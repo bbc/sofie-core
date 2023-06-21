@@ -271,13 +271,13 @@ export async function executeActionInner(
 		throw UserError.fromUnknown(err)
 	}
 
-	if (result && result.validationErrors) {
+	const validationErrors = result?.validationErrors ?? actionContext.requestError
+	if (validationErrors) {
+		const message = typeof validationErrors === 'string' ? validationErrors : JSON.stringify(validationErrors)
 		throw UserError.from(
-			new Error(
-				`AdLib Action "${actionParameters.actionId}" validation failed: ${JSON.stringify(result.validationErrors)}`
-			),
+			new Error(`AdLib Action "${actionParameters.actionId}" validation failed: ${message}`),
 			UserErrorMessage.ValidationFailed,
-			undefined,
+			{ message },
 			409
 		)
 	}
@@ -296,7 +296,6 @@ export async function executeActionInner(
 	return {
 		queuedPartInstanceId: actionContext.queuedPartInstanceId,
 		taken: actionContext.takeAfterExecute,
-		errorMessage: actionContext.requestError,
 	}
 }
 

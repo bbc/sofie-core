@@ -301,17 +301,6 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 				}
 			)
 			if (ClientAPI.isClientResponseError(result)) return result
-			// Check if the action rejected the request
-			if (result.result?.errorMessage) {
-				return ClientAPI.responseError(
-					UserError.from(
-						new Error(result.result.errorMessage),
-						UserErrorMessage.InternalError,
-						undefined,
-						400
-					)
-				)
-			}
 			return ClientAPI.responseSuccess(result.result ?? {})
 		} else {
 			return ClientAPI.responseError(
@@ -383,12 +372,6 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			}
 		)
 		if (ClientAPI.isClientResponseError(result)) return result
-		// Check if the action rejected the request
-		if (result.result?.errorMessage) {
-			return ClientAPI.responseError(
-				UserError.from(new Error(result.result.errorMessage), UserErrorMessage.InternalError, undefined, 400)
-			)
-		}
 		return ClientAPI.responseSuccess(result.result ?? {})
 	}
 
