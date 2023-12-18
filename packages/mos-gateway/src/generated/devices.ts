@@ -6,6 +6,7 @@
  */
 
 export interface MosDeviceConfig {
+	disableReqMachInfo?: boolean
 	primary: {
 		id: string
 		host: string
