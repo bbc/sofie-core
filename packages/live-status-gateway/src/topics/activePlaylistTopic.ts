@@ -1,10 +1,10 @@
 import { Logger } from 'winston'
 import { WebSocket } from 'ws'
 import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ABSessionAssignments, DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { DBShowStyleBase, OutputLayers, SourceLayers } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
-import { IOutputLayer, ISourceLayer } from '@sofie-automation/blueprints-integration'
+import { IOutputLayer, ISourceLayer, PieceAbSessionInfo } from '@sofie-automation/blueprints-integration'
 import { literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { WebSocketTopicBase, WebSocketTopic, CollectionObserver } from '../wsHandler'
 import { SelectedPartInstances, PartInstancesHandler } from '../collections/partInstancesHandler'
@@ -29,6 +29,7 @@ interface PieceStatus {
 	outputLayer: string
 	tags?: string[]
 	publicData: unknown
+	abSessions?: PieceAbSessionInfo[]
 }
 
 interface PartStatus {
@@ -58,6 +59,7 @@ export interface ActivePlaylistStatus {
 	currentSegment: CurrentSegmentStatus | null
 	nextPart: PartStatus | null
 	activePieces: PieceStatus[]
+	assignedAbSessions: Record<string, ABSessionAssignments>
 }
 
 export class ActivePlaylistTopic
@@ -159,6 +161,7 @@ export class ActivePlaylistTopic
 						  })
 						: null,
 					activePieces: this._pieceInstances?.active.map((piece) => this.toPieceStatus(piece)) ?? [],
+					assignedAbSessions: this._activePlaylist.assignedAbSessions ?? {},
 			  })
 			: literal<ActivePlaylistStatus>({
 					event: 'activePlaylist',
@@ -169,6 +172,7 @@ export class ActivePlaylistTopic
 					currentSegment: null,
 					nextPart: null,
 					activePieces: [],
+					assignedAbSessions: {},
 			  })
 
 		for (const subscriber of subscribers) {
@@ -273,6 +277,7 @@ export class ActivePlaylistTopic
 			outputLayer: outputLayerName ?? 'invalid',
 			tags: pieceInstance.piece.tags,
 			publicData: pieceInstance.piece.publicData,
+			abSessions: pieceInstance.piece.abSessions,
 		}
 	}
 }
