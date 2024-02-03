@@ -28,6 +28,7 @@ interface PieceStatus {
 	sourceLayer: string
 	outputLayer: string
 	tags?: string[]
+	publicData: unknown
 }
 
 interface PartStatus {
@@ -36,6 +37,7 @@ interface PartStatus {
 	name: string
 	autoNext?: boolean
 	pieces: PieceStatus[]
+	publicData: unknown
 }
 
 interface CurrentPartStatus extends PartStatus {
@@ -129,6 +131,7 @@ export class ActivePlaylistTopic
 										this._pieceInstances?.currentPartInstance.map((piece) =>
 											this.toPieceStatus(piece)
 										) ?? [],
+									publicData: currentPart.publicData,
 							  })
 							: null,
 					currentSegment:
@@ -152,6 +155,7 @@ export class ActivePlaylistTopic
 								pieces:
 									this._pieceInstances?.nextPartInstance.map((piece) => this.toPieceStatus(piece)) ??
 									[],
+								publicData: nextPart.publicData,
 						  })
 						: null,
 					activePieces: this._pieceInstances?.active.map((piece) => this.toPieceStatus(piece)) ?? [],
@@ -268,6 +272,7 @@ export class ActivePlaylistTopic
 			sourceLayer: sourceLayerName ?? 'invalid',
 			outputLayer: outputLayerName ?? 'invalid',
 			tags: pieceInstance.piece.tags,
+			publicData: pieceInstance.piece.publicData,
 		}
 	}
 }
