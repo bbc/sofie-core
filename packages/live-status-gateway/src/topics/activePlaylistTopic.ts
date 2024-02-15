@@ -15,6 +15,7 @@ import _ = require('underscore')
 import { PartTiming, calculateCurrentPartTiming } from './helpers/partTiming'
 import { SelectedPieceInstances, PieceInstancesHandler, PieceInstanceMin } from '../collections/pieceInstancesHandler'
 import { PieceStatus, toPieceStatus } from './helpers/pieceStatus'
+import { CurrentSegmentPart, getCurrentSegmentParts } from './helpers/segmentParts'
 
 const THROTTLE_PERIOD_MS = 100
 
@@ -34,6 +35,7 @@ interface CurrentPartStatus extends PartStatus {
 interface CurrentSegmentStatus {
 	id: string
 	timing: CurrentSegmentTiming
+	parts: CurrentSegmentPart[]
 }
 
 export interface ActivePlaylistStatus {
@@ -90,6 +92,8 @@ export class ActivePlaylistTopic
 
 		const currentPart = this._currentPartInstance ? this._currentPartInstance.part : null
 		const nextPart = this._nextPartInstance ? this._nextPartInstance.part : null
+		const currentSegmentParts =
+			(currentPart && this._partsBySegmentId[unprotectString(currentPart.segmentId)]) ?? []
 
 		const message = this._activePlaylist
 			? literal<ActivePlaylistStatus>({
@@ -123,7 +127,11 @@ export class ActivePlaylistTopic
 										this._currentPartInstance,
 										this._firstInstanceInSegmentPlayout,
 										this._partInstancesInCurrentSegment,
-										this._partsBySegmentId[unprotectString(currentPart.segmentId)] ?? []
+										currentSegmentParts
+									),
+									parts: getCurrentSegmentParts(
+										this._partInstancesInCurrentSegment,
+										currentSegmentParts
 									),
 							  })
 							: null,
