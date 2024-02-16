@@ -33,7 +33,7 @@ export function getCurrentSegmentParts(
 		.sort((a, b) => a.part._rank - b.part._rank)
 		.map(
 			(partInstance): CurrentSegmentPart => ({
-				id: partInstance._id as string,
+				id: unprotectString(partInstance.part._id),
 				name: partInstance.part.title,
 				timing: {
 					expectedDurationMs: partInstance.part.expectedDuration,
