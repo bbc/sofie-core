@@ -43,10 +43,6 @@ interface BaseAdLibStatus {
 
 interface AdLibStatus extends BaseAdLibStatus {
 	partId: string | undefined
-}
-
-interface AdLibActionStatus extends BaseAdLibStatus {
-	partId: string
 	tags?: string[]
 }
 
@@ -107,7 +103,7 @@ export class AdLibsTopic
 								})
 						  )
 						: []
-					return literal<AdLibActionStatus>({
+					return literal<AdLibStatus>({
 						id: unprotectString(action._id),
 						partId: unprotectString(action.partId),
 						name: interpollateTranslation(action.display.label.key, action.display.label.args),
@@ -133,6 +129,7 @@ export class AdLibsTopic
 						sourceLayer: sourceLayerName ?? 'invalid',
 						outputLayer: outputLayerName ?? 'invalid',
 						actionType: [],
+						tags: adLib.tags,
 						publicData: adLib.publicData,
 					})
 				})

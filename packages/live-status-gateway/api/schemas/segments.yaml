@@ -39,6 +39,11 @@ $defs:
       name:
         description: Name of the segment
         type: string
+      partIds:
+        description: Part IDs that belong to this segment
+        type: array
+        items:
+          type: string
       timing:
         type: object
         properties:
@@ -57,6 +62,7 @@ $defs:
       - id: 'OKAgZmZ0Buc99lE_2uPPSKVbMrQ_'
         rundownId: 'y9HauyWkcxQS3XaAOsW40BRLLsI_'
         name: 'Segment 0'
+        partIds: ['H5CBGYjThrMSmaYvRaa5FVKJIzk_']
         timing:
           expectedDurationMs: 15000
           budgetDurationMs: 20000

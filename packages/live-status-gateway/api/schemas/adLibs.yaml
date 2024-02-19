@@ -21,7 +21,7 @@ $defs:
         description: The available Global AdLibs for this playlist
         type: array
         items:
-          $ref: '#/$defs/adLib'
+          $ref: '#/$defs/globalAdLib'
     required: [event, rundownPlaylistId, adLibs, globalAdLibs]
     additionalProperties: false
     examples:
@@ -30,7 +30,7 @@ $defs:
         adLibs:
           $ref: '#/$defs/adLib/examples'
         globalAdLibs:
-          $ref: '#/$defs/adLib/examples'
+          $ref: '#/$defs/globalAdLib/examples'
   baseAdLib:
     type: object
     properties:
@@ -60,6 +60,11 @@ $defs:
               type: string
           required: [name, label]
           additionalProperties: false
+      tags:
+        description: Tags attached to this AdLib
+        type: array
+        items:
+          type: string          
       publicData:
         description: Optional arbitrary data
     required: [id, name, sourceLayer, actionType]
@@ -85,39 +90,8 @@ $defs:
   globalAdLib:
     allOf:
       - $ref: '#/$defs/baseAdLib'
-      - type: object
-        properties:
-          tags:
-            description: Tags attached to this AdLib
-            type: array
-            items:
-              type: string
     examples:
       - id: 'C6K_yIMuGFUk8X_L9A9_jRT6aq4_'
-        name: Music video clip
-        sourceLayer: Video Clip
-        actionType:
-          - name: pvw
-            label: Preview
-        tags: ['music_video']
-        publicData:
-          fileName: MV000123.mxf
-  adLibAction:
-    allOf:
-      - $ref: '#/$defs/baseAdLib'
-      - type: object
-        properties:
-          partId:
-            description: Unique id of the part which owns this AdLib
-            type: string
-          tags:
-            description: Tags attached to this AdLib
-            type: array
-            items:
-              type: string
-    examples:
-      - id: 'C6K_yIMuGFUk8X_L9A9_jRT6aq4_'
-        partId: 'H5CBGYjThrMSmaYvRaa5FVKJIzk_'
         name: Music video clip
         sourceLayer: Video Clip
         actionType:
