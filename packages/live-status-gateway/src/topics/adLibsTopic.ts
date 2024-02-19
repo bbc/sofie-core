@@ -24,7 +24,7 @@ export interface AdLibsStatus {
 	event: 'adLibs'
 	rundownPlaylistId: string | null
 	adLibs: AdLibStatus[]
-	globalAdLibs: AdLibStatus[]
+	globalAdLibs: GlobalAdLibStatus[]
 }
 
 interface AdLibActionType {
@@ -32,15 +32,27 @@ interface AdLibActionType {
 	label: string
 }
 
-interface AdLibStatus {
+interface BaseAdLibStatus {
 	id: string
 	partId?: string
 	name: string
 	sourceLayer: string
 	outputLayer: string
 	actionType: AdLibActionType[]
-	tags?: string[]
 	publicData: unknown
+}
+
+interface AdLibStatus extends BaseAdLibStatus {
+	partId: string | undefined
+}
+
+interface AdLibActionStatus extends BaseAdLibStatus {
+	partId: string
+	tags?: string[]
+}
+
+interface GlobalAdLibStatus extends BaseAdLibStatus {
+	tags?: string[]
 }
 
 export class AdLibsTopic
@@ -77,7 +89,7 @@ export class AdLibsTopic
 
 	sendStatus(subscribers: Iterable<WebSocket>): void {
 		const adLibs: AdLibStatus[] = []
-		const globalAdLibs: AdLibStatus[] = []
+		const globalAdLibs: GlobalAdLibStatus[] = []
 
 		if (this._adLibActions) {
 			adLibs.push(
@@ -96,7 +108,7 @@ export class AdLibsTopic
 								})
 						  )
 						: []
-					return literal<AdLibStatus>({
+					return literal<AdLibActionStatus>({
 						id: unprotectString(action._id),
 						partId: unprotectString(action.partId),
 						name: interpollateTranslation(action.display.label.key, action.display.label.args),
@@ -122,7 +134,6 @@ export class AdLibsTopic
 						sourceLayer: sourceLayerName ?? 'invalid',
 						outputLayer: outputLayerName ?? 'invalid',
 						actionType: [],
-						tags: adLib.tags,
 						publicData: adLib.publicData,
 					})
 				})
@@ -146,7 +157,7 @@ export class AdLibsTopic
 								})
 						  )
 						: []
-					return literal<AdLibStatus>({
+					return literal<GlobalAdLibStatus>({
 						id: unprotectString(action._id),
 						name: interpollateTranslation(action.display.label.key, action.display.label.args),
 						sourceLayer: sourceLayerName ?? 'invalid',
@@ -164,7 +175,7 @@ export class AdLibsTopic
 				...this._globalAdLibs.map((adLib) => {
 					const sourceLayerName = this._sourceLayersMap.get(adLib.sourceLayerId)
 					const outputLayerName = this._outputLayersMap.get(adLib.outputLayerId)
-					return literal<AdLibStatus>({
+					return literal<GlobalAdLibStatus>({
 						id: unprotectString(adLib._id),
 						name: adLib.name,
 						sourceLayer: sourceLayerName ?? 'invalid',
