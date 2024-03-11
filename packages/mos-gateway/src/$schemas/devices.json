@@ -5,6 +5,12 @@
 	"title": "Mos Device Config",
 	"type": "object",
 	"properties": {
+		"disableReqMachInfo": {
+			"type": "boolean",
+			"ui:title": "(Optional) Disable reqMachInfo message sending",
+			"ui:description": "When set, the MOS Gateway will not send reqMachInfo messages to the NRCS",
+			"default": false
+		},
 		"primary": {
 			"type": "object",
 			"ui:title": "Primary",

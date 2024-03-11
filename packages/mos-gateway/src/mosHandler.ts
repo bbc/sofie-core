@@ -461,12 +461,12 @@ export class MosHandler {
 
 			await Promise.all(
 				Object.entries<{ options: MosDeviceConfig }>(devicesToAdd).map(async ([deviceId, device]) => {
-					return this._addDevice(deviceId, device.options)
+					return this._addDevice(deviceId, device.options, device.options.disableReqMachInfo)
 				})
 			)
 		}
 	}
-	private async _addDevice(deviceId: string, deviceOptions: IMOSDeviceConnectionOptions): Promise<MosDevice> {
+	private async _addDevice(deviceId: string, deviceOptions: IMOSDeviceConnectionOptions, disableReqMachInfo?: boolean): Promise<MosDevice> {
 		if (this._getDevice(deviceId)) {
 			// the device is already there
 			throw new Error('Unable to add device "' + deviceId + '", because it already exists!')
@@ -487,40 +487,41 @@ export class MosHandler {
 		this._ownMosDevices[deviceId] = mosDevice
 
 		try {
-			const getMachineInfoUntilConnected = async (): Promise<IMOSListMachInfo> =>
-				mosDevice.requestMachineInfo().catch(async (e: any) => {
-					if (
-						e &&
-						((e + '').match(/no connection available for failover/i) ||
-							(e + '').match(/failover connection/i))
-					) {
-						// TODO: workaround (mos.connect resolves too soon, before the connection is actually initialted)
-						return new Promise((resolve) => {
-							setTimeout(() => {
-								resolve(getMachineInfoUntilConnected())
-							}, 2000)
-						})
-					} else {
-						throw e
-					}
-				})
-
-			const machInfo = await getMachineInfoUntilConnected()
-			this._logger.info('Connected to Mos-device', machInfo)
-			const machineId: string | undefined = machInfo.ID && this.mosTypes.mosString128.stringify(machInfo.ID)
-			if (
-				!(
-					machineId === deviceOptions.primary.id ||
-					(deviceOptions.secondary && machineId === deviceOptions.secondary.id)
-				)
-			) {
-				throw new Error(
-					'Mos-device has ID "' +
-						machineId +
-						'" but specified ncs-id is "' +
-						(deviceOptions.primary.id || (deviceOptions.secondary || { id: '' }).id) +
-						'"'
-				)
+			if (!disableReqMachInfo) {
+				const getMachineInfoUntilConnected = async (): Promise<IMOSListMachInfo> =>
+					mosDevice.requestMachineInfo().catch(async (e: any) => {
+						if (
+							e &&
+							((e + '').match(/no connection available for failover/i) ||
+								(e + '').match(/failover connection/i))
+						) {
+							// TODO: workaround (mos.connect resolves too soon, before the connection is actually initialted)
+							return new Promise((resolve) => {
+								setTimeout(() => {
+									resolve(getMachineInfoUntilConnected())
+								}, 2000)
+							})
+						} else {
+							throw e
+						}
+					})
+				const machInfo = await getMachineInfoUntilConnected()
+				this._logger.info('Connected to Mos-device', machInfo)
+				const machineId: string | undefined = machInfo.ID && this.mosTypes.mosString128.stringify(machInfo.ID)
+				if (
+					!(
+						machineId === deviceOptions.primary.id ||
+						(deviceOptions.secondary && machineId === deviceOptions.secondary.id)
+					)
+				) {
+					throw new Error(
+						'Mos-device has ID "' +
+							machineId +
+							'" but specified ncs-id is "' +
+							(deviceOptions.primary.id || (deviceOptions.secondary || { id: '' }).id) +
+							'"'
+					)
+				}
 			}
 			return mosDevice
 		} catch (e) {
