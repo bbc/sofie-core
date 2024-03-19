@@ -43,7 +43,7 @@ export class OnSetAsNextContext
 	}
 
 	public get currentPartState(): ActionPartChange {
-		return this.partAndPieceInstanceService.nextPartState
+		return this.partAndPieceInstanceService.currentPartState
 	}
 
 	async getPartInstance(part: 'current' | 'next'): Promise<IBlueprintPartInstance<unknown> | undefined> {
