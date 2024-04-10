@@ -19,7 +19,7 @@ import { convertPartInstanceToBlueprints } from './lib'
 import { RundownContext } from './RundownContext'
 import { AbSessionHelper } from '../../playout/abPlayback/abSessionHelper'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { PieceInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PieceInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 export class OnTimelineGenerateContext extends RundownContext implements ITimelineEventContext {
 	readonly currentPartInstance: Readonly<IBlueprintPartInstance> | undefined
@@ -36,6 +36,7 @@ export class OnTimelineGenerateContext extends RundownContext implements ITimeli
 		showStyleBlueprintConfig: ProcessedShowStyleConfig,
 		playlist: ReadonlyDeep<DBRundownPlaylist>,
 		rundown: ReadonlyDeep<DBRundown>,
+		orderedSegmentIds: ReadonlyDeep<Array<SegmentId>>,
 		previousPartInstance: ReadonlyDeep<DBPartInstance> | undefined,
 		currentPartInstance: ReadonlyDeep<DBPartInstance> | undefined,
 		nextPartInstance: ReadonlyDeep<DBPartInstance> | undefined,
@@ -64,6 +65,7 @@ export class OnTimelineGenerateContext extends RundownContext implements ITimeli
 		}
 
 		this.abSessionsHelper = new AbSessionHelper(
+			orderedSegmentIds,
 			partInstances,
 			clone<ABSessionInfo[]>(playlist.trackedAbSessions ?? [])
 		)

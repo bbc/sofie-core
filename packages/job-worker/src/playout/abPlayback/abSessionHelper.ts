@@ -1,5 +1,5 @@
 import { AB_MEDIA_PLAYER_AUTO } from '@sofie-automation/blueprints-integration'
-import { PartId, PieceInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PartId, PieceInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import { ABSessionInfo } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -18,11 +18,17 @@ interface ABSessionInfoExt extends ABSessionInfo {
  * A helper class for generating unique and persistent AB-playback sessionIds
  */
 export class AbSessionHelper {
+	readonly #orderedSegmentIds: ReadonlyDeep<Array<SegmentId>>
 	readonly #partInstances: ReadonlyDeep<Array<DBPartInstance>>
 
 	readonly #knownSessions: ABSessionInfoExt[]
 
-	constructor(partInstances: ReadonlyDeep<Array<DBPartInstance>>, knownSessions: ABSessionInfo[]) {
+	constructor(
+		orderedSegmentIds: ReadonlyDeep<Array<SegmentId>>,
+		partInstances: ReadonlyDeep<Array<DBPartInstance>>,
+		knownSessions: ABSessionInfo[]
+	) {
+		this.#orderedSegmentIds = orderedSegmentIds
 		this.#partInstances = partInstances
 		this.#knownSessions = knownSessions
 	}
@@ -76,8 +82,7 @@ export class AbSessionHelper {
 		}
 
 		// Check if we can continue sessions from the part before, or if we should create new ones
-		const canReuseFromPartInstanceBefore =
-			partInstanceIndex > 0 && this.#partInstances[partInstanceIndex - 1].part._rank < partInstance.part._rank
+		const canReuseFromPartInstanceBefore = this.#canReuseFromPartInstanceBefore(partInstanceIndex, partInstance)
 
 		if (canReuseFromPartInstanceBefore) {
 			// Try and find a session from the part before that we can use
@@ -115,6 +120,28 @@ export class AbSessionHelper {
 		}
 		this.#knownSessions.push(newSession)
 		return sessionId
+	}
+
+	#canReuseFromPartInstanceBefore(partInstanceIndex: number, partInstance: ReadonlyDeep<DBPartInstance>) {
+		if (partInstanceIndex <= 0) return false
+
+		const previousPartInstance = this.#partInstances[partInstanceIndex - 1]
+
+		// Check if the previous instance is in the same segment, and is positioned before this one
+		if (
+			previousPartInstance.segmentId === partInstance.segmentId &&
+			previousPartInstance.part._rank < partInstance.part._rank
+		)
+			return true
+
+		// Check if the previous instance is in an earlier segment
+		if (
+			this.#orderedSegmentIds.indexOf(previousPartInstance.segmentId) <
+			this.#orderedSegmentIds.indexOf(partInstance.segmentId)
+		)
+			return true
+
+		return false
 	}
 
 	/**

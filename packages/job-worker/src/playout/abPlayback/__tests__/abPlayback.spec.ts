@@ -88,7 +88,7 @@ function resolveAbSessions(
 
 describe('resolveMediaPlayers', () => {
 	// TODO - rework this to use an interface instead of mocking the methods
-	const abSessionHelper = new AbSessionHelper([], [])
+	const abSessionHelper = new AbSessionHelper([], [], [])
 
 	const mockGetPieceSessionId: jest.MockedFunction<typeof abSessionHelper.getPieceABSessionId> = jest.fn()
 	const mockGetObjectSessionId: jest.MockedFunction<typeof abSessionHelper.getTimelineObjectAbSessionId> = jest.fn()
