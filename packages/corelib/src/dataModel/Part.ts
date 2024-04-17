@@ -3,6 +3,7 @@ import { ITranslatableMessage } from '../TranslatableMessage'
 import { PartId, RundownId, SegmentId } from './Ids'
 import { PartNote } from './Notes'
 import { ReadonlyDeep } from 'type-fest'
+import { CoreUserEditingDefinitionAction } from './Rundown'
 
 export interface PartInvalidReason {
 	message: ITranslatableMessage
@@ -11,7 +12,7 @@ export interface PartInvalidReason {
 }
 
 /** A "Line" in NRK Lingo. */
-export interface DBPart extends IBlueprintPart {
+export interface DBPart extends Omit<IBlueprintPart, 'userEdits'> {
 	_id: PartId
 	/** Position inside the segment */
 	_rank: number
@@ -31,6 +32,8 @@ export interface DBPart extends IBlueprintPart {
 
 	/** A modified expectedDuration with the planned preroll and other timings factored in */
 	expectedDurationWithPreroll: number | undefined
+
+	userEdits?: CoreUserEditingDefinitionAction[]
 }
 
 export function isPartPlayable(part: Pick<ReadonlyDeep<DBPart>, 'invalid' | 'floated'>): boolean {

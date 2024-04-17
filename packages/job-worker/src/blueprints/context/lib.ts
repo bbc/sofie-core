@@ -8,9 +8,14 @@ import {
 	PieceInstancePiece,
 	ResolvedPieceInstance,
 } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
-import { DBRundown, Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import {
+	CoreUserEditingDefinition,
+	CoreUserEditingDefinitionAction,
+	DBRundown,
+	Rundown,
+} from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { clone, Complete, literal } from '@sofie-automation/corelib/dist/lib'
+import { clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { ReadonlyDeep } from 'type-fest'
 import {
@@ -44,6 +49,12 @@ import {
 } from '@sofie-automation/blueprints-integration'
 import { JobContext, ProcessedShowStyleBase, ProcessedShowStyleVariant } from '../../jobs'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import {
+	UserEditingDefinition,
+	UserEditingDefinitionAction,
+} from '@sofie-automation/blueprints-integration/dist/userEditing'
+import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib/dist/TranslatableMessage'
+import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 /**
  * Convert an object to have all the values of all keys (including optionals) be 'true'
@@ -80,6 +91,7 @@ export const IBlueprintPieceObjectsSampleKeys = allKeysOfObject<IBlueprintPiece>
 	allowDirectPlay: true,
 	notInVision: true,
 	abSessions: true,
+	userEdits: true,
 })
 
 // Compile a list of the keys which are allowed to be set
@@ -103,6 +115,7 @@ export const IBlueprintMutatablePartSampleKeys = allKeysOfObject<IBlueprintMutat
 	displayDuration: true,
 	identifier: true,
 	hackListenToMediaObjectUpdates: true,
+	userEdits: true,
 })
 
 /*
@@ -221,6 +234,7 @@ export function convertPieceToBlueprints(piece: ReadonlyDeep<PieceInstancePiece>
 		pieceType: piece.pieceType,
 		extendOnHold: piece.extendOnHold,
 		notInVision: piece.notInVision,
+		userEdits: translateUserEditsToBlueprint(piece.userEdits),
 	}
 
 	return obj
@@ -262,6 +276,7 @@ export function convertPartToBlueprints(part: ReadonlyDeep<DBPart>): IBlueprintP
 		hackListenToMediaObjectUpdates: clone<HackPartMediaObjectSubscription[] | undefined>(
 			part.hackListenToMediaObjectUpdates
 		),
+		userEdits: translateUserEditsToBlueprint(part.userEdits),
 	}
 
 	return obj
@@ -329,6 +344,7 @@ export function convertSegmentToBlueprints(segment: ReadonlyDeep<DBSegment>): IB
 		displayAs: segment.displayAs,
 		showShelf: segment.showShelf,
 		segmentTiming: segment.segmentTiming,
+		userEdits: translateUserEditsToBlueprint(segment.userEdits),
 	}
 
 	return obj
@@ -353,6 +369,7 @@ export function convertRundownToBlueprints(rundown: ReadonlyDeep<DBRundown>): IB
 		showStyleVariantId: unprotectString(rundown.showStyleVariantId),
 		playlistId: unprotectString(rundown.playlistId),
 		airStatus: rundown.airStatus,
+		userEdits: translateUserEditsToBlueprint(rundown.userEdits),
 	}
 
 	return obj
@@ -473,4 +490,43 @@ export async function getMediaObjectDuration(context: JobContext, mediaId: strin
 	if (span) span.end()
 
 	return durations.length > 0 ? durations[0] : undefined
+}
+
+function translateUserEditsToBlueprint(
+	userEdits: ReadonlyDeep<CoreUserEditingDefinition[]> | undefined
+): UserEditingDefinition[] | undefined {
+	if (!userEdits) return undefined
+
+	return userEdits.map((userEdit) => {
+		// switch (userEdits.type) {
+		// 	case 'action':
+		return {
+			type: 'action',
+			label: omit(userEdit.label, 'namespaces'),
+		} satisfies Complete<UserEditingDefinitionAction>
+		// 	default:
+		// 		assertNever(userEdits)
+		// 		return undefined
+		// }
+	})
+}
+
+export function translateUserEditsFromBlueprint(
+	userEdits: UserEditingDefinition[] | undefined,
+	blueprintIds: BlueprintId[]
+): CoreUserEditingDefinition[] | undefined {
+	if (!userEdits) return undefined
+
+	return userEdits.map((userEdit) => {
+		// switch (userEdits.type) {
+		// 	case 'action':
+		return {
+			type: 'action',
+			label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
+		} satisfies Complete<CoreUserEditingDefinitionAction>
+		// 	default:
+		// 		assertNever(userEdits)
+		// 		return undefined
+		// }
+	})
 }

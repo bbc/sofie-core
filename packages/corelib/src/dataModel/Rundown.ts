@@ -9,6 +9,7 @@ import {
 	ShowStyleVariantId,
 } from './Ids'
 import { RundownNote } from './Notes'
+import type { ITranslatableMessage } from '../TranslatableMessage'
 
 export enum RundownOrphanedReason {
 	/** Rundown is deleted from the NRCS but we still need it */
@@ -89,7 +90,16 @@ export interface Rundown {
 	playlistId: RundownPlaylistId
 	/** If the playlistId has ben set manually by a user in Sofie */
 	playlistIdIsSetInSofie?: boolean
+
+	userEdits?: CoreUserEditingDefinitionAction[]
 }
 
 /** Note: Use Rundown instead */
 export type DBRundown = Rundown
+
+export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction // TODO: form based and more types
+
+export interface CoreUserEditingDefinitionAction {
+	type: 'action'
+	label: ITranslatableMessage
+}

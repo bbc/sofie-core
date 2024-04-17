@@ -1,6 +1,7 @@
 import { SegmentDisplayMode, SegmentTimingInfo } from '@sofie-automation/blueprints-integration'
 import { SegmentId, RundownId } from './Ids'
 import { SegmentNote } from './Notes'
+import { CoreUserEditingDefinitionAction } from './Rundown'
 
 export enum SegmentOrphanedReason {
 	/** Segment is deleted from the NRCS but we still need it */
@@ -45,4 +46,6 @@ export interface DBSegment {
 
 	/** Holds notes (warnings / errors) thrown by the blueprints during creation */
 	notes?: Array<SegmentNote>
+
+	userEdits?: CoreUserEditingDefinitionAction[]
 }

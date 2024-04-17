@@ -14,7 +14,11 @@ import {
 	RundownPlaylistId,
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { DBRundown, RundownOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import {
+	CoreUserEditingDefinition,
+	DBRundown,
+	RundownOrphanedReason,
+} from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
 import { RundownBaselineAdLibItem } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibPiece'
 import { LazyInitialiseReadonly } from '../../lib/lazy'
@@ -235,7 +239,8 @@ export interface IngestModel extends IngestModelReadonly, BaseModel {
 		showStyleVariant: ReadonlyDeep<ProcessedShowStyleVariant>,
 		showStyleBlueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 		peripheralDevice: ReadonlyDeep<PeripheralDevice> | undefined,
-		rundownNotes: RundownNote[]
+		rundownNotes: RundownNote[],
+		userEdits: CoreUserEditingDefinition[] | undefined
 	): ReadonlyDeep<DBRundown>
 
 	/**

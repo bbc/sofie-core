@@ -1,3 +1,5 @@
+import type { UserEditingDefinition } from '../userEditing'
+
 export enum SegmentDisplayMode {
 	Timeline = 'timeline',
 	Storyboard = 'storyboard',
@@ -32,6 +34,8 @@ export interface IBlueprintSegment<TPrivateData = unknown, TPublicData = unknown
 
 	/** Contains properties related to the timing of the segment */
 	segmentTiming?: SegmentTimingInfo
+
+	userEdits?: UserEditingDefinition[]
 }
 /** The Segment sent from Core */
 export interface IBlueprintSegmentDB<TPrivateData = unknown, TPublicData = unknown>

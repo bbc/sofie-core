@@ -24,6 +24,7 @@ import { IngestReplacePartType, IngestSegmentModel } from './model/IngestSegment
 import { ReadonlyDeep } from 'type-fest'
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { WrappedShowStyleBlueprint } from '../blueprints/cache'
+import { translateUserEditsFromBlueprint } from '../blueprints/context/lib'
 
 async function getWatchedPackagesHelper(
 	context: JobContext,
@@ -286,6 +287,7 @@ function updateModelWithGeneratedSegment(
 			externalId: ingestSegment.externalId,
 			_rank: ingestSegment.rank,
 			notes: segmentNotes,
+			userEdits: translateUserEditsFromBlueprint(blueprintSegment.segment.userEdits, [blueprintId]),
 		})
 	)
 
@@ -368,6 +370,7 @@ function updateModelWithGeneratedPart(
 					]),
 			  }
 			: undefined,
+		userEdits: translateUserEditsFromBlueprint(blueprintPart.part.userEdits, [blueprintId]),
 	})
 
 	// Update pieces

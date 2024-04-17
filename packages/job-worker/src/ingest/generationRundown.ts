@@ -25,7 +25,7 @@ import { updateExpectedPackagesForRundownBaseline } from './expectedPackages'
 import { ReadonlyDeep } from 'type-fest'
 import { BlueprintResultRundown, ExtendedIngestRundown, IngestRundown } from '@sofie-automation/blueprints-integration'
 import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib/dist/TranslatableMessage'
-import { convertRundownToBlueprintSegmentRundown } from '../blueprints/context/lib'
+import { convertRundownToBlueprintSegmentRundown, translateUserEditsFromBlueprint } from '../blueprints/context/lib'
 import { calculateSegmentsAndRemovalsFromIngestData } from './generationSegment'
 
 export enum GenerateRundownMode {
@@ -277,7 +277,8 @@ export async function regenerateRundownAndBaselineFromIngestData(
 		showStyle.variant,
 		showStyleBlueprint,
 		peripheralDevice,
-		rundownNotes
+		rundownNotes,
+		translateUserEditsFromBlueprint(rundownRes.rundown.userEdits, translationNamespaces)
 	)
 
 	// get the rundown separetely to ensure it exists now

@@ -1,5 +1,6 @@
 import type { NoteSeverity } from '../lib'
 import type { ITranslatableMessage } from '../translations'
+import type { UserEditingDefinition } from '../userEditing'
 
 /** Timings for the inTransition, when supported and allowed */
 export interface IBlueprintPartInTransition {
@@ -85,6 +86,8 @@ export interface IBlueprintMutatablePart<TPrivateData = unknown, TPublicData = u
 
 	/** MediaObjects that when created/updated, should cause the blueprint to be rerun for the Segment of this Part */
 	hackListenToMediaObjectUpdates?: HackPartMediaObjectSubscription[]
+
+	userEdits?: UserEditingDefinition[]
 }
 
 export interface HackPartMediaObjectSubscription {
