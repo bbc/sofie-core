@@ -189,11 +189,20 @@ export const SegmentContextMenu = withTranslation()(
 			const { t } = this.props
 			if (/*this.state.studioMode &&*/ part) {
 				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-					MeteorCall.userAction.executeUserChangeOperation(e, ts, part.instance.rundownId, userEdit, {
-						segmentExternalId: segment?.externalId,
-						partExternalId: part.instance.part.externalId,
-						pieceExternalId: undefined,
-					})
+					MeteorCall.userAction.executeUserChangeOperation(
+						e,
+						ts,
+						part.instance.rundownId,
+						{
+							segmentExternalId: segment?.externalId,
+							partExternalId: part.instance.part.externalId,
+							pieceExternalId: undefined,
+						},
+						{
+							id: userEdit.id,
+							// TODO: define for non-click types
+						}
+					)
 				)
 			}
 		}
@@ -208,11 +217,20 @@ export const SegmentContextMenu = withTranslation()(
 			const { t } = this.props
 			if (/*this.state.studioMode &&*/ segment) {
 				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-					MeteorCall.userAction.executeUserChangeOperation(e, ts, segment.rundownId, userEdit, {
-						segmentExternalId: segment.externalId,
-						partExternalId: undefined,
-						pieceExternalId: undefined,
-					})
+					MeteorCall.userAction.executeUserChangeOperation(
+						e,
+						ts,
+						segment.rundownId,
+						{
+							segmentExternalId: segment.externalId,
+							partExternalId: undefined,
+							pieceExternalId: undefined,
+						},
+						{
+							id: userEdit.id,
+							// TODO: define for non-click types
+						}
+					)
 				)
 			}
 		}
