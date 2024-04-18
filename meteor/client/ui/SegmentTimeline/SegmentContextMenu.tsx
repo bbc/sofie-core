@@ -10,6 +10,12 @@ import { IContextMenuContext } from '../RundownView'
 import { PartUi, SegmentUi } from './SegmentTimelineContainer'
 import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { i18nTranslator } from '../i18n'
+import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
+import { MeteorCall } from '../../../lib/api/methods'
+import { PartExtended } from '../../../lib/Rundown'
+import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import { UserAction, doUserAction } from '../../../lib/clientUserAction'
 
 interface IProps {
 	onSetNext: (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => void
@@ -69,6 +75,16 @@ export const SegmentContextMenu = withTranslation()(
 									</MenuItem>
 								)}
 								<hr />
+								{segment?.userEdits?.map((userEdit, i) => {
+									return (
+										<MenuItem
+											key={`${userEdit.id}_${i}`}
+											onClick={(e) => this.onDoSegmentUserOperation(userEdit, segment, e)}
+										>
+											<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
+										</MenuItem>
+									)
+								})}
 							</>
 						)}
 						{part && !part.instance.part.invalid && timecode !== null && (
@@ -99,6 +115,17 @@ export const SegmentContextMenu = withTranslation()(
 										</MenuItem>
 									</>
 								) : null}
+								<hr />
+								{part.instance.part.userEdits?.map((userEdit, i) => {
+									return (
+										<MenuItem
+											key={`${userEdit.id}_${i}`}
+											onClick={(e) => this.onDoPartUserOperation(part, userEdit, segment, e)}
+										>
+											<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
+										</MenuItem>
+									)
+								})}
 							</>
 						)}
 					</ContextMenu>
@@ -149,6 +176,45 @@ export const SegmentContextMenu = withTranslation()(
 				return offset
 			}
 			return null
+		}
+
+		private onDoPartUserOperation(
+			part: PartExtended,
+			userEdit: CoreUserEditingDefinition,
+			segment: SegmentUi | null,
+			e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>
+		) {
+			// TODO: move this to the parent level.
+
+			const { t } = this.props
+			if (/*this.state.studioMode &&*/ part) {
+				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+					MeteorCall.userAction.executeUserChangeOperation(e, ts, part.instance.rundownId, userEdit, {
+						segmentExternalId: segment?.externalId,
+						partExternalId: part.instance.part.externalId,
+						pieceExternalId: undefined,
+					})
+				)
+			}
+		}
+
+		private onDoSegmentUserOperation(
+			userEdit: CoreUserEditingDefinition,
+			segment: SegmentUi,
+			e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>
+		) {
+			// TODO: move this to the parent level.
+
+			const { t } = this.props
+			if (/*this.state.studioMode &&*/ segment) {
+				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+					MeteorCall.userAction.executeUserChangeOperation(e, ts, segment.rundownId, userEdit, {
+						segmentExternalId: segment.externalId,
+						partExternalId: undefined,
+						pieceExternalId: undefined,
+					})
+				)
+			}
 		}
 	}
 )

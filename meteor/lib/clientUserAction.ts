@@ -114,6 +114,8 @@ function userActionToLabel(userAction: UserAction, t: i18next.TFunction) {
 			return t('Refreshing debug states')
 		case UserAction.ACTIVATE_SCRATCHPAD:
 			return t('Activate Scratchpad')
+		case UserAction.EXECUTE_USER_OPERATION:
+			return t('Execute User Operation')
 		default:
 			assertNever(userAction)
 	}
