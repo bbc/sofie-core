@@ -502,6 +502,7 @@ function translateUserEditsToBlueprint(
 		// 	case 'action':
 		return {
 			type: 'action',
+			id: userEdit.id,
 			label: omit(userEdit.label, 'namespaces'),
 		} satisfies Complete<UserEditingDefinitionAction>
 		// 	default:
@@ -522,6 +523,7 @@ export function translateUserEditsFromBlueprint(
 		// 	case 'action':
 		return {
 			type: 'action',
+			id: userEdit.id,
 			label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 		} satisfies Complete<CoreUserEditingDefinitionAction>
 		// 	default:

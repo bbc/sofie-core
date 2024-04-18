@@ -101,5 +101,6 @@ export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction // TODO:
 
 export interface CoreUserEditingDefinitionAction {
 	type: 'action'
+	id: string
 	label: ITranslatableMessage
 }

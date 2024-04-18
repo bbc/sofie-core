@@ -4,5 +4,6 @@ export type UserEditingDefinition = UserEditingDefinitionAction // TODO: form ba
 
 export interface UserEditingDefinitionAction {
 	type: 'action'
+	id: string
 	label: ITranslatableMessage
 }
