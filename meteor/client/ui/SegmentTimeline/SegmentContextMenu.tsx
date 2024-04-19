@@ -8,14 +8,19 @@ import { Translated } from '../../lib/ReactMeteorData/ReactMeteorData'
 import { RundownUtils } from '../../lib/rundown'
 import { IContextMenuContext } from '../RundownView'
 import { PartUi, SegmentUi } from './SegmentTimelineContainer'
-import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { i18nTranslator } from '../i18n'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { MeteorCall } from '../../../lib/api/methods'
-import { PartExtended } from '../../../lib/Rundown'
-import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import {
+	CoreUserEditingDefinition,
+	CoreUserEditingDefinitionAction,
+	CoreUserEditingDefinitionForm,
+} from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { UserAction, doUserAction } from '../../../lib/clientUserAction'
+import { UserOperationTarget } from '@sofie-automation/blueprints-integration'
+import { assertNever } from '@sofie-automation/corelib/dist/lib'
 
 interface IProps {
 	onSetNext: (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => void
@@ -76,9 +81,11 @@ export const SegmentContextMenu = withTranslation()(
 									</MenuItem>
 								)}
 								{segment &&
-									this.renderUserEditOperations(segment.userEdits, (e, userEdit) =>
-										this.onDoSegmentUserOperation(userEdit, segment, e)
-									)}
+									this.renderUserEditOperations(segment.rundownId, segment.userEdits, {
+										segmentExternalId: segment.externalId,
+										partExternalId: undefined,
+										pieceExternalId: undefined,
+									})}
 								<hr />
 							</>
 						)}
@@ -110,9 +117,11 @@ export const SegmentContextMenu = withTranslation()(
 										</MenuItem>
 									</>
 								) : null}
-								{this.renderUserEditOperations(part.instance.part.userEdits, (e, userEdit) =>
-									this.onDoPartUserOperation(part, userEdit, segment, e)
-								)}
+								{this.renderUserEditOperations(part.instance.rundownId, part.instance.part.userEdits, {
+									segmentExternalId: segment?.externalId,
+									partExternalId: part.instance.part.externalId,
+									pieceExternalId: undefined,
+								})}
 							</>
 						)}
 					</ContextMenu>
@@ -121,8 +130,9 @@ export const SegmentContextMenu = withTranslation()(
 		}
 
 		private renderUserEditOperations(
+			rundownId: RundownId,
 			userEdits: CoreUserEditingDefinition[] | undefined,
-			execute: (e: any, userEdit: CoreUserEditingDefinition) => void
+			operationTarget: UserOperationTarget
 		) {
 			if (!userEdits || userEdits.length === 0) return null
 
@@ -130,13 +140,59 @@ export const SegmentContextMenu = withTranslation()(
 				<>
 					<hr />
 					{userEdits.map((userEdit, i) => {
-						return (
-							<MenuItem key={`${userEdit.id}_${i}`} onClick={(e) => execute(e, userEdit)}>
-								<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
-							</MenuItem>
-						)
+						switch (userEdit.type) {
+							case 'action':
+								return this.renderUserEditOperationAction(rundownId, userEdit, i, operationTarget)
+							case 'form':
+								return this.renderUserEditOperationForm(rundownId, userEdit, i, operationTarget)
+							default:
+								assertNever(userEdit)
+								return null
+						}
 					})}
 				</>
+			)
+		}
+
+		private renderUserEditOperationAction(
+			rundownId: RundownId,
+			userEdit: CoreUserEditingDefinitionAction,
+			i: number,
+			operationTarget: UserOperationTarget
+		) {
+			const { t } = this.props
+
+			return (
+				<MenuItem
+					key={`${userEdit.id}_${i}`}
+					onClick={(e) => {
+						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+							MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
+								id: userEdit.id,
+							})
+						)
+					}}
+				>
+					<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
+				</MenuItem>
+			)
+		}
+
+		private renderUserEditOperationForm(
+			_rundownId: RundownId,
+			userEdit: CoreUserEditingDefinitionForm,
+			i: number,
+			_operationTarget: UserOperationTarget
+		) {
+			return (
+				<MenuItem
+					key={`${userEdit.id}_${i}`}
+					onClick={(_e) => {
+						// TODO:
+					}}
+				>
+					<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
+				</MenuItem>
 			)
 		}
 
@@ -183,63 +239,6 @@ export const SegmentContextMenu = withTranslation()(
 				return offset
 			}
 			return null
-		}
-
-		private onDoPartUserOperation(
-			part: PartExtended,
-			userEdit: CoreUserEditingDefinition,
-			segment: SegmentUi | null,
-			e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>
-		) {
-			// TODO: move this to the parent level.
-
-			const { t } = this.props
-			if (/*this.state.studioMode &&*/ part) {
-				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-					MeteorCall.userAction.executeUserChangeOperation(
-						e,
-						ts,
-						part.instance.rundownId,
-						{
-							segmentExternalId: segment?.externalId,
-							partExternalId: part.instance.part.externalId,
-							pieceExternalId: undefined,
-						},
-						{
-							id: userEdit.id,
-							// TODO: define for non-click types
-						}
-					)
-				)
-			}
-		}
-
-		private onDoSegmentUserOperation(
-			userEdit: CoreUserEditingDefinition,
-			segment: SegmentUi,
-			e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>
-		) {
-			// TODO: move this to the parent level.
-
-			const { t } = this.props
-			if (/*this.state.studioMode &&*/ segment) {
-				doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-					MeteorCall.userAction.executeUserChangeOperation(
-						e,
-						ts,
-						segment.rundownId,
-						{
-							segmentExternalId: segment.externalId,
-							partExternalId: undefined,
-							pieceExternalId: undefined,
-						},
-						{
-							id: userEdit.id,
-							// TODO: define for non-click types
-						}
-					)
-				)
-			}
 		}
 	}
 )

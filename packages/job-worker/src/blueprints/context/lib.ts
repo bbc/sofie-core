@@ -11,11 +11,12 @@ import {
 import {
 	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
+	CoreUserEditingDefinitionForm,
 	DBRundown,
 	Rundown,
 } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { ReadonlyDeep } from 'type-fest'
 import {
@@ -52,9 +53,11 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import {
 	UserEditingDefinition,
 	UserEditingDefinitionAction,
+	UserEditingDefinitionForm,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
 import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import _ = require('underscore')
 
 /**
  * Convert an object to have all the values of all keys (including optionals) be 'true'
@@ -497,19 +500,29 @@ function translateUserEditsToBlueprint(
 ): UserEditingDefinition[] | undefined {
 	if (!userEdits) return undefined
 
-	return userEdits.map((userEdit) => {
-		// switch (userEdits.type) {
-		// 	case 'action':
-		return {
-			type: 'action',
-			id: userEdit.id,
-			label: omit(userEdit.label, 'namespaces'),
-		} satisfies Complete<UserEditingDefinitionAction>
-		// 	default:
-		// 		assertNever(userEdits)
-		// 		return undefined
-		// }
-	})
+	return _.compact(
+		userEdits.map((userEdit) => {
+			switch (userEdit.type) {
+				case 'action':
+					return {
+						type: 'action',
+						id: userEdit.id,
+						label: omit(userEdit.label, 'namespaces'),
+					} satisfies Complete<UserEditingDefinitionAction>
+				case 'form':
+					return {
+						type: 'form',
+						id: userEdit.id,
+						label: omit(userEdit.label, 'namespaces'),
+						schema: clone(userEdit.schema),
+						currentValues: clone(userEdit.currentValues),
+					} satisfies Complete<UserEditingDefinitionForm>
+				default:
+					assertNever(userEdit)
+					return undefined
+			}
+		})
+	)
 }
 
 export function translateUserEditsFromBlueprint(
@@ -518,17 +531,27 @@ export function translateUserEditsFromBlueprint(
 ): CoreUserEditingDefinition[] | undefined {
 	if (!userEdits) return undefined
 
-	return userEdits.map((userEdit) => {
-		// switch (userEdits.type) {
-		// 	case 'action':
-		return {
-			type: 'action',
-			id: userEdit.id,
-			label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
-		} satisfies Complete<CoreUserEditingDefinitionAction>
-		// 	default:
-		// 		assertNever(userEdits)
-		// 		return undefined
-		// }
-	})
+	return _.compact(
+		userEdits.map((userEdit) => {
+			switch (userEdit.type) {
+				case 'action':
+					return {
+						type: 'action',
+						id: userEdit.id,
+						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
+					} satisfies Complete<CoreUserEditingDefinitionAction>
+				case 'form':
+					return {
+						type: 'form',
+						id: userEdit.id,
+						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
+						schema: clone(userEdit.schema),
+						currentValues: clone(userEdit.currentValues),
+					} satisfies Complete<CoreUserEditingDefinitionForm>
+				default:
+					assertNever(userEdit)
+					return undefined
+			}
+		})
+	)
 }

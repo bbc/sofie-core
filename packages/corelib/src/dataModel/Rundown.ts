@@ -1,4 +1,4 @@
-import { RundownPlaylistTiming, Time } from '@sofie-automation/blueprints-integration'
+import { JSONBlob, JSONSchema, RundownPlaylistTiming, Time } from '@sofie-automation/blueprints-integration'
 import {
 	RundownId,
 	OrganizationId,
@@ -97,10 +97,18 @@ export interface Rundown {
 /** Note: Use Rundown instead */
 export type DBRundown = Rundown
 
-export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction // TODO: form based and more types
+export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction | CoreUserEditingDefinitionForm
 
 export interface CoreUserEditingDefinitionAction {
 	type: 'action'
 	id: string
 	label: ITranslatableMessage
+}
+
+export interface CoreUserEditingDefinitionForm {
+	type: 'form'
+	id: string
+	label: ITranslatableMessage
+	schema: JSONBlob<JSONSchema>
+	currentValues: Record<string, any>
 }
