@@ -37,6 +37,8 @@ export const SegmentContextMenu = withTranslation()(
 		render(): JSX.Element | null {
 			const { t } = this.props
 
+			if (!this.props.studioMode || !this.props.playlist || !this.props.playlist.activationId) return null
+
 			const part = this.getPartFromContext()
 			const segment = this.getSegmentFromContext()
 			const timecode = this.getTimePosition()
@@ -48,10 +50,9 @@ export const SegmentContextMenu = withTranslation()(
 
 			const canSetAsNext = !!this.props.playlist?.activationId
 
-			return this.props.studioMode &&
-				this.props.playlist &&
-				this.props.playlist.activationId &&
-				segment?.orphaned !== SegmentOrphanedReason.SCRATCHPAD ? (
+			if (segment?.orphaned === SegmentOrphanedReason.SCRATCHPAD) return null
+
+			return (
 				<Escape to="document">
 					<ContextMenu id="segment-timeline-context-menu">
 						{part && timecode === null && (
@@ -74,17 +75,11 @@ export const SegmentContextMenu = withTranslation()(
 										<span>{t('Clear queued segment')}</span>
 									</MenuItem>
 								)}
+								{segment &&
+									this.renderUserEditOperations(segment.userEdits, (e, userEdit) =>
+										this.onDoSegmentUserOperation(userEdit, segment, e)
+									)}
 								<hr />
-								{segment?.userEdits?.map((userEdit, i) => {
-									return (
-										<MenuItem
-											key={`${userEdit.id}_${i}`}
-											onClick={(e) => this.onDoSegmentUserOperation(userEdit, segment, e)}
-										>
-											<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
-										</MenuItem>
-									)
-								})}
 							</>
 						)}
 						{part && !part.instance.part.invalid && timecode !== null && (
@@ -115,22 +110,34 @@ export const SegmentContextMenu = withTranslation()(
 										</MenuItem>
 									</>
 								) : null}
-								<hr />
-								{part.instance.part.userEdits?.map((userEdit, i) => {
-									return (
-										<MenuItem
-											key={`${userEdit.id}_${i}`}
-											onClick={(e) => this.onDoPartUserOperation(part, userEdit, segment, e)}
-										>
-											<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
-										</MenuItem>
-									)
-								})}
+								{this.renderUserEditOperations(part.instance.part.userEdits, (e, userEdit) =>
+									this.onDoPartUserOperation(part, userEdit, segment, e)
+								)}
 							</>
 						)}
 					</ContextMenu>
 				</Escape>
-			) : null
+			)
+		}
+
+		private renderUserEditOperations(
+			userEdits: CoreUserEditingDefinition[] | undefined,
+			execute: (e: any, userEdit: CoreUserEditingDefinition) => void
+		) {
+			if (!userEdits || userEdits.length === 0) return null
+
+			return (
+				<>
+					<hr />
+					{userEdits.map((userEdit, i) => {
+						return (
+							<MenuItem key={`${userEdit.id}_${i}`} onClick={(e) => execute(e, userEdit)}>
+								<span>{translateMessage(userEdit.label, i18nTranslator)}</span>
+							</MenuItem>
+						)
+					})}
+				</>
+			)
 		}
 
 		getSegmentFromContext = (): SegmentUi | null => {
