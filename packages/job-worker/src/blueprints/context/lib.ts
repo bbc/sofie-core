@@ -17,7 +17,7 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { assertNever, clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
-import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
+import { unprotectString, unprotectStringArray } from '@sofie-automation/corelib/dist/protectedString'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	ExpectedPackage,
@@ -547,6 +547,7 @@ export function translateUserEditsFromBlueprint(
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
+						translationNamespaces: unprotectStringArray(blueprintIds),
 					} satisfies Complete<CoreUserEditingDefinitionForm>
 				default:
 					assertNever(userEdit)

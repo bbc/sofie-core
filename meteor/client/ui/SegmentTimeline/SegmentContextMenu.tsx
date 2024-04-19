@@ -19,8 +19,10 @@ import {
 	CoreUserEditingDefinitionForm,
 } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { UserAction, doUserAction } from '../../../lib/clientUserAction'
-import { UserOperationTarget } from '@sofie-automation/blueprints-integration'
-import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import { JSONBlobParse, UserOperationTarget } from '@sofie-automation/blueprints-integration'
+import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
+import { doModalDialog } from '../../lib/ModalDialog'
+import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 
 interface IProps {
 	onSetNext: (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => void
@@ -81,7 +83,7 @@ export const SegmentContextMenu = withTranslation()(
 									</MenuItem>
 								)}
 								{segment &&
-									this.renderUserEditOperations(segment.rundownId, segment.userEdits, {
+									this.renderUserEditOperations(segment.rundownId, segment.name, segment.userEdits, {
 										segmentExternalId: segment.externalId,
 										partExternalId: undefined,
 										pieceExternalId: undefined,
@@ -117,11 +119,16 @@ export const SegmentContextMenu = withTranslation()(
 										</MenuItem>
 									</>
 								) : null}
-								{this.renderUserEditOperations(part.instance.rundownId, part.instance.part.userEdits, {
-									segmentExternalId: segment?.externalId,
-									partExternalId: part.instance.part.externalId,
-									pieceExternalId: undefined,
-								})}
+								{this.renderUserEditOperations(
+									part.instance.rundownId,
+									part.instance.part.title,
+									part.instance.part.userEdits,
+									{
+										segmentExternalId: segment?.externalId,
+										partExternalId: part.instance.part.externalId,
+										pieceExternalId: undefined,
+									}
+								)}
 							</>
 						)}
 					</ContextMenu>
@@ -131,6 +138,7 @@ export const SegmentContextMenu = withTranslation()(
 
 		private renderUserEditOperations(
 			rundownId: RundownId,
+			targetName: string,
 			userEdits: CoreUserEditingDefinition[] | undefined,
 			operationTarget: UserOperationTarget
 		) {
@@ -144,7 +152,7 @@ export const SegmentContextMenu = withTranslation()(
 							case 'action':
 								return this.renderUserEditOperationAction(rundownId, userEdit, i, operationTarget)
 							case 'form':
-								return this.renderUserEditOperationForm(rundownId, userEdit, i, operationTarget)
+								return this.renderUserEditOperationForm(rundownId, targetName, userEdit, i, operationTarget)
 							default:
 								assertNever(userEdit)
 								return null
@@ -179,16 +187,43 @@ export const SegmentContextMenu = withTranslation()(
 		}
 
 		private renderUserEditOperationForm(
-			_rundownId: RundownId,
+			rundownId: RundownId,
+			targetName: string,
 			userEdit: CoreUserEditingDefinitionForm,
 			i: number,
-			_operationTarget: UserOperationTarget
+			operationTarget: UserOperationTarget
 		) {
+			const { t } = this.props
+
 			return (
 				<MenuItem
 					key={`${userEdit.id}_${i}`}
-					onClick={(_e) => {
+					onClick={(e) => {
+						const schema = JSONBlobParse(userEdit.schema)
+						const values = clone(userEdit.currentValues)
+
 						// TODO:
+						doModalDialog({
+							title: t(`Edit {{targetName}}`, { targetName }),
+							message: (
+								<SchemaFormInPlace
+									schema={schema}
+									object={values}
+									translationNamespaces={userEdit.translationNamespaces}
+								/>
+							),
+							// acceptText: 'OK',
+							yes: t('Save Changes'),
+							no: t('Cancel'),
+							onAccept: () => {
+								doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+									MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
+										...values,
+										id: userEdit.id,
+									})
+								)
+							},
+						})
 					}}
 				>
 					<span>{translateMessage(userEdit.label, i18nTranslator)}</span>

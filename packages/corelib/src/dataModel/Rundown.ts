@@ -111,4 +111,5 @@ export interface CoreUserEditingDefinitionForm {
 	label: ITranslatableMessage
 	schema: JSONBlob<JSONSchema>
 	currentValues: Record<string, any>
+	translationNamespaces: string[]
 }
