@@ -17,7 +17,7 @@ import { faExclamationTriangle, faPlus } from '@fortawesome/free-solid-svg-icons
 import { ActionSelector } from './actionSelector/ActionSelector'
 import Tooltip from 'rc-tooltip'
 import { useTranslation } from 'react-i18next'
-import { OverrideOpHelper } from '../../../util/OverrideOpHelper'
+import { OverrideOpHelper } from '../../../../util/OverrideOpHelper'
 
 interface IProps {
 	action: SomeAction

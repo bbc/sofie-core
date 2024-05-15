@@ -1,4 +1,4 @@
-import { clone, literal, objectPathSet } from '@sofie-automation/corelib/dist/lib'
+import { clone, literal, objectPathSet } from './lib'
 import {
 	SomeObjectOverrideOp,
 	ObjectWithOverrides,
@@ -7,8 +7,7 @@ import {
 	applyAndValidateOverrides,
 	filterOverrideOpsForPrefix,
 	findParentOpToUpdate,
-} from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
-import { useRef, useMemo, useEffect, MutableRefObject } from 'react'
+} from './settings/objectWithOverrides'
 import { ReadonlyDeep } from 'type-fest'
 
 export interface WrappedOverridableItemDeleted<T extends object> {
@@ -38,28 +37,12 @@ export type WrappedOverridableItem<T extends object> =
  */
 export function getAllCurrentAndDeletedItemsFromOverrides<T extends object>(
 	rawObject: ReadonlyDeep<ObjectWithOverrides<Record<string, T | undefined>>>,
-	comparitor: ((a: [id: string, obj: T | ReadonlyDeep<T>], b: [id: string, obj: T | ReadonlyDeep<T>]) => number) | null
+	comparitor:
+		| ((a: [id: string, obj: T | ReadonlyDeep<T>], b: [id: string, obj: T | ReadonlyDeep<T>]) => number)
+		| null
 ): WrappedOverridableItem<T>[] {
-	const resolvedObject = applyAndValidateOverrides(rawObject).obj
-
-	// Convert the items into an array
-	const validItems: Array<[id: string, obj: T]> = []
-	for (const [id, obj] of Object.entries<T | undefined>(resolvedObject)) {
-		if (obj) validItems.push([id, obj])
-	}
-
-	if (comparitor) validItems.sort((a, b) => comparitor(a, b))
-
 	// Sort and wrap in the return type
-	const sortedItems = validItems.map(([id, obj]) =>
-		literal<WrappedOverridableItemNormal<T>>({
-			type: 'normal',
-			id: id,
-			computed: obj,
-			defaults: rawObject.defaults[id],
-			overrideOps: filterOverrideOpsForPrefix(rawObject.overrides, id).opsForPrefix,
-		})
-	)
+	const sortedItems = getAllCurrentItemsFromOverrides(rawObject, comparitor)
 
 	const removedOutputLayers: WrappedOverridableItemDeleted<T>[] = []
 
@@ -82,6 +65,42 @@ export function getAllCurrentAndDeletedItemsFromOverrides<T extends object>(
 	if (comparitor) removedOutputLayers.sort((a, b) => comparitor([a.id, a.defaults], [b.id, b.defaults]))
 
 	return [...sortedItems, ...removedOutputLayers]
+}
+
+/**
+ * Compile a sorted array of all the items currently active in the ObjectWithOverrides
+ * @param rawObject The ObjectWithOverrides to look at
+ * @param comparitor Comparitor for sorting the items
+ * @returns Sorted items
+ */
+export function getAllCurrentItemsFromOverrides<T extends object>(
+	rawObject: ReadonlyDeep<ObjectWithOverrides<Record<string, T | undefined>>>,
+	comparitor:
+		| ((a: [id: string, obj: T | ReadonlyDeep<T>], b: [id: string, obj: T | ReadonlyDeep<T>]) => number)
+		| null
+): WrappedOverridableItemNormal<T>[] {
+	const resolvedObject = applyAndValidateOverrides(rawObject).obj
+
+	// Convert the items into an array
+	const validItems: Array<[id: string, obj: T]> = []
+	for (const [id, obj] of Object.entries<T | undefined>(resolvedObject)) {
+		if (obj) validItems.push([id, obj])
+	}
+
+	if (comparitor) validItems.sort((a, b) => comparitor(a, b))
+
+	// Sort and wrap in the return type
+	const sortedItems = validItems.map(([id, obj]) =>
+		literal<WrappedOverridableItemNormal<T>>({
+			type: 'normal',
+			id: id,
+			computed: obj,
+			defaults: rawObject.defaults[id],
+			overrideOps: filterOverrideOpsForPrefix(rawObject.overrides, id).opsForPrefix,
+		})
+	)
+
+	return sortedItems
 }
 
 type SaveOverridesFunction = (newOps: SomeObjectOverrideOp[]) => void
@@ -127,39 +146,36 @@ export interface OverrideOpHelper extends OverrideOpHelperForItemContents {
 	 */
 	replaceItem(itemId: string, value: any): void
 }
-class OverrideOpHelperImpl implements OverrideOpHelper {
+export class OverrideOpHelperImpl implements OverrideOpHelper {
 	readonly #saveOverrides: SaveOverridesFunction
-	readonly #objectWithOverridesRef: MutableRefObject<ObjectWithOverrides<any>>
+	readonly #objectWithOverrides: { current: ObjectWithOverrides<any> }
 
-	constructor(
-		saveOverrides: SaveOverridesFunction,
-		objectWithOverridesRef: MutableRefObject<ObjectWithOverrides<any>>
-	) {
+	constructor(saveOverrides: SaveOverridesFunction, objectWithOverridesRef: { current: ObjectWithOverrides<any> }) {
 		this.#saveOverrides = saveOverrides
-		this.#objectWithOverridesRef = objectWithOverridesRef
+		this.#objectWithOverrides = objectWithOverridesRef
 	}
 
 	clearItemOverrides = (itemId: string, subPath: string): void => {
-		if (!this.#objectWithOverridesRef.current) return
+		if (!this.#objectWithOverrides.current) return
 
 		const opPath = `${itemId}.${subPath}`
 
-		const newOps = this.#objectWithOverridesRef.current.overrides.filter((op) => op.path !== opPath)
+		const newOps = this.#objectWithOverrides.current.overrides.filter((op) => op.path !== opPath)
 
 		this.#saveOverrides(newOps)
 	}
 
 	resetItem = (itemId: string): void => {
-		if (!this.#objectWithOverridesRef.current) return
+		if (!this.#objectWithOverrides.current) return
 
-		const newOps = filterOverrideOpsForPrefix(this.#objectWithOverridesRef.current.overrides, itemId).otherOps
+		const newOps = filterOverrideOpsForPrefix(this.#objectWithOverrides.current.overrides, itemId).otherOps
 
 		this.#saveOverrides(newOps)
 	}
 
 	deleteItem = (itemId: string): void => {
-		const newOps = filterOverrideOpsForPrefix(this.#objectWithOverridesRef.current.overrides, itemId).otherOps
-		if (this.#objectWithOverridesRef.current.defaults[itemId]) {
+		const newOps = filterOverrideOpsForPrefix(this.#objectWithOverrides.current.overrides, itemId).otherOps
+		if (this.#objectWithOverrides.current.defaults[itemId]) {
 			// If it was from the defaults, we need to mark it deleted
 			newOps.push(
 				literal<ObjectOverrideDeleteOp>({
@@ -173,22 +189,22 @@ class OverrideOpHelperImpl implements OverrideOpHelper {
 	}
 
 	changeItemId = (oldItemId: string, newItemId: string): void => {
-		if (!this.#objectWithOverridesRef.current) return
+		if (!this.#objectWithOverrides.current) return
 
 		const { otherOps: newOps, opsForPrefix: opsForId } = filterOverrideOpsForPrefix(
-			this.#objectWithOverridesRef.current.overrides,
+			this.#objectWithOverrides.current.overrides,
 			oldItemId
 		)
 
 		if (
 			!newItemId ||
 			newOps.find((op) => op.path === newItemId) ||
-			this.#objectWithOverridesRef.current.defaults[newItemId]
+			this.#objectWithOverrides.current.defaults[newItemId]
 		) {
 			throw new Error('Id is invalid or already in use')
 		}
 
-		if (this.#objectWithOverridesRef.current.defaults[oldItemId]) {
+		if (this.#objectWithOverrides.current.defaults[oldItemId]) {
 			// Future: should we be able to handle this?
 			throw new Error("Can't change id of object with defaults")
 		} else {
@@ -212,14 +228,14 @@ class OverrideOpHelperImpl implements OverrideOpHelper {
 	}
 
 	setItemValue = (itemId: string, subPath: string, value: unknown): void => {
-		if (!this.#objectWithOverridesRef.current) return
+		if (!this.#objectWithOverrides.current) return
 
 		if (subPath === '_id') {
 			throw new Error('Item id cannot be changed through this helper')
 		} else {
 			// Set a property
 			const { otherOps: newOps, opsForPrefix: opsForId } = filterOverrideOpsForPrefix(
-				this.#objectWithOverridesRef.current.overrides,
+				this.#objectWithOverrides.current.overrides,
 				itemId
 			)
 
@@ -266,10 +282,10 @@ class OverrideOpHelperImpl implements OverrideOpHelper {
 	}
 
 	replaceItem = (itemId: string, value: unknown): void => {
-		if (!this.#objectWithOverridesRef.current) return
+		if (!this.#objectWithOverrides.current) return
 
 		// Set a property
-		const { otherOps: newOps } = filterOverrideOpsForPrefix(this.#objectWithOverridesRef.current.overrides, itemId)
+		const { otherOps: newOps } = filterOverrideOpsForPrefix(this.#objectWithOverrides.current.overrides, itemId)
 
 		// TODO - is this too naive?
 
@@ -288,21 +304,9 @@ class OverrideOpHelperImpl implements OverrideOpHelper {
 /**
  * A helper to work with modifying an ObjectWithOverrides<T>
  */
-export function useOverrideOpHelper<T extends object>(
+export function useOverrideOpHelperBackend<T extends object>(
 	saveOverrides: (newOps: SomeObjectOverrideOp[]) => void,
 	objectWithOverrides: ObjectWithOverrides<T>
 ): OverrideOpHelper {
-	const objectWithOverridesRef = useRef(objectWithOverrides)
-
-	const helper = useMemo(
-		() => new OverrideOpHelperImpl(saveOverrides, objectWithOverridesRef),
-		[saveOverrides, objectWithOverridesRef]
-	)
-
-	// Use a ref to minimise reactivity when it changes
-	useEffect(() => {
-		objectWithOverridesRef.current = objectWithOverrides
-	}, [objectWithOverrides])
-
-	return helper
+	return new OverrideOpHelperImpl(saveOverrides, { current: objectWithOverrides })
 }

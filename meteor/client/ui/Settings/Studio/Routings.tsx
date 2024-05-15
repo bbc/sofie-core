@@ -1,7 +1,5 @@
 import ClassNames from 'classnames'
 import * as React from 'react'
-import { Meteor } from 'meteor/meteor'
-import * as _ from 'underscore'
 import {
 	DBStudio,
 	StudioRouteSet,
@@ -12,23 +10,46 @@ import {
 	MappingsExt,
 	MappingExt,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { EditAttribute, EditAttributeBase } from '../../../lib/EditAttribute'
 import { doModalDialog } from '../../../lib/ModalDialog'
-import { Translated } from '../../../lib/ReactMeteorData/react-meteor-data'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrash, faPencilAlt, faCheck, faPlus } from '@fortawesome/free-solid-svg-icons'
-import { withTranslation } from 'react-i18next'
+import { faTrash, faPencilAlt, faCheck, faPlus, faSync } from '@fortawesome/free-solid-svg-icons'
+import { useTranslation } from 'react-i18next'
 import { TSR } from '@sofie-automation/blueprints-integration'
-import { MeteorCall } from '../../../../lib/api/methods'
-import { doUserAction, UserAction } from '../../../../lib/clientUserAction'
 import { ReadonlyDeep } from 'type-fest'
 import { MappingsSettingsManifest, MappingsSettingsManifests } from './Mappings'
-import { SchemaFormForCollection } from '../../../lib/forms/SchemaFormForCollection'
-import { literal, objectPathGet } from '@sofie-automation/corelib/dist/lib'
-import { DropdownInputOption } from '../../../lib/Components/DropdownInput'
+import { literal } from '@sofie-automation/corelib/dist/lib'
+import {
+	DropdownInputControl,
+	DropdownInputOption,
+	getDropdownInputOptions,
+} from '../../../lib/Components/DropdownInput'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import { Studios } from '../../../collections'
-import { LabelActual } from '../../../lib/Components/LabelAndOverrides'
+import {
+	LabelActual,
+	LabelAndOverrides,
+	LabelAndOverridesForCheckbox,
+	LabelAndOverridesForDropdown,
+} from '../../../lib/Components/LabelAndOverrides'
+import {
+	OverrideOpHelper,
+	WrappedOverridableItem,
+	WrappedOverridableItemDeleted,
+	WrappedOverridableItemNormal,
+	getAllCurrentAndDeletedItemsFromOverrides,
+	useOverrideOpHelper,
+} from '../../util/OverrideOpHelper'
+import {
+	ObjectOverrideSetOp,
+	SomeObjectOverrideOp,
+	applyAndValidateOverrides,
+} from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import { useToggleExpandHelper } from '../../util/useToggleExpandHelper'
+import { TextInputControl } from '../../../lib/Components/TextInput'
+import { CheckboxControl } from '../../../lib/Components/Checkbox'
+import { OverrideOpHelperArrayTable } from '../../../lib/forms/SchemaFormTable/ArrayTableOpHelper'
+import { hasOpWithPath } from '../../../lib/Components/util'
+import { SchemaFormWithOverrides } from '../../../lib/forms/SchemaFormWithOverrides'
 
 interface IStudioRoutingsProps {
 	translationNamespaces: string[]
@@ -36,733 +57,976 @@ interface IStudioRoutingsProps {
 	studioMappings: ReadonlyDeep<MappingsExt>
 	manifest: MappingsSettingsManifests | undefined
 }
-interface IStudioRoutingsState {
-	editedItems: Array<string>
+
+export function StudioRoutings({
+	translationNamespaces,
+	studio,
+	studioMappings,
+	manifest,
+}: Readonly<IStudioRoutingsProps>): React.JSX.Element {
+	const { t } = useTranslation()
+	const { toggleExpanded, isExpanded } = useToggleExpandHelper()
+
+	const routeSetsFromOverrides = React.useMemo(
+		() => getAllCurrentAndDeletedItemsFromOverrides(studio.routeSetsWithOverrides, null),
+		[studio.routeSetsWithOverrides]
+	)
+
+	const exclusivityGroupsFromOverrides = React.useMemo(
+		() =>
+			getAllCurrentAndDeletedItemsFromOverrides(studio.routeSetExclusivityGroupsWithOverrides, (a, b) =>
+				a[0].localeCompare(b[0])
+			),
+		[studio.routeSetExclusivityGroupsWithOverrides]
+	)
+
+	const saveOverrides = React.useCallback(
+		(newOps: SomeObjectOverrideOp[]) => {
+			Studios.update(studio._id, {
+				$set: {
+					'routeSetsWithOverrides.overrides': newOps,
+				},
+			})
+		},
+		[studio._id]
+	)
+
+	const overrideHelper = useOverrideOpHelper(saveOverrides, studio.routeSetsWithOverrides)
+
+	const addNewRouteSet = React.useCallback(() => {
+		const resolvedRouteSets = applyAndValidateOverrides(studio.routeSetsWithOverrides).obj
+
+		// find free key name
+		const newRouteKeyName = 'newRouteSet'
+		let iter = 0
+		while (resolvedRouteSets[newRouteKeyName + iter.toString()]) {
+			iter++
+		}
+
+		const newId = newRouteKeyName + iter.toString()
+		const newRoute = literal<StudioRouteSet>({
+			name: 'New Route Set ' + iter.toString(),
+			active: false,
+			routes: [],
+			behavior: StudioRouteBehavior.TOGGLE,
+			exclusivityGroup: undefined,
+		})
+
+		const addOp = literal<ObjectOverrideSetOp>({
+			op: 'set',
+			path: newId,
+			value: newRoute,
+		})
+
+		Studios.update(studio._id, {
+			$push: {
+				'routeSetsWithOverrides.overrides': addOp,
+			},
+		})
+
+		setTimeout(() => {
+			toggleExpanded(newId, true)
+		}, 1)
+	}, [studio._id, studio.routeSetsWithOverrides])
+
+	const addNewExclusivityGroup = React.useCallback(() => {
+		const newGroupKeyName = 'exclusivityGroup'
+		const resolvedGroups = applyAndValidateOverrides(studio.routeSetExclusivityGroupsWithOverrides).obj
+
+		let iter = 0
+		while (resolvedGroups[newGroupKeyName + iter.toString()]) {
+			iter++
+		}
+
+		const newId = newGroupKeyName + iter.toString()
+		const newGroup: StudioRouteSetExclusivityGroup = {
+			name: 'New Exclusivity Group' + iter.toString(),
+		}
+		const addOp = literal<ObjectOverrideSetOp>({
+			op: 'set',
+			path: newId,
+			value: newGroup,
+		})
+
+		Studios.update(studio._id, {
+			$push: {
+				'routeSetExclusivityGroupsWithOverrides.overrides': addOp,
+			},
+		})
+
+		setTimeout(() => {
+			toggleExpanded(newId, true)
+		}, 1)
+	}, [studio._id, studio.routeSetExclusivityGroupsWithOverrides])
+
+	if (Object.keys(studio.routeSetsWithOverrides).length === 0) {
+		return (
+			<tr>
+				<td className="mhn dimmed">{t('There are no Route Sets set up.')}</td>
+			</tr>
+		)
+	}
+
+	return (
+		<div>
+			<h2 className="mhn mbs">{t('Route Sets')}</h2>
+			{!manifest && <span>{t('Add a playout device to the studio in order to configure the route sets')}</span>}
+			{manifest && (
+				<React.Fragment>
+					<p className="mhn mvs text-s dimmed field-hint">
+						{t(
+							'Controls for exposed Route Sets will be displayed to the producer within the Rundown View in the Switchboard.'
+						)}
+					</p>
+					<h3 className="mhn">{t('Exclusivity Groups')}</h3>
+					<table className="expando settings-studio-mappings-table">
+						<tbody>
+							<RenderExclusivityGroups
+								studio={studio}
+								routeSetsFromOverrides={routeSetsFromOverrides}
+								isExpanded={isExpanded}
+								toggleExpanded={toggleExpanded}
+								exclusivityGroupsFromOverrides={exclusivityGroupsFromOverrides}
+							/>
+						</tbody>
+					</table>
+					<div className="mod mhs">
+						<button className="btn btn-primary" onClick={addNewExclusivityGroup}>
+							<FontAwesomeIcon icon={faPlus} />
+						</button>
+					</div>
+					<h3 className="mhn">{t('Route Sets')}</h3>
+					<table className="expando settings-studio-mappings-table">
+						<tbody>
+							{routeSetsFromOverrides.map((routeSet: WrappedOverridableItem<StudioRouteSet>) => {
+								return (
+									<React.Fragment key={routeSet.id}>
+										{routeSet.type === 'normal' ? (
+											<RenderRouteSet
+												routeSet={routeSet}
+												manifest={manifest}
+												translationNamespaces={translationNamespaces}
+												studioMappings={studioMappings}
+												toggleExpanded={toggleExpanded}
+												isExpanded={isExpanded(routeSet.id)}
+												overrideHelper={overrideHelper}
+												exclusivityGroupsFromOverrides={exclusivityGroupsFromOverrides}
+											/>
+										) : (
+											<RenderRouteSetDeletedEntry routeSet={routeSet} overrideHelper={overrideHelper} />
+										)}
+									</React.Fragment>
+								)
+							})}
+						</tbody>
+					</table>
+					<div className="mod mhs">
+						<button className="btn btn-primary" onClick={addNewRouteSet}>
+							<FontAwesomeIcon icon={faPlus} />
+						</button>
+					</div>
+				</React.Fragment>
+			)}
+		</div>
+	)
 }
 
-export const StudioRoutings = withTranslation()(
-	class StudioRoutings extends React.Component<Translated<IStudioRoutingsProps>, IStudioRoutingsState> {
-		constructor(props: Translated<IStudioRoutingsProps>) {
-			super(props)
+interface IRenderRouteSetProps {
+	routeSet: WrappedOverridableItemNormal<StudioRouteSet>
+	manifest: MappingsSettingsManifests
+	translationNamespaces: string[]
+	studioMappings: ReadonlyDeep<MappingsExt>
+	toggleExpanded: (layerId: string, force?: boolean) => void
+	isExpanded: boolean
+	overrideHelper: OverrideOpHelper
+	exclusivityGroupsFromOverrides: WrappedOverridableItem<StudioRouteSetExclusivityGroup>[]
+}
 
-			this.state = {
-				editedItems: [],
-			}
-		}
-		isItemEdited = (routeSetId: string) => {
-			return this.state.editedItems.indexOf(routeSetId) >= 0
-		}
-		finishEditItem = (routeSetId: string) => {
-			const index = this.state.editedItems.indexOf(routeSetId)
-			if (index >= 0) {
-				this.state.editedItems.splice(index, 1)
-				this.setState({
-					editedItems: this.state.editedItems,
-				})
-			}
-		}
-		editItem = (routeSetId: string) => {
-			if (this.state.editedItems.indexOf(routeSetId) < 0) {
-				this.state.editedItems.push(routeSetId)
-				this.setState({
-					editedItems: this.state.editedItems,
-				})
-			} else {
-				this.finishEditItem(routeSetId)
-			}
-		}
-		confirmRemoveEGroup = (eGroupId: string, exclusivityGroup: StudioRouteSetExclusivityGroup) => {
-			const { t } = this.props
-			doModalDialog({
-				title: t('Remove this Exclusivity Group?'),
-				yes: t('Remove'),
-				no: t('Cancel'),
-				onAccept: () => {
-					this.removeExclusivityGroup(eGroupId)
-				},
-				message: (
-					<React.Fragment>
-						<p>
-							{t(
-								'Are you sure you want to remove exclusivity group "{{eGroupName}}"?\nRoute Sets assigned to this group will be reset to no group.',
-								{
-									eGroupName: exclusivityGroup.name,
-								}
+function RenderRouteSet({
+	routeSet,
+	manifest,
+	translationNamespaces,
+	toggleExpanded,
+	isExpanded,
+	studioMappings,
+	overrideHelper,
+	exclusivityGroupsFromOverrides,
+}: Readonly<IRenderRouteSetProps>): React.JSX.Element {
+	const { t } = useTranslation()
+	const toggleEditRouteSet = React.useCallback(() => toggleExpanded(routeSet.id), [toggleExpanded, routeSet.id])
+
+	const confirmRemove = (routeSetId: string) => {
+		doModalDialog({
+			title: t('Remove this Route Set?'),
+			yes: t('Remove'),
+			no: t('Cancel'),
+			onAccept: () => {
+				overrideHelper.deleteItem(routeSetId)
+			},
+			message: (
+				<React.Fragment>
+					<p>{t('Are you sure you want to remove the Route Set "{{routeId}}"?', { routeId: routeSetId })}</p>
+					<p>{t('Please note: This action is irreversible!')}</p>
+				</React.Fragment>
+			),
+		})
+	}
+
+	const addNewRouteInSet = (routeId: string) => {
+		const newRoutes = routeSet.computed?.routes || []
+
+		newRoutes.push({
+			mappedLayer: '',
+			outputMappedLayer: '',
+			remapping: {},
+			routeType: StudioRouteType.REROUTE,
+		})
+
+		overrideHelper.setItemValue(routeId, 'routes', newRoutes)
+	}
+
+	const updateRouteSetId = React.useCallback(
+		(newRouteSetId: string) => {
+			overrideHelper.changeItemId(routeSet.id, newRouteSetId)
+			toggleExpanded(newRouteSetId, true)
+		},
+		[overrideHelper, toggleExpanded, routeSet.id]
+	)
+
+	const exclusivityGroupOptions = React.useMemo(() => {
+		return getDropdownInputOptions([
+			{
+				name: 'None',
+				value: undefined,
+			},
+			...exclusivityGroupsFromOverrides
+				.filter((group) => group.type === 'normal')
+				.map((group) => group.computed?.name || group.id),
+		])
+	}, [exclusivityGroupsFromOverrides])
+
+	const DEFAULT_ACTIVE_OPTIONS = {
+		[t('Active')]: true,
+		[t('Not Active')]: false,
+		[t('Not defined')]: undefined,
+	}
+
+	const resyncRoutesTable = React.useCallback(
+		() => overrideHelper.clearItemOverrides(routeSet.id, 'routes'),
+		[overrideHelper, routeSet.id]
+	)
+	const routesIsOverridden = hasOpWithPath(routeSet.overrideOps, routeSet.id, 'routes')
+
+	return (
+		<React.Fragment>
+			<tr
+				className={ClassNames({
+					hl: isExpanded,
+				})}
+			>
+				<th className="settings-studio-device__name c2">{routeSet.id}</th>
+				<td className="settings-studio-device__id c3">{routeSet.computed?.name}</td>
+				<td className="settings-studio-device__id c4">{routeSet.computed?.exclusivityGroup}</td>
+				<td className="settings-studio-device__id c2">{routeSet.computed?.routes?.length}</td>
+				<td className="settings-studio-device__id c2">
+					{routeSet.computed?.active ? <span className="pill">{t('Active')}</span> : null}
+				</td>
+
+				<td className="settings-studio-device__actions table-item-actions c3">
+					<button className="action-btn" onClick={toggleEditRouteSet}>
+						<FontAwesomeIcon icon={faPencilAlt} />
+					</button>
+					<button className="action-btn" onClick={() => confirmRemove(routeSet.id)}>
+						<FontAwesomeIcon icon={faTrash} />
+					</button>
+				</td>
+			</tr>
+			{isExpanded && (
+				<tr className="expando-details hl">
+					<td colSpan={6}>
+						<div className="properties-grid">
+							<label className="field">
+								<LabelActual label={t('Route Set ID')} />
+								<TextInputControl
+									modifiedClassName="bghl"
+									classNames="input text-input input-l"
+									value={routeSet.id}
+									handleUpdate={updateRouteSetId}
+									disabled={!!routeSet.defaults}
+								/>
+							</label>
+							<LabelAndOverridesForDropdown
+								label={t('Default State')}
+								hint={t('he default state of this Route Set')}
+								item={routeSet}
+								itemKey={'defaultActive'}
+								opPrefix={routeSet.id}
+								overrideHelper={overrideHelper}
+								options={getDropdownInputOptions(DEFAULT_ACTIVE_OPTIONS)}
+							>
+								{(value, handleUpdate, options) => (
+									<DropdownInputControl
+										classNames="input text-input input-l"
+										options={options}
+										value={value}
+										handleUpdate={handleUpdate}
+									/>
+								)}
+							</LabelAndOverridesForDropdown>
+							<LabelAndOverridesForCheckbox
+								label={t('Active')}
+								item={routeSet}
+								itemKey={'active'}
+								opPrefix={routeSet.id}
+								overrideHelper={overrideHelper}
+							>
+								{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
+							</LabelAndOverridesForCheckbox>
+							<LabelAndOverrides
+								label={t('Route Set Name')}
+								item={routeSet}
+								itemKey={'name'}
+								opPrefix={routeSet.id}
+								overrideHelper={overrideHelper}
+							>
+								{(value, handleUpdate) => (
+									<TextInputControl
+										modifiedClassName="bghl"
+										classNames="input text-input input-l"
+										value={value}
+										handleUpdate={handleUpdate}
+									/>
+								)}
+							</LabelAndOverrides>
+
+							<LabelAndOverridesForDropdown
+								label={'Exclusivity group'}
+								hint={t('If set, only one Route Set will be active per exclusivity group')}
+								item={routeSet}
+								itemKey={'exclusivityGroup'}
+								opPrefix={routeSet.id}
+								overrideHelper={overrideHelper}
+								options={exclusivityGroupOptions}
+							>
+								{(value, handleUpdate, options) => (
+									<DropdownInputControl
+										classNames="input text-input input-l"
+										options={options}
+										value={value}
+										handleUpdate={handleUpdate}
+									/>
+								)}
+							</LabelAndOverridesForDropdown>
+
+							<LabelAndOverridesForDropdown
+								label={t('Behavior')}
+								hint={t('The way this Route Set should behave towards the user')}
+								item={routeSet}
+								itemKey={'behavior'}
+								opPrefix={routeSet.id}
+								overrideHelper={overrideHelper}
+								options={getDropdownInputOptions(StudioRouteBehavior)}
+							>
+								{(value, handleUpdate, options) => (
+									<DropdownInputControl
+										classNames="input text-input input-l"
+										options={options}
+										value={value}
+										handleUpdate={handleUpdate}
+									/>
+								)}
+							</LabelAndOverridesForDropdown>
+						</div>
+						<RenderRoutes
+							routeSet={routeSet}
+							manifest={manifest}
+							translationNamespaces={translationNamespaces}
+							overrideHelper={overrideHelper}
+							studioMappings={studioMappings}
+						/>
+						<div className="mod">
+							<button className="btn btn-primary right" onClick={() => toggleExpanded(routeSet.id)}>
+								<FontAwesomeIcon icon={faCheck} />
+							</button>
+							<button className="btn btn-secondary" onClick={() => addNewRouteInSet(routeSet.id)}>
+								<FontAwesomeIcon icon={faPlus} />
+							</button>
+							&nbsp;
+							{routeSet.defaults && (
+								<button
+									className="btn btn-primary"
+									onClick={resyncRoutesTable}
+									title="Reset to default"
+									disabled={!routesIsOverridden}
+								>
+									{t('Reset')}
+									&nbsp;
+									<FontAwesomeIcon icon={faSync} />
+								</button>
 							)}
-						</p>
-						<p>{t('Please note: This action is irreversible!')}</p>
-					</React.Fragment>
-				),
-			})
-		}
-		confirmRemoveRoute = (routeSetId: string, route: RouteMapping, index: number) => {
-			const { t } = this.props
+						</div>
+					</td>
+				</tr>
+			)}
+		</React.Fragment>
+	)
+}
+
+interface IRenderRouteSetDeletedProps {
+	routeSet: WrappedOverridableItemDeleted<StudioRouteSet>
+	overrideHelper: OverrideOpHelper
+}
+
+function RenderRouteSetDeletedEntry({ routeSet, overrideHelper }: Readonly<IRenderRouteSetDeletedProps>) {
+	const doUndeleteItem = React.useCallback(() => overrideHelper.resetItem(routeSet.id), [overrideHelper, routeSet.id])
+
+	return (
+		<tr>
+			<th className="settings-studio-device__name c3 notifications-s notifications-text">{routeSet.defaults.name}</th>
+			<td className="settings-studio-device__id c2 deleted">{routeSet.defaults.name}</td>
+			<td className="settings-studio-device__id c2 deleted">{routeSet.id}</td>
+			<td className="settings-studio-output-table__actions table-item-actions c3">
+				<button className="action-btn" onClick={doUndeleteItem} title="Restore to defaults">
+					<FontAwesomeIcon icon={faSync} />
+				</button>
+			</td>
+		</tr>
+	)
+}
+
+interface IRenderRoutesProps {
+	routeSet: WrappedOverridableItemNormal<StudioRouteSet>
+	manifest: MappingsSettingsManifests
+	translationNamespaces: string[]
+	overrideHelper: OverrideOpHelper
+	studioMappings: ReadonlyDeep<MappingsExt>
+}
+
+function RenderRoutes({
+	routeSet,
+	manifest,
+	translationNamespaces,
+	overrideHelper,
+	studioMappings,
+}: Readonly<IRenderRoutesProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const routesBuffer = routeSet.computed.routes
+
+	const tableOverrideHelper = React.useMemo(
+		() => new OverrideOpHelperArrayTable(overrideHelper, routeSet.id, routesBuffer, 'routes'),
+		[overrideHelper, routeSet.id, routesBuffer]
+	)
+
+	const confirmRemoveRoute = React.useCallback(
+		(route: WrappedOverridableItemNormal<RouteMapping>) => {
 			doModalDialog({
 				title: t('Remove this Route from this Route Set?'),
 				yes: t('Remove'),
 				no: t('Cancel'),
 				onAccept: () => {
-					this.removeRouteSetRoute(routeSetId, index)
+					tableOverrideHelper.deleteRow(route.id)
 				},
 				message: (
-					<React.Fragment>
+					<>
 						<p>
 							{t('Are you sure you want to remove the Route from "{{sourceLayerId}}" to "{{newLayerId}}"?', {
-								sourceLayerId: route.mappedLayer,
-								newLayerId: route.outputMappedLayer,
+								sourceLayerId: route.computed.mappedLayer,
+								newLayerId: route.computed.outputMappedLayer,
 							})}
 						</p>
 						<p>{t('Please note: This action is irreversible!')}</p>
-					</React.Fragment>
+					</>
 				),
 			})
-		}
-		confirmRemove = (routeSetId: string) => {
-			const { t } = this.props
-			doModalDialog({
-				title: t('Remove this Route Set?'),
-				yes: t('Remove'),
-				no: t('Cancel'),
-				onAccept: () => {
-					this.removeRouteSet(routeSetId)
-				},
-				message: (
-					<React.Fragment>
-						<p>{t('Are you sure you want to remove the Route Set "{{routeId}}"?', { routeId: routeSetId })}</p>
-						<p>{t('Please note: This action is irreversible!')}</p>
-					</React.Fragment>
-				),
+		},
+		[tableOverrideHelper]
+	)
+
+	return (
+		<>
+			<h4 className="mod mhs">{t('Routes')}</h4>
+			{routeSet.computed?.routes?.length === 0 ? (
+				<p className="text-s dimmed field-hint mhs">{t('There are no routes set up yet')}</p>
+			) : null}
+			{routesBuffer.map((route, index) => (
+				<RenderRoutesRow
+					key={index}
+					manifest={manifest}
+					translationNamespaces={translationNamespaces}
+					tableOverrideHelper={tableOverrideHelper}
+					studioMappings={studioMappings}
+					rawRoute={route}
+					routeIndex={index}
+					confirmRemoveRoute={confirmRemoveRoute}
+				/>
+			))}
+		</>
+	)
+}
+
+interface RenderRoutesRowProps {
+	manifest: MappingsSettingsManifests
+	translationNamespaces: string[]
+	tableOverrideHelper: OverrideOpHelperArrayTable
+	studioMappings: ReadonlyDeep<MappingsExt>
+	rawRoute: RouteMapping
+	routeIndex: number
+	confirmRemoveRoute: (route: WrappedOverridableItemNormal<RouteMapping>) => void
+}
+
+function RenderRoutesRow({
+	manifest,
+	translationNamespaces,
+	tableOverrideHelper,
+	studioMappings,
+	rawRoute,
+	routeIndex,
+	confirmRemoveRoute,
+}: Readonly<RenderRoutesRowProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const mappedLayer = rawRoute.mappedLayer ? studioMappings[rawRoute.mappedLayer] : undefined
+	const deviceTypeFromMappedLayer: TSR.DeviceType | undefined = mappedLayer?.device
+
+	const routeDeviceType: TSR.DeviceType | undefined =
+		rawRoute.routeType === StudioRouteType.REMAP
+			? rawRoute.deviceType
+			: rawRoute.mappedLayer
+			? deviceTypeFromMappedLayer
+			: rawRoute.deviceType
+
+	const routeMappingSchema = manifest[(routeDeviceType ?? rawRoute.remapping?.device) as TSR.DeviceType]
+
+	const mappingTypeOptions: DropdownInputOption<string | number>[] = React.useMemo(() => {
+		const rawMappingTypeOptions = Object.entries<JSONSchema>(routeMappingSchema?.mappingsSchema || {})
+		return rawMappingTypeOptions.map(([id, entry], i) =>
+			literal<DropdownInputOption<string | number>>({
+				value: id + '',
+				name: entry?.title ?? id + '',
+				i,
 			})
-		}
-		removeExclusivityGroup = (eGroupId: string) => {
-			const unsetObject: Record<string, 1> = {}
-			_.forEach(this.props.studio.routeSets, (routeSet, routeSetId) => {
-				if (routeSet.exclusivityGroup === eGroupId) {
-					unsetObject['routeSets.' + routeSetId + '.exclusivityGroup'] = 1
-				}
-			})
-			unsetObject['routeSetExclusivityGroups.' + eGroupId] = 1
-			Studios.update(this.props.studio._id, {
-				$unset: unsetObject,
-			})
-		}
-		removeRouteSetRoute = (routeId: string, index: number) => {
-			const unsetObject: Record<string, any> = {}
-			const newRoutes = this.props.studio.routeSets[routeId].routes.slice()
-			newRoutes.splice(index, 1)
-			unsetObject['routeSets.' + routeId + '.routes'] = newRoutes
-			Studios.update(this.props.studio._id, {
-				$set: unsetObject,
-			})
-		}
-		removeRouteSet = (routeId: string) => {
-			const unsetObject: Record<string, 1> = {}
-			unsetObject['routeSets.' + routeId] = 1
-			Studios.update(this.props.studio._id, {
-				$unset: unsetObject,
-			})
-		}
-		addNewRouteInSet = (routeId: string) => {
-			const newRouteKeyName = 'newRouteSet'
-			let iter = 0
-			while ((this.props.studio.routeSets || {})[newRouteKeyName + iter]) {
-				iter++
-			}
+		)
+	}, [routeMappingSchema?.mappingsSchema])
 
-			const newRoute: RouteMapping = {
-				mappedLayer: '',
-				outputMappedLayer: '',
-				remapping: {},
-				routeType: StudioRouteType.REROUTE,
-			}
-			const setObject: Record<string, any> = {}
-			setObject['routeSets.' + routeId + '.routes'] = newRoute
+	const route = React.useMemo(
+		() =>
+			literal<WrappedOverridableItemNormal<RouteMapping>>({
+				type: 'normal',
+				id: routeIndex + '',
+				computed: rawRoute,
+				defaults: undefined,
+				overrideOps: [],
+			}),
+		[rawRoute, routeIndex]
+	)
 
-			Studios.update(this.props.studio._id, {
-				$push: setObject,
-			})
-		}
-		addNewRouteSet = () => {
-			// find free key name
-			const newRouteKeyName = 'newRouteSet'
-			let iter = 0
-			while ((this.props.studio.routeSets || {})[newRouteKeyName + iter]) {
-				iter++
-			}
+	const confirmRemoveRouteLocal = React.useCallback(() => confirmRemoveRoute(route), [confirmRemoveRoute, route])
 
-			const newRoute: StudioRouteSet = {
-				name: 'New Route Set',
-				active: false,
-				routes: [],
-				behavior: StudioRouteBehavior.TOGGLE,
-			}
-			const setObject: Record<string, any> = {}
-			setObject['routeSets.' + newRouteKeyName + iter] = newRoute
+	return (
+		<div className="route-sets-editor mod pan mas">
+			<button className="action-btn right mod man pas" onClick={confirmRemoveRouteLocal}>
+				<FontAwesomeIcon icon={faTrash} />
+			</button>
+			<div className="properties-grid">
+				<LabelAndOverridesForDropdown
+					label={t('Original Layer')}
+					item={route}
+					itemKey={'mappedLayer'}
+					opPrefix={route.id}
+					overrideHelper={tableOverrideHelper}
+					options={getDropdownInputOptions(Object.keys(studioMappings))}
+				>
+					{(value, handleUpdate, options) => (
+						<DropdownInputControl
+							classNames="input text-input input-l"
+							options={options}
+							value={value}
+							handleUpdate={handleUpdate}
+						/>
+					)}
+				</LabelAndOverridesForDropdown>
 
-			Studios.update(this.props.studio._id, {
-				$set: setObject,
-			})
-		}
-		addNewExclusivityGroup = () => {
-			const newEGroupKeyName = 'exclusivityGroup'
-			let iter = 0
-			while ((this.props.studio.routeSetExclusivityGroups || {})[newEGroupKeyName + iter]) {
-				iter++
-			}
+				<LabelAndOverrides
+					label={t('New Layer')}
+					item={route}
+					itemKey={'outputMappedLayer'}
+					opPrefix={route.id}
+					overrideHelper={tableOverrideHelper}
+				>
+					{(value, handleUpdate) => (
+						<TextInputControl
+							modifiedClassName="bghl"
+							classNames="input text-input input-l"
+							value={value}
+							handleUpdate={handleUpdate}
+						/>
+					)}
+				</LabelAndOverrides>
 
-			const newGroup: StudioRouteSetExclusivityGroup = {
-				name: 'New Exclusivity Group',
-			}
-			const setObject: Record<string, any> = {}
-			setObject['routeSetExclusivityGroups.' + newEGroupKeyName + iter] = newGroup
+				<LabelAndOverridesForDropdown
+					label={t('Route Type')}
+					item={route}
+					itemKey={'routeType'}
+					opPrefix={route.id}
+					overrideHelper={tableOverrideHelper}
+					options={getDropdownInputOptions(StudioRouteType)}
+				>
+					{(value, handleUpdate, options) => {
+						if (!rawRoute.mappedLayer) {
+							return <span className="mls">REMAP</span>
+						} else {
+							return (
+								<DropdownInputControl
+									classNames="input text-input input-l"
+									options={options}
+									value={value}
+									handleUpdate={handleUpdate}
+								/>
+							)
+						}
+					}}
+				</LabelAndOverridesForDropdown>
 
-			Studios.update(this.props.studio._id, {
-				$set: setObject,
-			})
-		}
-		updateRouteSetId = (edit: EditAttributeBase, newValue: string) => {
-			const oldRouteId = edit.props.overrideDisplayValue
-			const newRouteId = newValue + ''
-			const route = this.props.studio.routeSets[oldRouteId]
+				<LabelAndOverridesForDropdown
+					label={t('Device Type')}
+					item={route}
+					itemKey={'deviceType'}
+					opPrefix={route.id}
+					overrideHelper={tableOverrideHelper}
+					options={getDropdownInputOptions(TSR.DeviceType)}
+				>
+					{(value, handleUpdate, options) => {
+						if (rawRoute.routeType === StudioRouteType.REROUTE && rawRoute.mappedLayer) {
+							return deviceTypeFromMappedLayer !== undefined ? (
+								<span className="mls">{TSR.DeviceType[deviceTypeFromMappedLayer]}</span>
+							) : (
+								<span className="mls dimmed">{t('Original Layer not found')}</span>
+							)
+						} else {
+							return (
+								<DropdownInputControl
+									classNames="input text-input input-l"
+									options={options}
+									value={value}
+									handleUpdate={handleUpdate}
+								/>
+							)
+						}
+					}}
+				</LabelAndOverridesForDropdown>
 
-			if (this.props.studio.routeSets[newRouteId]) {
-				throw new Meteor.Error(400, 'Route Set "' + newRouteId + '" already exists')
-			}
-
-			const mSet: Record<string, any> = {}
-			const mUnset: Record<string, 1> = {}
-			mSet['routeSets.' + newRouteId] = route
-			mUnset['routeSets.' + oldRouteId] = 1
-
-			if (edit.props.collection) {
-				edit.props.collection.update(this.props.studio._id, {
-					$set: mSet,
-					$unset: mUnset,
-				})
-			}
-
-			this.finishEditItem(oldRouteId)
-			this.editItem(newRouteId)
-		}
-		updateExclusivityGroupId = (edit: EditAttributeBase, newValue: string) => {
-			const oldRouteId = edit.props.overrideDisplayValue
-			const newRouteId = newValue + ''
-			const route = this.props.studio.routeSetExclusivityGroups[oldRouteId]
-
-			if (this.props.studio.routeSetExclusivityGroups[newRouteId]) {
-				throw new Meteor.Error(400, 'Exclusivity Group "' + newRouteId + '" already exists')
-			}
-
-			const mSet: Record<string, any> = {}
-			const mUnset: Record<string, 1> = {}
-			mSet['routeSetExclusivityGroups.' + newRouteId] = route
-			mUnset['routeSetExclusivityGroups.' + oldRouteId] = 1
-
-			if (edit.props.collection) {
-				edit.props.collection.update(this.props.studio._id, {
-					$set: mSet,
-					$unset: mUnset,
-				})
-			}
-
-			this.finishEditItem(oldRouteId)
-			this.editItem(newRouteId)
-		}
-		updateRouteSetActive = (routeSetId: string, value: boolean) => {
-			const { t } = this.props
-			doUserAction(t, 'StudioSettings', UserAction.SWITCH_ROUTE_SET, (e, ts) =>
-				MeteorCall.userAction.switchRouteSet(e, ts, this.props.studio._id, routeSetId, value)
-			)
-		}
-
-		renderRoutes(routeSet: StudioRouteSet, routeSetId: string, manifest: MappingsSettingsManifests) {
-			const { t } = this.props
-
-			return (
-				<React.Fragment>
-					<h4 className="mod mhs">{t('Routes')}</h4>
-					{routeSet.routes.length === 0 ? (
-						<p className="text-s dimmed field-hint mhs">{t('There are no routes set up yet')}</p>
-					) : null}
-					{routeSet.routes.map((route, index) => {
-						const mappedLayer = route.mappedLayer ? this.props.studioMappings[route.mappedLayer] : undefined
-						const deviceTypeFromMappedLayer: TSR.DeviceType | undefined = mappedLayer?.device
-
-						const routeDeviceType: TSR.DeviceType | undefined =
-							route.routeType === StudioRouteType.REMAP
-								? route.deviceType
-								: route.mappedLayer
-								? deviceTypeFromMappedLayer
-								: route.deviceType
-
-						const routeMappingSchema = manifest[(routeDeviceType ?? route.remapping?.device) as TSR.DeviceType]
-
-						const rawMappingTypeOptions = Object.entries<JSONSchema>(routeMappingSchema?.mappingsSchema || {})
-						const mappingTypeOptions = rawMappingTypeOptions.map(([id, entry], i) =>
-							literal<DropdownInputOption<string | number>>({
-								value: id + '',
-								name: entry?.title ?? id + '',
-								i,
-							})
-						)
-
-						return (
-							<div className="route-sets-editor mod pan mas" key={index}>
-								<button
-									className="action-btn right mod man pas"
-									onClick={() => this.confirmRemoveRoute(routeSetId, route, index)}
-								>
-									<FontAwesomeIcon icon={faTrash} />
-								</button>
-								<div className="properties-grid">
-									<label className="field">
-										<LabelActual label={t('Original Layer')} />
-										<EditAttribute
-											modifiedClassName="bghl"
-											attribute={`routeSets.${routeSetId}.routes.${index}.mappedLayer`}
-											obj={this.props.studio}
-											type="dropdowntext"
-											options={Object.keys(this.props.studioMappings)}
-											label={t('None')}
-											collection={Studios}
-											className="input text-input input-l"
-										></EditAttribute>
-									</label>
-									<label className="field">
-										<LabelActual label={t('New Layer')} />
-										<EditAttribute
-											modifiedClassName="bghl"
-											attribute={`routeSets.${routeSetId}.routes.${index}.outputMappedLayer`}
-											obj={this.props.studio}
-											type="text"
-											collection={Studios}
-											className="input text-input input-l"
-										></EditAttribute>
-									</label>
-
-									<label className="field">
-										<LabelActual label={t('Route Type')} />
-										{!route.mappedLayer ? (
-											<span className="mls">REMAP</span>
-										) : (
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeSetId}.routes.${index}.routeType`}
-												obj={this.props.studio}
-												type="dropdown"
-												options={StudioRouteType}
-												optionsAreNumbers={true}
-												collection={Studios}
-												className="input text-input input-l"
-											></EditAttribute>
-										)}
-									</label>
-
-									<label className="field">
-										<LabelActual label={t('Device Type')} />
-										{route.routeType === StudioRouteType.REROUTE && route.mappedLayer ? (
-											deviceTypeFromMappedLayer !== undefined ? (
-												<span className="mls">{TSR.DeviceType[deviceTypeFromMappedLayer]}</span>
-											) : (
-												<span className="mls dimmed">{t('Source Layer not found')}</span>
-											)
-										) : (
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeSetId}.routes.${index}.deviceType`}
-												obj={this.props.studio}
-												type="dropdown"
-												options={TSR.DeviceType}
-												optionsAreNumbers={true}
-												collection={Studios}
-												className="input text-input input-l"
-											></EditAttribute>
-										)}
-									</label>
-
-									{mappingTypeOptions.length > 0 && (
-										<label className="field">
-											<LabelActual label={t('Mapping Type')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeSetId}.routes.${index}.remapping.options.mappingType`}
-												obj={this.props.studio}
-												type="dropdown"
-												options={mappingTypeOptions}
-												collection={Studios}
-												className="input text-input input-l"
-											></EditAttribute>
-										</label>
-									)}
-									{route.routeType === StudioRouteType.REMAP ||
-									(routeDeviceType !== undefined && route.remapping !== undefined) ? (
-										<>
-											<label className="field">
-												<LabelActual label={t('Device ID')} />
-												<div>
-													<EditAttribute
-														modifiedClassName="bghl"
-														attribute={`routeSets.${routeSetId}.routes.${index}.remapping.deviceId`}
-														obj={this.props.studio}
-														type="checkbox"
-														collection={Studios}
-														className="mrs mvxs"
-														mutateDisplayValue={(v) => (v === undefined ? false : true)}
-														mutateUpdateValue={() => undefined}
-													/>
-													<EditAttribute
-														modifiedClassName="bghl"
-														attribute={`routeSets.${routeSetId}.routes.${index}.remapping.deviceId`}
-														obj={this.props.studio}
-														type="text"
-														collection={Studios}
-														className="input text-input input-l"
-													></EditAttribute>
-												</div>
-											</label>
-
-											<DeviceMappingSettings
-												translationNamespaces={this.props.translationNamespaces}
-												studio={this.props.studio}
-												attribute={`routeSets.${routeSetId}.routes.${index}.remapping.options`}
-												mappedLayer={mappedLayer}
-												manifest={routeMappingSchema}
-											/>
-										</>
-									) : null}
-								</div>
-							</div>
-						)
-					})}
-				</React.Fragment>
-			)
-		}
-
-		renderExclusivityGroups() {
-			const { t } = this.props
-
-			if (Object.keys(this.props.studio.routeSetExclusivityGroups).length === 0) {
-				return (
-					<tr>
-						<td className="mhn dimmed">{t('There are no exclusivity groups set up.')}</td>
-					</tr>
-				)
-			}
-
-			return _.map(
-				this.props.studio.routeSetExclusivityGroups,
-				(exclusivityGroup: StudioRouteSetExclusivityGroup, exclusivityGroupId: string) => {
-					return (
-						<React.Fragment key={exclusivityGroupId}>
-							<tr
-								className={ClassNames({
-									hl: this.isItemEdited(exclusivityGroupId),
-								})}
-							>
-								<th className="settings-studio-device__name c3">{exclusivityGroupId}</th>
-								<td className="settings-studio-device__id c5">{exclusivityGroup.name}</td>
-								<td className="settings-studio-device__id c3">
-									{
-										_.filter(
-											this.props.studio.routeSets,
-											(routeSet) => routeSet.exclusivityGroup === exclusivityGroupId
-										).length
-									}
-								</td>
-
-								<td className="settings-studio-device__actions table-item-actions c3">
-									<button className="action-btn" onClick={() => this.editItem(exclusivityGroupId)}>
-										<FontAwesomeIcon icon={faPencilAlt} />
-									</button>
-									<button
-										className="action-btn"
-										onClick={() => this.confirmRemoveEGroup(exclusivityGroupId, exclusivityGroup)}
-									>
-										<FontAwesomeIcon icon={faTrash} />
-									</button>
-								</td>
-							</tr>
-							{this.isItemEdited(exclusivityGroupId) && (
-								<tr className="expando-details hl">
-									<td colSpan={6}>
-										<div className="properties-grid">
-											<label className="field">
-												<LabelActual label={t('Exclusivity Group ID')} />
-												<EditAttribute
-													modifiedClassName="bghl"
-													attribute={'routeSetExclusivityGroups'}
-													overrideDisplayValue={exclusivityGroupId}
-													obj={this.props.studio}
-													type="text"
-													collection={Studios}
-													updateFunction={this.updateExclusivityGroupId}
-													className="input text-input input-l"
-												></EditAttribute>
-											</label>
-											<label className="field">
-												<LabelActual label={t('Exclusivity Group Name')} />
-												<EditAttribute
-													modifiedClassName="bghl"
-													attribute={'routeSetExclusivityGroups.' + exclusivityGroupId + '.name'}
-													obj={this.props.studio}
-													type="text"
-													collection={Studios}
-													className="input text-input input-l"
-												></EditAttribute>
-												<span className="text-s dimmed field-hint">{t('Display name of the Exclusivity Group')}</span>
-											</label>
-										</div>
-										<div className="mod alright">
-											<button className="btn btn-primary" onClick={() => this.finishEditItem(exclusivityGroupId)}>
-												<FontAwesomeIcon icon={faCheck} />
-											</button>
-										</div>
-									</td>
-								</tr>
-							)}
-						</React.Fragment>
-					)
-				}
-			)
-		}
-
-		renderRouteSets(manifest: MappingsSettingsManifests) {
-			const { t } = this.props
-
-			const DEFAULT_ACTIVE_OPTIONS = {
-				[t('Active')]: true,
-				[t('Not Active')]: false,
-				[t('Not defined')]: undefined,
-			}
-
-			if (Object.keys(this.props.studio.routeSets).length === 0) {
-				return (
-					<tr>
-						<td className="mhn dimmed">{t('There are no Route Sets set up.')}</td>
-					</tr>
-				)
-			}
-
-			return _.map(this.props.studio.routeSets, (routeSet: StudioRouteSet, routeId: string) => {
-				return (
-					<React.Fragment key={routeId}>
-						<tr
-							className={ClassNames({
-								hl: this.isItemEdited(routeId),
-							})}
-						>
-							<th className="settings-studio-device__name c2">{routeId}</th>
-							<td className="settings-studio-device__id c3">{routeSet.name}</td>
-							<td className="settings-studio-device__id c4">{routeSet.exclusivityGroup}</td>
-							<td className="settings-studio-device__id c2">{routeSet.routes.length}</td>
-							<td className="settings-studio-device__id c2">
-								{routeSet.active ? <span className="pill">{t('Active')}</span> : null}
-							</td>
-
-							<td className="settings-studio-device__actions table-item-actions c3">
-								<button className="action-btn" onClick={() => this.editItem(routeId)}>
-									<FontAwesomeIcon icon={faPencilAlt} />
-								</button>
-								<button className="action-btn" onClick={() => this.confirmRemove(routeId)}>
-									<FontAwesomeIcon icon={faTrash} />
-								</button>
-							</td>
-						</tr>
-						{this.isItemEdited(routeId) && (
-							<tr className="expando-details hl">
-								<td colSpan={6}>
-									<div className="properties-grid">
-										<label className="field">
-											<LabelActual label={t('Route Set ID')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={'routeSets'}
-												overrideDisplayValue={routeId}
-												obj={this.props.studio}
-												type="text"
-												collection={Studios}
-												updateFunction={this.updateRouteSetId}
-												className="input text-input input-l"
-											></EditAttribute>
-										</label>
-										<label className="field">
-											<LabelActual label={t('Active')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeId}.active`}
-												obj={this.props.studio}
-												type="checkbox"
-												collection={Studios}
-												updateFunction={(_ctx, value) => this.updateRouteSetActive(routeId, value)}
-												disabled={routeSet.behavior === StudioRouteBehavior.ACTIVATE_ONLY && routeSet.active}
-												className=""
-											></EditAttribute>
-											<span className="mlm text-s dimmed field-hint">{t('Is this Route Set currently active')}</span>
-										</label>
-										<label className="field">
-											<LabelActual label={t('Default State')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeId}.defaultActive`}
-												obj={this.props.studio}
-												type="dropdown"
-												collection={Studios}
-												options={DEFAULT_ACTIVE_OPTIONS}
-												className="input text-input input-l"
-											></EditAttribute>
-											<span className="mlm text-s dimmed field-hint">{t('The default state of this Route Set')}</span>
-										</label>
-
-										<label className="field">
-											<LabelActual label={t('Route Set Name')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeId}.name`}
-												obj={this.props.studio}
-												type="text"
-												collection={Studios}
-												className="input text-input input-l"
-											></EditAttribute>
-											<span className="text-s dimmed field-hint">{t('Display name of the Route Set')}</span>
-										</label>
-
-										<label className="field">
-											<LabelActual label={t('Exclusivity group')} />
-											<div>
-												<EditAttribute
-													modifiedClassName="bghl"
-													attribute={`routeSets.${routeId}.exclusivityGroup`}
-													obj={this.props.studio}
-													type="checkbox"
-													className="mrs mvxs"
-													collection={Studios}
-													mutateDisplayValue={(v) => (v === undefined ? false : true)}
-													mutateUpdateValue={() => undefined}
-												/>
-												<EditAttribute
-													modifiedClassName="bghl"
-													attribute={`routeSets.${routeId}.exclusivityGroup`}
-													obj={this.props.studio}
-													type="dropdown"
-													options={Object.keys(this.props.studio.routeSetExclusivityGroups)}
-													mutateDisplayValue={(v) => (v === undefined ? 'None' : v)}
-													collection={Studios}
-													className="input text-input input-l"
-												></EditAttribute>
-											</div>
-											<span className="text-s dimmed field-hint">
-												{t('If set, only one Route Set will be active per exclusivity group')}
-											</span>
-										</label>
-
-										<label className="field">
-											<LabelActual label={t('Behavior')} />
-											<EditAttribute
-												modifiedClassName="bghl"
-												attribute={`routeSets.${routeId}.behavior`}
-												obj={this.props.studio}
-												type="dropdown"
-												options={StudioRouteBehavior}
-												optionsAreNumbers={true}
-												collection={Studios}
-												className="input text-input input-l"
-											></EditAttribute>
-											<span className="text-s dimmed field-hint">
-												{t('The way this Route Set should behave towards the user')}
-											</span>
-										</label>
-									</div>
-									{this.renderRoutes(routeSet, routeId, manifest)}
-									<div className="mod">
-										<button className="btn btn-primary right" onClick={() => this.finishEditItem(routeId)}>
-											<FontAwesomeIcon icon={faCheck} />
-										</button>
-										<button className="btn btn-secondary" onClick={() => this.addNewRouteInSet(routeId)}>
-											<FontAwesomeIcon icon={faPlus} />
-										</button>
-									</div>
-								</td>
-							</tr>
+				{mappingTypeOptions.length > 0 && (
+					<LabelAndOverridesForDropdown<any> // Deep key is not allowed, but is fine for now
+						label={t('Mapping Type')}
+						item={route}
+						itemKey={'remapping.options.mappingType'}
+						opPrefix={route.id}
+						overrideHelper={tableOverrideHelper}
+						options={mappingTypeOptions}
+					>
+						{(value, handleUpdate, options) => (
+							<DropdownInputControl
+								classNames="input text-input input-l"
+								options={options}
+								value={value}
+								handleUpdate={handleUpdate}
+							/>
 						)}
-					</React.Fragment>
-				)
-			})
-		}
+					</LabelAndOverridesForDropdown>
+				)}
+				{rawRoute.routeType === StudioRouteType.REMAP ||
+				(routeDeviceType !== undefined && rawRoute.remapping !== undefined) ? (
+					<>
+						<LabelAndOverrides<any> // Deep key is not allowed, but is fine for now
+							label={t('Device ID')}
+							item={route}
+							itemKey={'remapping.deviceId'}
+							opPrefix={route.id}
+							overrideHelper={tableOverrideHelper}
+							showClearButton={true}
+						>
+							{(value, handleUpdate) => (
+								<TextInputControl
+									modifiedClassName="bghl"
+									classNames="input text-input input-l"
+									value={value}
+									handleUpdate={handleUpdate}
+								/>
+							)}
+						</LabelAndOverrides>
 
-		render(): JSX.Element {
-			const { t } = this.props
-			return (
-				<div>
-					<h2 className="mhn mbs">{t('Route Sets')}</h2>
-					{!this.props.manifest && (
-						<span>{t('Add a playout device to the studio in order to configure the route sets')}</span>
-					)}
-					{this.props.manifest && (
-						<React.Fragment>
-							<p className="mhn mvs text-s dimmed field-hint">
-								{t(
-									'Controls for exposed Route Sets will be displayed to the producer within the Rundown View in the Switchboard.'
-								)}
-							</p>
-							<h3 className="mhn">{t('Exclusivity Groups')}</h3>
-							<table className="expando settings-studio-mappings-table">
-								<tbody>{this.renderExclusivityGroups()}</tbody>
-							</table>
-							<div className="mod mhs">
-								<button className="btn btn-primary" onClick={() => this.addNewExclusivityGroup()}>
-									<FontAwesomeIcon icon={faPlus} />
-								</button>
-							</div>
-							<h3 className="mhn">{t('Route Sets')}</h3>
-							<table className="expando settings-studio-mappings-table">
-								<tbody>{this.renderRouteSets(this.props.manifest)}</tbody>
-							</table>
-							<div className="mod mhs">
-								<button className="btn btn-primary" onClick={() => this.addNewRouteSet()}>
-									<FontAwesomeIcon icon={faPlus} />
-								</button>
-							</div>
-						</React.Fragment>
-					)}
-				</div>
-			)
-		}
-	}
-)
+						<DeviceMappingSettings
+							translationNamespaces={translationNamespaces}
+							mappedLayer={mappedLayer}
+							manifest={routeMappingSchema}
+							overrideHelper={tableOverrideHelper}
+							route={route}
+						/>
+					</>
+				) : null}
+			</div>
+		</div>
+	)
+}
 
 interface IDeviceMappingSettingsProps {
 	translationNamespaces: string[]
-	studio: DBStudio
-	attribute: string
 	manifest: MappingsSettingsManifest | undefined
 	mappedLayer: ReadonlyDeep<MappingExt> | undefined
+	overrideHelper: OverrideOpHelperArrayTable
+	route: WrappedOverridableItemNormal<RouteMapping>
 }
 
 function DeviceMappingSettings({
 	translationNamespaces,
-	attribute,
 	manifest,
-	studio,
 	mappedLayer,
-}: IDeviceMappingSettingsProps) {
-	const routeRemapping = objectPathGet(studio, attribute)
+	overrideHelper,
+	route,
+}: Readonly<IDeviceMappingSettingsProps>) {
+	const mappingType = route.computed?.remapping?.options?.mappingType ?? mappedLayer?.options?.mappingType
+	const mappingSchema = mappingType ? manifest?.mappingsSchema?.[mappingType] : undefined
 
-	const mappingType = routeRemapping?.mappingType ?? mappedLayer?.options?.mappingType
-	const mappingSchema = manifest?.mappingsSchema?.[mappingType]
+	// Remove the required field from the schema, as that the properties show the clear button
+	const mappingSchemaPartial = React.useMemo(() => {
+		if (!mappingSchema) return null
 
-	if (mappingSchema && routeRemapping) {
+		return { ...mappingSchema, required: [] }
+	}, [mappingSchema])
+
+	if (mappingSchemaPartial) {
 		return (
-			<SchemaFormForCollection
-				schema={mappingSchema}
-				object={routeRemapping}
-				basePath={attribute}
+			<SchemaFormWithOverrides
+				schema={mappingSchemaPartial}
 				translationNamespaces={translationNamespaces}
-				collection={Studios}
-				objectId={studio._id}
-				partialOverridesForObject={mappedLayer}
+				attr={'remapping.options'}
+				item={route}
+				overrideHelper={overrideHelper}
+				isRequired
+				showClearButtonForNonRequiredFields={true}
 			/>
 		)
 	} else {
 		return null
 	}
+}
+
+interface IRenderExclusivityGroupsProps {
+	studio: DBStudio
+	toggleExpanded: (exclusivityGroupId: string, force?: boolean) => void
+	isExpanded: (exclusivityGroupId: string) => boolean
+	routeSetsFromOverrides: WrappedOverridableItem<StudioRouteSet>[]
+	exclusivityGroupsFromOverrides: WrappedOverridableItem<StudioRouteSetExclusivityGroup>[]
+}
+
+function RenderExclusivityGroups({
+	studio,
+	toggleExpanded,
+	isExpanded,
+	routeSetsFromOverrides,
+	exclusivityGroupsFromOverrides,
+}: Readonly<IRenderExclusivityGroupsProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const saveExclusivityOverrides = React.useCallback(
+		(newOps: SomeObjectOverrideOp[]) => {
+			Studios.update(studio._id, {
+				$set: {
+					'routeSetExclusivityGroupsWithOverrides.overrides': newOps,
+				},
+			})
+		},
+		[studio._id]
+	)
+
+	const exclusivityOverrideHelper = useOverrideOpHelper(
+		saveExclusivityOverrides,
+		studio.routeSetExclusivityGroupsWithOverrides
+	)
+
+	if (exclusivityGroupsFromOverrides.length === 0) {
+		return (
+			<tr>
+				<td className="mhn dimmed">{t('There are no exclusivity groups set up.')}</td>
+			</tr>
+		)
+	}
+	return (
+		<React.Fragment>
+			{exclusivityGroupsFromOverrides.map(
+				(exclusivityGroup: WrappedOverridableItem<StudioRouteSetExclusivityGroup>) => {
+					return (
+						<React.Fragment key={exclusivityGroup.id}>
+							{exclusivityGroup.type === 'normal' ? (
+								<RenderExclusivityGroup
+									exclusivityGroup={exclusivityGroup}
+									toggleExpanded={toggleExpanded}
+									isExpanded={isExpanded(exclusivityGroup.id)}
+									routeSetsFromOverrides={routeSetsFromOverrides}
+									exclusivityOverrideHelper={exclusivityOverrideHelper}
+								/>
+							) : (
+								<RenderExclusivityDeletedGroup
+									exclusivityGroup={exclusivityGroup}
+									exlusivityOverrideHelper={exclusivityOverrideHelper}
+								/>
+							)}
+						</React.Fragment>
+					)
+				}
+			)}
+		</React.Fragment>
+	)
+}
+
+interface IRenderExclusivityGroupProps {
+	exclusivityGroup: WrappedOverridableItemNormal<StudioRouteSetExclusivityGroup>
+	toggleExpanded: (exclusivityGroupId: string, force?: boolean) => void
+	isExpanded: boolean
+	routeSetsFromOverrides: WrappedOverridableItem<StudioRouteSet>[]
+	exclusivityOverrideHelper: OverrideOpHelper
+}
+
+function RenderExclusivityGroup({
+	exclusivityGroup,
+	toggleExpanded,
+	isExpanded,
+	routeSetsFromOverrides,
+	exclusivityOverrideHelper,
+}: Readonly<IRenderExclusivityGroupProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const removeExclusivityGroup = (eGroupId: string) => {
+		exclusivityOverrideHelper.deleteItem(eGroupId)
+	}
+
+	const confirmRemoveEGroup = () => {
+		doModalDialog({
+			title: t('Remove this Exclusivity Group?'),
+			yes: t('Remove'),
+			no: t('Cancel'),
+			onAccept: () => {
+				removeExclusivityGroup(exclusivityGroup.id)
+			},
+			message: (
+				<React.Fragment>
+					<p>
+						{t(
+							'Are you sure you want to remove exclusivity group "{{eGroupName}}"?\nRoute Sets assigned to this group will be reset to no group.',
+							{
+								eGroupName: exclusivityGroup.computed?.name,
+							}
+						)}
+					</p>
+					<p>{t('Please note: This action is irreversible!')}</p>
+				</React.Fragment>
+			),
+		})
+	}
+	const updateExclusivityGroupId = React.useCallback(
+		(newGroupId: string) => {
+			exclusivityOverrideHelper.changeItemId(exclusivityGroup.id, newGroupId)
+			toggleExpanded(newGroupId, true)
+		},
+		[exclusivityOverrideHelper, toggleExpanded, exclusivityGroup.id]
+	)
+
+	return (
+		<React.Fragment>
+			<tr
+				className={ClassNames({
+					hl: isExpanded,
+				})}
+			>
+				<th className="settings-studio-device__name c3">{exclusivityGroup.id}</th>
+				<td className="settings-studio-device__id c5">{exclusivityGroup.computed?.name}</td>
+				<td className="settings-studio-device__id c3">
+					{
+						routeSetsFromOverrides.filter(
+							(routeSet) => routeSet.computed?.exclusivityGroup === exclusivityGroup.computed?.name
+						).length
+					}
+				</td>
+
+				<td className="settings-studio-device__actions table-item-actions c3">
+					<button className="action-btn" onClick={() => toggleExpanded(exclusivityGroup.id)}>
+						<FontAwesomeIcon icon={faPencilAlt} />
+					</button>
+					<button className="action-btn" onClick={confirmRemoveEGroup}>
+						<FontAwesomeIcon icon={faTrash} />
+					</button>
+				</td>
+			</tr>
+			{isExpanded && (
+				<tr className="expando-details hl">
+					<td colSpan={6}>
+						<div className="properties-grid">
+							<label className="field">
+								<LabelActual label={t('Exclusivity Group ID')} />
+								<TextInputControl
+									modifiedClassName="bghl"
+									classNames="input text-input input-l"
+									value={exclusivityGroup.id}
+									handleUpdate={updateExclusivityGroupId}
+									disabled={!!exclusivityGroup.defaults}
+								/>
+							</label>
+							<LabelAndOverrides
+								label={t('Exclusivity Group Name')}
+								item={exclusivityGroup}
+								itemKey={'name'}
+								opPrefix={exclusivityGroup.id}
+								overrideHelper={exclusivityOverrideHelper}
+							>
+								{(value, handleUpdate) => (
+									<TextInputControl
+										modifiedClassName="bghl"
+										classNames="input text-input input-l"
+										value={value}
+										handleUpdate={handleUpdate}
+									/>
+								)}
+							</LabelAndOverrides>
+						</div>
+						<div className="mod alright">
+							<button className="btn btn-primary" onClick={() => toggleExpanded(exclusivityGroup.id)}>
+								<FontAwesomeIcon icon={faCheck} />
+							</button>
+						</div>
+					</td>
+				</tr>
+			)}
+		</React.Fragment>
+	)
+}
+
+interface IRenderExclusivityDeletedGroupProps {
+	exclusivityGroup: WrappedOverridableItemDeleted<StudioRouteSetExclusivityGroup>
+	exlusivityOverrideHelper: OverrideOpHelper
+}
+
+function RenderExclusivityDeletedGroup({
+	exclusivityGroup,
+	exlusivityOverrideHelper: overrideHelper,
+}: Readonly<IRenderExclusivityDeletedGroupProps>): React.JSX.Element {
+	const doUndeleteItem = React.useCallback(
+		() => overrideHelper.resetItem(exclusivityGroup.id),
+		[overrideHelper, exclusivityGroup.id]
+	)
+
+	return (
+		<tr>
+			<th className="settings-studio-device__name c3 notifications-s notifications-text">
+				{exclusivityGroup.defaults?.name}
+			</th>
+			<td className="settings-studio-device__id c2 deleted">{exclusivityGroup.defaults?.name}</td>
+			<td className="settings-studio-device__id c2 deleted">{exclusivityGroup.id}</td>
+			<td className="settings-studio-output-table__actions table-item-actions c3">
+				<button className="action-btn" onClick={doUndeleteItem} title="Restore to defaults">
+					<FontAwesomeIcon icon={faSync} />
+				</button>
+			</td>
+		</tr>
+	)
 }

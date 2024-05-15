@@ -5,18 +5,17 @@ import {
 	MappingExt,
 	StudioRouteType,
 	StudioRouteSet,
-	RouteMapping,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { ReadonlyDeep } from 'type-fest'
 
-export function getActiveRoutes(routeSets: ReadonlyDeep<Record<string, StudioRouteSet>>): ResultingMappingRoutes {
+export function getActiveRoutes(routeSets: Record<string, StudioRouteSet>): ResultingMappingRoutes {
 	const routes: ResultingMappingRoutes = {
 		existing: {},
 		inserted: [],
 	}
 
 	const exclusivityGroups: { [groupId: string]: true } = {}
-	for (const routeSet of Object.values<ReadonlyDeep<StudioRouteSet>>(routeSets)) {
+
+	for (const routeSet of Object.values<StudioRouteSet>(routeSets)) {
 		if (routeSet.active) {
 			let useRoute = true
 			if (routeSet.exclusivityGroup) {
@@ -27,7 +26,7 @@ export function getActiveRoutes(routeSets: ReadonlyDeep<Record<string, StudioRou
 				exclusivityGroups[routeSet.exclusivityGroup] = true
 			}
 			if (useRoute) {
-				for (const routeMapping of Object.values<ReadonlyDeep<RouteMapping>>(routeSet.routes)) {
+				for (const routeMapping of routeSet.routes || []) {
 					if (routeMapping.outputMappedLayer) {
 						if (routeMapping.mappedLayer) {
 							// Route an existing layer

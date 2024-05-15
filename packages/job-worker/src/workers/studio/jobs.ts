@@ -46,6 +46,7 @@ import { handleExecuteAdlibAction } from '../../playout/adlibAction'
 import { handleTakeNextPart } from '../../playout/take'
 import { handleActivateScratchpad } from '../../playout/scratchpad'
 import { handleExecuteBucketAdLibOrAction } from '../../playout/bucketAdlibJobs'
+import { handleSwitchRouteSet } from '../../studio/routeSet'
 
 type ExecutableFunction<T extends keyof StudioJobFunc> = (
 	context: JobContext,
@@ -103,4 +104,5 @@ export const studioJobHandlers: StudioJobHandlers = {
 	[StudioJobs.BlueprintIgnoreFixUpConfigForStudio]: handleBlueprintIgnoreFixUpConfigForStudio,
 
 	[StudioJobs.ActivateScratchpad]: handleActivateScratchpad,
+	[StudioJobs.SwitchRouteSet]: handleSwitchRouteSet,
 }

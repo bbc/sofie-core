@@ -93,6 +93,7 @@ export enum PlayoutActions {
 	reloadRundownPlaylistData = 'reloadRundownPlaylistData',
 	disableNextPiece = 'disableNextPiece',
 	activateScratchpadMode = 'activateScratchpadMode',
+	switchRouteSet = 'switchRouteSet',
 }
 
 export enum ClientActions {

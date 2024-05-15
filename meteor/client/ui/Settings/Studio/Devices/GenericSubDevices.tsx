@@ -6,7 +6,7 @@ import {
 	WrappedOverridableItem,
 	WrappedOverridableItemDeleted,
 	WrappedOverridableItemNormal,
-} from '../../util/OverrideOpHelper'
+} from '../../../util/OverrideOpHelper'
 import { faCheck, faPencilAlt, faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { JSONBlob, JSONBlobParse, JSONSchema } from '@sofie-automation/blueprints-integration'

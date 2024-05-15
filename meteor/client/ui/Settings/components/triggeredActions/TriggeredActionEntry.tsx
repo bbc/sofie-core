@@ -32,7 +32,7 @@ import {
 } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { ShowStyleBaseId, TriggeredActionId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { isHotkeyTrigger } from '../../../../../lib/api/triggers/triggerTypeSelectors'
-import { getAllCurrentAndDeletedItemsFromOverrides, useOverrideOpHelper } from '../../util/OverrideOpHelper'
+import { getAllCurrentAndDeletedItemsFromOverrides, useOverrideOpHelper } from '../../../util/OverrideOpHelper'
 import { TriggeredActions } from '../../../../collections'
 import { catchError } from '../../../../lib/lib'
 

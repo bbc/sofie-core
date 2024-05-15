@@ -17,7 +17,7 @@ import {
 	OverrideOpHelper,
 	useOverrideOpHelper,
 	WrappedOverridableItemNormal,
-} from '../util/OverrideOpHelper'
+} from '../../util/OverrideOpHelper'
 import { TextInputControl } from '../../../lib/Components/TextInput'
 import { CheckboxControl } from '../../../lib/Components/Checkbox'
 import { IntInputControl } from '../../../lib/Components/IntInput'

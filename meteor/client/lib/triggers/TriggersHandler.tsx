@@ -32,6 +32,7 @@ import {
 	RundownId,
 	RundownPlaylistId,
 	ShowStyleBaseId,
+	StudioId,
 	TriggeredActionId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import {
@@ -48,6 +49,7 @@ import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 type HotkeyTriggerListener = (e: KeyboardEvent) => void
 
 interface IProps {
+	studioId: StudioId
 	rundownPlaylistId: RundownPlaylistId
 	currentRundownId: RundownId | null
 	showStyleBaseId: ShowStyleBaseId
@@ -317,6 +319,7 @@ export const TriggersHandler: React.FC<IProps> = function TriggersHandler(
 				let context = rundownPlaylistContext.get()
 				if (context === null) {
 					context = {
+						studioId: new ReactiveVar(props.studioId),
 						rundownPlaylistId: new ReactiveVar(playlist._id),
 						rundownPlaylist: new ReactiveVar(playlist),
 						currentRundownId: new ReactiveVar(props.currentRundownId),
@@ -339,6 +342,7 @@ export const TriggersHandler: React.FC<IProps> = function TriggersHandler(
 			}
 		})
 	}, [
+		props.studioId,
 		props.rundownPlaylistId,
 		props.currentRundownId,
 		props.currentPartId,

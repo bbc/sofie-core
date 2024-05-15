@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { WrappedOverridableItemNormal } from '../../../ui/Settings/util/OverrideOpHelper'
+import { WrappedOverridableItemNormal } from '../../../ui/util/OverrideOpHelper'
 import { SchemaFormTableEditRow } from './TableEditRow'
 import { SchemaTableSummaryRow } from '../SchemaTableSummaryRow'
 import { literal } from '@sofie-automation/shared-lib/dist/lib/lib'
