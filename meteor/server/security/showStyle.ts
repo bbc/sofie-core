@@ -46,10 +46,10 @@ export namespace ShowStyleReadAccess {
 	): Promise<boolean> {
 		check(selector, Object)
 		if (!Settings.enableUserAccounts) return true
-		if (!selector.showStyleBaseId || !isProtectedString(selector.showStyleBaseId))
+		if (!selector.showStyleBaseId || isProtectedString(selector.showStyleBaseId))
 			throw new Meteor.Error(400, 'selector must contain showStyleBaseId')
 
-		const access = await allowAccessToShowStyleBase(cred, selector.showStyleBaseId)
+		const access = await allowAccessToShowStyleBase(cred, selector.showStyleBaseId as ShowStyleBaseId)
 		if (!access.read) return logNotAllowed('ShowStyleBase content', access.reason)
 
 		return true
