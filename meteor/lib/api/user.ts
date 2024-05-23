@@ -29,6 +29,6 @@ export async function createUser(newUser: CreateNewUserData): Promise<UserId> {
 	// The reason for that is that the client-side should use Accounts.createUser right away
 	// so that the password aren't sent in "plaintext" to the server.
 
-	const userId = await Accounts.createUserAsync(newUser)
+	const userId = Accounts.createUser(newUser)
 	return protectString<UserId>(userId)
 }
