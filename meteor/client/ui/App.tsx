@@ -183,7 +183,7 @@ export const App: React.FC = function App() {
 	}, [mountPWAFullScreenTrigger])
 
 	const isAuthenticated = !Settings.enableUserAccounts || user
-	const shouldUseAuthentication = Settings.enableUserAccounts
+	const shouldUseAuthentication = Settings.enableUserAccounts && !user
 
 	const onNavigationUserConfirmation = useCallback((message: string, callback: (result: boolean) => void) => {
 		doModalDialog({
