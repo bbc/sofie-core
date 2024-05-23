@@ -245,28 +245,28 @@ export const App: React.FC = function App() {
 										<Route exact path="/signup" component={SignupPage} />
 										<Route exact path="/reset" component={LostPasswordPage} />
 										<Route exact path="/reset/:token" component={ResetPasswordPage} />
-										<Route
-											exact
-											path="/account"
-											render={() => (
-												<RequireAuth>
-													<AccountPage />
-												</RequireAuth>
-											)}
-										/>
-										<Route
-											exact
-											path="/organization"
-											render={() => (
-												<RequireAuth>
-													<OrganizationPage />
-												</RequireAuth>
-											)}
-										/>
 									</>
 								) : (
 									<Route exact path="/" component={RundownList} />
 								)}
+								<Route
+									exact
+									path="/account"
+									render={() => (
+										<RequireAuth>
+											<AccountPage />
+										</RequireAuth>
+									)}
+								/>
+								<Route
+									exact
+									path="/organization"
+									render={() => (
+										<RequireAuth>
+											<OrganizationPage />
+										</RequireAuth>
+									)}
+								/>
 								<Route
 									path="/rundowns"
 									render={() => (
