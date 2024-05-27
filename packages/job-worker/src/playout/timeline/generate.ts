@@ -392,12 +392,12 @@ async function getTimelineRundown(
 				)
 				try {
 					const abHelper = blueprintContext.abSessionsHelper // Future: this should be removed from OnTimelineGenerateContext once the methods are removed from the api
-					const newAbSessionsResult = applyAbPlaybackForTimeline(
+					const newAbSessionsResult = await applyAbPlaybackForTimeline(
 						context,
 						abHelper,
 						blueprint,
 						showStyle,
-						playoutModel.playlist,
+						playoutModel,
 						resolvedPieces,
 						timelineObjs
 					)

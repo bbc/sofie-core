@@ -18,7 +18,7 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 	// Add your migration here
 
 	{
-		id: `convert routesets to ObjectWithOverrides`,
+		id: `convert routesets to ObjectWithOverrides and add abPlayers object`,
 		canBeRunAutomatically: true,
 		validate: async () => {
 			const studios = await Studios.findFetchAsync({ routeSets: { $exists: true } })
@@ -40,6 +40,12 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 				if (!studio.routeSets) continue
 				//@ts-expect-error routeSets is not typed as ObjectWithOverrides
 				const oldRouteSets = studio.routeSets as any as Record<string, StudioRouteSet>
+
+				for (const key of Object.keys(oldRouteSets)) {
+					if (!oldRouteSets[key].abPlayers) {
+						oldRouteSets[key].abPlayers = []
+					}
+				}
 
 				const newRouteSets = convertObjectIntoOverrides(oldRouteSets)
 

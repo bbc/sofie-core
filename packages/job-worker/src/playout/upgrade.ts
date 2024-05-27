@@ -79,6 +79,7 @@ export async function handleBlueprintUpgradeForStudio(context: JobContext, _data
 				behavior: (dev[1] as StudioRouteSet).behavior ?? {},
 				exclusivityGroup: (dev[1] as StudioRouteSet).exclusivityGroup ?? undefined,
 				routes: (dev[1] as StudioRouteSet).routes,
+				abPlayers: (dev[1] as StudioRouteSet).abPlayers,
 			}),
 		])
 	)

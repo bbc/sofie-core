@@ -2992,8 +2992,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									onToggleSupportPanel={this.onToggleSupportPanel}
 									isStudioMode={this.state.studioMode}
 									onTake={this.onTake}
-									studioRouteSets={studio.routeSets}
-									studioRouteSetExclusivityGroups={studio.routeSetExclusivityGroups}
+									studio={studio}
 									onStudioRouteSetSwitch={this.onStudioRouteSetSwitch}
 									onSegmentViewMode={this.onSegmentViewModeChange}
 								/>

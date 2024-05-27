@@ -9,6 +9,7 @@ import {
 	StudioRouteType,
 	MappingsExt,
 	MappingExt,
+	StudioAbPlayerDisabling,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { doModalDialog } from '../../../lib/ModalDialog'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -68,7 +69,7 @@ export function StudioRoutings({
 	const { toggleExpanded, isExpanded } = useToggleExpandHelper()
 
 	const routeSetsFromOverrides = React.useMemo(
-		() => getAllCurrentAndDeletedItemsFromOverrides(studio.routeSetsWithOverrides, null),
+		() => getAllCurrentAndDeletedItemsFromOverrides(studio.routeSetsWithOverrides, (a, b) => a[0].localeCompare(b[0])),
 		[studio.routeSetsWithOverrides]
 	)
 
@@ -108,6 +109,7 @@ export function StudioRoutings({
 			name: 'New Route Set ' + iter.toString(),
 			active: false,
 			routes: [],
+			abPlayers: [],
 			behavior: StudioRouteBehavior.TOGGLE,
 			exclusivityGroup: undefined,
 		})
@@ -285,6 +287,17 @@ function RenderRouteSet({
 		overrideHelper.setItemValue(routeId, 'routes', newRoutes)
 	}
 
+	const addNewAbPlayerInSet = (routeId: string) => {
+		const newAbPlayers = routeSet.computed?.abPlayers || []
+
+		newAbPlayers.push({
+			poolName: '',
+			playerId: '',
+		})
+
+		overrideHelper.setItemValue(routeId, 'abPlayers', newAbPlayers)
+	}
+
 	const updateRouteSetId = React.useCallback(
 		(newRouteSetId: string) => {
 			overrideHelper.changeItemId(routeSet.id, newRouteSetId)
@@ -316,6 +329,12 @@ function RenderRouteSet({
 		[overrideHelper, routeSet.id]
 	)
 	const routesIsOverridden = hasOpWithPath(routeSet.overrideOps, routeSet.id, 'routes')
+
+	const resyncAbPlayerTable = React.useCallback(
+		() => overrideHelper.clearItemOverrides(routeSet.id, 'abPlayers'),
+		[overrideHelper, routeSet.id]
+	)
+	const abPlayerIsOverridden = hasOpWithPath(routeSet.overrideOps, routeSet.id, 'abPlayers')
 
 	return (
 		<React.Fragment>
@@ -445,9 +464,6 @@ function RenderRouteSet({
 							studioMappings={studioMappings}
 						/>
 						<div className="mod">
-							<button className="btn btn-primary right" onClick={() => toggleExpanded(routeSet.id)}>
-								<FontAwesomeIcon icon={faCheck} />
-							</button>
 							<button className="btn btn-secondary" onClick={() => addNewRouteInSet(routeSet.id)}>
 								<FontAwesomeIcon icon={faPlus} />
 							</button>
@@ -458,6 +474,28 @@ function RenderRouteSet({
 									onClick={resyncRoutesTable}
 									title="Reset to default"
 									disabled={!routesIsOverridden}
+								>
+									{t('Reset')}
+									&nbsp;
+									<FontAwesomeIcon icon={faSync} />
+								</button>
+							)}
+						</div>
+						<RenderAbPlayers routeSet={routeSet} overrideHelper={overrideHelper} />
+						<div className="mod">
+							<button className="btn btn-primary right" onClick={() => toggleExpanded(routeSet.id)}>
+								<FontAwesomeIcon icon={faCheck} />
+							</button>
+							<button className="btn btn-secondary" onClick={() => addNewAbPlayerInSet(routeSet.id)}>
+								<FontAwesomeIcon icon={faPlus} />
+							</button>
+							&nbsp;
+							{routeSet.defaults && (
+								<button
+									className="btn btn-primary"
+									onClick={resyncAbPlayerTable}
+									title="Reset to default"
+									disabled={!abPlayerIsOverridden}
 								>
 									{t('Reset')}
 									&nbsp;
@@ -810,6 +848,141 @@ function DeviceMappingSettings({
 	} else {
 		return null
 	}
+}
+
+interface IRenderAbPlayersProps {
+	routeSet: WrappedOverridableItemNormal<StudioRouteSet>
+	overrideHelper: OverrideOpHelper
+}
+
+function RenderAbPlayers({ routeSet, overrideHelper }: Readonly<IRenderAbPlayersProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const abPlayersBuffer = routeSet.computed.abPlayers
+
+	const tableOverrideHelper = React.useMemo(
+		() => new OverrideOpHelperArrayTable(overrideHelper, routeSet.id, abPlayersBuffer, 'abPlayers'),
+		[overrideHelper, routeSet.id, abPlayersBuffer]
+	)
+
+	const confirmRemoveAbPlayer = React.useCallback(
+		(route: WrappedOverridableItemNormal<StudioAbPlayerDisabling>) => {
+			doModalDialog({
+				title: t('Remove this AB PLayers from this Route Set?'),
+				yes: t('Remove'),
+				no: t('Cancel'),
+				onAccept: () => {
+					tableOverrideHelper.deleteRow(route.id)
+				},
+				message: (
+					<>
+						<p>
+							{t('Are you sure you want to remove the AB Player "{{playerId}}"?', {
+								playerId: route.computed.playerId,
+							})}
+						</p>
+						<p>{t('Please note: This action is irreversible!')}</p>
+					</>
+				),
+			})
+		},
+		[tableOverrideHelper]
+	)
+
+	return (
+		<>
+			<h4 className="mod mhs">{t('AB Playout devices')}</h4>
+			{routeSet.computed?.abPlayers?.length === 0 ? (
+				<p className="text-s dimmed field-hint mhs">{t('There are no AB Playout devices set up yet')}</p>
+			) : null}
+			{abPlayersBuffer.map((route, index) => (
+				<RenderAbPlayerRow
+					key={index}
+					tableOverrideHelper={tableOverrideHelper}
+					abPlayers={routeSet.computed.abPlayers}
+					rawRoute={route}
+					routeIndex={index}
+					confirmRemoveAbPlayer={confirmRemoveAbPlayer}
+				/>
+			))}
+		</>
+	)
+}
+
+interface RenderAbPlayerRowProps {
+	tableOverrideHelper: OverrideOpHelperArrayTable
+	abPlayers: StudioAbPlayerDisabling[]
+	rawRoute: StudioAbPlayerDisabling
+	routeIndex: number
+	confirmRemoveAbPlayer: (route: WrappedOverridableItemNormal<any>) => void
+}
+
+function RenderAbPlayerRow({
+	tableOverrideHelper,
+	rawRoute,
+	routeIndex,
+	confirmRemoveAbPlayer,
+}: Readonly<RenderAbPlayerRowProps>): React.JSX.Element {
+	const { t } = useTranslation()
+
+	const player = React.useMemo(
+		() =>
+			literal<WrappedOverridableItemNormal<StudioAbPlayerDisabling>>({
+				type: 'normal',
+				id: routeIndex + '',
+				computed: rawRoute,
+				defaults: undefined,
+				overrideOps: [],
+			}),
+		[rawRoute, routeIndex]
+	)
+
+	const confirmRemoveRouteLocal = React.useCallback(
+		() => confirmRemoveAbPlayer(player),
+		[confirmRemoveAbPlayer, player]
+	)
+
+	return (
+		<div className="route-sets-editor mod pan mas">
+			<button className="action-btn right mod man pas" onClick={confirmRemoveRouteLocal}>
+				<FontAwesomeIcon icon={faTrash} />
+			</button>
+			<div className="properties-grid">
+				<LabelAndOverrides
+					label={t('Pool PlayerId')}
+					item={player}
+					itemKey={'playerId'}
+					opPrefix={player.id}
+					overrideHelper={tableOverrideHelper}
+				>
+					{(value, handleUpdate) => (
+						<TextInputControl
+							modifiedClassName="bghl"
+							classNames="input text-input input-l"
+							value={value}
+							handleUpdate={handleUpdate}
+						/>
+					)}
+				</LabelAndOverrides>
+				<LabelAndOverrides
+					label={t('Pool name')}
+					item={player}
+					itemKey={'poolName'}
+					opPrefix={player.id}
+					overrideHelper={tableOverrideHelper}
+				>
+					{(value, handleUpdate) => (
+						<TextInputControl
+							modifiedClassName="bghl"
+							classNames="input text-input input-l"
+							value={value}
+							handleUpdate={handleUpdate}
+						/>
+					)}
+				</LabelAndOverrides>
+			</div>
+		</div>
+	)
 }
 
 interface IRenderExclusivityGroupsProps {

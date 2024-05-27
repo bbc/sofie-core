@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react'
 // @ts-expect-error No types available
 import * as VelocityReact from 'velocity-react'
 
-import {
-	StudioRouteSet,
-	StudioRouteBehavior,
-	StudioRouteSetExclusivityGroup,
-} from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { StudioRouteSet, StudioRouteBehavior } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { RewindAllSegmentsIcon } from '../../lib/ui/icons/rewindAllSegmentsIcon'
 
 import { Lottie } from '@crello/react-lottie'
@@ -26,15 +22,11 @@ import { SegmentViewMode } from '../../lib/ui/icons/listView'
 import { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { MediaStatusPopUp } from './MediaStatusPopUp'
 import { MediaStatusIcon } from '../../lib/ui/icons/mediaStatus'
+import { UIStudio } from '../../../lib/api/studios'
 
 interface IProps {
 	playlistId: RundownPlaylistId
-	studioRouteSets: {
-		[id: string]: StudioRouteSet
-	}
-	studioRouteSetExclusivityGroups: {
-		[id: string]: StudioRouteSetExclusivityGroup
-	}
+	studio: UIStudio
 	isFollowingOnAir: boolean
 	onFollowOnAir?: () => void
 	onRewindSegments?: () => void
@@ -108,7 +100,7 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 		setSwitchboardOpen(false)
 	}
 
-	const availableRouteSets = Object.entries<StudioRouteSet>(props.studioRouteSets)
+	const availableRouteSets = Object.entries<StudioRouteSet>(props.studio.routeSets)
 		.filter(([_id, routeSet]) => routeSet.behavior !== StudioRouteBehavior.HIDDEN)
 		.sort((a, b) => {
 			if (a[1].name < b[1].name) return -1
@@ -242,7 +234,7 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 					<SegmentViewMode />
 				</button>
 				{props.isStudioMode &&
-					props.studioRouteSets &&
+					props.studio.routeSets &&
 					props.onStudioRouteSetSwitch &&
 					availableRouteSets.length > 0 && (
 						<>
@@ -286,7 +278,7 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 								{switchboardOpen && (
 									<SwitchboardPopUp
 										availableRouteSets={availableRouteSets}
-										studioRouteSetExclusivityGroups={props.studioRouteSetExclusivityGroups}
+										studio={props.studio}
 										onStudioRouteSetSwitch={props.onStudioRouteSetSwitch}
 									/>
 								)}

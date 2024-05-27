@@ -1,14 +1,11 @@
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-	StudioRouteSet,
-	StudioRouteSetExclusivityGroup,
-	StudioRouteBehavior,
-} from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { StudioRouteSet, StudioRouteBehavior } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import classNames from 'classnames'
 import { RouteSetOverrideIcon } from '../../lib/ui/icons/switchboard'
 import Tooltip from 'rc-tooltip'
 import { TOOLTIP_DEFAULT_DELAY } from '../../lib/lib'
+import { UIStudio } from '../../../lib/api/studios'
 
 interface IProps {
 	onStudioRouteSetSwitch?: (
@@ -18,9 +15,7 @@ interface IProps {
 		state: boolean
 	) => void
 	availableRouteSets: [string, StudioRouteSet][]
-	studioRouteSetExclusivityGroups: {
-		[id: string]: StudioRouteSetExclusivityGroup
-	}
+	studio: UIStudio
 }
 
 /**
@@ -43,8 +38,8 @@ export function SwitchboardPopUp(props: Readonly<IProps>): JSX.Element {
 				<h2 className="mhn mvn">{t('Switchboard')}</h2>
 				{Object.entries<[string, StudioRouteSet][]>(exclusivityGroups).map(([key, routeSets]) => (
 					<div className="switchboard-pop-up-panel__group" key={key}>
-						{props.studioRouteSetExclusivityGroups[key]?.name && (
-							<p className="mhs mbs mtn">{props.studioRouteSetExclusivityGroups[key]?.name}</p>
+						{props.studio.routeSetExclusivityGroups[key]?.name && (
+							<p className="mhs mbs mtn">{props.studio.routeSetExclusivityGroups[key]?.name}</p>
 						)}
 						{routeSets.length === 2 &&
 						routeSets[0][1].behavior === StudioRouteBehavior.ACTIVATE_ONLY &&
@@ -164,7 +159,66 @@ export function SwitchboardPopUp(props: Readonly<IProps>): JSX.Element {
 						)}
 					</div>
 				))}
+				{/* <AbPoolsDisabling studio={props.studio} onStudioAbPoolDisablingSwitch={props.onStudioAbPoolDisablingSwitch} /> */}
 			</div>
 		</div>
 	)
 }
+
+// function AbPoolsDisabling(props: {
+// 	onStudioAbPoolDisablingSwitch?: IProps['onStudioAbPoolDisablingSwitch']
+// 	studio: UIStudio
+// }) {
+// 	const { t } = useTranslation()
+// 	if (!abPools) return <div />
+
+// 	return (
+// 		<div className="switchboard-pop-up-panel__group">
+// 			{Object.keys(abPools).map((poolKey: string) => {
+// 				const abPool = abPools[poolKey]
+// 				return (
+// 					<div key={poolKey} className="switchboard-pop-up-panel__group__controls">
+// 						AB Pool - {poolKey}:
+// 						<div className="switchboard-pop-up-panel__group">
+// 							{Object.keys(abPool.players).map((playerKey: string) => {
+// 								const player = abPool.players[playerKey]
+// 								return (
+// 									<div key={playerKey} className="switchboard-pop-up-panel__group__controls mhm mbs">
+// 										<span className="switchboard-pop-up-panel__group__controls__active">{t('Off')}</span>
+// 										<a
+// 											className={classNames('switch-button', 'sb-nocolor', {
+// 												'sb-on': !player.disabled,
+// 											})}
+// 											role="button"
+// 											onClick={(e) => {
+// 												props.onStudioAbPoolDisablingSwitch &&
+// 													props.onStudioAbPoolDisablingSwitch(e, poolKey, playerKey, !player.disabled)
+// 											}}
+// 											tabIndex={0}
+// 										>
+// 											<div className="sb-content">
+// 												<div className="sb-label">
+// 													<span className="mls">&nbsp;</span>
+// 													<span className="mrs right">&nbsp;</span>
+// 												</div>
+// 												<div className="sb-switch"></div>
+// 											</div>
+// 										</a>
+// 										<span
+// 											className={classNames({
+// 												'switchboard-pop-up-panel__group__controls__active': !player.disabled,
+// 												'switchboard-pop-up-panel__group__controls__inactive': player.disabled,
+// 											})}
+// 										>
+// 											{playerKey}
+// 										</span>
+// 									</div>
+// 								)
+// 							})}
+// 						</div>
+// 					</div>
+// 				)
+// 			})}
+// 		</div>
+// 	)
+// }

@@ -18,7 +18,10 @@ export interface StudioRouteSet {
 	behavior: StudioRouteBehavior
 
 	routes: RouteMapping[]
+	/** AB Pool members */
+	abPlayers: StudioAbPlayerDisabling[]
 }
+
 export enum StudioRouteBehavior {
 	HIDDEN = 0,
 	TOGGLE = 1,
@@ -36,6 +39,12 @@ export interface RouteMapping extends ResultingMappingRoute {
 	/** Which original layer to route. If false, a "new" layer will be inserted during routing */
 	mappedLayer: string | undefined
 }
+
+export interface StudioAbPlayerDisabling {
+	poolName: string
+	playerId: string | number
+}
+
 export interface ResultingMappingRoutes {
 	/** Routes that route existing layers */
 	existing: {
