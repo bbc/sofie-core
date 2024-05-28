@@ -65,7 +65,7 @@ class SegmentTimingPanelInner extends React.Component<
 					)}
 					{this.props.active && this.props.liveSegment && this.props.parts && this.props.pieces && (
 						<SegmentDuration
-							segmentId={this.props.liveSegment._id}
+							segment={this.props.liveSegment}
 							parts={this.props.parts}
 							pieces={this.props.pieces}
 							countUp={panel.timingType === 'count_up'}

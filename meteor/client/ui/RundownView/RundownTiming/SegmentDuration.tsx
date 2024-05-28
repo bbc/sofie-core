@@ -1,18 +1,18 @@
 import classNames from 'classnames'
 import React, { ReactNode } from 'react'
 import { withTiming, WithTiming } from './withTiming'
-import { unprotectString } from '../../../../lib/lib'
 import { RundownUtils } from '../../../lib/rundown'
 import { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer'
 import {
 	calculatePartInstanceExpectedDurationWithPreroll,
 	CalculateTimingsPiece,
 } from '@sofie-automation/corelib/dist/playout/timings'
-import { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { getPartInstanceTimingId } from '../../../lib/rundownTiming'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 
 interface ISegmentDurationProps {
-	segmentId: SegmentId
+	segment: DBSegment
 	parts: PartUi[]
 	pieces: Map<PartId, CalculateTimingsPiece[]>
 	label?: ReactNode
@@ -36,9 +36,7 @@ export const SegmentDuration = withTiming<ISegmentDurationProps, {}>()(function 
 	let budget = 0
 	let playedOut = 0
 
-	const segmentBudgetDuration =
-		props.timingDurations.segmentBudgetDurations &&
-		props.timingDurations.segmentBudgetDurations[unprotectString(props.segmentId)]
+	const segmentBudgetDuration = props.segment.segmentTiming?.budgetDuration
 
 	if (segmentBudgetDuration !== undefined) {
 		budget = segmentBudgetDuration

@@ -55,7 +55,6 @@ interface IProps {
 	onHeaderNoteClick?: (segmentId: SegmentId, level: NoteSeverity) => void
 	isLastSegment: boolean
 	lastValidPartIndex: number | undefined
-	budgetDuration?: number
 	showCountdownToSegment: boolean
 	fixedSegmentDuration: boolean | undefined
 	subscriptionsReady: boolean

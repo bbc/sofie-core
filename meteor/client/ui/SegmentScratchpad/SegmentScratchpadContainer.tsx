@@ -227,7 +227,6 @@ export const SegmentScratchpadContainer = withResolvedSegment<IProps>(function S
 			isLastSegment={props.isLastSegment}
 			lastValidPartIndex={props.lastValidPartIndex}
 			onHeaderNoteClick={props.onHeaderNoteClick}
-			budgetDuration={props.budgetDuration}
 			showCountdownToSegment={props.showCountdownToSegment}
 			fixedSegmentDuration={props.fixedSegmentDuration}
 			subscriptionsReady={initialSubscriptionsReady}
