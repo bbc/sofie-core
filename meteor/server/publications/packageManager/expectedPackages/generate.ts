@@ -17,6 +17,7 @@ import { CustomPublishCollection } from '../../../lib/customPublication'
 import { logger } from '../../../logging'
 import { ExpectedPackagesContentCache } from './contentCache'
 import type { StudioFields } from './publication'
+import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 
 /**
  * Regenerate the output for the provided ExpectedPackage `regenerateIds`, updating the data in `collection` as needed
@@ -172,7 +173,10 @@ enum Priorities {
 }
 
 function generateExpectedPackageForDevice(
-	studio: Pick<StudioLight, '_id' | 'packageContainers' | 'previewContainerIds' | 'thumbnailContainerIds'>,
+	studio: Pick<
+		StudioLight,
+		'_id' | 'packageContainersWithOverrides' | 'previewContainerIds' | 'thumbnailContainerIds'
+	>,
 	expectedPackage: PackageManagerExpectedPackageBase,
 	deviceId: PeripheralDeviceId,
 	pieceInstanceId: PieceInstanceId | null,
@@ -182,7 +186,9 @@ function generateExpectedPackageForDevice(
 	const combinedSources: PackageContainerOnPackage[] = []
 
 	for (const packageSource of expectedPackage.sources) {
-		const lookedUpSource = studio.packageContainers[packageSource.containerId]
+		const lookedUpSource = applyAndValidateOverrides(studio.packageContainersWithOverrides).obj[
+			packageSource.containerId
+		]
 		if (lookedUpSource) {
 			combinedSources.push(calculateCombinedSource(packageSource, lookedUpSource))
 		} else {
@@ -253,14 +259,15 @@ function calculateCombinedSource(
 	return combinedSource
 }
 function calculateCombinedTargets(
-	studio: Pick<StudioLight, '_id' | 'packageContainers'>,
+	studio: Pick<StudioLight, '_id' | 'packageContainersWithOverrides'>,
 	expectedPackage: PackageManagerExpectedPackageBase,
 	deviceId: PeripheralDeviceId
 ): PackageContainerOnPackage[] {
 	const mappingDeviceId = unprotectString(deviceId)
+	const packageContainers = applyAndValidateOverrides(studio.packageContainersWithOverrides).obj
 
 	let packageContainerId: string | undefined
-	for (const [containerId, packageContainer] of Object.entries<StudioPackageContainer>(studio.packageContainers)) {
+	for (const [containerId, packageContainer] of Object.entries<StudioPackageContainer>(packageContainers)) {
 		if (packageContainer.deviceIds.includes(mappingDeviceId)) {
 			// TODO: how to handle if a device has multiple containers?
 			packageContainerId = containerId
@@ -270,7 +277,7 @@ function calculateCombinedTargets(
 
 	const combinedTargets: PackageContainerOnPackage[] = []
 	if (packageContainerId) {
-		const lookedUpTarget = studio.packageContainers[packageContainerId]
+		const lookedUpTarget = packageContainers[packageContainerId]
 		if (lookedUpTarget) {
 			// Todo: should the be any combination of properties here?
 			combinedTargets.push({

@@ -8,7 +8,7 @@ import {
 	ObjectWithOverrides,
 	SomeObjectOverrideOp,
 } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
-import { useOverrideOpHelper, WrappedOverridableItemNormal } from '../util/OverrideOpHelper'
+import { useOverrideOpHelper, WrappedOverridableItemNormal } from '../../util/OverrideOpHelper'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import deepmerge from 'deepmerge'
 import { SchemaFormSofieEnumDefinition, translateStringIfHasNamespaces } from '../../../lib/forms/schemaFormUtil'

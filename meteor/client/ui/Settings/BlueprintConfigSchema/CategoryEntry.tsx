@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IBlueprintConfig } from '@sofie-automation/blueprints-integration'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import { SchemaFormSofieEnumDefinition } from '../../../lib/forms/schemaFormUtil'
-import { WrappedOverridableItemNormal, OverrideOpHelperForItemContents } from '../util/OverrideOpHelper'
+import { WrappedOverridableItemNormal, OverrideOpHelperForItemContents } from '../../util/OverrideOpHelper'
 
 interface ConfigCategoryEntryProps {
 	translationNamespaces: string[]

@@ -101,9 +101,9 @@ export function defaultStudio(_id: StudioId): DBStudio {
 			mediaPreviewsUrl: '',
 			minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 		},
-		routeSets: {},
-		routeSetExclusivityGroups: {},
-		packageContainers: {},
+		routeSetsWithOverrides: wrapDefaultObject({}),
+		routeSetExclusivityGroupsWithOverrides: wrapDefaultObject({}),
+		packageContainersWithOverrides: wrapDefaultObject({}),
 		previewContainerIds: [],
 		thumbnailContainerIds: [],
 		peripheralDeviceSettings: {

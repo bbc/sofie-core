@@ -6,7 +6,7 @@ import { PeripheralDevice, PeripheralDeviceCategory } from '@sofie-automation/co
 import { getHelpMode } from '../../../../lib/localStorage'
 import Tooltip from 'rc-tooltip'
 import { useTranslation } from 'react-i18next'
-import { getAllCurrentAndDeletedItemsFromOverrides, useOverrideOpHelper } from '../../util/OverrideOpHelper'
+import { getAllCurrentAndDeletedItemsFromOverrides, useOverrideOpHelper } from '../../../util/OverrideOpHelper'
 import {
 	ObjectOverrideSetOp,
 	SomeObjectOverrideOp,

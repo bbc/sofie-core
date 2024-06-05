@@ -24,6 +24,7 @@ import {
 	MappingsExt,
 	ResultingMappingRoutes,
 	StudioPackageContainer,
+	StudioRouteSet,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { literal, Complete, assertNever } from '@sofie-automation/corelib/dist/lib'
 import { ReadonlyDeep } from 'type-fest'
@@ -42,6 +43,7 @@ import {
 	PackageInfoLight,
 	PieceDependencies,
 } from './common'
+import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 
 interface ScanInfoForPackages {
 	[packageId: string]: ScanInfoForPackage
@@ -174,10 +176,17 @@ export type PieceContentStatusPiece = Pick<PieceGeneric, '_id' | 'content' | 'ex
 export interface PieceContentStatusStudio
 	extends Pick<
 		DBStudio,
-		'_id' | 'settings' | 'packageContainers' | 'previewContainerIds' | 'thumbnailContainerIds' | 'routeSets'
+		| '_id'
+		| 'settings'
+		| 'packageContainersWithOverrides'
+		| 'previewContainerIds'
+		| 'thumbnailContainerIds'
+		| 'routeSetsWithOverrides'
 	> {
 	/** Mappings between the physical devices / outputs and logical ones */
 	mappings: MappingsExt
+	/** Route sets with overrides */
+	routeSets: Record<string, StudioRouteSet>
 }
 
 export async function checkPieceContentStatusAndDependencies(
@@ -516,7 +525,7 @@ async function checkPieceContentExpectedPackageStatus(
 			for (const routedDeviceId of routedDeviceIds) {
 				let packageContainerId: string | undefined
 				for (const [containerId, packageContainer] of Object.entries<ReadonlyDeep<StudioPackageContainer>>(
-					studio.packageContainers
+					applyAndValidateOverrides(studio.packageContainersWithOverrides).obj
 				)) {
 					if (packageContainer.deviceIds.includes(unprotectString(routedDeviceId))) {
 						// TODO: how to handle if a device has multiple containers?
@@ -727,7 +736,7 @@ async function getAssetUrlFromPackageContainerStatus(
 ): Promise<string | undefined> {
 	if (!assetContainerId || !packageAssetPath) return
 
-	const assetPackageContainer = studio.packageContainers[assetContainerId]
+	const assetPackageContainer = applyAndValidateOverrides(studio.packageContainersWithOverrides).obj[assetContainerId]
 	if (!assetPackageContainer) return
 
 	const previewPackageOnPackageContainer = await getPackageContainerPackageStatus(assetContainerId, expectedPackageId)

@@ -30,7 +30,13 @@ import {
 } from './actionFilterChainCompilers'
 import { ClientAPI } from '../client'
 import { ReactiveVar } from 'meteor/reactive-var'
-import { PartId, PartInstanceId, RundownId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import {
+	PartId,
+	PartInstanceId,
+	RundownId,
+	RundownPlaylistId,
+	StudioId,
+} from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { PartInstances, Parts } from '../../collections/libCollections'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil'
 import { hashSingleUseToken } from '../userActions'
@@ -43,6 +49,7 @@ type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
 
 export interface ReactivePlaylistActionContext {
+	studioId: ReactiveVar<StudioId>
 	rundownPlaylistId: ReactiveVar<RundownPlaylistId>
 	rundownPlaylist: ReactiveVar<
 		Pick<DBRundownPlaylist, '_id' | 'name' | 'activationId' | 'nextPartInfo' | 'currentPartInfo'>
@@ -116,6 +123,7 @@ function createRundownPlaylistContext(
 	} else if (filterChain[0].object === 'view' && context.rundownPlaylist) {
 		const playlistContext = context as PlainPlaylistContext
 		return {
+			studioId: new DummyReactiveVar(playlistContext.rundownPlaylist.studioId),
 			rundownPlaylistId: new DummyReactiveVar(playlistContext.rundownPlaylist._id),
 			rundownPlaylist: new DummyReactiveVar(playlistContext.rundownPlaylist),
 			currentRundownId: new DummyReactiveVar(playlistContext.currentRundownId),
@@ -161,7 +169,8 @@ function createRundownPlaylistContext(
 			}
 
 			return {
-				rundownPlaylistId: new DummyReactiveVar(playlist?._id),
+				studioId: new DummyReactiveVar(playlist.studioId),
+				rundownPlaylistId: new DummyReactiveVar(playlist._id),
 				rundownPlaylist: new DummyReactiveVar(playlist),
 				currentRundownId: new DummyReactiveVar(
 					currentPartInstance?.rundownId ??
@@ -583,6 +592,10 @@ export function createAction(action: SomeAction, sourceLayers: SourceLayers): Ex
 		case PlayoutActions.resyncRundownPlaylist:
 			return createUserActionWithCtx(action, UserAction.RESYNC_RUNDOWN_PLAYLIST, async (e, ts, ctx) =>
 				MeteorCall.userAction.resyncRundownPlaylist(e, ts, ctx.rundownPlaylistId.get())
+			)
+		case PlayoutActions.switchRouteSet:
+			return createUserActionWithCtx(action, UserAction.SWITCH_ROUTE_SET, async (e, ts, ctx) =>
+				MeteorCall.userAction.switchRouteSet(e, ts, ctx.studioId.get(), action.routeSetId, 'toggle')
 			)
 		case ClientActions.showEntireCurrentSegment:
 			return createShowEntireCurrentSegmentAction(action.filterChain, action.on)

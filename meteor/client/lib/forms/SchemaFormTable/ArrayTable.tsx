@@ -3,10 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { clone, objectPathGet } from '@sofie-automation/corelib/dist/lib'
 import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-	WrappedOverridableItemNormal,
-	OverrideOpHelperForItemContents,
-} from '../../../ui/Settings/util/OverrideOpHelper'
+import { WrappedOverridableItemNormal, OverrideOpHelperForItemContents } from '../../../ui/util/OverrideOpHelper'
 import { useToggleExpandHelper } from '../../../ui/util/useToggleExpandHelper'
 import { doModalDialog } from '../../ModalDialog'
 import {

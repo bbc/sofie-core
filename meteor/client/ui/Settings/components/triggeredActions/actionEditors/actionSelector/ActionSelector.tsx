@@ -71,6 +71,11 @@ function getArguments(t: TFunction, action: SomeAction): string[] {
 			break
 		case PlayoutActions.resyncRundownPlaylist:
 			break
+		case PlayoutActions.switchRouteSet:
+			if (action.routeSetId) {
+				result.push(t('Route Set: {{routeSet}}', { routeSet: action.routeSetId }))
+			}
+			break
 		case ClientActions.shelf:
 			if (action.state === true) {
 				result.push(t('Open'))
@@ -124,6 +129,8 @@ function hasArguments(action: SomeAction): boolean {
 			return !!action.undo
 		case PlayoutActions.moveNext:
 			return !!(action.parts || action.segments)
+		case PlayoutActions.switchRouteSet:
+			return !!action.routeSetId
 		case PlayoutActions.reloadRundownPlaylistData:
 			return false
 		case PlayoutActions.resetRundownPlaylist:
@@ -176,6 +183,8 @@ function actionToLabel(t: TFunction, action: SomeAction['action']): string {
 			return t('Take')
 		case PlayoutActions.resyncRundownPlaylist:
 			return t('Resync with NRCS')
+		case PlayoutActions.switchRouteSet:
+			return t('Switch Route Set')
 		case ClientActions.shelf:
 			return t('Shelf')
 		case ClientActions.rewindSegments:
@@ -254,6 +263,8 @@ function getActionParametersEditor(
 		case PlayoutActions.deactivateRundownPlaylist:
 			return null
 		case PlayoutActions.activateScratchpadMode:
+			return null
+		case PlayoutActions.switchRouteSet:
 			return null
 		case PlayoutActions.disableNextPiece:
 			return (
