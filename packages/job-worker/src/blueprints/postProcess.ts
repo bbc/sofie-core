@@ -34,7 +34,10 @@ import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibActio
 import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
 import { ArrayElement, getHash, literal, omit } from '@sofie-automation/corelib/dist/lib'
 import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
-import { RundownImportVersions } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import {
+	CoreUserEditingDefinitionAction,
+	RundownImportVersions,
+} from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { BucketAdLib, BucketAdLibIngestInfo } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 import {
 	interpollateTranslation,
@@ -109,7 +112,10 @@ export function postProcessPieces(
 			startPartId: partId,
 			invalid: setInvalid ?? false,
 			timelineObjectsString: EmptyPieceTimelineObjectsBlob,
-			userEdits: translateUserEditsFromBlueprint(orgPiece.userEdits, [blueprintId]),
+			userEdits:
+				(translateUserEditsFromBlueprint(orgPiece.userEdits, [
+					blueprintId,
+				]) as CoreUserEditingDefinitionAction[]) || undefined,
 		}
 
 		if (piece.pieceType !== IBlueprintPieceType.Normal) {
