@@ -17,7 +17,7 @@ import {
 	AdLibActions,
 	AdLibPieces,
 	ExpectedPlayoutItems,
-	IngestDataCache,
+	NrcsIngestDataCache,
 	PartInstances,
 	Parts,
 	PeripheralDevices,
@@ -572,7 +572,7 @@ meteorPublish(
 			NoSecurityReadAccess.any() ||
 			(await RundownReadAccess.rundownContent(selector.rundownId, { userId: this.userId, token }))
 		) {
-			return IngestDataCache.findWithCursor(selector, modifier)
+			return NrcsIngestDataCache.findWithCursor(selector, modifier)
 		}
 		return null
 	}

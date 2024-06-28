@@ -10,6 +10,7 @@ import { IContextMenuContext } from '../RundownView'
 import { PartUi, SegmentUi } from './SegmentTimelineContainer'
 import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { RenderUserEditOperations } from '../UserEditOperations/RenderUserEditOperations'
 
 interface IProps {
 	onSetNext: (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => void
@@ -31,6 +32,8 @@ export const SegmentContextMenu = withTranslation()(
 		render(): JSX.Element | null {
 			const { t } = this.props
 
+			if (!this.props.studioMode || !this.props.playlist || !this.props.playlist.activationId) return null
+
 			const part = this.getPartFromContext()
 			const segment = this.getSegmentFromContext()
 			const timecode = this.getTimePosition()
@@ -39,6 +42,15 @@ export const SegmentContextMenu = withTranslation()(
 			const isCurrentPart =
 				(part && this.props.playlist && part.instance._id === this.props.playlist.currentPartInfo?.partInstanceId) ||
 				undefined
+
+			const isSegmentEditAble = segment?._id !== this.props.playlist.queuedSegmentId && segment?.protectFromUserEdits
+
+			const isPartEditAble =
+				isSegmentEditAble &&
+				part?.instance.part.protectFromUserEdits &&
+				part?.instance._id !== this.props.playlist.currentPartInfo?.partInstanceId &&
+				part?.instance._id !== this.props.playlist.nextPartInfo?.partInstanceId &&
+				part?.instance._id !== this.props.playlist.previousPartInfo?.partInstanceId
 
 			const canSetAsNext = !!this.props.playlist?.activationId
 
@@ -68,6 +80,12 @@ export const SegmentContextMenu = withTranslation()(
 										<span>{t('Clear queued segment')}</span>
 									</MenuItem>
 								)}
+								{segment &&
+									RenderUserEditOperations(isSegmentEditAble, segment.rundownId, segment.name, segment.userEdits, {
+										segmentExternalId: segment?.externalId,
+										partExternalId: undefined,
+										pieceExternalId: undefined,
+									})}
 								<hr />
 							</>
 						)}
@@ -99,6 +117,17 @@ export const SegmentContextMenu = withTranslation()(
 										</MenuItem>
 									</>
 								) : null}
+								{RenderUserEditOperations(
+									isPartEditAble,
+									part.instance.rundownId,
+									part.instance.part.title,
+									part.instance.part.userEdits,
+									{
+										segmentExternalId: segment?.externalId,
+										partExternalId: part.instance.part.externalId,
+										pieceExternalId: undefined,
+									}
+								)}
 							</>
 						)}
 					</ContextMenu>

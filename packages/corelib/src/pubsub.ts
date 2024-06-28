@@ -225,7 +225,7 @@ export interface CorelibPubSubTypes {
 	[CorelibPubSub.ingestDataCache]: (
 		selector: MongoQuery<IngestDataCacheObj>,
 		token?: string
-	) => CollectionName.IngestDataCache
+	) => CollectionName.NrcsIngestDataCache
 	[CorelibPubSub.rundownPlaylists]: (
 		/** RundownPlaylistIds to fetch for, or null to fetch all */
 		rundownPlaylistIds: RundownPlaylistId[] | null,
@@ -346,7 +346,7 @@ export type CorelibPubSubCollections = {
 	[CollectionName.ExpectedPackages]: ExpectedPackageDBBase
 	[CollectionName.ExpectedPackageWorkStatuses]: ExpectedPackageWorkStatus
 	[CollectionName.ExternalMessageQueue]: ExternalMessageQueueObj
-	[CollectionName.IngestDataCache]: IngestDataCacheObj
+	[CollectionName.NrcsIngestDataCache]: IngestDataCacheObj
 	[CollectionName.PartInstances]: DBPartInstance
 	[CollectionName.PackageContainerStatuses]: PackageContainerStatusDB
 	[CollectionName.PackageInfos]: PackageInfoDB

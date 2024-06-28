@@ -19,7 +19,12 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { Piece, PieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
-import { DBRundown, RundownOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import {
+	CoreUserEditingDefinition,
+	CoreUserEditingDefinitionAction,
+	DBRundown,
+	RundownOrphanedReason,
+} from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
 import { RundownBaselineAdLibItem } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibPiece'
 import { RundownBaselineObj } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineObj'
@@ -292,7 +297,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		return undefined
 	}
 	/**
-	 * Get the Segments of this Rundown, in order
+	 * Get the Segments of this Rundown, in no particular order
 	 */
 	getAllSegments(): IngestSegmentModel[] {
 		const segments: IngestSegmentModel[] = []
@@ -422,7 +427,8 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		showStyleVariant: ReadonlyDeep<ProcessedShowStyleVariant>,
 		showStyleBlueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 		peripheralDevice: ReadonlyDeep<PeripheralDevice> | undefined,
-		rundownNotes: RundownNote[]
+		rundownNotes: RundownNote[],
+		userEdits: CoreUserEditingDefinition[] | undefined
 	): ReadonlyDeep<DBRundown> {
 		const newRundown = literal<Complete<DBRundown>>({
 			...clone(rundownData as Complete<IBlueprintRundown>),
@@ -433,6 +439,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 			studioId: this.context.studio._id,
 			showStyleVariantId: showStyleVariant._id,
 			showStyleBaseId: showStyleBase._id,
+			userEdits: clone(userEdits) as CoreUserEditingDefinitionAction[] | undefined,
 			orphaned: undefined,
 
 			importVersions: {

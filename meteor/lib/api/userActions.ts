@@ -2,7 +2,7 @@ import { ClientAPI } from '../api/client'
 import { MethodContext } from './methods'
 import { EvaluationBase } from '../collections/Evaluations'
 import { Bucket } from '../collections/Buckets'
-import { IngestAdlib, ActionUserData } from '@sofie-automation/blueprints-integration'
+import { IngestAdlib, ActionUserData, UserOperationTarget } from '@sofie-automation/blueprints-integration'
 import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 import { AdLibActionCommon } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
@@ -327,6 +327,13 @@ export interface NewUserActionAPI extends MethodContext {
 		playlistId: RundownPlaylistId,
 		rundownId: RundownId
 	): Promise<ClientAPI.ClientResponse<void>>
+	executeUserChangeOperation(
+		userEvent: string,
+		eventTime: Time,
+		rundownId: RundownId,
+		operationTarget: UserOperationTarget,
+		operation: { id: string; [key: string]: any }
+	): Promise<ClientAPI.ClientResponse<void>>
 }
 
 export enum UserActionAPIMethods {
@@ -407,6 +414,7 @@ export enum UserActionAPIMethods {
 	'disablePeripheralSubDevice' = 'userAction.system.disablePeripheralSubDevice',
 
 	'activateScratchpadMode' = 'userAction.activateScratchpadMode',
+	'executeUserChangeOperation' = 'userAction.executeUserChangeOperation',
 }
 
 export interface ReloadRundownPlaylistResponse {

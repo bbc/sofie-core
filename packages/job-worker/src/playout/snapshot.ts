@@ -18,16 +18,10 @@ import {
 	RestorePlaylistSnapshotResult,
 } from '@sofie-automation/corelib/dist/worker/studio'
 import { getCurrentTime, getSystemVersion } from '../lib'
-import _ = require('underscore')
 import { JobContext } from '../jobs'
 import { runWithPlaylistLock } from './lock'
 import { CoreRundownPlaylistSnapshot } from '@sofie-automation/corelib/dist/snapshots'
-import {
-	unprotectString,
-	ProtectedString,
-	protectStringArray,
-	protectString,
-} from '@sofie-automation/corelib/dist/protectedString'
+import { unprotectString, ProtectedString, protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { saveIntoDb } from '../db/changes'
 import { getPartId, getSegmentId } from '../ingest/lib'
 import { assertNever, getRandomId, literal } from '@sofie-automation/corelib/dist/lib'
@@ -52,10 +46,15 @@ export async function handleGeneratePlaylistSnapshot(
 
 		const rundowns = await context.directCollections.Rundowns.findFetch({ playlistId: playlist._id })
 		const rundownIds = rundowns.map((i) => i._id)
-		const ingestData = await context.directCollections.IngestDataCache.findFetch(
+		const ingestData = await context.directCollections.NrcsIngestDataCache.findFetch(
 			{ rundownId: { $in: rundownIds } },
 			{ sort: { modified: -1 } }
 		) // @todo: check sorting order
+		const sofieIngestData = await context.directCollections.SofieIngestDataCache.findFetch(
+			{ rundownId: { $in: rundownIds } },
+			{ sort: { modified: -1 } }
+		) // @todo: check sorting order
+
 		// const userActions = await context.directCollections.UserActionsLog.findFetch({
 		// 	args: {
 		// 		$regex:
@@ -120,6 +119,7 @@ export async function handleGeneratePlaylistSnapshot(
 			playlist,
 			rundowns,
 			ingestData,
+			sofieIngestData,
 			baselineObjs,
 			baselineAdlibs,
 			segments,
@@ -393,9 +393,15 @@ export async function handleRestorePlaylistSnapshot(
 		saveIntoDb(context, context.directCollections.Rundowns, { playlistId }, snapshot.rundowns),
 		saveIntoDb(
 			context,
-			context.directCollections.IngestDataCache,
+			context.directCollections.NrcsIngestDataCache,
 			{ rundownId: { $in: rundownIds } },
 			updateItemIds(snapshot.ingestData, true)
+		),
+		saveIntoDb(
+			context,
+			context.directCollections.SofieIngestDataCache,
+			{ rundownId: { $in: rundownIds } },
+			updateItemIds(snapshot.sofieIngestData || snapshot.ingestData, true)
 		),
 		saveIntoDb(
 			context,
@@ -460,7 +466,7 @@ export async function handleRestorePlaylistSnapshot(
 		saveIntoDb(
 			context,
 			context.directCollections.ExpectedMediaItems,
-			{ partId: { $in: protectStringArray(_.keys(partIdMap)) } },
+			{ partId: { $in: Array.from(partIdMap.keys()) } },
 			updateItemIds(snapshot.expectedMediaItems, true)
 		),
 		saveIntoDb(

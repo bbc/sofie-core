@@ -32,7 +32,6 @@ describe('PlayoutRundownModelImpl', () => {
 			_id: protectString(id),
 			rundownId: protectString('rd0'),
 			externalId: id,
-			externalModified: 100000,
 			_rank: rank,
 			name: `${id} segment`,
 		}
@@ -106,14 +105,12 @@ describe('PlayoutRundownModelImpl', () => {
 
 			const fixedSegment: ReadonlyDeep<DBSegment> = {
 				...createdSegment.segment,
-				externalModified: 0,
 			}
 
 			expect(fixedSegment).toEqual({
 				_id: expectedId,
 				rundownId: protectString('rd0'),
 				externalId: '__scratchpad__',
-				externalModified: 0,
 				_rank: -1,
 				name: '',
 				orphaned: SegmentOrphanedReason.SCRATCHPAD,

@@ -84,7 +84,6 @@ describe('getOrderedPartsAfterPlayhead', () => {
 				externalId: 'MOCK_SEGMENT_0',
 				rundownId: rundownId,
 				name: 'Segment 0',
-				externalModified: 1,
 			}),
 			context.mockCollections.Segments.insertOne({
 				_id: protectString(rundownId + '_segment01'),
@@ -92,7 +91,6 @@ describe('getOrderedPartsAfterPlayhead', () => {
 				externalId: 'MOCK_SEGMENT_1',
 				rundownId: rundownId,
 				name: 'Segment 1',
-				externalModified: 1,
 			}),
 			context.mockCollections.Segments.insertOne({
 				_id: protectString(rundownId + '_segment2'),
@@ -100,7 +98,6 @@ describe('getOrderedPartsAfterPlayhead', () => {
 				externalId: 'MOCK_SEGMENT_2',
 				rundownId: rundownId,
 				name: 'Segment 2',
-				externalModified: 1,
 			}),
 		])
 		segmentId0 = segmentIds[0]

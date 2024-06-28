@@ -8,13 +8,13 @@ import { WatchedPackagesHelper } from '../blueprints/context/watchedPackages'
 import { postProcessAdLibActions, postProcessAdLibPieces, postProcessPieces } from '../blueprints/postProcess'
 import { logger } from '../logging'
 import { IngestModel, IngestModelReadonly, IngestReplaceSegmentType } from './model/IngestModel'
-import { LocalIngestSegment, LocalIngestRundown } from './ingestCache'
 import { getSegmentId, canSegmentBeUpdated } from './lib'
 import { JobContext, ProcessedShowStyleCompound } from '../jobs'
 import { CommitIngestData } from './lock'
 import {
 	BlueprintResultPart,
 	BlueprintResultSegment,
+	IngestRundown,
 	IngestSegment,
 	NoteSeverity,
 } from '@sofie-automation/blueprints-integration'
@@ -22,14 +22,15 @@ import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib
 import { updateExpectedPackagesForPartModel } from './expectedPackages'
 import { IngestReplacePartType, IngestSegmentModel } from './model/IngestSegmentModel'
 import { ReadonlyDeep } from 'type-fest'
-import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import { CoreUserEditingDefinitionAction, Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { WrappedShowStyleBlueprint } from '../blueprints/cache'
+import { translateUserEditsFromBlueprint } from '../blueprints/context/lib'
 
 async function getWatchedPackagesHelper(
 	context: JobContext,
 	allRundownWatchedPackages0: WatchedPackagesHelper | null,
 	ingestModel: IngestModelReadonly,
-	ingestSegments: LocalIngestSegment[]
+	ingestSegments: IngestSegment[]
 ): Promise<WatchedPackagesHelper> {
 	if (allRundownWatchedPackages0) {
 		return allRundownWatchedPackages0
@@ -50,7 +51,7 @@ async function getWatchedPackagesHelper(
 export async function calculateSegmentsFromIngestData(
 	context: JobContext,
 	ingestModel: IngestModel,
-	ingestSegments: LocalIngestSegment[],
+	ingestSegments: IngestSegment[],
 	allRundownWatchedPackages0: WatchedPackagesHelper | null
 ): Promise<SegmentId[]> {
 	const span = context.startSpan('ingest.rundownInput.calculateSegmentsFromIngestData')
@@ -97,7 +98,7 @@ async function regenerateSegmentAndUpdateModelFull(
 	blueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 	allRundownWatchedPackages: WatchedPackagesHelper,
 	ingestModel: IngestModel,
-	ingestSegment: LocalIngestSegment
+	ingestSegment: IngestSegment
 ): Promise<SegmentId> {
 	// Ensure the parts are sorted by rank
 	ingestSegment.parts.sort((a, b) => a.rank - b.rank)
@@ -151,7 +152,7 @@ async function regenerateSegmentAndUpdateModel(
 	showStyle: ReadonlyDeep<ProcessedShowStyleCompound>,
 	blueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 	ingestModel: IngestModel,
-	ingestSegment: LocalIngestSegment,
+	ingestSegment: IngestSegment,
 	watchedPackages: WatchedPackagesHelper
 ): Promise<IngestSegmentModel> {
 	const rundown = ingestModel.getRundown()
@@ -245,13 +246,9 @@ async function generateSegmentWithBlueprints(
 	}
 }
 
-function createInternalErrorSegment(
-	blueprintId: BlueprintId,
-	ingestSegment: LocalIngestSegment
-): IngestReplaceSegmentType {
+function createInternalErrorSegment(blueprintId: BlueprintId, ingestSegment: IngestSegment): IngestReplaceSegmentType {
 	return {
 		externalId: ingestSegment.externalId,
-		externalModified: ingestSegment.modified,
 		_rank: ingestSegment.rank,
 		notes: [
 			{
@@ -275,7 +272,7 @@ function updateModelWithGeneratedSegment(
 	context: JobContext,
 	blueprintId: BlueprintId,
 	ingestModel: IngestModel,
-	ingestSegment: LocalIngestSegment,
+	ingestSegment: IngestSegment,
 	blueprintSegment: BlueprintResultSegment,
 	blueprintNotes: RawPartNote[]
 ): IngestSegmentModel {
@@ -288,9 +285,12 @@ function updateModelWithGeneratedSegment(
 		literal<IngestReplaceSegmentType>({
 			...blueprintSegment.segment,
 			externalId: ingestSegment.externalId,
-			externalModified: ingestSegment.modified,
 			_rank: ingestSegment.rank,
 			notes: segmentNotes,
+			userEdits:
+				(translateUserEditsFromBlueprint(blueprintSegment.segment.userEdits, [
+					blueprintId,
+				]) as CoreUserEditingDefinitionAction[]) || undefined,
 		})
 	)
 
@@ -373,6 +373,10 @@ function updateModelWithGeneratedPart(
 					]),
 			  }
 			: undefined,
+		userEdits:
+			(translateUserEditsFromBlueprint(blueprintPart.part.userEdits, [
+				blueprintId,
+			]) as CoreUserEditingDefinitionAction[]) || undefined,
 	})
 
 	// Update pieces
@@ -479,7 +483,7 @@ function preserveOrphanedSegmentPositionInRundown(
 export async function updateSegmentFromIngestData(
 	context: JobContext,
 	ingestModel: IngestModel,
-	ingestSegment: LocalIngestSegment,
+	ingestSegment: IngestSegment,
 	isNewSegment: boolean
 ): Promise<CommitIngestData | null> {
 	const span = context.startSpan('ingest.rundownInput.handleUpdatedPartInner')
@@ -515,7 +519,7 @@ export async function updateSegmentFromIngestData(
 export async function regenerateSegmentsFromIngestData(
 	context: JobContext,
 	ingestModel: IngestModel,
-	ingestRundown: LocalIngestRundown,
+	ingestRundown: IngestRundown,
 	segmentIds: SegmentId[]
 ): Promise<{ result: CommitIngestData | null; skippedSegments: SegmentId[] }> {
 	const span = context.startSpan('ingest.rundownInput.handleUpdatedPartInner')
@@ -527,7 +531,7 @@ export async function regenerateSegmentsFromIngestData(
 	const rundown = ingestModel.getRundown()
 
 	const skippedSegments: SegmentId[] = []
-	const ingestSegments: LocalIngestSegment[] = []
+	const ingestSegments: IngestSegment[] = []
 
 	for (const segmentId of segmentIds) {
 		const segment = ingestModel.getSegment(segmentId)
@@ -573,7 +577,7 @@ export async function regenerateSegmentsFromIngestData(
 export async function calculateSegmentsAndRemovalsFromIngestData(
 	context: JobContext,
 	ingestModel: IngestModel,
-	ingestRundown: LocalIngestRundown,
+	ingestRundown: IngestRundown,
 	allRundownWatchedPackages: WatchedPackagesHelper
 ): Promise<{ changedSegmentIds: SegmentId[]; removedSegmentIds: SegmentId[] }> {
 	const changedSegmentIds = await calculateSegmentsFromIngestData(
@@ -591,6 +595,8 @@ export async function calculateSegmentsAndRemovalsFromIngestData(
 		removedSegmentIds.push(oldSegment.segment._id)
 		changedSegmentIds.push(oldSegment.segment._id)
 		oldSegment.setOrphaned(SegmentOrphanedReason.DELETED)
+
+		oldSegment.removeAllParts()
 	}
 
 	return { changedSegmentIds, removedSegmentIds }

@@ -28,10 +28,17 @@ registerIndex(AdLibPieces, {
 	_rank: 1,
 })
 
-export const IngestDataCache = createAsyncOnlyReadOnlyMongoCollection<IngestDataCacheObj>(
-	CollectionName.IngestDataCache
+export const NrcsIngestDataCache = createAsyncOnlyReadOnlyMongoCollection<IngestDataCacheObj>(
+	CollectionName.NrcsIngestDataCache
 )
-registerIndex(IngestDataCache, {
+registerIndex(NrcsIngestDataCache, {
+	rundownId: 1,
+})
+
+export const SofieIngestDataCache = createAsyncOnlyReadOnlyMongoCollection<IngestDataCacheObj>(
+	CollectionName.SofieIngestDataCache
+)
+registerIndex(SofieIngestDataCache, {
 	rundownId: 1,
 })
 

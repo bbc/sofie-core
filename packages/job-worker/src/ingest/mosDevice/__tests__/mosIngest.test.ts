@@ -3,8 +3,7 @@ import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { PeripheralDevice } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
-import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
-import _ = require('underscore')
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { sortPartsInSortedSegments, sortSegmentsInRundowns } from '@sofie-automation/corelib/dist/playout/playlist'
 import {
 	handleMosDeleteStory,
@@ -14,7 +13,7 @@ import {
 	handleMosSwapStories,
 } from '../mosStoryJobs'
 import { handleMosRundownData, handleMosRundownReadyToAir, handleMosRundownStatus } from '../mosRundownJobs'
-import { parseMosString } from '../lib'
+import { getMosIngestSegmentId, parseMosString } from '../lib'
 import { MockJobContext, setupDefaultJobEnvironment } from '../../../__mocks__/context'
 import { setupMockIngestDevice, setupMockShowStyleCompound } from '../../../__mocks__/presetCollections'
 import { fixSnapshot } from '../../../__mocks__/helpers/snapshot'
@@ -23,7 +22,7 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { MongoQuery } from '../../../db'
 import { handleRemovedRundown } from '../../ingestRundownJobs'
 import { MOS } from '@sofie-automation/corelib'
-import { literal } from '@sofie-automation/corelib/dist/lib'
+import { groupByToMap, literal, normalizeArrayToMap, omit } from '@sofie-automation/corelib/dist/lib'
 import { IngestCacheType } from '@sofie-automation/corelib/dist/dataModel/IngestDataCache'
 import { getPartId } from '../../lib'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
@@ -31,10 +30,11 @@ import { handleSetNextPart } from '../../../playout/setNextJobs'
 import { handleTakeNextPart } from '../../../playout/take'
 import { handleActivateRundownPlaylist, handleDeactivateRundownPlaylist } from '../../../playout/activePlaylistJobs'
 import { removeRundownPlaylistFromDb } from '../../__tests__/lib'
+import { UserErrorMessage } from '@sofie-automation/corelib/dist/error'
+import { wrapCustomIngestJob, wrapGenericIngestJob, wrapMosIngestJob } from '../../jobWrappers'
 
 jest.mock('../../updateNext')
 import { ensureNextPartIsValid } from '../../updateNext'
-import { UserErrorMessage } from '@sofie-automation/corelib/dist/error'
 type TensureNextPartIsValid = jest.MockedFunction<typeof ensureNextPartIsValid>
 const ensureNextPartIsValidMock = ensureNextPartIsValid as TensureNextPartIsValid
 
@@ -43,17 +43,32 @@ const mosTypes = MOS.getMosTypes(true)
 function getPartIdMap(segments: DBSegment[], parts: DBPart[]) {
 	const sortedParts = sortPartsInSortedSegments(parts, segments)
 
-	const groupedParts = _.groupBy(sortedParts, (p) => unprotectString(p.segmentId))
-	const arr: [string, DBPart[]][] = _.pairs(groupedParts)
-	const idMap = _.map(arr, (g) => ({
-		segmentId: protectString<SegmentId>(g[0]),
-		parts: _.map(g[1], (p) => p.externalId),
+	const segmentMap = normalizeArrayToMap(segments, '_id')
+
+	const groupedParts = groupByToMap(sortedParts, 'segmentId')
+	const arr: [SegmentId, DBPart[]][] = Array.from(groupedParts.entries())
+	const idMap = arr.map((group) => ({
+		segmentId: group[0],
+		segmentName: segmentMap.get(group[0])?.name ?? null,
+		parts: group[1].map((p) => p.externalId),
 	}))
-	return _.sortBy(idMap, (s) => {
-		const obj = _.find(segments, (s2) => s2._id === s.segmentId)
-		return obj ? obj._rank : 99999
+
+	return idMap.sort((a, b) => {
+		const aRank = segmentMap.get(a.segmentId)?._rank ?? 99999
+		const bRank = segmentMap.get(b.segmentId)?._rank ?? 99999
+
+		return aRank - bRank
 	})
 }
+
+const handleMosDeleteStoryWrapped = wrapMosIngestJob(handleMosDeleteStory)
+const handleMosFullStoryWrapped = wrapMosIngestJob(handleMosFullStory)
+const handleMosInsertStoriesWrapped = wrapMosIngestJob(handleMosInsertStories)
+const handleMosMoveStoriesWrapped = wrapMosIngestJob(handleMosMoveStories)
+const handleMosSwapStoriesWrapped = wrapMosIngestJob(handleMosSwapStories)
+const handleMosRundownDataWrapped = wrapMosIngestJob(handleMosRundownData)
+const handleRemovedRundownWrapped = wrapGenericIngestJob(handleRemovedRundown)
+const handleMosRundownReadyToAirWrapped = wrapCustomIngestJob(handleMosRundownReadyToAir)
 
 describe('Test recieved mos ingest payloads', () => {
 	let context: MockJobContext
@@ -79,7 +94,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		// Reset RO
 		const roData = mockRO.roCreate()
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: parseMosString(roData.ID),
 			mosRunningOrder: roData,
@@ -142,7 +157,7 @@ describe('Test recieved mos ingest payloads', () => {
 		await expect(context.mockCollections.Rundowns.findOne()).resolves.toBeFalsy()
 
 		const roData = mockRO.roCreate()
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: parseMosString(roData.ID),
 			mosRunningOrder: roData,
@@ -176,7 +191,7 @@ describe('Test recieved mos ingest payloads', () => {
 			await context.mockCollections.Rundowns.findOne({ externalId: mosTypes.mosString128.stringify(roData.ID) })
 		).toBeTruthy()
 
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: parseMosString(roData.ID),
 			mosRunningOrder: roData,
@@ -213,7 +228,7 @@ describe('Test recieved mos ingest payloads', () => {
 			await context.mockCollections.Rundowns.findOne({ externalId: mosTypes.mosString128.stringify(roData.ID) })
 		).toBeTruthy()
 
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: parseMosString(roData.ID),
 			mosRunningOrder: roData,
@@ -247,7 +262,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(await context.mockCollections.RundownPlaylists.findOne(rundown.playlistId)).toBeTruthy()
 
 		await expect(
-			handleRemovedRundown(context, {
+			handleRemovedRundownWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: parseMosString(roData.ID),
 			})
@@ -270,7 +285,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(rundown.orphaned).toBeFalsy()
 		expect(await context.mockCollections.RundownPlaylists.findOne(rundown.playlistId)).toBeTruthy()
 
-		await handleRemovedRundown(context, {
+		await handleRemovedRundownWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: parseMosString(roData.ID),
 		})
@@ -286,7 +301,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(await context.mockCollections.RundownPlaylists.findOne()).toBeFalsy()
 
 		await expect(
-			handleRemovedRundown(context, {
+			handleRemovedRundownWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: parseMosString(roData.ID),
 			})
@@ -361,7 +376,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(rundown.status).not.toEqual(newStatus.toString())
 		expect((rundown.privateData as any)?.airStatus).not.toEqual(newStatus.toString())
 
-		await handleMosRundownReadyToAir(context, {
+		await handleMosRundownReadyToAirWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			status: newStatus,
@@ -385,7 +400,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(rundown).toBeTruthy()
 		expect(rundown.status).not.toEqual(newStatus.toString())
 
-		await handleMosRundownReadyToAir(context, {
+		await handleMosRundownReadyToAirWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			status: newStatus,
@@ -405,7 +420,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(await context.mockCollections.Rundowns.findOne({ externalId: externalId })).toBeFalsy()
 
 		await expect(
-			handleMosRundownReadyToAir(context, {
+			handleMosRundownReadyToAirWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: externalId,
 				status: newStatus,
@@ -422,7 +437,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const newPartData = mockRO.newItem('ro1;s1;newPart1', 'SEGMENT1;new1')
 
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s1;p3'),
@@ -443,7 +458,7 @@ describe('Test recieved mos ingest payloads', () => {
 		// Clean up after ourselves:
 		const partsToRemove = await context.mockCollections.Parts.findFetch({ externalId: 'ro1;s1;newPart1' })
 		await context.mockCollections.Parts.remove({ _id: { $in: partsToRemove.map((p) => p._id) } })
-		await context.mockCollections.IngestDataCache.remove({
+		await context.mockCollections.NrcsIngestDataCache.remove({
 			rundownId: rundown._id,
 			type: IngestCacheType.PART,
 			partId: { $in: partsToRemove.map((p) => p._id) },
@@ -461,7 +476,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const newPartData = mockRO.newItem('ro1;s1;newPart2', 'SEGMENT1;new2')
 
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s1;p3'),
@@ -488,7 +503,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const newPartData = mockRO.newItem('ro1;s1b;newPart1', 'SEGMENT1B;new1')
 
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s2;p1'),
@@ -502,12 +517,13 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const partMap = mockRO.segmentIdMap()
 		partMap.splice(1, 0, {
-			segmentId: '9VE_IbHiHyW6VjY6Fi8fMJEgtS4_',
+			segmentId: 'IiRyvJZ9SAVEo_UKYVJUUveInbA_',
+			segmentName: 'SEGMENT1B',
 			parts: [mosTypes.mosString128.stringify(newPartData.ID)],
 		})
-		partMap[2].segmentId = 'Qz1OqWVatX_W4Sp5C0m8VhTTfME_'
-		partMap[3].segmentId = '8GUNgE7zUulco2K3yuhJ1Fyceeo_'
-		partMap[4].segmentId = 'XF9ZBDI5IouvkmTbounEfoJ6ijY_'
+		partMap[2].segmentId = 'Kbs6joYlqXZr_QeVR7ssTHfJ4kI_'
+		partMap[3].segmentId = 'SIuQJB7ZJNtRcxtqLGljE_qBGo8_'
+		partMap[4].segmentId = 'ddtMj3S9nDPeQ3tkyHTCOYrU414_'
 		expect(getPartIdMap(segments, parts)).toEqual(partMap)
 
 		await expectRundownToMatchSnapshot(rundown._id, true, true)
@@ -524,7 +540,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const beforeStoryId = mosTypes.mosString128.create('newFakePart')
 
 		await expect(
-			handleMosInsertStories(context, {
+			handleMosInsertStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: beforeStoryId,
@@ -532,7 +548,9 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: false,
 			})
 		).rejects.toThrow(
-			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} in rundown ${rundown.externalId} not found`
+			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+				rundown.externalId
+			} not found`
 		)
 
 		expect(
@@ -551,7 +569,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const newPartData = mockRO.roCreate().Stories[0]
 
 		await expect(
-			handleMosInsertStories(context, {
+			handleMosInsertStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: mosTypes.mosString128.create('ro1;s2;p1'),
@@ -559,7 +577,9 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: false,
 			})
 		).rejects.toThrow(
-			`Parts ${mosTypes.mosString128.stringify(newPartData.ID)} already exist in rundown ${rundown.externalId}`
+			`Parts ${getMosIngestSegmentId(mosTypes.mosString128.stringify(newPartData.ID))} already exist in rundown ${
+				rundown.externalId
+			}`
 		)
 	})
 
@@ -601,7 +621,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const newPartData = mockRO.newItem('ro1;s1;newPart1', 'SEGMENT1;new1')
 
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s1;p2'),
@@ -631,7 +651,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const newPartData = mockRO.newItem('ro1;s1;newPart2', 'SEGMENT1;new2')
 
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s1;p3'),
@@ -658,7 +678,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const beforeStoryId = mosTypes.mosString128.create('fakeId2')
 		await expect(
-			handleMosInsertStories(context, {
+			handleMosInsertStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: beforeStoryId,
@@ -666,7 +686,9 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: true,
 			})
 		).rejects.toThrow(
-			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} in rundown ${rundown.externalId} not found`
+			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+				rundown.externalId
+			} not found`
 		)
 
 		expect(
@@ -687,7 +709,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const partExternalIds = ['ro1;s3;p1', 'ro1;s3;p2']
 
-		await handleMosDeleteStory(context, {
+		await handleMosDeleteStoryWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			stories: partExternalIds.map((i) => mosTypes.mosString128.create(i)),
@@ -714,12 +736,12 @@ describe('Test recieved mos ingest payloads', () => {
 		const partExternalIds = ['ro1;s1;p2', 'fakeId']
 
 		await expect(
-			handleMosDeleteStory(context, {
+			handleMosDeleteStoryWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				stories: partExternalIds.map((i) => mosTypes.mosString128.create(i)),
 			})
-		).rejects.toThrow(`Parts fakeId in rundown ${rundown.externalId} were not found`)
+		).rejects.toThrow(`Parts segment-fakeId in rundown ${rundown.externalId} were not found`)
 
 		expect(await context.mockCollections.Parts.findFetch({ externalId: { $in: partExternalIds } })).toHaveLength(1)
 	})
@@ -736,7 +758,7 @@ describe('Test recieved mos ingest payloads', () => {
 			Body: [],
 		})
 
-		await handleMosFullStory(context, {
+		await handleMosFullStoryWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			story: story,
@@ -762,7 +784,7 @@ describe('Test recieved mos ingest payloads', () => {
 		})
 
 		await expect(
-			handleMosFullStory(context, {
+			handleMosFullStoryWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				story: story,
@@ -785,14 +807,12 @@ describe('Test recieved mos ingest payloads', () => {
 		})
 
 		await expect(
-			handleMosFullStory(context, {
+			handleMosFullStoryWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: mosTypes.mosString128.stringify(story.RunningOrderId),
 				story: story,
 			})
-		).rejects.toThrow(
-			`handleMosFullStory: Missing MOS Rundown "${mosTypes.mosString128.stringify(story.RunningOrderId)}"`
-		)
+		).rejects.toThrow(`Rundown "${mosTypes.mosString128.stringify(story.RunningOrderId)}" not found`)
 	})
 
 	test('mosRoStorySwap: Within same segment', async () => {
@@ -807,7 +827,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const story0 = mosTypes.mosString128.create('ro1;s1;p2')
 		const story1 = mosTypes.mosString128.create('ro1;s1;p3')
 
-		await handleMosSwapStories(context, {
+		await handleMosSwapStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			story0,
@@ -838,7 +858,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const story0 = mosTypes.mosString128.create('ro1;s1;p1')
 		const story1 = mosTypes.mosString128.create('ro1;s1;p3')
 
-		await handleMosSwapStories(context, {
+		await handleMosSwapStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			story0,
@@ -850,7 +870,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const { segments, parts } = await getRundownData({ _id: rundown._id })
 
 		const partMap = mockRO.segmentIdMap()
-		partMap[0].segmentId = 'apDVfF5nk1_StK474hEUxLMZIag_'
+		partMap[0].segmentId = 'is9fJG4C1Q7i4JBj5ccMlCzk1zM_'
 		partMap[0].parts[0] = 'ro1;s1;p3'
 		partMap[0].parts[2] = 'ro1;s1;p1'
 		expect(getPartIdMap(segments, parts)).toEqual(partMap)
@@ -864,16 +884,13 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const story0 = mosTypes.mosString128.create('ro1;s1;p1')
 
-		await expect(
-			handleMosSwapStories(context, {
-				peripheralDeviceId: device._id,
-				rundownExternalId: rundown.externalId,
-				story0,
-				story1: story0,
-			})
-		).rejects.toThrow(
-			`Cannot swap part ${mosTypes.mosString128.stringify(story0)} with itself in rundown ${rundown.externalId}`
-		)
+		// Should complete without error
+		await handleMosSwapStoriesWrapped(context, {
+			peripheralDeviceId: device._id,
+			rundownExternalId: rundown.externalId,
+			story0,
+			story1: story0,
+		})
 	})
 
 	test('mosRoStorySwap: Story not found', async () => {
@@ -884,7 +901,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const story1 = mosTypes.mosString128.create('ro1;s1;p99')
 
 		await expect(
-			handleMosSwapStories(context, {
+			handleMosSwapStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				story0,
@@ -893,7 +910,7 @@ describe('Test recieved mos ingest payloads', () => {
 		).rejects.toThrow(`Story ${mosTypes.mosString128.stringify(story1)} not found in rundown ${rundown.externalId}`)
 
 		await expect(
-			handleMosSwapStories(context, {
+			handleMosSwapStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				story0: story1,
@@ -914,7 +931,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const story0 = mosTypes.mosString128.create('ro1;s3;p1')
 		const story1 = mosTypes.mosString128.create('ro1;s4;p1')
 
-		await handleMosSwapStories(context, {
+		await handleMosSwapStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			story0,
@@ -927,7 +944,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const partMap = mockRO.segmentIdMap()
 		partMap[1].parts.push('ro1;s4;p1')
-		partMap[2].segmentId = 'sLfUx9cadyquE07Vw9byoX35G9I_'
+		partMap[2].segmentId = 'RzYAlXBEVlAqzR8s38yjLxS41xU_'
 		partMap[2].parts.reverse()
 		partMap.splice(3, 1)
 		expect(getPartIdMap(segments, parts)).toEqual(partMap)
@@ -947,7 +964,7 @@ describe('Test recieved mos ingest payloads', () => {
 		const story0 = mosTypes.mosString128.create('ro1;s1;p2')
 		const story1 = mosTypes.mosString128.create('ro1;s2;p2')
 
-		await handleMosSwapStories(context, {
+		await handleMosSwapStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			story0,
@@ -956,7 +973,46 @@ describe('Test recieved mos ingest payloads', () => {
 
 		expect(ensureNextPartIsValid).toHaveBeenCalledTimes(1)
 
-		// Don't care about the result here, just making sure there isnt an exception while updating the db
+		const { segments, parts } = await getRundownData({ _id: rundown._id })
+
+		const partMap = [
+			{
+				parts: ['ro1;s1;p1'],
+				segmentName: 'SEGMENT1',
+				segmentId: 'aZYVvzVUYqFQBxY1iavRymzMiys_',
+			},
+			{
+				parts: ['ro1;s2;p2'],
+				segmentName: 'SEGMENT2',
+				segmentId: 'F5ID5_MkDHoJM5rV8VYhh7CFkWA_',
+			},
+			{
+				parts: ['ro1;s1;p3'],
+				segmentName: 'SEGMENT1',
+				segmentId: 'is9fJG4C1Q7i4JBj5ccMlCzk1zM_',
+			},
+			{
+				parts: ['ro1;s2;p1'],
+				segmentName: 'SEGMENT2',
+				segmentId: 'Kbs6joYlqXZr_QeVR7ssTHfJ4kI_',
+			},
+			{
+				parts: ['ro1;s1;p2'],
+				segmentName: 'SEGMENT1',
+				segmentId: 'KK1Zsy8wo_zZwZOhKln0BoXAIJI_',
+			},
+			{
+				parts: ['ro1;s3;p1', 'ro1;s3;p2'],
+				segmentName: 'SEGMENT3',
+				segmentId: 'SIuQJB7ZJNtRcxtqLGljE_qBGo8_',
+			},
+			{
+				parts: ['ro1;s4;p1'],
+				segmentName: 'SEGMENT2',
+				segmentId: 'ddtMj3S9nDPeQ3tkyHTCOYrU414_',
+			},
+		]
+		expect(getPartIdMap(segments, parts)).toEqual(partMap)
 
 		await expectRundownToMatchSnapshot(rundown._id, true, true)
 	})
@@ -972,7 +1028,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const story0 = 'ro1;s1;p3'
 
-		await handleMosMoveStories(context, {
+		await handleMosMoveStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s1;p2'),
@@ -1005,7 +1061,7 @@ describe('Test recieved mos ingest payloads', () => {
 			mosTypes.mosString128.create('ro1;s1;p3'),
 		]
 
-		await handleMosMoveStories(context, {
+		await handleMosMoveStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create(''),
@@ -1037,14 +1093,16 @@ describe('Test recieved mos ingest payloads', () => {
 		]
 
 		await expect(
-			handleMosMoveStories(context, {
+			handleMosMoveStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: beforeStoryId,
 				stories,
 			})
 		).rejects.toThrow(
-			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} was not found in rundown ${rundown.externalId}`
+			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+				rundown.externalId
+			} not found`
 		)
 	})
 
@@ -1060,14 +1118,16 @@ describe('Test recieved mos ingest payloads', () => {
 		]
 
 		await expect(
-			handleMosMoveStories(context, {
+			handleMosMoveStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: beforeStoryId,
 				stories,
 			})
 		).rejects.toThrow(
-			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} was not found in rundown ${rundown.externalId}`
+			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+				rundown.externalId
+			} not found`
 		)
 	})
 
@@ -1085,7 +1145,7 @@ describe('Test recieved mos ingest payloads', () => {
 		]
 
 		await expect(
-			handleMosMoveStories(context, {
+			handleMosMoveStoriesWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				insertBeforeStoryId: beforeStoryId,
@@ -1119,7 +1179,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(partsInSegmentBefore).toHaveLength(3)
 
 		// This should only remove the first part in the segment. The other parts will be regenerated
-		await handleMosDeleteStory(context, {
+		await handleMosDeleteStoryWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			stories: [mosTypes.mosString128.create(partExternalId)],
@@ -1137,9 +1197,9 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(partsInSegmentAfter).toHaveLength(2)
 
 		// The other parts in the segment should not not have changed:
-		expect(partsInSegmentAfter[0]).toMatchObject(_.omit(partsInSegmentBefore[1], ['segmentId', '_rank']))
+		expect(partsInSegmentAfter[0]).toMatchObject(omit(partsInSegmentBefore[1], 'segmentId', '_rank'))
 
-		expect(partsInSegmentAfter[1]).toMatchObject(_.omit(partsInSegmentBefore[2], ['segmentId', '_rank']))
+		expect(partsInSegmentAfter[1]).toMatchObject(omit(partsInSegmentBefore[2], 'segmentId', '_rank'))
 	})
 
 	async function mosReplaceBasicStory(
@@ -1148,7 +1208,7 @@ describe('Test recieved mos ingest payloads', () => {
 		newStoryId: string,
 		newStoryName: string
 	): Promise<void> {
-		return handleMosInsertStories(context, {
+		return handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: runningOrderId,
 			insertBeforeStoryId: mosTypes.mosString128.create(oldStoryId),
@@ -1257,7 +1317,7 @@ describe('Test recieved mos ingest payloads', () => {
 			// cleanup
 			await handleDeactivateRundownPlaylist(context, {
 				playlistId: rundown.playlistId,
-			})
+			}).catch(() => null)
 		}
 	})
 
@@ -1301,7 +1361,7 @@ describe('Test recieved mos ingest payloads', () => {
 			}
 
 			// regenerate the rundown
-			await handleMosRundownData(context, {
+			await handleMosRundownDataWrapped(context, {
 				peripheralDeviceId: device._id,
 				rundownExternalId: rundown.externalId,
 				mosRunningOrder: mosRO,
@@ -1335,7 +1395,7 @@ describe('Test recieved mos ingest payloads', () => {
 			// cleanup
 			await handleDeactivateRundownPlaylist(context, {
 				playlistId: rundown.playlistId,
-			})
+			}).catch(() => null)
 		}
 	})
 
@@ -1355,7 +1415,7 @@ describe('Test recieved mos ingest payloads', () => {
 		roData1.ID = mosTypes.mosString128.create('Rundown1')
 		roData1.Slug = mosTypes.mosString128.create('Test Rundown 1')
 		;(roData1 as any).ForcePlaylistExternalId = 'playlist1'
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: mosTypes.mosString128.stringify(roData1.ID),
 			mosRunningOrder: roData1,
@@ -1366,7 +1426,7 @@ describe('Test recieved mos ingest payloads', () => {
 		roData2.ID = mosTypes.mosString128.create('Rundown2')
 		roData2.Slug = mosTypes.mosString128.create('Test Rundown 2')
 		;(roData2 as any).ForcePlaylistExternalId = 'playlist1'
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: mosTypes.mosString128.stringify(roData2.ID),
 			mosRunningOrder: roData2,
@@ -1392,7 +1452,7 @@ describe('Test recieved mos ingest payloads', () => {
 		expect(playlist.name).not.toEqual(rundown2.name)
 
 		// Remove the first rundown in the playlist
-		await handleRemovedRundown(context, {
+		await handleRemovedRundownWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: mosTypes.mosString128.stringify(roData1.ID),
 		})
@@ -1413,7 +1473,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		const mosRO = mockRO.roCreate()
 		// regenerate the rundown
-		await handleMosRundownData(context, {
+		await handleMosRundownDataWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: mosTypes.mosString128.stringify(mosRO.ID),
 			mosRunningOrder: mosRO,
@@ -1430,7 +1490,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		// insert a part after segment1
 		const newPartData = mockRO.newItem('ro1;s2a;newPart1', 'SEGMENT2pre;new1')
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: mosTypes.mosString128.create('ro1;s2;p1'),
@@ -1465,7 +1525,7 @@ describe('Test recieved mos ingest payloads', () => {
 
 		// Replace the story with itself, but different slug
 		const replacementPartData = mockRO.newItem('ro1;s2a;newPart1', 'SEGMENT2;new1')
-		await handleMosInsertStories(context, {
+		await handleMosInsertStoriesWrapped(context, {
 			peripheralDeviceId: device._id,
 			rundownExternalId: rundown.externalId,
 			insertBeforeStoryId: replacementPartData.ID,

@@ -29,6 +29,7 @@ import { EmptyPieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/da
 import _ = require('underscore')
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { IBlueprintMutatablePartSampleKeys } from '../../../blueprints/context/lib'
+import { CoreUserEditingDefinitionAction } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 
 interface PlayoutPieceInstanceModelSnapshotImpl {
 	PieceInstance: PieceInstance
@@ -514,7 +515,7 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 			'part',
 			{
 				...this.partInstanceImpl.part,
-				...trimmedProps,
+				...(trimmedProps as CoreUserEditingDefinitionAction[] | undefined),
 			},
 			true
 		)
