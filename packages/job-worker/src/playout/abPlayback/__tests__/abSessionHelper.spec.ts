@@ -1,4 +1,9 @@
-import { PartInstanceId, PieceInstanceInfiniteId, PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import {
+	PartInstanceId,
+	PieceInstanceInfiniteId,
+	PartId,
+	SegmentId,
+} from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { ABSessionInfo } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -28,7 +33,13 @@ describe('AbSessionHelper', () => {
 	) {
 		const partInstances = _.compact([previousPartInstance, currentPartInstance, nextPartInstance])
 
-		const abSessionHelper = new AbSessionHelper(partInstances, clone<ABSessionInfo[]>(trackedAbSessions ?? []))
+		const orderedSegmentIds: SegmentId[] = [protectString('segment0'), protectString('segment1')]
+
+		const abSessionHelper = new AbSessionHelper(
+			orderedSegmentIds,
+			partInstances,
+			clone<ABSessionInfo[]>(trackedAbSessions ?? [])
+		)
 
 		let nextId = 0
 		abSessionHelper.getNewSessionId = () => getSessionId(nextId++)
@@ -71,12 +82,21 @@ describe('AbSessionHelper', () => {
 			isLookahead: !!isLookahead,
 		} as any
 	}
-	function createPartInstance(id: string, partId: string, rank: number): DBPartInstance {
+	function createPartInstance(
+		id: string,
+		partId: string,
+		rank: number,
+		segmentId?: SegmentId | string
+	): DBPartInstance {
+		segmentId = segmentId ?? 'segment0'
+
 		// This defines only the minimum required values for the method we are calling
 		return {
 			_id: id,
+			segmentId,
 			part: {
 				_id: partId,
+				segmentId,
 				_rank: rank,
 			},
 		} as any
@@ -231,6 +251,25 @@ describe('AbSessionHelper', () => {
 
 		const nextPartInstance = createPartInstance('abcdef', 'aaa', 1)
 		const currentPartInstance = createPartInstance('12345', 'bbb', 0)
+
+		const abSessionHelper = getSessionHelper([], undefined, currentPartInstance, nextPartInstance)
+
+		const sessionId = getSessionId(0)
+		const piece0 = createPieceInstance(currentPartInstance._id)
+		expect(abSessionHelper.getPieceABSessionId(piece0, 'name0')).toEqual(sessionId)
+		expect(abSessionHelper.knownSessions).toHaveLength(1)
+
+		const piece2 = createPieceInstance(nextPartInstance._id)
+		expect(abSessionHelper.getPieceABSessionId(piece2, 'name0')).toEqual(sessionId)
+		expect(abSessionHelper.knownSessions).toHaveLength(1)
+	})
+	test('getPieceABSessionId - continue normal session from previous segment', async () => {
+		const { rundownId } = await setupDefaultRundownPlaylist(jobContext)
+		const rundown = (await jobContext.mockCollections.Rundowns.findOne(rundownId)) as DBRundown
+		expect(rundown).toBeTruthy()
+
+		const nextPartInstance = createPartInstance('abcdef', 'aaa', 0, 'segment1')
+		const currentPartInstance = createPartInstance('12345', 'bbb', 0, 'segment0')
 
 		const abSessionHelper = getSessionHelper([], undefined, currentPartInstance, nextPartInstance)
 

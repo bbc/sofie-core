@@ -10,7 +10,7 @@ import { applyAbPlayerObjectAssignments } from '../applyAssignments'
 const POOL_NAME = 'clip'
 
 describe('applyMediaPlayersAssignments', () => {
-	const abSessionHelper = new AbSessionHelper([], [])
+	const abSessionHelper = new AbSessionHelper([], [], [])
 
 	const mockGetPieceSessionId: jest.MockedFunction<typeof abSessionHelper.getPieceABSessionId> = jest.fn()
 	const mockGetObjectSessionId: jest.MockedFunction<typeof abSessionHelper.getTimelineObjectAbSessionId> = jest.fn()
