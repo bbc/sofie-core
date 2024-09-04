@@ -1,143 +1,111 @@
 title: ingest
 description: Ingest methods
 resources:
-  ingestPlaylists:
+  playlists:
     get:
-      operationId: getIngestPlaylists
+      operationId: getPlaylists
+      summary: Gets all Playlists.
       tags:
         - ingest
-      summary: Gets ingest data for all Playlists in Sofie.
-      responses:
-        200:
-          description: Command successfully handled - returns an array of Playlists with their playlistIds and list of Rundow.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                  playlists:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ingestPlaylistItem'
-                    example:
-                      - playlistId: 'playlist1'
-                        rundowns:
-                          - externalId: 'playlist1Rundown1'
-                          - externalId: 'playlist1Rundown2'
-                      - playlistId: 'playlist2'
-                        rundowns:
-                          - externalId: 'playlist2Rundown1'
-                          - externalId: 'playlist2Rundown2'
-                          - externalId: 'playlist2Rundown3'
-    delete:
-      operationId: deleteIngestPlaylists
-      tags:
-        - ingest
-      summary: Delete multiple playlists.
-      responses:
-        200:
-          description: Playlists removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-  ingestPlaylist:
-    get:
-      operationId: getIngestPlaylist
-      tags:
-        - ingest
-      summary: Gets ingest data for a specific Playlist from Sofie.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Command successfully handled - returns an array of Playlists.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/playlistResponse'
+    delete:
+      operationId: deletePlaylists
+      tags:
+        - ingest
+      parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
+      summary: Deletes all Playlists. Resources under the Playlists (e.g. Rundowns) will also be removed.
+      responses:
+        202:
+          description: Request for deleting accepted.
+  playlist:
+    get:
+      operationId: getPlaylist
+      summary: Gets the specified Playlist.
+      tags:
+        - ingest
+      parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Requested Playlist.
+          description: Internal or external ID of the Playlist to return.
           required: true
           schema:
             type: string
       responses:
         200:
           description: Playlist is returned.
-          headers:
-            ETag:
-              schema:
-                type: string
-              description: Version of Playlist, if known.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                  playlist:
-                    $ref: '#/components/schemas/ingestPlaylist'
-                example:
-                  status: 200
-                  playlist:
-                    name: playlist1
-                required:
-                  - status
-                  - playlist
-                additionalProperties: false
+                $ref: '#/components/schemas/playlistResponse'
         404:
           description: Invalid playlistId
-          $ref: '#/components/responses/idNotFound'
-          # oneOf:
-          #   - $ref: '#/components/responses/playlistNotFound'
+          $ref: '#/components/responses/playlistNotFound'
     delete:
-      operationId: deleteIngestPlaylist
+      operationId: deletePlaylist
+      summary: Deletes a specified Playlist. Resources under the Playlist (e.g. Rundowns) will also be removed.
       tags:
         - ingest
-      summary: Deletes a specified ingest Playlist. Resources under the Playlist (e.g. Rundowns) will also be removed.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist to delete.
+          description: Internal or external ID of the Playlist to delete.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Playlist removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request for deleting accepted.
         404:
-          $ref: '#/components/responses/idNotFound'
-          # oneOf:
-          #   - $ref: '#/components/responses/playlistNotFound'
-  ingestRundowns:
+          $ref: '#/components/responses/playlistNotFound'
+  rundowns:
     get:
-      operationId: getIngestRundowns
+      operationId: getRundowns
+      summary: Gets all Rundowns belonging to a specified Playlist.
       tags:
         - ingest
-      summary: Gets ingest data for all Rundowns belonging to a Playlist.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist to get all Rundowns for.
+          description: Internal or external ID of the Playlist the Rundowns belong to.
           required: true
           schema:
             type: string
@@ -147,306 +115,235 @@ resources:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                  rundowns:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ingestRundownItem'
-                    example:
-                      - externalId: rundown1
-                required:
-                  - status
-                  - playlists
-                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/rundownResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
-    put:
-      operationId: putIngestRundowns
+          #   - $ref: '#/components/responses/rundownNotFound'
+    post:
+      operationId: postRundown
+      summary: Creates a Rundown in a specified Playlist.
       tags:
         - ingest
-      summary: Creates/updates the Rundowns in a Playlist. Any existing Rundowns in the Playlist that are not included in this list will be deleted (including their Segments and Parts). Rundowns will be placed in the Playlist in the order specified by their individual ranks. If the creation/deletion/updating of any Rundown fails all changes will be discarded. ETags are not supported for bulk updates, no version information will be stored for any of the created/modified Rundowns.
       parameters:
-        - name: playlistId
+        - name: studioId
           in: path
-          description: Playlist to create/update all Rundowns for.
+          description: ID of the studio that is performing ingest operation.
           required: true
           schema:
             type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
+        - name: playlistId
+          in: path
+          description: Internal or external ID of the Playlist the new Rundown belongs to.
+          required: true
           schema:
-            type: array
-            items:
-              type: string
-          description: If specified, each Rundown will only be updated if its version does not match one of the specified ETags. If no ETag is found for a Rundown, the new data will replace whatever currently exists, regardless of whether the data is actually the same.
+            type: string
+      requestBody:
+        description: Rundown data to ingest.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/rundown'
+      responses:
+        202:
+          description: Request has been accepted.
+        400:
+          description: Bad request.
+    put:
+      operationId: putRundowns
+      summary: Updates Rundowns belonging to a specified Playlist.
+      tags:
+        - ingest
+      parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
+        - name: playlistId
+          in: path
+          description: Internal or external ID of the Playlist the Rundowns to update belong to.
+          required: true
+          schema:
+            type: string
       requestBody:
         description: Contains the Rundown data.
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                rundowns:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ingestRundown'
-                  example:
-                    - name: rundown1
-                      source: 'Our Company - Some Product Name'
-                      rank: 0
-              required:
-                - rundowns
-              additionalProperties: false
+              type: array
+              items:
+                $ref: '#/components/schemas/rundown'
       responses:
-        200:
-          description: Rundowns have been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request has been accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
     delete:
-      operationId: deleteIngestRundowns
+      operationId: deleteRundowns
       tags:
         - ingest
-      summary: Delete multiple rundowns.
+      summary: Deletes all Rundowns belonging to specified Playlist. Resources under the Rundowns (e.g. Segments) will also be removed.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Part belongs to.
+          description: Internal or external ID of the Playlist the Rundowns to delete belong to.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Rundown removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-  ingestRundown:
+        202:
+          description: Request accepted.
+        404:
+          $ref: '#/components/responses/idNotFound'
+  rundown:
     get:
-      operationId: getIngestRundown
+      operationId: getRundown
+      summary: Gets the specified Rundown.
       tags:
         - ingest
-      summary: Gets ingest data for a specific Rundown.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Rundown belongs to.
+          description: Internal or external ID of the Playlist the Rundown belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to return.
+          description: Internal or external ID of the Rundown to return.
           required: true
           schema:
             type: string
       responses:
         200:
           description: Rundown is returned.
-          headers:
-            ETag:
-              schema:
-                type: string
-              description: Version of Rundown, if known.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                  rundown:
-                    $ref: '#/components/schemas/ingestRundown'
-                example:
-                  status: 200
-                  rundown:
-                    name: rundown1
-                    source: 'Our Company - Some Product Name'
-                    rank: 0
-                required:
-                  - status
-                  - rundown
-                additionalProperties: false
+                $ref: '#/components/schemas/rundownResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
     put:
-      operationId: putIngestRundown
+      operationId: putRundown
+      summary: Updates an existing specified Rundown.
       tags:
         - ingest
-      summary: Creates a new or updates an existing Rundown.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist to ingest Rundown into.
+          description: Internal or external ID of the Playlist the Rundown to update belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to create/update.
+          description: Internal or external ID of the Rundown to update.
           required: true
           schema:
             type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Rundown will only be updated if one of the specified ETags does not match. If unspecified, the new data will replace whatever currently exists, regardless of whether the data is actually the same.
-        - name: If-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Rundown will only be updated if one of the specified ETags matches.
-        - name: ETag
-          in: header
-          required: true
-          schema:
-            type: string
-            example: '123456789'
-          description: ETag to use as version information for Rundown.
       requestBody:
         description: Contains the Rundown data.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ingestRundown'
-            example:
-              name: rundown1
-              source: 'Our Company - Some Product Name'
-              rank: 0
+              $ref: '#/components/schemas/rundown'
       responses:
-        200:
-          description: Rundown has been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-        201:
-          description: Rundown has been created.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 201
-                    example: 201
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request has been accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
     delete:
-      operationId: deleteIngestRundown
+      operationId: deleteRundown
+      summary: Deletes a specified Rundown. Resources under the Rundown (e.g. Segments) will also be removed.
       tags:
         - ingest
-      summary: Deletes a specified ingest Rundown. Resources under the Rundown (e.g. Segments) will also be removed.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Rundown belongs to.
+          description: Internal or external ID of the Playlist the Rundown belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to delete.
+          description: Internal or external ID of the Rundown to delete.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Rundown removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request for deleting accepted.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
-  ingestSegments:
+  segments:
     get:
-      operationId: getIngestSegments
+      operationId: getSegments
       tags:
         - ingest
-      summary: Gets the ingest data for all Segments belonging to a Rundown.
+      summary: Gets all Segments belonging to a specified Rundown.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Rundown belongs to.
+          description: Internal or external ID of the Playlist the Segments belong to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to get Segments for.
+          description: Internal or external ID of the Rundown the Segments belong to.
           required: true
           schema:
             type: string
@@ -456,177 +353,165 @@ resources:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                  segments:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ingestSegmentItem'
-                    example:
-                      - externalId: segment1
-                required:
-                  - status
-                  - segments
-                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/segmentResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
-    put:
-      operationId: putIngestSegments
+    post:
+      operationId: postSegment
       tags:
         - ingest
-      summary: Creates/updates the Segments in a Rundown. Any existing Segments in the Rundown that are not included in this list will be deleted (including their Parts). Segments will be placed in the Rundown in the order specified by their individual ranks. If the creation/deletion/updating of any Segment fails all changes will be discarded.
+      summary: Creates a Segment in a specified Rundown.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Rundown belongs to.
+          description: Internal or external ID of the Playlist the new Segment belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to create/update all Segments for.
+          description: Internal or external ID of the Rundown the new Segment belongs to.
           required: true
           schema:
             type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, each Segment will only be updated if its version does not match one of the specified ETags. If no ETag is found for a Segment, the new data will replace whatever currently exists, regardless of whether the data is actually the same. ETags are not supported for bulk updates, no version information will be stored for any of the created/modified Rundowns.
       requestBody:
         description: Contains the Segment data.
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                segments:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ingestSegment'
-                  example:
-                    - name: segment1
-                      rank: 0
-              required:
-                - segments
-              additionalProperties: false
+              $ref: '#/components/schemas/segment'
       responses:
-        200:
-          description: Segments have been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request accepted.
+        400:
+          description: Bad request.
+        404:
+          $ref: '#/components/responses/idNotFound'
+          # oneOf:
+          #   - $ref: '#/components/responses/playlistNotFound'
+          #   - $ref: '#/components/responses/rundownNotFound'
+    put:
+      operationId: putSegments
+      tags:
+        - ingest
+      summary: Updates Segments belonging to a specified Rundown.
+      parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
+        - name: playlistId
+          in: path
+          description: Internal or external ID of the Playlist the Segments to update belongs to.
+          required: true
+          schema:
+            type: string
+        - name: rundownId
+          in: path
+          description: Internal or external ID of the Rundown the Segments to update belong to.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Contains the Segment data.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/segment'
+      responses:
+        202:
+          description: Request accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
     delete:
-      operationId: deleteIngestSegments
+      operationId: deleteSegments
       tags:
         - ingest
-      summary: Delete multiple segments.
+      summary: Deletes all Segments belonging to specified Rundown. Resources under the Segments (e.g. Parts) will also be removed.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Part belongs to.
+          description: Internal or external ID of the Playlist the Segments belong to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the ingest Part belongs to.
+          description: Internal or external ID of the Rundown the Segments to delete belong to.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Segments removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-  ingestSegment:
+        202:
+          description: Request accepted.
+        404:
+          $ref: '#/components/responses/idNotFound'
+  segment:
     get:
-      operationId: getIngestSegment
+      operationId: getSegment
       tags:
         - ingest
-      summary: Gets ingest data for a specific Segment.
+      summary: Gets the specified Segment.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Segment belongs to.
+          description: Internal or external ID of the Playlist the Segment belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the Segment belongs to.
+          description: Internal or external ID of the Rundown the Segment belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to create/update.
+          description: Internal or external ID of the Segment to return.
           required: true
           schema:
             type: string
       responses:
         200:
           description: Segment is returned.
-          headers:
-            ETag:
-              schema:
-                type: string
-              description: Version of Segment, if known.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                  segment:
-                    $ref: '#/components/schemas/ingestSegment'
-                example:
-                  status: 200
-                  segment:
-                    name: segment1
-                    rank: 0
-                required:
-                  - status
-                  - segment
-                additionalProperties: false
+                $ref: '#/components/schemas/segmentResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
@@ -634,162 +519,118 @@ resources:
           #   - $ref: '#/components/responses/rundownNotFound'
           #   - $ref: '#/components/responses/segmentNotFound'
     put:
-      operationId: putIngestSegment
+      operationId: putSegment
       tags:
         - ingest
-      summary: Creates a new or updates an existing Segment.
+      summary: Updates an existing specified Segment.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist to ingest Segment into.
+          description: Internal or external ID of the Playlist the Segment to update belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to ingest Segment into.
+          description: Internal or external ID of the Rundown the Segment to update belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to create/update.
-          schema:
-            type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Segment will only be updated if one of the specified ETags does not match. If unspecified, the new data will replace whatever currently exists, regardless of whether the data is actually the same.
-        - name: If-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Segment will only be updated if one of the specified ETags matches.
-        - name: ETag
-          in: header
+          description: Internal or external ID of the Segment to update.
           required: true
           schema:
             type: string
-          description: ETag to use as version information for Segment.
       requestBody:
         description: Contains the Segment data.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ingestSegment'
-            example:
-              name: segment1
-              rank: 0
+              $ref: '#/components/schemas/segment'
       responses:
-        200:
-          description: Segment has been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-        201:
-          description: Segment has been created.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 201
-                    example: 201
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
     delete:
-      operationId: deleteIngestSegment
+      operationId: deleteSegment
       tags:
         - ingest
-      summary: Deletes a specified ingest Segment. Resources under the Segment (e.g. Parts) will also be removed.
+      summary: Deletes a specified Segment. Resources under the Segment (e.g. Parts) will also be removed.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Segment belongs to.
+          description: Internal or external ID of the Playlist the Segment belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the ingest Segment belongs to.
+          description: Internal or external ID of the Rundown the Segment belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to delete.
+          description: Internal or external ID of the Segment to delete.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Segment removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request accepted.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
-  ingestParts:
+  parts:
     get:
-      operationId: getIngestParts
+      operationId: getParts
       tags:
         - ingest
-      summary: Gets the ingest data for all Parts belonging to a Segment.
+      summary: Gets all Parts belonging to a specified Segment.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Segment belongs to.
+          description: Internal or external ID of the Playlist the Parts belong to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the Segment belongs to.
+          description: Internal or external ID of the Rundown the Parts belong to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to get Parts for.
+          description: Internal or external ID of the Segment the Parts belong to.
           required: true
           schema:
             type: string
@@ -799,93 +640,107 @@ resources:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                  parts:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ingestPartItem'
-                    example:
-                      - externalId: part1
-                required:
-                  - status
-                  - parts
-                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/partResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
           #   - $ref: '#/components/responses/playlistNotFound'
           #   - $ref: '#/components/responses/rundownNotFound'
           #   - $ref: '#/components/responses/segmentNotFound'
-    put:
-      operationId: putIngestParts
+    post:
+      operationId: postPart
       tags:
         - ingest
-      summary: Creates/updates the Parts in a Segment. Any existing Parts in the Segment that are not included in this list will be deleted. Parts will be placed in the Segment in the order specified by their individual ranks. If the creation/deletion/updating of any Parts fails all changes will be discarded.
+      summary: Creates a Part in a specified Segment.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Segment belongs to.
+          description: Internal or external ID of the Playlist the new Part belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the Segment belongs to.
+          description: Internal or external ID of the Rundown the new Part belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to create/update all Parts for.
+          description: Internal or external ID of the Segment the new Part belongs to.
           required: true
           schema:
             type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, each Part will only be updated if its version does not match one of the specified ETags. If no ETag is found for a Part, the new data will replace whatever currently exists, regardless of whether the data is actually the same. ETags are not supported for bulk updates, no version information will be stored for any of the created/modified Rundowns.
       requestBody:
-        description: Contains the Part data.
+        description: Contains the Parts data.
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                parts:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ingestPart'
-                  example:
-                    - externalId: part1
-              required:
-                - parts
-              additionalProperties: false
+              $ref: '#/components/schemas/part'
       responses:
-        200:
-          description: Parts have been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request accepted.
+        400:
+          description: Bad request.
+        404:
+          $ref: '#/components/responses/idNotFound'
+          # oneOf:
+          #   - $ref: '#/components/responses/playlistNotFound'
+          #   - $ref: '#/components/responses/rundownNotFound'
+          #   - $ref: '#/components/responses/partNotFound'
+    put:
+      operationId: putParts
+      tags:
+        - ingest
+      summary: Updates Parts belonging to a specified Segment.
+      parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
+        - name: playlistId
+          in: path
+          description: Internal or external ID of the Playlist the Parts to update belong to.
+          required: true
+          schema:
+            type: string
+        - name: rundownId
+          in: path
+          description: Internal or external ID of the Rundown the Parts to update belong to.
+          required: true
+          schema:
+            type: string
+        - name: segmentId
+          in: path
+          description: Internal or external ID of the Segment the Parts to update belong to.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Contains the Parts data.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/part'
+      responses:
+        202:
+          description: Request accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
@@ -893,102 +748,84 @@ resources:
           #   - $ref: '#/components/responses/rundownNotFound'
           #   - $ref: '#/components/responses/partNotFound'
     delete:
-      operationId: deleteIngestParts
+      operationId: deleteParts
       tags:
         - ingest
-      summary: Delete multiple Parts.
+      summary: Deletes all Parts belonging to specified Segment.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Part belongs to.
+          description: Internal or external ID of the Playlist the Parts belong to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the ingest Part belongs to.
+          description: Internal or external ID of the Rundown the Parts belong to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment the ingest Part belongs to.
+          description: Internal or external ID of the Segment the Parts to delete belong to.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Parts removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-  ingestPart:
+        202:
+          description: Request for deleting accepted.
+        404:
+          $ref: '#/components/responses/idNotFound'
+  part:
     get:
-      operationId: getIngestPart
+      operationId: getPart
       tags:
         - ingest
-      summary: Gets ingest data for a specific Part.
+      summary: Gets the specified Part.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the Part belongs to.
+          description: Internal or external ID of the Playlist the Part belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the Part belongs to.
+          description: Internal or external ID of the Rundown the Part belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment the Part belongs to.
+          description: Internal or external ID of the Segment the Part belongs to.
           required: true
           schema:
             type: string
         - name: partId
           in: path
-          description: Part to create/update.
+          description: Internal or external ID of the Part to return.
           required: true
           schema:
             type: string
       responses:
         200:
           description: Part is returned.
-          headers:
-            ETag:
-              schema:
-                type: string
-              description: Version of Part, if known.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                  part:
-                    $ref: '#/components/schemas/ingestPart'
-                example:
-                  status: 200
-                  part:
-                    name: part1
-                    rank: 0
-                required:
-                  - status
-                  - part
-                additionalProperties: false
+                $ref: '#/components/schemas/partResponse'
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
@@ -997,96 +834,51 @@ resources:
           #   - $ref: '#/components/responses/segmentNotFound'
           #   - $ref: '#/components/responses/partNotFound'
     put:
-      operationId: putIngestPart
+      operationId: putPart
       tags:
         - ingest
-      summary: Creates a new or updates an existing Part.
+      summary: Updates an existing specified Part.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist to ingest Part into.
+          description: Internal or external ID of the Playlist the Part to update belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown to ingest Part into.
+          description: Internal or external ID of the Rundown the Part to update belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment to ingest Part into.
+          description: Internal or external ID of the Segment the Part to update belongs to.
           schema:
             type: string
         - name: partId
           in: path
-          description: Part to update/create.
+          description: Internal or external ID of the Part to update.
           schema:
             type: string
-        - name: If-None-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Part will only be updated if the specified ETag does not match. If unspecified, the new data will replace whatever currently exists, regardless of whether the data is actually the same.
-        - name: If-Match
-          in: header
-          # Indicates that the array elements are serialized as a comma-separated list in the header.
-          style: simple
-          schema:
-            type: array
-            items:
-              type: string
-          description: If specified, the Part will only be updated if one of the specified ETags matches.
-        - name: ETag
-          in: header
-          required: true
-          schema:
-            type: string
-          description: ETag to use as version information for Part.
       requestBody:
         description: Contains the Rundown data.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ingestPart'
-            example:
-              name: part1
-              rank: 0
+              $ref: '#/components/schemas/part'
       responses:
-        200:
-          description: Part has been updated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
-        201:
-          description: Part has been created.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 201
-                    example: 201
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request has been accepted.
+        400:
+          description: Bad request.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
@@ -1094,50 +886,44 @@ resources:
           #   - $ref: '#/components/responses/rundownNotFound'
           #   - $ref: '#/components/responses/segmentNotFound'
     delete:
-      operationId: deleteIngestPart
+      operationId: deletePart
       tags:
         - ingest
-      summary: Deletes a specified ingest Part.
+      summary: Deletes a specified Part.
       parameters:
+        - name: studioId
+          in: path
+          description: ID of the studio that is performing ingest operation.
+          required: true
+          schema:
+            type: string
         - name: playlistId
           in: path
-          description: Playlist the ingest Part belongs to.
+          description: Internal or external ID of the Playlist the Part belongs to.
           required: true
           schema:
             type: string
         - name: rundownId
           in: path
-          description: Rundown the ingest Part belongs to.
+          description: Internal or external ID of the Rundown the Part belongs to.
           required: true
           schema:
             type: string
         - name: segmentId
           in: path
-          description: Segment the ingest Part belongs to.
+          description: Internal or external ID of the Segment the Part belongs to.
           required: true
           schema:
             type: string
         - name: partId
           in: path
-          description: Part to delete.
+          description: Internal or external ID of the Part to delete.
           required: true
           schema:
             type: string
       responses:
-        200:
-          description: Part removed.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: number
-                    const: 200
-                    example: 200
-                required:
-                  - status
-                additionalProperties: false
+        202:
+          description: Request has been accepted.
         404:
           $ref: '#/components/responses/idNotFound'
           # oneOf:
@@ -1148,10 +934,24 @@ resources:
 components:
   responses:
     idNotFound:
-      # oneOf responses like below don't render correctly with current tools - use playlist as an example for the docs.
-      # oneOf:
-      #   - $ref: '#/components/responses/playlistNotFound'
-      $ref: '#/components/responses/playlistNotFound'
+      # oneOf responses don't render correctly with current tools. Use this response as a replacement.
+      description: The specified resource does not exist.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: number
+                const: 404
+                example: 404
+              message:
+                type: string
+                example: The specified resource was not found.
+            required:
+              - status
+              - message
+            additionalProperties: false
     playlistNotFound:
       description: The specified Playlist does not exist.
       content:
@@ -1186,10 +986,6 @@ components:
                 type: number
                 const: 404
                 example: 404
-              notFound:
-                type: string
-                const: rundown
-                example: rundown
               message:
                 type: string
                 example: The specified Rundown was not found.
@@ -1209,10 +1005,6 @@ components:
                 type: number
                 const: 404
                 example: 404
-              notFound:
-                type: string
-                const: segment
-                example: segment
               message:
                 type: string
                 example: The specified Segment was not found.
@@ -1232,10 +1024,6 @@ components:
                 type: number
                 const: 404
                 example: 404
-              notFound:
-                type: string
-                const: part
-                example: part
               message:
                 type: string
                 example: The specified Part was not found.
@@ -1244,111 +1032,293 @@ components:
               - notFound
               - message
             additionalProperties: false
+    badRequest:
+      description: Bad request.
   schemas:
-    ingestPlaylistItem:
+    playlist:
       type: object
       properties:
+        name:
+          type: string
+          example: Playlist name
+        externalId:
+          type: string
+          example: playlist1
+        rundownIds:
+          type: array
+          items:
+            type: string
+          example:
+            - rundown1
+            - rundown2
+            - rundown3
+      required:
+        - name
+      additionalProperties: false
+    playlistResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+          example: playlist1
+        rundownIds:
+          type: array
+          items:
+            type: string
+          example:
+            - rundown1
+            - rundown2
+            - rundown3
+        studioId:
+          type: string
+          example: studio0
+      required:
+        - id
+        - externalId
+        - rundownIds
+        - studioId
+      additionalProperties: false
+    rundown:
+      type: object
+      properties:
+        externalId:
+          type: string
+          example: rundown1
+        name:
+          type: string
+          example: Rundown 1
+        type:
+          type: string
+          example: external
+          description: Value that defines the structure of the payload, must be known by Sofie.
+        resyncUrl:
+          type: string
+          example: http://nrcs-url/resync/rundownId
+          description: URL on which the Sofie will send the POST request to request re-syncing of the Rundown.
+        timing:
+          type: object
+          description: If type is "none", only expectedDuration can be optionally provided. If type is "forward-time", expectedStart must be provided while either duration or expectedEnd can be optionally provided. If type is "back-time", expectedEnd must be provided while either duration or expectedStart can be optionally provided.
+          properties:
+            type:
+              type: string
+              enum:
+                - none
+                - forward-time
+                - back-time
+            expectedStart:
+              type: number
+              description: Epoch timestamp in milliseconds.
+              example: 1705924800000
+            expectedEnd:
+              type: number
+              description: Epoch timestamp in milliseconds.
+              example: 1705927500000
+            expectedDuration:
+              type: number
+              description: Interval in milliseconds.
+              example: 3600000
+          required:
+            - type
+          additionalProperties: false
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/segment'
+      required:
+        - externalId
+        - name
+        - type
+        - resyncUrl
+        - timing
+      additionalProperties: false
+    rundownResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+          example: rundown1
+        studioId:
+          type: string
+          example: studio0
         playlistId:
           type: string
-          description: The Id provided by Sofie. This Id will be used for /playlist commands for controlling playlist activations, playback etc.
-        rundowns:
-          type: array
-          description: All rundowns in a Playlist.
-          items:
-            $ref: '#/components/schemas/ingestRundownItem'
-      required:
-        - playlistId
-        - rundowns
-      additionalProperties: false
-    ingestRundownItem:
-      type: object
-      properties:
-        externalId:
+          example: playlist1
+        playlistExternalId:
           type: string
-          description: The Id provided by a system external to Sofie that can be used by the same external system to identify this Rundown.
-      required:
-        - externalId
-      additionalProperties: false
-    ingestSegmentItem:
-      type: object
-      properties:
-        externalId:
-          type: string
-          description: The Id provided by a system external to Sofie that can be used by the same external system to identify this Segment.
-      required:
-        - externalId
-      additionalProperties: false
-    ingestPartItem:
-      type: object
-      properties:
+          example: playlistExternal1
         name:
           type: string
-        externalId:
+          example: Rundown 1
+        type:
           type: string
-          description: The Id provided by a system external to Sofie that can be used by the same external system to identify this Part.
-      required:
-        - name
-        - externalId
-      additionalProperties: false
-    ingestPlaylist:
-      type: object
-      properties:
-        name:
-          type: string
-      required:
-        - name
-      additionalProperties: false
-    ingestRundown:
-      type: object
-      properties:
-        name:
-          type: string
-        source:
-          type: string
-          description: A source type that can be displayed to the end-user. Should identify what type of system (e.g. vendor/product name) the data has been sent from.
-          examples:
-            - 'Some Product Name'
-            - 'Our Company - Some Product Name'
-        rank:
-          type: number
-          description: The position of the Rundown in the parent Playlist.
-          inclusiveMinimum: 0.0
-        payload:
+        timing:
           type: object
-          additionalProperties: true
+          properties:
+            type:
+              type: string
+              enum:
+                - none
+                - forward-time
+                - back-time
+            expectedStart:
+              type: number
+              description: Epoch timestamp in milliseconds.
+            expectedDuration:
+              type: number
+              description: Epoch interval in milliseconds.
+            expectedEnd:
+              type: number
+              description: Epoch timestamp in milliseconds.
+          required:
+            - type
+          additionalProperties: false
       required:
+        - id
+        - externalId
+        - studioId
+        - playlistId
         - name
-        - source
-        - rank
-      additionalProperties: false
-    ingestSegment:
+    segment:
       type: object
       properties:
+        externalId:
+          type: string
+          example: segment1
         name:
           type: string
+          example: Segment 1
         rank:
           type: number
           description: The position of the Segment in the parent Rundown.
           inclusiveMinimum: 0.0
-        payload:
+          example: 1
+        isHidden:
+          type: boolean
+          example: false
+          description: If the Segment is hidden or not.
+        timing:
           type: object
-          additionalProperties: true
+          description: Segment timing.
+          properties:
+            expectedStart:
+              type: number
+              description: Epoch timestamp in milliseconds.
+              example: 1705924800000
+            expectedEnd:
+              type: number
+              description: Epoch timestamp in milliseconds.
+              example: 1705927500000
+          additionalProperties: false
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/part'
       required:
+        - externalId
         - name
         - rank
       additionalProperties: false
-    ingestPart:
+    segmentResponse:
       type: object
       properties:
+        id:
+          type: string
+          example: segment1
+        externalId:
+          type: string
+          example: segmentExternal1
+        rundownId:
+          type: string
+          example: rundown11
         name:
           type: string
+          example: Segment 1
         rank:
           type: number
-          description: The position of the Part in the parent Segment.
+          example: 1
+        isHidden:
+          type: boolean
+        timing:
+          type: object
+          properties:
+            expectedStart:
+              type: number
+              description: Epoch timestamp in milliseconds.
+            expectedEnd:
+              type: number
+              description: Epoch timestamp in milliseconds.
+          additionalProperties: false
+      required:
+        - id
+        - externalId
+        - rundownId
+        - name
+        - rank
+      additionalProperties: false
+    part:
+      type: object
+      properties:
+        externalId:
+          type: string
+          example: part1
+        name:
+          type: string
+          example: Part 1
+        float:
+          type: boolean
+          example: false
+        autoNext:
+          type: boolean
+          example: false
+        rank:
+          type: number
+          description: Position of the Part in the Segment.
+          example: 0
         payload:
           type: object
           additionalProperties: true
       required:
+        - externalId
+        - name
+        - rank
+      additionalProperties: false
+    partResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: part1
+        externalId:
+          type: string
+          example: partExternal1
+        rundownId:
+          type: string
+          example: rundown1
+        segmentId:
+          type: string
+          example: segment1
+        name:
+          type: string
+          example: Part 1
+        rank:
+          type: number
+          example: 0
+        expectedDuration:
+          type: number
+          description: Calculated based on pieces.
+          example: 10000
+        autoNext:
+          type: boolean
+          example: false
+      required:
+        - id
+        - externalId
+        - rundownId
+        - segmentId
         - name
         - rank
       additionalProperties: false
