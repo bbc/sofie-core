@@ -5,7 +5,7 @@ import {
 	ICommonContext,
 	ABTimelineLayerChangeRules,
 } from '@sofie-automation/blueprints-integration'
-import { ABSessionAssignments } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ABSessionAssignment, ABSessionAssignments } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { OnGenerateTimelineObjExt } from '@sofie-automation/corelib/dist/dataModel/Timeline'
 import { logger } from '../../logging'
 import * as _ from 'underscore'
@@ -105,7 +105,9 @@ export function applyAbPlayerObjectAssignments(
 		logger.debug(`Unexpected sessions are: ${unexpectedSessions.join(', ')}`)
 	}
 
-	logger.silly(`ABPlayback calculated assignments for "${poolName}": ${JSON.stringify(newAssignments)}`)
+	Object.values<ABSessionAssignment | undefined>(newAssignments).forEach((assignment) => {
+		logger.silly(`ABPlayback: Assigned session "${assignment?.sessionId}" to player "${assignment?.playerId}"`)
+	})
 
 	return newAssignments
 }

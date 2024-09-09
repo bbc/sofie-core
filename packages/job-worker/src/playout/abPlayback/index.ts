@@ -10,7 +10,7 @@ import { WrappedShowStyleBlueprint } from '../../blueprints/cache'
 import { ReadonlyDeep } from 'type-fest'
 import { JobContext, ProcessedShowStyleCompound } from '../../jobs'
 import { getCurrentTime } from '../../lib'
-import { resolveAbAssignmentsFromRequests } from './abPlaybackResolver'
+import { resolveAbAssignmentsFromRequests, SessionRequest } from './abPlaybackResolver'
 import { calculateSessionTimeRanges } from './abPlaybackSessions'
 import { applyAbPlayerObjectAssignments } from './applyAssignments'
 import { AbSessionHelper } from './abSessionHelper'
@@ -85,17 +85,33 @@ export async function applyAbPlaybackForTimeline(
 						assingmentsToPlayer[assignment.playerId] = (assingmentsToPlayer[assignment.playerId] || 0) + 1
 					}
 					if (!filteredPlayers.find((player) => player.playerId === assignment?.playerId)) {
+						logger.info(
+							'ABPlayback: Clearing old assignments due to a player has been taken out of the pool'
+						)
 						previousAbSessionAssignments[poolName] = {}
 					}
 				}
 			)
 		}
-		// If a player are free and multiple sessions are assigned to one player, clear the old assignments:
-		Object.values<number>(assingmentsToPlayer).forEach((numberOfAssingments) => {
-			if (numberOfAssingments > 1 && players.length >= numberOfAssingments) {
+		// Check if a player has been added to the pool, and if so, clear the old assignments:
+		const emptyPlayers = filteredPlayers.filter(
+			(player) =>
+				!Object.values<ABPlayerDefinition | undefined>(previousAbSessionAssignments[poolName]).find(
+					(assignment) => assignment?.playerId === player.playerId
+				)
+		)
+		logger.info('---------------------------- ABPlayback: Empty players ----------------------------')
+		logger.info(`ABPlayback: Empty players: ${emptyPlayers.map((player) => player.playerId).join(', ')}`)
+		const multipleAssignments = Object.values<number>(assingmentsToPlayer).filter((count) => count > 1)
+		if (emptyPlayers.length > 0 && multipleAssignments.length > 0) {
+			// Check if some players have more than one assignment
+			if (multipleAssignments.length > 0) {
+				logger.warn(
+					'ABPlayback: Clearing old assignments due to a player has been added to the pool, and some players have more than one assignment'
+				)
 				previousAbSessionAssignments[poolName] = {}
 			}
-		})
+		}
 
 		const previousAssignmentMap: ABSessionAssignments = previousAbSessionAssignments[poolName] || {}
 		const sessionRequests = calculateSessionTimeRanges(
@@ -113,7 +129,11 @@ export async function applyAbPlaybackForTimeline(
 			now
 		)
 
-		logger.silly(`ABPlayback resolved sessions for "${poolName}": ${JSON.stringify(assignments)}`)
+		Object.values<SessionRequest>(assignments.requests).forEach((assignment) => {
+			logger.silly(
+				`ABPlayback resolved session for "${poolName}" - ${assignment.id}" to player "${assignment.playerId}"`
+			)
+		})
 		if (assignments.failedRequired.length > 0) {
 			logger.warn(
 				`ABPlayback failed to assign sessions for "${poolName}": ${JSON.stringify(assignments.failedRequired)}`
