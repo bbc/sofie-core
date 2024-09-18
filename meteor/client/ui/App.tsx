@@ -420,7 +420,7 @@ const RequireAuth = React.memo(function RequireAuth({ children }: React.PropsWit
 function useRoles(user: User | null, subsReady: boolean, userLevel: UserLevel | null) {
 	const location = window.location
 
-	const [roles, setRoles] = useState(
+	const [roles, setRoles] = useState<UserLevel>(
 		Settings.enableUserAccounts
 			? {
 					studio: false,
@@ -440,39 +440,7 @@ function useRoles(user: User | null, subsReady: boolean, userLevel: UserLevel | 
 
 	useEffect(() => {
 		if (userLevel) {
-			switch (userLevel) {
-				case UserLevel.Admin:
-					setRoles({
-						studio: true,
-						configure: true,
-						developer: true,
-						testing: true,
-						service: true,
-					})
-					break
-				case UserLevel.Studio:
-					setRoles({
-						studio: true,
-						configure: false,
-						developer: false,
-						testing: false,
-						service: false,
-					})
-					break
-				case UserLevel.PeripheralDevice:
-				case UserLevel.Readonly:
-					setRoles({
-						studio: false,
-						configure: false,
-						developer: false,
-						testing: false,
-						service: false,
-					})
-					break
-				default:
-					assertNever(userLevel)
-					break
-			}
+			setRoles(userLevel)
 		} else if (!Settings.enableUserAccounts) {
 			if (!location.search) return
 
@@ -509,7 +477,7 @@ function useRoles(user: User | null, subsReady: boolean, userLevel: UserLevel | 
 				service: getAllowService(),
 			})
 		}
-	}, [location.search, user, subsReady, userLevel])
+	}, [location.search, user, subsReady, JSON.stringify(userLevel)])
 
 	return roles
 }
