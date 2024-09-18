@@ -16,6 +16,8 @@ import {
 	UserId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownPlaylists, Rundowns } from '../collections'
+import { MethodContext } from '../../lib/api/methods'
+import { parseUserLevel, USER_LEVEL_HEADER } from '../../lib/userLevel'
 
 export namespace RundownPlaylistReadAccess {
 	/** Handles read access for all playlist document */
@@ -69,7 +71,7 @@ export interface RundownContentAccess {
 export namespace RundownPlaylistContentWriteAccess {
 	/** Access to playout for a playlist, from a rundown. ie the playlist and everything inside it. */
 	export async function rundown(
-		cred0: Credentials,
+		context: MethodContext,
 		existingRundown: Rundown | RundownId
 	): Promise<RundownContentAccess> {
 		triggerWriteAccess()
@@ -80,25 +82,32 @@ export namespace RundownPlaylistContentWriteAccess {
 			existingRundown = m
 		}
 
-		const access = await anyContent(cred0, existingRundown.playlistId)
+		const access = await anyContent(context, existingRundown.playlistId)
 		return { ...access, rundown: existingRundown }
 	}
 	/** Access to playout for a playlist. ie the playlist and everything inside it. */
 	export async function playout(
-		cred0: Credentials,
+		context: MethodContext,
 		playlistId: RundownPlaylistId
 	): Promise<RundownPlaylistContentAccess> {
-		return anyContent(cred0, playlistId)
+		return anyContent(context, playlistId)
 	}
 	/**
 	 * We don't have user levels, so we can use a simple check for all cases
 	 * Return credentials if writing is allowed, throw otherwise
 	 */
 	async function anyContent(
-		cred0: Credentials,
+		context: MethodContext,
 		playlistId: RundownPlaylistId
 	): Promise<RundownPlaylistContentAccess> {
 		triggerWriteAccess()
+
+		if (context.connection) {
+			// A POC that 'fails auth' if the user doesn't have studio permissions
+			const userLevel = parseUserLevel(context.connection.httpHeaders[USER_LEVEL_HEADER])
+			if (!userLevel?.studio) throw new Meteor.Error(403, `Not allowed: no studio permission`)
+		}
+
 		if (!Settings.enableUserAccounts) {
 			const playlist = await RundownPlaylists.findOneAsync(playlistId)
 			return {
@@ -106,10 +115,10 @@ export namespace RundownPlaylistContentWriteAccess {
 				organizationId: null,
 				studioId: playlist?.studioId || null,
 				playlist: playlist || null,
-				cred: cred0,
+				cred: context,
 			}
 		}
-		const cred = await resolveCredentials(cred0)
+		const cred = await resolveCredentials(context)
 		if (!cred.user) throw new Meteor.Error(403, `Not logged in`)
 		if (!cred.organizationId) throw new Meteor.Error(500, `User has no organization`)
 		const access = await allowAccessToRundownPlaylist(cred, playlistId)

@@ -1,20 +1,46 @@
-import { UserId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { protectString } from './lib'
-
 export const USER_LEVEL_HEADER = 'dnt'
-export const USER_LEVEL_USER_ID = protectString<UserId>('fake-user')
+// export const USER_LEVEL_USER_ID = protectString<UserId>('fake-user')
 
-export enum UserLevel {
-	Readonly = 'readonly',
-	Studio = 'studio',
-	Admin = 'admin',
-	PeripheralDevice = 'peripheral-device',
+export interface UserLevel {
+	studio: boolean
+	configure: boolean
+	developer: boolean
+	testing: boolean
+	service: boolean
 }
-const allowedLevels = new Set(Object.values<UserLevel>(UserLevel))
+const allowedLevels = new Set<keyof UserLevel>(['studio', 'configure', 'developer', 'testing', 'service'])
 
 export function parseUserLevel(level: string | undefined): UserLevel | null {
-	if (!level) return null
-	const levelTyped = level as UserLevel
-	if (allowedLevels.has(levelTyped)) return levelTyped
+	if (level === 'admin') {
+		return {
+			studio: true,
+			configure: true,
+			developer: true,
+			testing: true,
+			service: true,
+		}
+	}
+
+	const result: UserLevel = {
+		studio: false,
+		configure: false,
+		developer: false,
+		testing: false,
+		service: false,
+	}
+
+	if (level && typeof level === 'string') {
+		const parts = level.split(',')
+
+		for (const part of parts) {
+			const part2 = part.trim() as keyof UserLevel
+			if (allowedLevels.has(part2)) {
+				result[part2] = true
+			}
+		}
+
+		return result
+	}
+
 	return null
 }
