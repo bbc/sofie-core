@@ -2,13 +2,16 @@ import { Accounts } from 'meteor/accounts-base'
 import { UserProfile } from '../../lib/collections/Users'
 import { protectString } from '../lib'
 import { UserId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { UserLevel } from '../userLevel'
 
 export interface NewUserAPI {
+	getUserLevel(): Promise<UserLevel | null>
 	enrollUser(email: string, name: string): Promise<UserId>
 	requestPasswordReset(email: string): Promise<boolean>
 	removeUser(): Promise<boolean>
 }
 export enum UserAPIMethods {
+	'getUserLevel' = 'user.getUserLevel',
 	'enrollUser' = 'user.enrollUser',
 	'requestPasswordReset' = 'user.requestPasswordReset',
 	'removeUser' = 'user.removeUser',

@@ -57,7 +57,9 @@ import { useTracker, useSubscription } from '../lib/ReactMeteorData/ReactMeteorD
 import { DocumentTitleProvider } from '../lib/DocumentTitleProvider'
 import { Spinner } from '../lib/Spinner'
 import { catchError, isRunningInPWA } from '../lib/lib'
-import { firstIfArray, protectString } from '../../lib/lib'
+import { assertNever, firstIfArray, protectString } from '../../lib/lib'
+import { UserLevel } from '../../lib/userLevel'
+import { MeteorCall } from '../../lib/api/methods'
 
 const NullComponent = () => null
 
@@ -82,12 +84,25 @@ export const App: React.FC = function App() {
 	const [lastStart] = useState(Date.now())
 	const [requestedRoute, setRequestedRoute] = useState<undefined | string>()
 
+	const [userLevel, setUserLevel] = useState<UserLevel | null>(null)
+	useEffect(() => {
+		setUserLevel(null)
+
+		// TODO - this is a temorary hack!
+		MeteorCall.user
+			.getUserLevel()
+			.then(setUserLevel)
+			.catch((e) => {
+				console.error('Failed to set level', e)
+			})
+	}, [user])
+
 	const userReady = useSubscription(MeteorPubSub.loggedInUser)
 	const orgReady = useSubscription(MeteorPubSub.organization, user?.organizationId ?? null)
 
-	const subsReady = userReady && orgReady
+	const subsReady = userReady && orgReady && !userLevel
 
-	const roles = useRoles(user, subsReady)
+	const roles = useRoles(user, subsReady, userLevel)
 	const featureFlags = useFeatureFlags()
 
 	useEffect(() => {
@@ -402,7 +417,7 @@ const RequireAuth = React.memo(function RequireAuth({ children }: React.PropsWit
 	return <Navigate to="/" />
 })
 
-function useRoles(user: User | null, subsReady: boolean) {
+function useRoles(user: User | null, subsReady: boolean, userLevel: UserLevel | null) {
 	const location = window.location
 
 	const [roles, setRoles] = useState(
@@ -424,7 +439,41 @@ function useRoles(user: User | null, subsReady: boolean) {
 	)
 
 	useEffect(() => {
-		if (!Settings.enableUserAccounts) {
+		if (userLevel) {
+			switch (userLevel) {
+				case UserLevel.Admin:
+					setRoles({
+						studio: true,
+						configure: true,
+						developer: true,
+						testing: true,
+						service: true,
+					})
+					break
+				case UserLevel.Studio:
+					setRoles({
+						studio: true,
+						configure: false,
+						developer: false,
+						testing: false,
+						service: false,
+					})
+					break
+				case UserLevel.PeripheralDevice:
+				case UserLevel.Readonly:
+					setRoles({
+						studio: false,
+						configure: false,
+						developer: false,
+						testing: false,
+						service: false,
+					})
+					break
+				default:
+					assertNever(userLevel)
+					break
+			}
+		} else if (!Settings.enableUserAccounts) {
 			if (!location.search) return
 
 			const params = queryStringParse(location.search)
@@ -460,7 +509,7 @@ function useRoles(user: User | null, subsReady: boolean) {
 				service: getAllowService(),
 			})
 		}
-	}, [location.search, user, subsReady])
+	}, [location.search, user, subsReady, userLevel])
 
 	return roles
 }
