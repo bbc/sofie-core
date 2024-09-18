@@ -4,6 +4,7 @@ import { logger } from './logging'
 import { sendTrace } from './api/integration/influx'
 import { PeripheralDevices } from './collections'
 import { MetricsGauge } from '@sofie-automation/corelib/dist/prometheus'
+import { parseUserLevel, USER_LEVEL_HEADER } from '../lib/userLevel'
 
 const connections = new Set<string>()
 const connectionsGauge = new MetricsGauge({
@@ -13,6 +14,13 @@ const connectionsGauge = new MetricsGauge({
 
 Meteor.onConnection((conn: Meteor.Connection) => {
 	// This is called whenever a new ddp-connection is opened (ie a web-client or a peripheral-device)
+
+	const userLevel = parseUserLevel(conn.httpHeaders[USER_LEVEL_HEADER])
+	if (!userLevel) {
+		// Reject connection, not permitted
+		conn.close()
+		return
+	}
 
 	const connectionId: string = conn.id
 	// var clientAddress = conn.clientAddress; // ip-adress

@@ -16,6 +16,7 @@ import { resetCredentials } from '../security/lib/credentials'
 import { OrganizationId, UserId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Organizations, Users } from '../collections'
 import { logger } from '../logging'
+import { parseUserLevel, USER_LEVEL_HEADER } from '../../lib/userLevel'
 
 async function enrollUser(email: string, name: string): Promise<UserId> {
 	triggerWriteAccessBecauseNoCheckNecessary()
@@ -93,6 +94,9 @@ async function removeUser(context: MethodContext) {
 }
 
 class ServerUserAPI extends MethodContextAPI implements NewUserAPI {
+	async getUserLevel() {
+		return parseUserLevel(this.connection?.httpHeaders?.[USER_LEVEL_HEADER])
+	}
 	async enrollUser(email: string, name: string) {
 		return enrollUser(email, name)
 	}
