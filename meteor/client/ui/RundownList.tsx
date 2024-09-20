@@ -3,7 +3,7 @@ import * as React from 'react'
 import { MeteorPubSub } from '../../lib/api/pubsub'
 import { GENESIS_SYSTEM_VERSION } from '../../lib/collections/CoreSystem'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { getAllowConfigure, getAllowStudio, getHelpMode } from '../lib/localStorage'
+import { getHelpMode } from '../lib/localStorage'
 import { literal, unprotectString } from '../../lib/lib'
 import { useSubscription, useTracker } from '../lib/ReactMeteorData/react-meteor-data'
 import { Spinner } from '../lib/Spinner'
@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { CreateAdlibTestingRundownPanel } from './RundownList/CreateAdlibTestingRundownPanel'
+import { UserPermissionsContext } from './UserPermissions'
 
 export enum ToolTipStep {
 	TOOLTIP_START_HERE = 'TOOLTIP_START_HERE',
@@ -30,6 +31,8 @@ export enum ToolTipStep {
 
 export function RundownList(): JSX.Element {
 	const { t } = useTranslation()
+
+	const userPermissions = React.useContext(UserPermissionsContext)
 
 	const playlistIds = useTracker(
 		() =>
@@ -114,11 +117,11 @@ export function RundownList(): JSX.Element {
 		}
 
 		if (coreSystem?.version === GENESIS_SYSTEM_VERSION && gotPlaylists === true) {
-			return getAllowConfigure() ? ToolTipStep.TOOLTIP_RUN_MIGRATIONS : ToolTipStep.TOOLTIP_START_HERE
+			return userPermissions.configure ? ToolTipStep.TOOLTIP_RUN_MIGRATIONS : ToolTipStep.TOOLTIP_START_HERE
 		} else {
 			return ToolTipStep.TOOLTIP_EXTRAS
 		}
-	}, [coreSystem, rundownPlaylists])
+	}, [coreSystem, rundownPlaylists, userPermissions])
 
 	const showGettingStarted = coreSystem?.version === GENESIS_SYSTEM_VERSION && rundownPlaylists.length === 0
 
@@ -186,7 +189,7 @@ export function RundownList(): JSX.Element {
 				)}
 			</section>
 
-			{getAllowStudio() && <CreateAdlibTestingRundownPanel />}
+			{userPermissions.studio && <CreateAdlibTestingRundownPanel />}
 
 			<RundownListFooter />
 		</>

@@ -50,6 +50,7 @@ export function useRoles(): [roles: UserLevel, ready: boolean] {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			// TODO - this is a temorary hack!
+			// TODO - this should also be triggered by ddp reconnecting
 			MeteorCall.user
 				.getUserLevel()
 				.then((v) => {
@@ -74,24 +75,12 @@ export function useRoles(): [roles: UserLevel, ready: boolean] {
 						service: false,
 					})
 				})
-		})
+		}, 30000) // Arbitrary poll interval
 
 		return () => {
 			clearInterval(interval)
 		}
 	}, [])
-
-	// useEffect(() => {
-	// 	setUserLevel(null)
-
-	// 	// TODO - this is a temorary hack!
-	// 	MeteorCall.user
-	// 		.getUserLevel()
-	// 		.then(setUserLevel)
-	// 		.catch((e) => {
-	// 			console.error('Failed to set level', e)
-	// 		})
-	// }, [])
 
 	useEffect(() => {
 		if (!USE_HEADER_AUTH) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import Tooltip from 'rc-tooltip'
 import ClassNames from 'classnames'
 import { useTranslation } from 'react-i18next'
@@ -19,13 +19,13 @@ import { MeteorCall } from '../../../lib/api/methods'
 import { RundownUtils } from '../../lib/rundown'
 import PlaylistRankResetButton from './PlaylistRankResetButton'
 import { DisplayFormattedTime } from './DisplayFormattedTime'
-import { getAllowStudio } from '../../lib/localStorage'
 import { doUserAction, UserAction } from '../../../lib/clientUserAction'
 import { RundownViewLayoutSelection } from './RundownViewLayoutSelection'
 import { RundownLayoutsAPI } from '../../../lib/api/rundownLayouts'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { TOOLTIP_DEFAULT_DELAY } from '../../lib/lib'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { UserPermissionsContext } from '../UserPermissions'
 
 export interface RundownPlaylistUi extends DBRundownPlaylist {
 	rundowns: Rundown[]
@@ -41,6 +41,8 @@ export function RundownPlaylistUi({
 }>): JSX.Element | null {
 	const { t } = useTranslation()
 	const [rundownOrder, setRundownOrder] = useState(playlist.rundowns.map((rundown) => rundown._id))
+
+	const userPermissions = useContext(UserPermissionsContext)
 
 	useEffect(() => {
 		setRundownOrder(playlist.rundowns.map((rundown) => rundown._id))
@@ -205,7 +207,7 @@ export function RundownPlaylistUi({
 							</Link>
 						</span>
 					</h2>
-					{getAllowStudio() ? (
+					{userPermissions.studio ? (
 						<PlaylistRankResetButton
 							manualSortingActive={playlist.rundownRanksAreSetInSofie === true}
 							nrcsName={getRundownNrcsName(playlist.rundowns[0])}

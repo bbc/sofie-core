@@ -45,6 +45,8 @@ import { UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
 import { RundownPlaylistCollectionUtil } from '../../../lib/collections/rundownPlaylistUtil'
 import { logger } from '../../../lib/logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
+import { UserPermissionsContext } from '../UserPermissions'
+import { UserLevel } from '../../../lib/userLevel'
 
 export const onRONotificationClick = new ReactiveVar<((e: RONotificationEvent) => void) | undefined>(undefined)
 export const reloadRundownPlaylistClick = new ReactiveVar<((e: any) => void) | undefined>(undefined)
@@ -75,6 +77,8 @@ function getNoticeLevelForNoteSeverity(type: NoteSeverity): NoticeLevel {
 }
 
 class RundownViewNotifier extends WithManagedTracker {
+	private readonly userPermissions: Readonly<UserLevel>
+
 	private _notificationList: NotificationList
 	private _notifier: NotifierHandle
 
@@ -99,8 +103,10 @@ class RundownViewNotifier extends WithManagedTracker {
 	private _unsentExternalMessagesStatus: Notification | undefined = undefined
 	private _unsentExternalMessageStatusDep: Tracker.Dependency
 
-	constructor(playlistId: RundownPlaylistId | undefined, studio: UIStudio) {
+	constructor(playlistId: RundownPlaylistId | undefined, studio: UIStudio, userPermissions: Readonly<UserLevel>) {
 		super()
+		this.userPermissions = userPermissions
+
 		this._notificationList = new NotificationList([])
 		this._mediaStatusDep = new Tracker.Dependency()
 		this._rundownStatusDep = new Tracker.Dependency()
@@ -212,7 +218,7 @@ class RundownViewNotifier extends WithManagedTracker {
 								{
 									label: t('Re-sync'),
 									type: 'primary',
-									disabled: !getAllowStudio(),
+									disabled: !this.userPermissions.studio,
 									action: () => {
 										doModalDialog({
 											title: t('Re-sync Rundown'),
@@ -229,7 +235,7 @@ class RundownViewNotifier extends WithManagedTracker {
 													(e, ts) => MeteorCall.userAction.resyncRundown(e, ts, rundown._id),
 													(err, reloadResult) => {
 														if (!err && reloadResult) {
-															handleRundownReloadResponse(t, rundown._id, reloadResult)
+															handleRundownReloadResponse(t, this.userPermissions, rundown._id, reloadResult)
 														}
 													}
 												)
@@ -328,7 +334,7 @@ class RundownViewNotifier extends WithManagedTracker {
 										{
 											label: t('Restart'),
 											type: 'primary',
-											disabled: !getAllowStudio(),
+											disabled: !this.userPermissions.studio,
 											action: () => {
 												doModalDialog({
 													title: t('Restart {{device}}', { device: parent.name }),
@@ -626,7 +632,7 @@ class RundownViewNotifier extends WithManagedTracker {
 									nrcsName: getRundownNrcsName(firstRundown),
 								}),
 								type: 'primary',
-								disabled: !getAllowStudio(),
+								disabled: !this.userPermissions.studio,
 								action: (e) => {
 									const reloadFunc = reloadRundownPlaylistClick.get()
 									if (reloadFunc) {
@@ -701,7 +707,7 @@ class RundownViewNotifier extends WithManagedTracker {
 	}
 }
 
-interface IProps {
+interface RundownNotifierProps {
 	// match?: {
 	// 	params: {
 	// 		rundownId?: RundownId
@@ -712,32 +718,16 @@ interface IProps {
 	studio: UIStudio
 }
 
-export const RundownNotifier = class RundownNotifier extends React.Component<IProps> {
-	private notifier: RundownViewNotifier
+export function RundownNotifier({ playlistId, studio }: RundownNotifierProps): JSX.Element | null {
+	const userPermissions = React.useContext(UserPermissionsContext)
 
-	constructor(props: IProps) {
-		super(props)
-		this.notifier = new RundownViewNotifier(props.playlistId, props.studio)
-	}
+	React.useEffect(() => {
+		const notifier = new RundownViewNotifier(playlistId, studio, userPermissions)
 
-	shouldComponentUpdate(nextProps: IProps): boolean {
-		if (this.props.playlistId === nextProps.playlistId && this.props.studio._id === nextProps.studio._id) {
-			return false
+		return () => {
+			notifier.stop()
 		}
-		return true
-	}
+	}, [playlistId, studio._id, userPermissions])
 
-	componentDidUpdate(): void {
-		this.notifier.stop()
-		this.notifier = new RundownViewNotifier(this.props.playlistId, this.props.studio)
-	}
-
-	componentWillUnmount(): void {
-		this.notifier.stop()
-	}
-
-	render(): React.ReactNode {
-		// this.props.connected
-		return null
-	}
+	return null
 }

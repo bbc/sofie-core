@@ -127,7 +127,7 @@ export function RundownListItem({
 					: undefined
 			}
 			confirmReSyncRundownHandler={
-				rundown.orphaned && userPermissions.studio ? () => confirmReSyncRundown(rundown, t) : undefined
+				rundown.orphaned && userPermissions.studio ? () => confirmReSyncRundown(userPermissions, rundown, t) : undefined
 			}
 		/>
 	)

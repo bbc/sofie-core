@@ -345,9 +345,9 @@ interface IRundownHeaderProps {
 	rundownIds: RundownId[]
 	firstRundown: Rundown | undefined
 	onActivate?: (isRehearsal: boolean) => void
-	studioMode: boolean
 	inActiveRundownView?: boolean
 	layout: RundownLayoutRundownHeader | undefined
+	userPermissions: Readonly<UserLevel>
 }
 
 interface IRundownHeaderState {
@@ -439,7 +439,7 @@ const RundownHeader = withTranslation()(
 		disableNextPiece = (e: any) => {
 			const { t } = this.props
 
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				doUserAction(
 					t,
 					e,
@@ -453,7 +453,7 @@ const RundownHeader = withTranslation()(
 		disableNextPieceUndo = (e: any) => {
 			const { t } = this.props
 
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				doUserAction(
 					t,
 					e,
@@ -466,7 +466,7 @@ const RundownHeader = withTranslation()(
 
 		take = (e: any) => {
 			const { t } = this.props
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				if (!this.props.playlist.activationId) {
 					const onSuccess = () => {
 						if (typeof this.props.onActivate === 'function') this.props.onActivate(false)
@@ -537,7 +537,7 @@ const RundownHeader = withTranslation()(
 
 		hold = (e: any) => {
 			const { t } = this.props
-			if (this.props.studioMode && this.props.playlist.activationId) {
+			if (this.props.userPermissions.studio && this.props.playlist.activationId) {
 				doUserAction(t, e, UserAction.ACTIVATE_HOLD, (e, ts) =>
 					MeteorCall.userAction.activateHold(e, ts, this.props.playlist._id, false)
 				)
@@ -547,7 +547,7 @@ const RundownHeader = withTranslation()(
 		holdUndo = (e: any) => {
 			const { t } = this.props
 			if (
-				this.props.studioMode &&
+				this.props.userPermissions.studio &&
 				this.props.playlist.activationId &&
 				this.props.playlist.holdState === RundownHoldState.PENDING
 			) {
@@ -644,7 +644,7 @@ const RundownHeader = withTranslation()(
 			if (e.persist) e.persist()
 
 			if (
-				this.props.studioMode &&
+				this.props.userPermissions.studio &&
 				(!this.props.playlist.activationId || (this.props.playlist.activationId && this.props.playlist.rehearsal))
 			) {
 				const onSuccess = () => {
@@ -718,7 +718,7 @@ const RundownHeader = withTranslation()(
 			if (e.persist) e.persist()
 
 			if (
-				this.props.studioMode &&
+				this.props.userPermissions.studio &&
 				(!this.props.playlist.activationId || (this.props.playlist.activationId && !this.props.playlist.rehearsal))
 			) {
 				const onSuccess = () => {
@@ -798,7 +798,7 @@ const RundownHeader = withTranslation()(
 			const { t } = this.props
 			if (e.persist) e.persist()
 
-			if (this.props.studioMode && this.props.playlist.activationId) {
+			if (this.props.userPermissions.studio && this.props.playlist.activationId) {
 				if (this.rundownShouldHaveStarted()) {
 					if (this.props.playlist.rehearsal) {
 						// We're in rehearsal mode
@@ -830,7 +830,7 @@ const RundownHeader = withTranslation()(
 			if (e.persist) e.persist()
 
 			if (
-				this.props.studioMode &&
+				this.props.userPermissions.studio &&
 				this.props.studio.settings.allowAdlibTestingSegment &&
 				this.props.playlist.activationId &&
 				this.props.currentRundown
@@ -880,7 +880,7 @@ const RundownHeader = withTranslation()(
 
 		reloadRundownPlaylist = (e: any) => {
 			const { t } = this.props
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				doUserAction(
 					t,
 					e,
@@ -888,7 +888,7 @@ const RundownHeader = withTranslation()(
 					(e, ts) => MeteorCall.userAction.resyncRundownPlaylist(e, ts, this.props.playlist._id),
 					(err, reloadResponse) => {
 						if (!err && reloadResponse) {
-							if (!handleRundownPlaylistReloadResponse(t, reloadResponse)) {
+							if (!handleRundownPlaylistReloadResponse(t, this.props.userPermissions, reloadResponse)) {
 								if (this.props.playlist && this.props.playlist.nextPartInfo) {
 									scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId).catch((error) => {
 										if (!error.toString().match(/another scroll/)) console.warn(error)
@@ -903,7 +903,7 @@ const RundownHeader = withTranslation()(
 
 		takeRundownSnapshot = (e: any) => {
 			const { t } = this.props
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				const doneMessage = t('A snapshot of the current Running\xa0Order has been created for troubleshooting.')
 				doUserAction(
 					t,
@@ -946,7 +946,7 @@ const RundownHeader = withTranslation()(
 
 		resetAndActivateRundown = (e: any) => {
 			// Called from the ModalDialog, 1 minute before broadcast starts
-			if (this.props.studioMode) {
+			if (this.props.userPermissions.studio) {
 				const { t } = this.props
 				this.rewindSegments() // Do a rewind right away
 
@@ -998,7 +998,7 @@ const RundownHeader = withTranslation()(
 					<Escape to="document">
 						<ContextMenu id="rundown-context-menu">
 							<div className="react-contextmenu-label">{this.props.playlist && this.props.playlist.name}</div>
-							{this.props.studioMode ? (
+							{this.props.userPermissions.studio ? (
 								<React.Fragment>
 									{!(this.props.playlist.activationId && this.props.playlist.rehearsal) ? (
 										!this.rundownShouldHaveStarted() && !this.props.playlist.activationId ? (
@@ -1062,7 +1062,7 @@ const RundownHeader = withTranslation()(
 							holdToDisplay={contextMenuHoldToDisplayTime()}
 						>
 							<WarningDisplay
-								studioMode={this.props.studioMode}
+								studioMode={this.props.userPermissions.studio}
 								inActiveRundownView={this.props.inActiveRundownView}
 								playlist={this.props.playlist}
 								oneMinuteBeforeAction={this.resetAndActivateRundown}
@@ -1072,7 +1072,7 @@ const RundownHeader = withTranslation()(
 									<div className="badge mod">
 										<Tooltip
 											overlay={t('Add ?studio=1 to the URL to enter studio mode')}
-											visible={getHelpMode() && !getAllowStudio()}
+											visible={getHelpMode() && !this.props.userPermissions.studio}
 											placement="bottom"
 										>
 											<div className="media-elem mrs sofie-logo" />
@@ -1089,7 +1089,7 @@ const RundownHeader = withTranslation()(
 										showStyleBase={this.props.showStyleBase}
 										showStyleVariant={this.props.showStyleVariant}
 										studio={this.props.studio}
-										studioMode={this.props.studioMode}
+										studioMode={this.props.userPermissions.studio}
 										shouldQueue={this.state.shouldQueue}
 										onChangeQueueAdLib={this.changeQueueAdLib}
 										selectedPiece={this.state.selectedPiece}
@@ -2966,7 +2966,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									rundownIds={this.props.rundowns.map((r) => r._id)}
 									firstRundown={this.props.rundowns[0]}
 									onActivate={this.onActivate}
-									studioMode={this.props.userPermissions.studio}
+									userPermissions={this.props.userPermissions}
 									inActiveRundownView={this.props.inActiveRundownView}
 									currentRundown={this.state.currentRundown || this.props.rundowns[0]}
 									layout={this.state.rundownHeaderLayout}
@@ -3298,7 +3298,11 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 	}
 )
 
-function handleRundownPlaylistReloadResponse(t: i18next.TFunction, result: ReloadRundownPlaylistResponse): boolean {
+function handleRundownPlaylistReloadResponse(
+	t: i18next.TFunction,
+	userPermissions: Readonly<UserLevel>,
+	result: ReloadRundownPlaylistResponse
+): boolean {
 	const rundownsInNeedOfHandling = result.rundownsResponses.filter(
 		(r) => r.response === TriggerReloadDataResponse.MISSING
 	)
@@ -3334,7 +3338,7 @@ function handleRundownPlaylistReloadResponse(t: i18next.TFunction, result: Reloa
 	}
 
 	const handled = rundownsInNeedOfHandling.map((r) =>
-		handleRundownReloadResponse(t, r.rundownId, r.response, onActionTaken)
+		handleRundownReloadResponse(t, userPermissions, r.rundownId, r.response, onActionTaken)
 	)
 	return handled.reduce((previousValue, value) => previousValue || value, false)
 }
@@ -3343,6 +3347,7 @@ type RundownReloadResponseUserAction = 'removed' | 'unsynced' | 'error'
 
 export function handleRundownReloadResponse(
 	t: i18next.TFunction,
+	userPermissions: Readonly<UserLevel>,
 	rundownId: RundownId,
 	result: TriggerReloadDataResponse,
 	clb?: (action: RundownReloadResponseUserAction) => void
