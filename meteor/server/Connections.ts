@@ -25,6 +25,15 @@ Meteor.onConnection((conn: Meteor.Connection) => {
 	const connectionId: string = conn.id
 	// var clientAddress = conn.clientAddress; // ip-adress
 
+	// HACK: force the userId of the connection before it can be used.
+	// This ensures we know the permissions of the connection before it can try to do anything
+	const connSession = (Meteor as any).server.sessions.get(conn.id)
+	if (!connSession) {
+		logger.error(`Failed to find session for ddp connection! "${conn.id}"`)
+	} else {
+		connSession.userId = JSON.stringify(userLevel)
+	}
+
 	connections.add(conn.id)
 	logger.debug(`Client connected: "${conn.id}", "${conn.clientAddress}"`)
 	traceConnections()
