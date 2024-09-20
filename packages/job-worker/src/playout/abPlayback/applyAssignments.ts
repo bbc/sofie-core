@@ -89,7 +89,7 @@ export function applyAbPlayerObjectAssignments(
 			unexpectedSessions.push(`${sessionId}(${objs.map((obj) => obj.id).join(',')})`)
 
 			// If there was a previous assignment, hopefully that is better than nothing
-			const prev = previousAssignmentMap[sessionId]
+			const prev = previousAssignmentMap?.[sessionId]
 			if (prev) {
 				failedObjects.push(
 					...updateObjectsToAbPlayer(blueprintContext, abConfiguration, poolName, prev.playerId, objs)
