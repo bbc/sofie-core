@@ -15,6 +15,8 @@ import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../lib/meteorApi'
 import { UserLevel as UserPermissions } from '@sofie-automation/meteor-lib/dist/userLevel' // nocommit - avoid this alias
 
+export type { UserPermissions }
+
 export const UserPermissionsContext = React.createContext<Readonly<UserPermissions>>({
 	studio: false,
 	configure: false,
@@ -53,6 +55,7 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 
 		const interval = setInterval(() => {
 			// TODO - this is a temorary hack!
+			// TODO - this should also be triggered by ddp reconnecting
 			MeteorCall.user
 				.getUserLevel()
 				.then((v) => {
@@ -77,7 +80,7 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 						service: false,
 					})
 				})
-		})
+		}, 30000) // Arbitrary poll interval
 
 		return () => {
 			clearInterval(interval)
