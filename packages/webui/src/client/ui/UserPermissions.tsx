@@ -13,14 +13,7 @@ import {
 } from '../lib/localStorage'
 import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../lib/meteorApi'
-
-export interface UserPermissions {
-	studio: boolean
-	configure: boolean
-	developer: boolean
-	testing: boolean
-	service: boolean
-}
+import { UserLevel as UserPermissions } from '@sofie-automation/meteor-lib/dist/userLevel' // nocommit - avoid this alias
 
 export const UserPermissionsContext = React.createContext<Readonly<UserPermissions>>({
 	studio: false,
