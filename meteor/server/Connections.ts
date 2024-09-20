@@ -5,6 +5,7 @@ import { sendTrace } from './api/integration/influx'
 import { PeripheralDevices } from './collections'
 import { MetricsGauge } from '@sofie-automation/corelib/dist/prometheus'
 import { parseUserLevel, USER_LEVEL_HEADER } from '../lib/userLevel'
+import { Settings } from '../lib/Settings'
 
 const connections = new Set<string>()
 const connectionsGauge = new MetricsGauge({
@@ -15,24 +16,29 @@ const connectionsGauge = new MetricsGauge({
 Meteor.onConnection((conn: Meteor.Connection) => {
 	// This is called whenever a new ddp-connection is opened (ie a web-client or a peripheral-device)
 
-	const userLevel = parseUserLevel(conn.httpHeaders[USER_LEVEL_HEADER])
-	if (!userLevel) {
-		// Reject connection, not permitted
-		conn.close()
-		return
+	if (Settings.enableHeaderAuth) {
+		const userLevel = parseUserLevel(conn.httpHeaders[USER_LEVEL_HEADER])
+		if (!userLevel) {
+			// Reject connection, not permitted
+			conn.close()
+			return
+		}
+
+		// HACK: force the userId of the connection before it can be used.
+		// This ensures we know the permissions of the connection before it can try to do anything
+		const connSession = (Meteor as any).server.sessions.get(conn.id)
+		if (!connSession) {
+			logger.error(`Failed to find session for ddp connection! "${conn.id}"`)
+			// Close the connection, it won't be secure
+			conn.close()
+			return
+		} else {
+			connSession.userId = JSON.stringify(userLevel)
+		}
 	}
 
 	const connectionId: string = conn.id
 	// var clientAddress = conn.clientAddress; // ip-adress
-
-	// HACK: force the userId of the connection before it can be used.
-	// This ensures we know the permissions of the connection before it can try to do anything
-	const connSession = (Meteor as any).server.sessions.get(conn.id)
-	if (!connSession) {
-		logger.error(`Failed to find session for ddp connection! "${conn.id}"`)
-	} else {
-		connSession.userId = JSON.stringify(userLevel)
-	}
 
 	connections.add(conn.id)
 	logger.debug(`Client connected: "${conn.id}", "${conn.clientAddress}"`)

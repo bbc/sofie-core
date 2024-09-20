@@ -14,6 +14,7 @@ import {
 } from '../lib/localStorage'
 import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../../lib/api/methods'
+import { Settings } from '../../lib/Settings'
 
 export const UserPermissionsContext = React.createContext<Readonly<UserLevel>>({
 	studio: false,
@@ -23,14 +24,12 @@ export const UserPermissionsContext = React.createContext<Readonly<UserLevel>>({
 	service: false,
 })
 
-const USE_HEADER_AUTH = true // TODO - dynamic somehow
-
 export function useRoles(): [roles: UserLevel, ready: boolean] {
 	const location = window.location
 
-	const [ready, setReady] = useState(!USE_HEADER_AUTH)
+	const [ready, setReady] = useState(!Settings.enableHeaderAuth)
 	const [roles, setRoles] = useState<UserLevel>(
-		USE_HEADER_AUTH
+		Settings.enableHeaderAuth
 			? {
 					studio: false,
 					configure: false,
@@ -83,7 +82,7 @@ export function useRoles(): [roles: UserLevel, ready: boolean] {
 	}, [])
 
 	useEffect(() => {
-		if (!USE_HEADER_AUTH) {
+		if (!Settings.enableHeaderAuth) {
 			if (!location.search) return
 
 			const params = queryStringParse(location.search)

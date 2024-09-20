@@ -21,6 +21,8 @@ export interface ISettings {
 	allowGrabbingTimeline: boolean
 	/** If true, enables security measures, access control and user accounts. */
 	enableUserAccounts: boolean
+	/** If true, enable header based security measures */
+	enableHeaderAuth: boolean
 	/** Default duration to use to render parts when no duration is provided */
 	defaultDisplayDuration: number
 	/** If true, allows creation of new playlists in the Lobby Gui (rundown list). If false; only pre-existing playlists are allowed. */
@@ -72,6 +74,7 @@ const DEFAULT_SETTINGS = Object.freeze<ISettings>({
 	defaultTimeScale: 1,
 	allowGrabbingTimeline: true,
 	enableUserAccounts: false,
+	enableHeaderAuth: true, // nocommit - hack for testing
 	defaultDisplayDuration: 3000,
 	allowMultiplePlaylistsInGUI: false,
 	poisonKey: 'Escape',

@@ -25,14 +25,14 @@ import { WrappedAsyncMongoCollection } from './implementations/asyncCollection'
 import { WrappedReadOnlyMongoCollection } from './implementations/readonlyWrapper'
 
 export interface MongoAllowRules<DBInterface> {
-	insert?: (userId: UserId, doc: DBInterface) => Promise<boolean> | boolean
+	insert?: (userId: UserId | null, doc: DBInterface) => Promise<boolean> | boolean
 	update?: (
-		userId: UserId,
+		userId: UserId | null,
 		doc: DBInterface,
 		fieldNames: FieldNames<DBInterface>,
 		modifier: MongoModifier<DBInterface>
 	) => Promise<boolean> | boolean
-	remove?: (userId: UserId, doc: DBInterface) => Promise<boolean> | boolean
+	remove?: (userId: UserId | null, doc: DBInterface) => Promise<boolean> | boolean
 }
 
 /**
