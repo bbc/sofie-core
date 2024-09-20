@@ -15,7 +15,7 @@ import {
 import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../../lib/api/methods'
 
-export const UserRolesContext = React.createContext<Readonly<UserLevel>>({
+export const UserPermissionsContext = React.createContext<Readonly<UserLevel>>({
 	studio: false,
 	configure: false,
 	developer: false,

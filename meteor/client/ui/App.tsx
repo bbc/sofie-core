@@ -48,7 +48,7 @@ import { DocumentTitleProvider } from '../lib/DocumentTitleProvider'
 import { Spinner } from '../lib/Spinner'
 import { catchError, isRunningInPWA } from '../lib/lib'
 import { firstIfArray, protectString } from '../../lib/lib'
-import { useRoles, UserRolesContext } from './UserRoles'
+import { useRoles, UserPermissionsContext } from './UserPermissions'
 
 const NullComponent = () => null
 
@@ -191,7 +191,7 @@ export const App: React.FC = function App() {
 	}, [])
 
 	return (
-		<UserRolesContext.Provider value={roles}>
+		<UserPermissionsContext.Provider value={roles}>
 			<UserContext.Provider value={user}>
 				<UserSubscriptionReadyContext.Provider value={subsReady}>
 					<Router getUserConfirmation={onNavigationUserConfirmation}>
@@ -360,7 +360,7 @@ export const App: React.FC = function App() {
 					</Router>
 				</UserSubscriptionReadyContext.Provider>
 			</UserContext.Provider>
-		</UserRolesContext.Provider>
+		</UserPermissionsContext.Provider>
 	)
 }
 

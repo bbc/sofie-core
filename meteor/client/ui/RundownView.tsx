@@ -40,7 +40,7 @@ import { getCurrentTime, unprotectString, protectString } from '../../lib/lib'
 import { RundownUtils } from '../lib/rundown'
 import { ErrorBoundary } from '../lib/ErrorBoundary'
 import { ModalDialog, doModalDialog, isModalShowing } from '../lib/ModalDialog'
-import { getAllowStudio, getAllowDeveloper, getHelpMode } from '../lib/localStorage'
+import { getHelpMode } from '../lib/localStorage'
 import { ClientAPI } from '../../lib/api/client'
 import {
 	scrollToPosition,
@@ -154,6 +154,8 @@ import { isTranslatableMessage, translateMessage } from '@sofie-automation/corel
 import { i18nTranslator } from './i18n'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { useRundownAndShowStyleIdsForPlaylist } from './util/useRundownAndShowStyleIdsForPlaylist'
+import { UserPermissionsContext } from './UserPermissions'
+import { UserLevel } from '../../lib/userLevel'
 
 export const MAGIC_TIME_SCALE_FACTOR = 0.03
 
@@ -1151,7 +1153,6 @@ export interface IContextMenuContext {
 
 interface IState {
 	timeScale: number
-	studioMode: boolean
 	contextMenuContext: IContextMenuContext | null
 	bottomMargin: string
 	followLiveSegments: boolean
@@ -1210,6 +1211,8 @@ interface ITrackedProps {
 	nextSegmentPartIds: PartId[]
 }
 export function RundownView(props: Readonly<IProps>): JSX.Element {
+	const userPermissions = React.useContext(UserPermissionsContext)
+
 	const playlistId = props.playlistId
 
 	const requiredSubsReady: boolean[] = []
@@ -1327,11 +1330,12 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 	}, [playlistId])
 
 	const subsReady = requiredSubsReady.findIndex((ready) => !ready) === -1
-	return <RundownViewContent {...props} subsReady={subsReady} />
+	return <RundownViewContent {...props} subsReady={subsReady} userPermissions={userPermissions} />
 }
 
 interface IPropsWithReady extends IProps {
 	subsReady: boolean
+	userPermissions: Readonly<UserLevel>
 }
 
 interface IRundownViewContentSnapshot {
@@ -1491,7 +1495,6 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 			this.state = {
 				timeScale: MAGIC_TIME_SCALE_FACTOR * Settings.defaultTimeScale,
-				studioMode: getAllowStudio(),
 				contextMenuContext: null,
 				bottomMargin: '',
 				followLiveSegments: true,
@@ -1771,9 +1774,6 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 					documentTitle.set(null)
 				}
 			}
-			if (Settings.enableUserAccounts && getAllowStudio() !== this.state.studioMode) {
-				this.setState({ studioMode: getAllowStudio() })
-			}
 
 			this.handleMiniShelfRequeue(prevProps)
 		}
@@ -1897,16 +1897,21 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 			}
 		}
 
-		private handleBeforeUnloadEventAttach(prevProps: ITrackedProps, prevState: IState) {
+		private handleBeforeUnloadEventAttach(prevProps: IPropsWithReady & ITrackedProps, _prevState: IState) {
 			if (this.props.onlyShelf) return
 
 			if (
 				typeof this.props.playlist !== typeof prevProps.playlist ||
 				this.props.playlist?._id !== prevProps.playlist?._id ||
 				!!this.props.playlist?.activationId !== !!prevProps.playlist?.activationId ||
-				this.state.studioMode !== prevState.studioMode
+				this.props.userPermissions.studio !== prevProps.userPermissions.studio
 			) {
-				if (this.props.playlist && this.props.playlist.activationId && this.state.studioMode && !getAllowDeveloper()) {
+				if (
+					this.props.playlist &&
+					this.props.playlist.activationId &&
+					this.props.userPermissions.studio &&
+					!this.props.userPermissions.developer
+				) {
 					window.addEventListener('beforeunload', this.onBeforeUnload)
 				} else {
 					window.removeEventListener('beforeunload', this.onBeforeUnload)
@@ -2115,7 +2120,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 		onSetNext = (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => {
 			const { t } = this.props
-			if (this.state.studioMode && part && part._id && this.props.playlist) {
+			if (this.props.userPermissions.studio && part && part._id && this.props.playlist) {
 				const playlistId = this.props.playlist._id
 				doUserAction(
 					t,
@@ -2140,7 +2145,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 		onSetNextSegment = (segmentId: SegmentId, e: any) => {
 			const { t } = this.props
-			if (this.state.studioMode && segmentId && this.props.playlist) {
+			if (this.props.userPermissions.studio && segmentId && this.props.playlist) {
 				const playlistId = this.props.playlist._id
 				doUserAction(
 					t,
@@ -2159,7 +2164,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 		onQueueNextSegment = (segmentId: SegmentId | null, e: any) => {
 			const { t } = this.props
-			if (this.state.studioMode && (segmentId || segmentId === null) && this.props.playlist) {
+			if (this.props.userPermissions.studio && (segmentId || segmentId === null) && this.props.playlist) {
 				const playlistId = this.props.playlist._id
 				doUserAction(
 					t,
@@ -2179,7 +2184,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 		onPieceDoubleClick = (item: PieceUi, e: React.MouseEvent<HTMLDivElement>) => {
 			const { t } = this.props
 			if (
-				this.state.studioMode &&
+				this.props.userPermissions.studio &&
 				item &&
 				item.instance &&
 				this.props.playlist &&
@@ -2623,7 +2628,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 				miniShelfFilter: this.state.miniShelfFilter,
 				countdownToSegmentRequireLayers: this.state.rundownViewLayout?.countdownToSegmentRequireLayers,
 				fixedSegmentDuration: this.state.rundownViewLayout?.fixedSegmentDuration,
-				studioMode: this.state.studioMode,
+				studioMode: this.props.userPermissions.studio,
 				adLibSegmentUi: this.state.uiSegmentMap.get(segment._id),
 				showDurationSourceLayers: showDurationSourceLayers,
 			}
@@ -2678,7 +2683,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 		}
 
 		onContextMenuTop = (e: React.MouseEvent<HTMLDivElement>): boolean => {
-			if (!getAllowDeveloper()) {
+			if (!this.props.userPermissions.developer) {
 				e.preventDefault()
 				e.stopPropagation()
 			}
@@ -2942,7 +2947,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 						<div
 							className={ClassNames('rundown-view', {
 								'notification-center-open': this.state.isNotificationsCenterOpen !== undefined,
-								'rundown-view--studio-mode': this.state.studioMode,
+								'rundown-view--studio-mode': this.props.userPermissions.studio,
 							})}
 							style={this.getStyle()}
 							onWheelCapture={this.onWheel}
@@ -2950,9 +2955,9 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 						>
 							{this.renderSegmentsList()}
 							<ErrorBoundary>
-								{this.props.matchedSegments && this.props.matchedSegments.length > 0 && getAllowStudio() && (
-									<AfterBroadcastForm playlist={playlist} />
-								)}
+								{this.props.matchedSegments &&
+									this.props.matchedSegments.length > 0 &&
+									this.props.userPermissions.studio && <AfterBroadcastForm playlist={playlist} />}
 							</ErrorBoundary>
 							<ErrorBoundary>
 								<RundownHeader
@@ -2961,7 +2966,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									rundownIds={this.props.rundowns.map((r) => r._id)}
 									firstRundown={this.props.rundowns[0]}
 									onActivate={this.onActivate}
-									studioMode={this.state.studioMode}
+									studioMode={this.props.userPermissions.studio}
 									inActiveRundownView={this.props.inActiveRundownView}
 									currentRundown={this.state.currentRundown || this.props.rundowns[0]}
 									layout={this.state.rundownHeaderLayout}
@@ -2970,8 +2975,8 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 								/>
 							</ErrorBoundary>
 							<ErrorBoundary>
-								{this.state.studioMode && !Settings.disableBlurBorder && (
-									<KeyboardFocusIndicator>
+								{this.props.userPermissions.studio && !Settings.disableBlurBorder && (
+									<KeyboardFocusIndicator userPermissions={this.props.userPermissions}>
 										<div
 											className={ClassNames('rundown-view__focus-lost-frame', {
 												'rundown-view__focus-lost-frame--reduce-animation': Meteor.isDevelopment,
@@ -2990,7 +2995,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									onToggleNotifications={this.onToggleNotifications}
 									isSupportPanelOpen={this.state.isSupportPanelOpen}
 									onToggleSupportPanel={this.onToggleSupportPanel}
-									isStudioMode={this.state.studioMode}
+									isStudioMode={this.props.userPermissions.studio}
 									onTake={this.onTake}
 									studioRouteSets={studio.routeSets}
 									studioRouteSetExclusivityGroups={studio.routeSetExclusivityGroups}
@@ -3051,7 +3056,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 												{t('Take a Snapshot')}
 											</PromiseButton>
 											<hr />
-											{this.state.studioMode && (
+											{this.props.userPermissions.studio && (
 												<>
 													<button className="btn btn-secondary" onClick={this.onRestartPlayout}>
 														{t('Restart Playout')}
@@ -3059,7 +3064,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 													<hr />
 												</>
 											)}
-											{this.state.studioMode &&
+											{this.props.userPermissions.studio &&
 												this.props.casparCGPlayoutDevices &&
 												this.props.casparCGPlayoutDevices.map((i) => (
 													<React.Fragment key={unprotectString(i._id)}>
@@ -3074,7 +3079,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 								</VelocityReact.VelocityTransitionGroup>
 							</ErrorBoundary>
 							<ErrorBoundary>
-								{this.state.studioMode && (
+								{this.props.userPermissions.studio && (
 									<Prompt
 										when={!!playlist.activationId}
 										message={t('This rundown is now active. Are you sure you want to exit this screen?')}
@@ -3091,7 +3096,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									onSetNext={this.onSetNext}
 									onSetNextSegment={this.onSetNextSegment}
 									onQueueNextSegment={this.onQueueNextSegment}
-									studioMode={this.state.studioMode}
+									studioMode={this.props.userPermissions.studio}
 									enablePlayFromAnywhere={!!studio.settings.enablePlayFromAnywhere}
 								/>
 							</ErrorBoundary>
@@ -3134,7 +3139,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									playlist={this.props.playlist}
 									showStyleBase={this.props.showStyleBase}
 									showStyleVariant={this.props.showStyleVariant}
-									studioMode={this.state.studioMode}
+									studioMode={this.props.userPermissions.studio}
 									onChangeBottomMargin={this.onChangeBottomMargin}
 									rundownLayout={this.state.shelfLayout}
 									shelfDisplayOptions={this.props.shelfDisplayOptions}
@@ -3181,7 +3186,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 							playlist={this.props.playlist}
 							showStyleBase={this.props.showStyleBase}
 							showStyleVariant={this.props.showStyleVariant}
-							studioMode={this.state.studioMode}
+							studioMode={this.props.userPermissions.studio}
 							onChangeBottomMargin={this.onChangeBottomMargin}
 							rundownLayout={this.state.shelfLayout}
 							studio={this.props.studio}
@@ -3200,7 +3205,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 				<SorensenContext.Consumer>
 					{(sorensen) =>
 						sorensen &&
-						this.state.studioMode &&
+						this.props.userPermissions.studio &&
 						this.props.studio &&
 						this.props.showStyleBase && (
 							<TriggersHandler
@@ -3368,7 +3373,7 @@ export function handleRundownReloadResponse(
 				{
 					label: t('Leave Unsynced'),
 					type: 'default',
-					disabled: !getAllowStudio(),
+					disabled: !userPermissions.studio,
 					action: () => {
 						doUserAction(
 							t,
