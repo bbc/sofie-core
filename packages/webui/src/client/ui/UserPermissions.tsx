@@ -14,6 +14,7 @@ import {
 import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../lib/meteorApi'
 import { UserLevel as UserPermissions } from '@sofie-automation/meteor-lib/dist/userLevel' // nocommit - avoid this alias
+import { Settings } from '../lib/Settings'
 
 export type { UserPermissions }
 
@@ -25,15 +26,13 @@ export const UserPermissionsContext = React.createContext<Readonly<UserPermissio
 	service: false,
 })
 
-const USE_HEADER_AUTH = true // TODO - dynamic somehow
-
 export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 	const location = window.location
 
-	const [ready, setReady] = useState(!USE_HEADER_AUTH)
+	const [ready, setReady] = useState(!Settings.enableHeaderAuth)
 
 	const [permissions, setPermissions] = useState<UserPermissions>(
-		USE_HEADER_AUTH
+		Settings.enableHeaderAuth
 			? {
 					studio: false,
 					configure: false,
@@ -51,7 +50,7 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 	)
 
 	useEffect(() => {
-		if (!USE_HEADER_AUTH) return
+		if (!Settings.enableHeaderAuth) return
 
 		const interval = setInterval(() => {
 			// TODO - this is a temorary hack!
@@ -85,10 +84,10 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 		return () => {
 			clearInterval(interval)
 		}
-	}, [USE_HEADER_AUTH])
+	}, [Settings.enableHeaderAuth])
 
 	useEffect(() => {
-		if (USE_HEADER_AUTH) return
+		if (Settings.enableHeaderAuth) return
 
 		if (!location.search) return
 
@@ -116,7 +115,7 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 			testing: getLocalAllowTesting(),
 			service: getLocalAllowService(),
 		})
-	}, [location.search, USE_HEADER_AUTH])
+	}, [location.search, Settings.enableHeaderAuth])
 
 	// A naive memoizing of the value, to avoid reactions when the value is identical
 	return [useMemo(() => permissions, [JSON.stringify(permissions)]), ready]
