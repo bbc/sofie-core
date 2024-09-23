@@ -108,8 +108,8 @@ export async function handleBlueprintUpgradeForStudio(context: JobContext, _data
 			'peripheralDeviceSettings.playoutDevices.defaults': playoutDevices,
 			'peripheralDeviceSettings.ingestDevices.defaults': ingestDevices,
 			'peripheralDeviceSettings.inputDevices.defaults': inputDevices,
-			'routeSets.defaults': routeSets,
-			'routeSetExclusivityGroups.defaults': routeSetExclusivityGroups,
+			'routeSetsWithOverrides.defaults': routeSets,
+			'routeSetExclusivityGroupsWithOverrides.defaults': routeSetExclusivityGroups,
 			'packageContainersWithOverrides.defaults': packageContainers,
 			lastBlueprintConfig: {
 				blueprintHash: blueprint.blueprintDoc.blueprintHash,
