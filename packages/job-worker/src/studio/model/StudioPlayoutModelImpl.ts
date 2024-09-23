@@ -85,7 +85,10 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 		this.#baselineHelper.setExpectedPlayoutItems(playoutItems)
 	}
 
-	setTimeline(timelineObjs: TimelineObjGeneric[], generationVersions: TimelineCompleteGenerationVersions): void {
+	setTimeline(
+		timelineObjs: TimelineObjGeneric[],
+		generationVersions: TimelineCompleteGenerationVersions
+	): ReadonlyDeep<TimelineComplete> {
 		this.#timeline = {
 			_id: this.context.studioId,
 			timelineHash: getRandomId(),
@@ -94,6 +97,8 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 			generationVersions: generationVersions,
 		}
 		this.#timelineHasChanged = true
+
+		return this.#timeline
 	}
 
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): void {

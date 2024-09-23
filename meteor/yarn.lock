@@ -1020,23 +1020,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mos-connection/helper@npm:^4.1.1-nightly-master-20240430-072032-ffb8bf6.0":
-  version: 4.1.1-nightly-master-20240430-072032-ffb8bf6.0
-  resolution: "@mos-connection/helper@npm:4.1.1-nightly-master-20240430-072032-ffb8bf6.0"
+"@mos-connection/helper@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "@mos-connection/helper@npm:4.1.1"
   dependencies:
-    "@mos-connection/model": 4.1.1-nightly-master-20240430-072032-ffb8bf6.0
+    "@mos-connection/model": 4.1.1
     iconv-lite: ^0.6.3
     tslib: ^2.5.3
     xml-js: ^1.6.11
     xmlbuilder: ^15.1.1
-  checksum: dcf7d5e800d08c007a4026b37ddcc6ebe77d020a311809bc379a5c7d15657c2d447b4149682aec17161d17217e2c6d5167c7ef81e954a4ed5a6283a7c75a7e0a
+  checksum: 3ff0982889d33e97bb573de101706aba59936b0413651425c900a433b3f2981668c7099898c3385a3a4c691813b9fb73d22b77647d09c6a4fd5e513fbb18b115
   languageName: node
   linkType: hard
 
-"@mos-connection/model@npm:4.1.1-nightly-master-20240430-072032-ffb8bf6.0, @mos-connection/model@npm:^4.1.1-nightly-master-20240430-072032-ffb8bf6.0":
-  version: 4.1.1-nightly-master-20240430-072032-ffb8bf6.0
-  resolution: "@mos-connection/model@npm:4.1.1-nightly-master-20240430-072032-ffb8bf6.0"
-  checksum: 07bd3ffc94a8c140d994de445c34158bb9f5f8950f6cea34d59657fe4da1f0f6b5d0c2c7ef1b2ad902b43c846485ab10cb9f19d707233b875fe739d731151bdc
+"@mos-connection/model@npm:4.1.1, @mos-connection/model@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "@mos-connection/model@npm:4.1.1"
+  checksum: 31332dcf977ca6735b6c39729bc1c31c750dc965e540d0dbbde34695c69651dfa1fdb97d8347f81ad6a66ad39062ff84bc2d93e8bcb142fe953e49490cf63d2d
   languageName: node
   linkType: hard
 
@@ -1321,7 +1321,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sofie-automation/blueprints-integration@portal:../packages/blueprints-integration::locator=automation-core%40workspace%3A."
   dependencies:
-    "@sofie-automation/shared-lib": 1.51.0-in-testing.0
+    "@sofie-automation/shared-lib": 1.51.0-in-testing.1
     tslib: ^2.6.2
     type-fest: ^3.13.1
   languageName: node
@@ -1362,8 +1362,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sofie-automation/corelib@portal:../packages/corelib::locator=automation-core%40workspace%3A."
   dependencies:
-    "@sofie-automation/blueprints-integration": 1.51.0-in-testing.0
-    "@sofie-automation/shared-lib": 1.51.0-in-testing.0
+    "@sofie-automation/blueprints-integration": 1.51.0-in-testing.1
+    "@sofie-automation/shared-lib": 1.51.0-in-testing.1
     fast-clone: ^1.5.13
     i18next: ^21.10.0
     influx: ^5.9.3
@@ -1394,9 +1394,9 @@ __metadata:
   resolution: "@sofie-automation/job-worker@portal:../packages/job-worker::locator=automation-core%40workspace%3A."
   dependencies:
     "@slack/webhook": ^6.1.0
-    "@sofie-automation/blueprints-integration": 1.51.0-in-testing.0
-    "@sofie-automation/corelib": 1.51.0-in-testing.0
-    "@sofie-automation/shared-lib": 1.51.0-in-testing.0
+    "@sofie-automation/blueprints-integration": 1.51.0-in-testing.1
+    "@sofie-automation/corelib": 1.51.0-in-testing.1
+    "@sofie-automation/shared-lib": 1.51.0-in-testing.1
     amqplib: ^0.10.3
     deepmerge: ^4.3.1
     elastic-apm-node: ^3.51.0
@@ -1405,7 +1405,7 @@ __metadata:
     node-fetch: ^2.7.0
     p-lazy: ^3.1.0
     p-timeout: ^4.1.0
-    superfly-timeline: 9.0.0
+    superfly-timeline: 9.0.1
     threadedclass: ^1.2.2
     tslib: ^2.6.2
     type-fest: ^3.13.1
@@ -1417,8 +1417,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sofie-automation/shared-lib@portal:../packages/shared-lib::locator=automation-core%40workspace%3A."
   dependencies:
-    "@mos-connection/model": ^4.1.1-nightly-master-20240430-072032-ffb8bf6.0
-    timeline-state-resolver-types: 9.1.0
+    "@mos-connection/model": ^4.1.1
+    timeline-state-resolver-types: 9.2.0-alpha.0
     tslib: ^2.6.2
     type-fest: ^3.13.1
   languageName: node
@@ -2689,7 +2689,7 @@ __metadata:
     "@jstarpl/react-contextmenu": ^2.15.0
     "@koa/cors": ^5.0.0
     "@koa/router": ^12.0.1
-    "@mos-connection/helper": ^4.1.1-nightly-master-20240430-072032-ffb8bf6.0
+    "@mos-connection/helper": ^4.1.1
     "@nrk/core-icons": ^9.6.0
     "@popperjs/core": ^2.11.8
     "@shopify/jest-koa-mocks": ^5.1.1
@@ -2794,7 +2794,7 @@ __metadata:
     semver: ^7.5.4
     sinon: ^14.0.2
     standard-version: ^9.5.0
-    superfly-timeline: 9.0.0
+    superfly-timeline: 9.0.1
     threadedclass: ^1.2.2
     timecode: 0.0.4
     ts-jest: ^29.1.2
@@ -11570,12 +11570,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"superfly-timeline@npm:9.0.0":
-  version: 9.0.0
-  resolution: "superfly-timeline@npm:9.0.0"
+"superfly-timeline@npm:9.0.1":
+  version: 9.0.1
+  resolution: "superfly-timeline@npm:9.0.1"
   dependencies:
     tslib: ^2.6.0
-  checksum: bb56fc6d6884f2956cdc1f18edceff48bc693c2329b009170e4d399ce70b8123ef38ddada0f0479eb359690eae39e7e578a9ec4ba326d6e4704653f74cde1a6d
+  checksum: 4267eed691fe9ce9f89bf17c8aed1a98206938dd6d850c64b083e4fd3a3dc5329801c76c757450c9520375bad100ce512cc6d6a3e4a997bdfa14a4e7d65f09f2
   languageName: node
   linkType: hard
 
@@ -11748,12 +11748,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-types@npm:9.1.0":
-  version: 9.1.0
-  resolution: "timeline-state-resolver-types@npm:9.1.0"
+"timeline-state-resolver-types@npm:9.2.0-alpha.0":
+  version: 9.2.0-alpha.0
+  resolution: "timeline-state-resolver-types@npm:9.2.0-alpha.0"
   dependencies:
     tslib: ^2.6.2
-  checksum: dab48013908d588a4a9357aeb824117316ce1666d972575c4fc89a0f70647bee4aacdfddb73bce5db7f7bdc5920f9e31b3669b47d6e97cf627e41f9f205e3f03
+  checksum: 88004b58606489102eb39601926bc56ca6ea2142e70339e9d0b8a7a848d7347a4b213340da3ebf5cf13edad804b14b1a155191b2123b805b96f8f221488e015a
   languageName: node
   linkType: hard
 

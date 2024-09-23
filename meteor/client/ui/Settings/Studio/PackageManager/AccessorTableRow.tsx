@@ -225,6 +225,43 @@ export function AccessorTableRow({
 										)}
 									</LabelAndOverrides>
 									<LabelAndOverrides
+										label={t('Is Immutable')}
+										hint={t('When set, resources are considered immutable, ie they will not change')}
+										item={packageContainer}
+										//@ts-expect-error can't be 4 levels deep
+										itemKey={`container.accessors.${accessorId}.isImmutable`}
+										opPrefix={packageContainer.id}
+										overrideHelper={overrideHelper}
+									>
+										{(value, handleUpdate) => (
+											<CheckboxControl
+												classNames="input text-input input-l"
+												value={value}
+												handleUpdate={handleUpdate}
+											/>
+										)}
+									</LabelAndOverrides>
+									<LabelAndOverrides
+										label={t('Does NOT support HEAD requests')}
+										hint={t(
+											"If set, Package Manager assumes that the source doesn't support HEAD requests and will use GET instead. If false, HEAD requests will be sent to check availability."
+										)}
+										item={packageContainer}
+										//@ts-expect-error can't be 4 levels deep
+										itemKey={`container.accessors.${accessorId}.useGETinsteadOfHEAD`}
+										opPrefix={packageContainer.id}
+										overrideHelper={overrideHelper}
+									>
+										{(value, handleUpdate) => (
+											<CheckboxControl
+												classNames="input text-input input-l"
+												value={value}
+												handleUpdate={handleUpdate}
+											/>
+										)}
+									</LabelAndOverrides>
+
+									<LabelAndOverrides
 										label={t('Network Id')}
 										hint={t(
 											'(Optional) A name/identifier of the local network where the share is located, leave empty if globally accessible'

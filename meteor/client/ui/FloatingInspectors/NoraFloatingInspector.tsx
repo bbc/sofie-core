@@ -1,4 +1,4 @@
-import { NoraContent } from '@sofie-automation/blueprints-integration'
+import { JSONBlobParse, NoraContent, NoraPayload } from '@sofie-automation/blueprints-integration'
 import React, { useEffect, useImperativeHandle } from 'react'
 import _ from 'underscore'
 import { getNoraContentSteps } from '../SegmentContainer/PieceMultistepChevron'
@@ -86,33 +86,39 @@ export class NoraPreviewRenderer extends React.Component<{}, IStateHeader> {
 	}
 
 	private postNoraEvent(contentWindow: Window, noraContent: NoraContent) {
-		contentWindow.postMessage(
-			{
-				event: 'nora',
-				contentToShow: {
-					manifest: noraContent.payload.manifest,
-					template: {
-						event: 'preview',
-						name: noraContent.payload.template.name,
-						channel: 'gfx1',
-						layer: noraContent.payload.template.layer,
-						system: 'html',
+		try {
+			const payload = JSONBlobParse<NoraPayload>(noraContent.previewPayload)
+
+			contentWindow.postMessage(
+				{
+					event: 'nora',
+					contentToShow: {
+						manifest: payload.manifest,
+						template: {
+							event: 'preview',
+							name: payload.template.name,
+							channel: 'gfx1',
+							layer: payload.template.layer,
+							system: 'html',
+						},
+						content: {
+							...payload.content,
+							_valid: false,
+						},
+						timing: {
+							duration: '00:05',
+							in: 'auto',
+							out: 'auto',
+							timeIn: '00:00',
+						},
+						step: payload.step,
 					},
-					content: {
-						...noraContent.payload.content,
-						_valid: false,
-					},
-					timing: {
-						duration: '00:05',
-						in: 'auto',
-						out: 'auto',
-						timeIn: '00:00',
-					},
-					step: noraContent.payload.step,
 				},
-			},
-			'*'
-		)
+				'*'
+			)
+		} catch (e) {
+			console.error(`Error in NoraPreviewRenderer.postNoraEvent: ${e}`, e)
+		}
 	}
 
 	private _show() {

@@ -1,6 +1,6 @@
 {
 	"name": "automation-core",
-	"version": "1.51.0-in-testing.0",
+	"version": "1.51.0-in-testing.1",
 	"private": true,
 	"engines": {
 		"node": ">=14.19.1"
@@ -48,7 +48,7 @@
 		"@jstarpl/react-contextmenu": "^2.15.0",
 		"@koa/cors": "^5.0.0",
 		"@koa/router": "^12.0.1",
-		"@mos-connection/helper": "^4.1.1-nightly-master-20240430-072032-ffb8bf6.0",
+		"@mos-connection/helper": "^4.1.1",
 		"@nrk/core-icons": "^9.6.0",
 		"@popperjs/core": "^2.11.8",
 		"@slack/webhook": "^6.1.0",
@@ -100,7 +100,7 @@
 		"react-router-dom": "^5.3.4",
 		"react-timer-hoc": "^2.3.0",
 		"semver": "^7.5.4",
-		"superfly-timeline": "9.0.0",
+		"superfly-timeline": "9.0.1",
 		"threadedclass": "^1.2.2",
 		"timecode": "0.0.4",
 		"type-fest": "^3.13.1",
