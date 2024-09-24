@@ -58,6 +58,7 @@ import { DocumentTitleProvider } from '../lib/DocumentTitleProvider'
 import { Spinner } from '../lib/Spinner'
 import { catchError, isRunningInPWA } from '../lib/lib'
 import { firstIfArray, protectString } from '../../lib/lib'
+import { Meteor } from 'meteor/meteor'
 
 const NullComponent = () => null
 
@@ -89,6 +90,8 @@ export const App: React.FC = function App() {
 
 	const roles = useRoles(user, subsReady)
 	const featureFlags = useFeatureFlags()
+
+	const sofieRootPath = new URL(Meteor.absoluteUrl()).pathname
 
 	useEffect(() => {
 		if (user) return
@@ -201,7 +204,7 @@ export const App: React.FC = function App() {
 	return (
 		<UserContext.Provider value={user}>
 			<UserSubscriptionReadyContext.Provider value={subsReady}>
-				<Router getUserConfirmation={onNavigationUserConfirmation}>
+				<Router getUserConfirmation={onNavigationUserConfirmation} basename={sofieRootPath}>
 					<div className="container-fluid header-clear">
 						{/* Header switch - render the usual header for all pages but the rundown view */}
 						{isAuthenticated && (

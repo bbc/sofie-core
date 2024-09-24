@@ -45,7 +45,7 @@ const i18nOptions = {
 	},
 
 	backend: {
-		loadPath: '/locales/{{lng}}/{{ns}}.json',
+		loadPath: Meteor.absoluteUrl('./locales/{{lng}}/{{ns}}.json'),
 	},
 
 	detection: {

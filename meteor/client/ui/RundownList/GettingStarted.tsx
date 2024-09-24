@@ -28,7 +28,7 @@ export function GettingStarted({ step }: Readonly<IGettingStartedProps>): JSX.El
 							visible={step === ToolTipStep.TOOLTIP_RUN_MIGRATIONS}
 							placement="bottom"
 						>
-							<a href="/settings/tools/migration">{t('Migrations')}</a>
+							<a href="./settings/tools/migration">{t('Migrations')}</a>
 						</Tooltip>
 					</li>
 				</ul>
