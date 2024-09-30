@@ -7,7 +7,7 @@ import { contextMenuHoldToDisplayTime } from '../../lib/lib'
 import { RundownUtils } from '../../lib/rundown'
 import { getElementDocumentOffset } from '../../utils/positions'
 import { IContextMenuContext } from '../RundownView'
-import { CurrentPartRemaining } from '../RundownView/RundownTiming/CurrentPartRemaining'
+import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownTiming/CurrentPartOrSegmentRemaining'
 import { PieceUi, SegmentUi } from '../SegmentContainer/withResolvedSegment'
 import { SegmentTimelinePartElementId } from '../SegmentTimeline/Parts/SegmentTimelinePart'
 import { LinePartIdentifier } from './LinePartIdentifier'
@@ -131,7 +131,7 @@ export const LinePart: React.FC<IProps> = function LinePart({
 				<div className="segment-opl__part-duration">
 					{/* <PartDisplayDuration part={part} fixed={true} /> */}
 					{isLivePart && (
-						<CurrentPartRemaining
+						<CurrentPartOrSegmentRemaining
 							currentPartInstanceId={part.instance._id}
 							speaking={false}
 							heavyClassName="overtime"

@@ -61,6 +61,7 @@ function makeMockSegment(
 	timing?: {
 		expectedStart?: number
 		expectedEnd?: number
+		budgetDuration?: number
 	}
 ): DBSegment {
 	return literal<DBSegment>({
@@ -144,7 +145,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: undefined,
 				remainingTimeOnCurrentPart: undefined,
 				rundownsBeforeNextBreak: undefined,
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 			})
 		)
@@ -246,7 +246,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: undefined,
 				remainingTimeOnCurrentPart: undefined,
 				rundownsBeforeNextBreak: undefined,
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 			})
 		)
@@ -348,7 +347,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: undefined,
 				remainingTimeOnCurrentPart: undefined,
 				rundownsBeforeNextBreak: undefined,
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 			})
 		)
@@ -454,7 +452,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: undefined,
 				remainingTimeOnCurrentPart: undefined,
 				rundownsBeforeNextBreak: undefined,
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 			})
 		)
@@ -581,7 +578,6 @@ describe('rundown Timing Calculator', () => {
 					breakIsLastRundown: undefined,
 					remainingTimeOnCurrentPart: undefined,
 					rundownsBeforeNextBreak: undefined,
-					segmentBudgetDurations: {},
 					segmentStartedPlayback: {},
 				})
 			)
@@ -736,7 +732,6 @@ describe('rundown Timing Calculator', () => {
 					breakIsLastRundown: false,
 					remainingTimeOnCurrentPart: 2500,
 					rundownsBeforeNextBreak: [],
-					segmentBudgetDurations: {},
 					segmentStartedPlayback: {},
 					nextRundownAnchor: undefined,
 				})
@@ -892,7 +887,6 @@ describe('rundown Timing Calculator', () => {
 					breakIsLastRundown: false,
 					remainingTimeOnCurrentPart: -4000,
 					rundownsBeforeNextBreak: [],
-					segmentBudgetDurations: {},
 					segmentStartedPlayback: {},
 					nextRundownAnchor: undefined,
 				})
@@ -997,7 +991,6 @@ describe('rundown Timing Calculator', () => {
 					breakIsLastRundown: undefined,
 					remainingTimeOnCurrentPart: undefined,
 					rundownsBeforeNextBreak: undefined,
-					segmentBudgetDurations: {},
 					segmentStartedPlayback: {},
 				})
 			)
@@ -1135,7 +1128,6 @@ describe('rundown Timing Calculator', () => {
 					breakIsLastRundown: undefined,
 					remainingTimeOnCurrentPart: undefined,
 					rundownsBeforeNextBreak: undefined,
-					segmentBudgetDurations: {},
 					segmentStartedPlayback: {},
 				})
 			)
@@ -1154,24 +1146,27 @@ describe('rundown Timing Calculator', () => {
 		const segmentId1 = 'segment1'
 		const segmentId2 = 'segment2'
 		const segmentsMap: Map<SegmentId, DBSegment> = new Map()
-		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId1))
-		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId1))
+		segmentsMap.set(
+			protectString<SegmentId>(segmentId1),
+			makeMockSegment(segmentId1, 0, rundownId1, { budgetDuration: 5000 })
+		)
+		segmentsMap.set(
+			protectString<SegmentId>(segmentId2),
+			makeMockSegment(segmentId2, 0, rundownId1, { budgetDuration: 3000 })
+		)
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				budgetDuration: 2000,
 				expectedDuration: 1000,
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				budgetDuration: 3000,
 				expectedDuration: 1000,
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				budgetDuration: 3000,
 				expectedDuration: 1000,
 			})
 		)
@@ -1253,11 +1248,129 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: undefined,
 				remainingTimeOnCurrentPart: undefined,
 				rundownsBeforeNextBreak: undefined,
-				segmentBudgetDurations: {
-					[segmentId1]: 5000,
-					[segmentId2]: 3000,
-				},
 				segmentStartedPlayback: {},
+			})
+		)
+	})
+
+	it('Adds Piece preroll to Part durations', () => {
+		const timing = new RundownTimingCalculator()
+		const playlist: DBRundownPlaylist = makeMockPlaylist()
+		playlist.timing = {
+			type: 'forward-time' as any,
+			expectedStart: 0,
+			expectedDuration: 40000,
+		}
+		const rundownId = 'rundown1'
+		const segmentId1 = 'segment1'
+		const segmentId2 = 'segment2'
+		const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
+		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
+		const parts: DBPart[] = []
+		parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
+		parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
+		parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+		parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+		const partInstances = convertPartsToPartInstances(parts)
+		const piecesMap: Map<PartId, CalculateTimingsPiece[]> = new Map()
+		piecesMap.set(protectString('part1'), [
+			literal<CalculateTimingsPiece>({
+				enable: {
+					start: 0,
+				},
+				prerollDuration: 5000,
+				pieceType: IBlueprintPieceType.Normal,
+			}),
+		])
+		piecesMap.set(protectString('part2'), [
+			literal<CalculateTimingsPiece>({
+				enable: {
+					start: 0,
+				},
+				prerollDuration: 240,
+				pieceType: IBlueprintPieceType.Normal,
+			}),
+		])
+		const partInstancesMap: Map<PartId, PartInstance> = new Map()
+		const rundown = makeMockRundown(rundownId, playlist)
+		const rundowns = [rundown]
+		const result = timing.updateDurations(
+			0,
+			false,
+			playlist,
+			rundowns,
+			undefined,
+			partInstances,
+			partInstancesMap,
+			piecesMap,
+			segmentsMap,
+			DEFAULT_DURATION,
+			[]
+		)
+		expect(result).toEqual(
+			literal<RundownTimingContext>({
+				isLowResolution: false,
+				asDisplayedPlaylistDuration: 9240,
+				asPlayedPlaylistDuration: 9240,
+				currentPartInstanceId: null,
+				currentPartWillAutoNext: false,
+				currentTime: 0,
+				rundownExpectedDurations: {
+					[rundownId]: 4000,
+				},
+				rundownAsPlayedDurations: {
+					[rundownId]: 9240,
+				},
+				partCountdown: {
+					part1: 0,
+					part2: 6000,
+					part3: 7240,
+					part4: 8240,
+				},
+				partDisplayDurations: {
+					part1: 6000,
+					part2: 1240,
+					part3: 1000,
+					part4: 1000,
+				},
+				partDisplayStartsAt: {
+					part1: 0,
+					part2: 6000,
+					part3: 7240,
+					part4: 8240,
+				},
+				partDurations: {
+					part1: 6000,
+					part2: 1240,
+					part3: 1000,
+					part4: 1000,
+				},
+				partExpectedDurations: {
+					part1: 6000,
+					part2: 1240,
+					part3: 1000,
+					part4: 1000,
+				},
+				partPlayed: {
+					part1: 0,
+					part2: 0,
+					part3: 0,
+					part4: 0,
+				},
+				partStartsAt: {
+					part1: 0,
+					part2: 6000,
+					part3: 7240,
+					part4: 8240,
+				},
+				remainingPlaylistDuration: 9240,
+				totalPlaylistDuration: 9240,
+				breakIsLastRundown: undefined,
+				remainingTimeOnCurrentPart: undefined,
+				rundownsBeforeNextBreak: undefined,
+				segmentStartedPlayback: {},
+				nextRundownAnchor: undefined,
 			})
 		)
 	})
@@ -1404,7 +1517,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: 500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 2000,
 			})
@@ -1553,7 +1665,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: -1500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 4000,
 			})
@@ -1708,7 +1819,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: 500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 3000,
 			})
@@ -1857,7 +1967,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: 500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 2000,
 			})
@@ -2006,7 +2115,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: -1500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 4000,
 			})
@@ -2161,7 +2269,6 @@ describe('rundown Timing Calculator', () => {
 				breakIsLastRundown: false,
 				remainingTimeOnCurrentPart: 500,
 				rundownsBeforeNextBreak: [],
-				segmentBudgetDurations: {},
 				segmentStartedPlayback: {},
 				nextRundownAnchor: 3000,
 			})
