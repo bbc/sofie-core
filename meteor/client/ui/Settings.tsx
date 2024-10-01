@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { useSubscription, useTracker } from '../lib/ReactMeteorData/react-meteor-data'
 import { Route, Switch, Redirect, useHistory } from 'react-router-dom'
 import { ErrorBoundary } from '../lib/ErrorBoundary'
@@ -14,12 +14,14 @@ import { MigrationView } from './Settings/Migration'
 import { getUser } from '../../lib/collections/Users'
 import { Settings as MeteorSettings } from '../../lib/Settings'
 import { SettingsMenu } from './Settings/SettingsMenu'
-import { getAllowConfigure } from '../lib/localStorage'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
+import { UserPermissionsContext } from './UserPermissions'
 
 export function Settings(): JSX.Element | null {
 	const user = useTracker(() => getUser(), [], null)
+
+	const userPermissions = useContext(UserPermissionsContext)
 
 	const history = useHistory()
 
@@ -30,11 +32,11 @@ export function Settings(): JSX.Element | null {
 	useSubscription(CorelibPubSub.blueprints, null)
 
 	useEffect(() => {
-		if (MeteorSettings.enableUserAccounts && user) {
-			const access = getAllowConfigure()
+		if (MeteorSettings.enableUserAccounts) {
+			const access = userPermissions.configure
 			if (!access) history.push('/')
 		}
-	}, [user])
+	}, [userPermissions])
 
 	return (
 		<div className="mtl gutter has-statusbar">

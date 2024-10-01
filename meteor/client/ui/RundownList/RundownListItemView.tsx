@@ -3,7 +3,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Rundown, getRundownNrcsName } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { getAllowStudio } from '../../lib/localStorage'
 import { RundownUtils } from '../../lib/rundown'
 import { iconDragHandle, iconRemove, iconResync } from './icons'
 import { DisplayFormattedTime } from './DisplayFormattedTime'
@@ -16,6 +15,7 @@ import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTi
 import { TOOLTIP_DEFAULT_DELAY } from '../../lib/lib'
 import { Meteor } from 'meteor/meteor'
 import { RundownPlaylists } from '../../collections'
+import { UserPermissionsContext } from '../UserPermissions'
 
 interface IRundownListItemViewProps {
 	isActive: boolean
@@ -54,6 +54,8 @@ export default React.memo(function RundownListItemView({
 }: IRundownListItemViewProps): JSX.Element | null {
 	const { t } = useTranslation()
 
+	const userPermissions = React.useContext(UserPermissionsContext)
+
 	if (!rundown.playlistId) throw new Meteor.Error(500, 'Rundown is not a part of a rundown playlist!')
 	const playlist = RundownPlaylists.findOne(rundown.playlistId)
 	if (!playlist) throw new Meteor.Error(404, `Rundown Playlist "${rundown.playlistId}" not found!`)
@@ -80,7 +82,7 @@ export default React.memo(function RundownListItemView({
 		>
 			<span className="rundown-list-item__name" role="rowheader">
 				<>
-					{getAllowStudio() ? (
+					{userPermissions.studio ? (
 						<span className="draghandle" ref={connectDragSource}>
 							<Tooltip
 								overlay={t('Drag to reorder or move out of playlist')}

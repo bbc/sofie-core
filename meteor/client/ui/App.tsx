@@ -4,18 +4,8 @@ import 'moment/min/locales'
 import { parse as queryStringParse } from 'query-string'
 import Header from './Header'
 import {
-	setAllowStudio,
-	setAllowConfigure,
-	getAllowStudio,
-	getAllowConfigure,
-	setAllowDeveloper,
-	setAllowTesting,
-	getAllowTesting,
-	getAllowDeveloper,
 	setAllowSpeaking,
 	setAllowVibrating,
-	setAllowService,
-	getAllowService,
 	setHelpMode,
 	setUIZoom,
 	getUIZoom,
@@ -58,6 +48,7 @@ import { DocumentTitleProvider } from '../lib/DocumentTitleProvider'
 import { Spinner } from '../lib/Spinner'
 import { catchError, isRunningInPWA } from '../lib/lib'
 import { firstIfArray, protectString } from '../../lib/lib'
+import { useRoles, UserPermissionsContext } from './UserPermissions'
 
 const NullComponent = () => null
 
@@ -85,9 +76,10 @@ export const App: React.FC = function App() {
 	const userReady = useSubscription(MeteorPubSub.loggedInUser)
 	const orgReady = useSubscription(MeteorPubSub.organization, user?.organizationId ?? null)
 
-	const subsReady = userReady && orgReady
+	const [roles, rolesReady] = useRoles()
 
-	const roles = useRoles(user, subsReady)
+	const subsReady = userReady && orgReady && rolesReady
+
 	const featureFlags = useFeatureFlags()
 
 	useEffect(() => {
@@ -199,174 +191,176 @@ export const App: React.FC = function App() {
 	}, [])
 
 	return (
-		<UserContext.Provider value={user}>
-			<UserSubscriptionReadyContext.Provider value={subsReady}>
-				<Router getUserConfirmation={onNavigationUserConfirmation}>
-					<div className="container-fluid header-clear">
-						{/* Header switch - render the usual header for all pages but the rundown view */}
-						{isAuthenticated && (
+		<UserPermissionsContext.Provider value={roles}>
+			<UserContext.Provider value={user}>
+				<UserSubscriptionReadyContext.Provider value={subsReady}>
+					<Router getUserConfirmation={onNavigationUserConfirmation}>
+						<div className="container-fluid header-clear">
+							{/* Header switch - render the usual header for all pages but the rundown view */}
+							{isAuthenticated && (
+								<ErrorBoundary>
+									<Switch>
+										<Route path="/rundown/:playlistId" component={NullComponent} />
+										<Route path="/countdowns/:studioId" component={NullComponent} />
+										<Route path="/activeRundown" component={NullComponent} />
+										<Route path="/prompter/:studioId" component={NullComponent} />
+										<Route
+											path="/"
+											render={(props) => (
+												<Header
+													{...props}
+													loggedIn={user ? true : false}
+													allowConfigure={roles.configure}
+													allowTesting={roles.testing}
+													allowDeveloper={roles.developer}
+												/>
+											)}
+										/>
+									</Switch>
+								</ErrorBoundary>
+							)}
+							{/* Main app switch */}
 							<ErrorBoundary>
 								<Switch>
-									<Route path="/rundown/:playlistId" component={NullComponent} />
-									<Route path="/countdowns/:studioId" component={NullComponent} />
-									<Route path="/activeRundown" component={NullComponent} />
-									<Route path="/prompter/:studioId" component={NullComponent} />
-									<Route
-										path="/"
-										render={(props) => (
-											<Header
-												{...props}
-												loggedIn={user ? true : false}
-												allowConfigure={roles.configure}
-												allowTesting={roles.testing}
-												allowDeveloper={roles.developer}
+									{shouldUseAuthentication ? (
+										<>
+											<Route
+												exact
+												path="/"
+												render={(props) => <LoginPage {...props} requestedRoute={requestedRoute} />}
 											/>
+											<Route exact path="/login" render={() => <Redirect to="/" />} />
+											<Route
+												exact
+												path="/login/verify-email/:token"
+												render={(props) => <LoginPage {...props} requestedRoute={requestedRoute} />}
+											/>
+											<Route exact path="/signup" component={SignupPage} />
+											<Route exact path="/reset" component={LostPasswordPage} />
+											<Route exact path="/reset/:token" component={ResetPasswordPage} />
+											<Route
+												exact
+												path="/account"
+												render={() => (
+													<RequireAuth>
+														<AccountPage />
+													</RequireAuth>
+												)}
+											/>
+											<Route
+												exact
+												path="/organization"
+												render={() => (
+													<RequireAuth>
+														<OrganizationPage />
+													</RequireAuth>
+												)}
+											/>
+										</>
+									) : (
+										<Route exact path="/" component={RundownList} />
+									)}
+									<Route
+										path="/rundowns"
+										render={() => (
+											<RequireAuth>
+												<RundownList />
+											</RequireAuth>
 										)}
 									/>
+									<Route
+										path="/rundown/:playlistId/shelf"
+										exact
+										render={(props) => (
+											<RequireAuth>
+												<RundownView
+													playlistId={protectString(decodeURIComponent(props.match.params.playlistId))}
+													onlyShelf={true}
+												/>
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/rundown/:playlistId"
+										render={(props) => (
+											<RequireAuth>
+												<RundownView playlistId={protectString(decodeURIComponent(props.match.params.playlistId))} />
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/activeRundown/:studioId"
+										render={(props) => (
+											<RequireAuth>
+												<ActiveRundownView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/prompter/:studioId"
+										render={(props) => (
+											<RequireAuth>
+												<PrompterView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
+											</RequireAuth>
+										)}
+									/>
+									{/* We switch to the general ClockView component, and allow it to do the switch between various types of countdowns */}
+									<Route
+										path="/countdowns/:studioId"
+										render={(props) => (
+											<RequireAuth>
+												<ClockView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/status"
+										render={() => (
+											<RequireAuth>
+												<Status />
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/settings"
+										render={() => (
+											<RequireAuth>
+												<SettingsView />
+											</RequireAuth>
+										)}
+									/>
+									<Route
+										path="/testTools"
+										render={() => (
+											<RequireAuth>
+												<TestTools />
+											</RequireAuth>
+										)}
+									/>
+									<Route>
+										<Redirect to="/" />
+									</Route>
 								</Switch>
 							</ErrorBoundary>
-						)}
-						{/* Main app switch */}
-						<ErrorBoundary>
-							<Switch>
-								{shouldUseAuthentication ? (
-									<>
-										<Route
-											exact
-											path="/"
-											render={(props) => <LoginPage {...props} requestedRoute={requestedRoute} />}
-										/>
-										<Route exact path="/login" render={() => <Redirect to="/" />} />
-										<Route
-											exact
-											path="/login/verify-email/:token"
-											render={(props) => <LoginPage {...props} requestedRoute={requestedRoute} />}
-										/>
-										<Route exact path="/signup" component={SignupPage} />
-										<Route exact path="/reset" component={LostPasswordPage} />
-										<Route exact path="/reset/:token" component={ResetPasswordPage} />
-										<Route
-											exact
-											path="/account"
-											render={() => (
-												<RequireAuth>
-													<AccountPage />
-												</RequireAuth>
-											)}
-										/>
-										<Route
-											exact
-											path="/organization"
-											render={() => (
-												<RequireAuth>
-													<OrganizationPage />
-												</RequireAuth>
-											)}
-										/>
-									</>
-								) : (
-									<Route exact path="/" component={RundownList} />
-								)}
-								<Route
-									path="/rundowns"
-									render={() => (
-										<RequireAuth>
-											<RundownList />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/rundown/:playlistId/shelf"
-									exact
-									render={(props) => (
-										<RequireAuth>
-											<RundownView
-												playlistId={protectString(decodeURIComponent(props.match.params.playlistId))}
-												onlyShelf={true}
-											/>
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/rundown/:playlistId"
-									render={(props) => (
-										<RequireAuth>
-											<RundownView playlistId={protectString(decodeURIComponent(props.match.params.playlistId))} />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/activeRundown/:studioId"
-									render={(props) => (
-										<RequireAuth>
-											<ActiveRundownView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/prompter/:studioId"
-									render={(props) => (
-										<RequireAuth>
-											<PrompterView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
-										</RequireAuth>
-									)}
-								/>
-								{/* We switch to the general ClockView component, and allow it to do the switch between various types of countdowns */}
-								<Route
-									path="/countdowns/:studioId"
-									render={(props) => (
-										<RequireAuth>
-											<ClockView studioId={protectString(decodeURIComponent(props.match.params.studioId))} />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/status"
-									render={() => (
-										<RequireAuth>
-											<Status />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/settings"
-									render={() => (
-										<RequireAuth>
-											<SettingsView />
-										</RequireAuth>
-									)}
-								/>
-								<Route
-									path="/testTools"
-									render={() => (
-										<RequireAuth>
-											<TestTools />
-										</RequireAuth>
-									)}
-								/>
-								<Route>
-									<Redirect to="/" />
-								</Route>
-							</Switch>
-						</ErrorBoundary>
-						<ErrorBoundary>
-							<Switch>
-								{/* Put views that should NOT have the Notification center here: */}
-								<Route path="/countdowns/:studioId" component={NullComponent} />
-								<Route path="/prompter/:studioId" component={NullComponent} />
-								<Route path="/" component={ConnectionStatusNotification} />
-							</Switch>
-						</ErrorBoundary>
-						<ErrorBoundary>
-							<DocumentTitleProvider />
-						</ErrorBoundary>
-						<ErrorBoundary>
-							<ModalDialogGlobalContainer />
-						</ErrorBoundary>
-					</div>
-				</Router>
-			</UserSubscriptionReadyContext.Provider>
-		</UserContext.Provider>
+							<ErrorBoundary>
+								<Switch>
+									{/* Put views that should NOT have the Notification center here: */}
+									<Route path="/countdowns/:studioId" component={NullComponent} />
+									<Route path="/prompter/:studioId" component={NullComponent} />
+									<Route path="/" component={ConnectionStatusNotification} />
+								</Switch>
+							</ErrorBoundary>
+							<ErrorBoundary>
+								<DocumentTitleProvider />
+							</ErrorBoundary>
+							<ErrorBoundary>
+								<ModalDialogGlobalContainer />
+							</ErrorBoundary>
+						</div>
+					</Router>
+				</UserSubscriptionReadyContext.Provider>
+			</UserContext.Provider>
+		</UserPermissionsContext.Provider>
 	)
 }
 
@@ -401,69 +395,6 @@ const RequireAuth = React.memo(function RequireAuth({ children }: React.PropsWit
 
 	return <Navigate to="/" />
 })
-
-function useRoles(user: User | null, subsReady: boolean) {
-	const location = window.location
-
-	const [roles, setRoles] = useState(
-		Settings.enableUserAccounts
-			? {
-					studio: false,
-					configure: false,
-					developer: false,
-					testing: false,
-					service: false,
-			  }
-			: {
-					studio: getAllowStudio(),
-					configure: getAllowConfigure(),
-					developer: getAllowDeveloper(),
-					testing: getAllowTesting(),
-					service: getAllowService(),
-			  }
-	)
-
-	useEffect(() => {
-		if (!Settings.enableUserAccounts) {
-			if (!location.search) return
-
-			const params = queryStringParse(location.search)
-
-			if (params['studio']) setAllowStudio(params['studio'] === '1')
-			if (params['configure']) setAllowConfigure(params['configure'] === '1')
-			if (params['develop']) setAllowDeveloper(params['develop'] === '1')
-			if (params['testing']) setAllowTesting(params['testing'] === '1')
-			if (params['service']) setAllowService(params['service'] === '1')
-
-			if (params['admin']) {
-				const val = params['admin'] === '1'
-				setAllowStudio(val)
-				setAllowConfigure(val)
-				setAllowDeveloper(val)
-				setAllowTesting(val)
-				setAllowService(val)
-			}
-
-			setRoles({
-				studio: getAllowStudio(),
-				configure: getAllowConfigure(),
-				developer: getAllowDeveloper(),
-				testing: getAllowTesting(),
-				service: getAllowService(),
-			})
-		} else if (user && subsReady) {
-			setRoles({
-				studio: getAllowStudio(),
-				configure: getAllowConfigure(),
-				developer: getAllowDeveloper(),
-				testing: getAllowTesting(),
-				service: getAllowService(),
-			})
-		}
-	}, [location.search, user, subsReady])
-
-	return roles
-}
 
 function useFeatureFlags() {
 	const location = window.location

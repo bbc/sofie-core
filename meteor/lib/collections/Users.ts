@@ -2,7 +2,6 @@ import { Meteor } from 'meteor/meteor'
 import { unprotectString } from '../lib'
 import { UserRoles, DBOrganization } from './Organization'
 import { UserId, OrganizationId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { Organizations } from '../collections/libCollections'
 
 export interface UserProfile {
 	name: string
@@ -40,14 +39,14 @@ export function getUser(): User | null {
 export function getUserId(): UserId | null {
 	return (Meteor.userId() as any) || null
 }
-export function getUserRoles(user?: User | null, organization?: DBOrganization | null): UserRoles {
-	if (user === undefined) user = getUser()
-	if (!user) {
-		return {}
-	}
-	if (organization === undefined) organization = Organizations.findOne({ _id: user.organizationId }) || null
-	return getUserRolesFromLoadedDocuments(user, organization)
-}
+// export function getUserRoles(user?: User | null, organization?: DBOrganization | null): UserRoles {
+// 	if (user === undefined) user = getUser()
+// 	if (!user) {
+// 		return {}
+// 	}
+// 	if (organization === undefined) organization = Organizations.findOne({ _id: user.organizationId }) || null
+// 	return getUserRolesFromLoadedDocuments(user, organization)
+// }
 
 export function getUserRolesFromLoadedDocuments(user: User | null, organization: DBOrganization | null): UserRoles {
 	if (!user) {

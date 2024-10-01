@@ -4,6 +4,8 @@ import { logger } from './logging'
 import { sendTrace } from './api/integration/influx'
 import { PeripheralDevices } from './collections'
 import { MetricsGauge } from '@sofie-automation/corelib/dist/prometheus'
+import { parseUserLevel, USER_LEVEL_HEADER } from '../lib/userLevel'
+import { Settings } from '../lib/Settings'
 
 const connections = new Set<string>()
 const connectionsGauge = new MetricsGauge({
@@ -13,6 +15,30 @@ const connectionsGauge = new MetricsGauge({
 
 Meteor.onConnection((conn: Meteor.Connection) => {
 	// This is called whenever a new ddp-connection is opened (ie a web-client or a peripheral-device)
+
+	if (Settings.enableHeaderAuth) {
+		const userLevel = parseUserLevel(conn.httpHeaders[USER_LEVEL_HEADER])
+		if (!userLevel) {
+			// Reject connection, not permitted
+			conn.close()
+			return
+		}
+
+		// HACK: force the userId of the connection before it can be used.
+		// This ensures we know the permissions of the connection before it can try to do anything+
+		// This could probably be safely done inside a meteor method, as we only need it when directly modifying a collection in the client,
+		// but that will cause all the publications to restart when changing the userId.
+		// Note: this has been tested in Meteor 3.0.2 and it remains working
+		const connSession = (Meteor as any).server.sessions.get(conn.id)
+		if (!connSession) {
+			logger.error(`Failed to find session for ddp connection! "${conn.id}"`)
+			// Close the connection, it won't be secure
+			conn.close()
+			return
+		} else {
+			connSession.userId = JSON.stringify(userLevel)
+		}
+	}
 
 	const connectionId: string = conn.id
 	// var clientAddress = conn.clientAddress; // ip-adress
