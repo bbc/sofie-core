@@ -25,7 +25,9 @@ Meteor.onConnection((conn: Meteor.Connection) => {
 		}
 
 		// HACK: force the userId of the connection before it can be used.
-		// This ensures we know the permissions of the connection before it can try to do anything
+		// This ensures we know the permissions of the connection before it can try to do anything+
+		// This could probably be safely done inside a meteor method, as we only need it when directly modifying a collection in the client,
+		// but that will cause all the publications to restart when changing the userId.
 		// Note: this has been tested in Meteor 3.0.2 and it remains working
 		const connSession = (Meteor as any).server.sessions.get(conn.id)
 		if (!connSession) {
