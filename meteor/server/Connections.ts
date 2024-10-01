@@ -26,6 +26,7 @@ Meteor.onConnection((conn: Meteor.Connection) => {
 
 		// HACK: force the userId of the connection before it can be used.
 		// This ensures we know the permissions of the connection before it can try to do anything
+		// Note: this has been tested in Meteor 3.0.2 and it remains working
 		const connSession = (Meteor as any).server.sessions.get(conn.id)
 		if (!connSession) {
 			logger.error(`Failed to find session for ddp connection! "${conn.id}"`)
