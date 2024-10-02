@@ -66,7 +66,6 @@ export class RundownTimingCalculator {
 	private partDisplayDurations: Record<TimingId, number> = {}
 	private partDisplayDurationsNoPlayback: Record<TimingId, number> = {}
 	private displayDurationGroups: Record<string, number> = {}
-	private segmentStartedPlayback: Record<string, number> = {}
 	private segmentAsPlayedDurations: Record<string, number> = {}
 	private breakProps: {
 		props: BreakProps | undefined
@@ -124,7 +123,6 @@ export class RundownTimingCalculator {
 		let liveSegmentId: SegmentId | undefined
 
 		Object.keys(this.displayDurationGroups).forEach((key) => delete this.displayDurationGroups[key])
-		Object.keys(this.segmentStartedPlayback).forEach((key) => delete this.segmentStartedPlayback[key])
 		Object.keys(this.segmentAsPlayedDurations).forEach((key) => delete this.segmentAsPlayedDurations[key])
 		this.untimedSegments.clear()
 		this.linearParts.length = 0
@@ -163,7 +161,7 @@ export class RundownTimingCalculator {
 
 						if (liveSegment?.segmentTiming?.countdownType === CountdownType.SEGMENT_BUDGET_DURATION) {
 							remainingBudgetOnCurrentSegment =
-								(this.segmentStartedPlayback[unprotectString(liveSegmentId)] ??
+								(playlist.segmentsStartedPlayback?.[unprotectString(liveSegmentId)] ??
 									lastStartedPlayback ??
 									now) +
 								(liveSegment.segmentTiming.budgetDuration ?? 0) -
@@ -629,7 +627,6 @@ export class RundownTimingCalculator {
 			partDisplayStartsAt: this.partDisplayStartsAt,
 			partExpectedDurations: this.partExpectedDurations,
 			partDisplayDurations: this.partDisplayDurations,
-			segmentStartedPlayback: this.segmentStartedPlayback,
 			currentTime: now,
 			remainingTimeOnCurrentPart,
 			remainingBudgetOnCurrentSegment,
@@ -722,8 +719,6 @@ export interface RundownTimingContext {
 	 * if the Part does not have an expected duration.
 	 */
 	partExpectedDurations?: Record<string, number>
-	/** Time when selected segments started playback. Contains only the current segment and the segment before, if we've just entered a new one */
-	segmentStartedPlayback?: Record<string, number>
 	/** Remaining time on current part */
 	remainingTimeOnCurrentPart?: number
 	/** Remaining budget on current segment, if its countdownType === CountdownType.SEGMENT_BUDGET_DURATION */
