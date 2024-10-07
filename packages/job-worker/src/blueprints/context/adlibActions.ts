@@ -28,6 +28,7 @@ import { DatastorePersistenceMode } from '@sofie-automation/shared-lib/dist/core
 import { removeTimelineDatastoreValue, setTimelineDatastoreValue } from '../../playout/datastore'
 import { executePeripheralDeviceAction, listPlayoutDevices } from '../../peripheralDevice'
 import { ActionPartChange, PartAndPieceInstanceActionService } from './services/PartAndPieceInstanceActionService'
+import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 
 export class DatastoreActionExecutionContext
 	extends ShowStyleUserContext
@@ -61,6 +62,10 @@ export class DatastoreActionExecutionContext
 /** Actions */
 export class ActionExecutionContext extends ShowStyleUserContext implements IActionExecutionContext, IEventContext {
 	public takeAfterExecute: boolean
+
+	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
+		return this.partAndPieceInstanceService.quickLoopInfo
+	}
 
 	public get currentPartState(): ActionPartChange {
 		return this.partAndPieceInstanceService.currentPartState
