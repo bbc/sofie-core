@@ -69,4 +69,12 @@ export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContex
 	 */
 	/** Remove piecesInstances by id. Returns ids of piecesInstances that were removed. Note: For now we only allow removing from the next, but this might change to include current if there is justification */
 	removePieceInstances(part: 'next', pieceInstanceIds: string[]): Promise<string[]>
+
+	/**
+	 * Move the next part through the rundown. Can move by either a number of parts, or segments in either direction.
+	 * This will result in the `onSetAsNext` callback being called again following the current call, with the new PartInstance.
+	 * Multiple calls of this inside one call to `onSetAsNext` will replace earlier calls.
+	 * @returns Whether a new Part was found using the provided offset
+	 */
+	moveNextPart(partDelta: number, segmentDelta: number): Promise<boolean>
 }
