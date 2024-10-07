@@ -22,6 +22,7 @@ import { PlayoutModel } from '../../playout/model/PlayoutModel'
 import { ReadonlyDeep } from 'type-fest'
 import { getCurrentTime } from '../../lib'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 
 export class OnSetAsNextContext
 	extends ShowStyleUserContext
@@ -36,6 +37,10 @@ export class OnSetAsNextContext
 		private partAndPieceInstanceService: PartAndPieceInstanceActionService
 	) {
 		super(contextInfo, context, showStyle, watchedPackages)
+	}
+
+	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
+		return this.partAndPieceInstanceService.quickLoopInfo
 	}
 
 	public get nextPartState(): ActionPartChange {
