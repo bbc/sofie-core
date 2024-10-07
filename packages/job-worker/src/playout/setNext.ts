@@ -47,8 +47,20 @@ export async function setNextPart(
 ): Promise<void> {
 	const span = context.startSpan('setNextPart')
 
+	const attemptedPartIds = new Set<PartId | null>()
+	if (rawNextPart && 'part' in rawNextPart) attemptedPartIds.add(rawNextPart.part._id)
+
 	let moveNextToPart = await setNextPart2(context, playoutModel, rawNextPart, setManually, nextTimeOffset)
 	while (moveNextToPart) {
+		// Ensure that we aren't stuck in an infinite loop. If this while loop is being run for a part twice, then the blueprints are behaving oddly and will likely get stuck
+		// Instead of throwing and causing a larger failure, we can stop processing here, and leave something as next
+		const nextedId = moveNextToPart.selectedPart?._id ?? null
+		if (attemptedPartIds.has(nextedId)) {
+			logger.error(`Blueprint onSetAsNext callback moved the next part ${attemptedPartIds.size}, forming a loop`)
+			break
+		}
+		attemptedPartIds.add(nextedId)
+
 		moveNextToPart = await setNextPart2(
 			context,
 			playoutModel,
