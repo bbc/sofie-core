@@ -35,8 +35,11 @@ export const SegmentDuration = withTiming<ISegmentDurationProps, {}>()(function 
 	const segmentTimingType = props.segment.segmentTiming?.countdownType ?? CountdownType.PART_EXPECTED_DURATION
 
 	let budget = segmentBudgetDuration ?? 0
+	let hardFloor = false
 
 	if (segmentTimingType === CountdownType.SEGMENT_BUDGET_DURATION) {
+		hardFloor = true
+
 		if (props.timingDurations.currentSegmentId === props.segment._id) {
 			duration = props.timingDurations.remainingBudgetOnCurrentSegment ?? segmentBudgetDuration ?? 0
 		} else {
@@ -80,7 +83,7 @@ export const SegmentDuration = withTiming<ISegmentDurationProps, {}>()(function 
 					})}
 					role="timer"
 				>
-					{RundownUtils.formatDiffToTimecode(value, false, false, true, false, true, '+')}
+					{RundownUtils.formatDiffToTimecode(value, false, false, true, false, true, '+', false, hardFloor)}
 				</span>
 			</>
 		)
