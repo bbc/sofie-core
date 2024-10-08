@@ -22,6 +22,7 @@ import {
 	convertPieceInstanceToBlueprints,
 	convertPieceToBlueprints,
 	convertResolvedPieceInstanceToBlueprints,
+	createBlueprintQuickLoopInfo,
 	getMediaObjectDuration,
 } from '../lib'
 import { getResolvedPiecesForCurrentPartInstance } from '../../../playout/resolvedPieces'
@@ -73,13 +74,7 @@ export class PartAndPieceInstanceActionService {
 	readonly showStyleCompound: ReadonlyDeep<ProcessedShowStyleCompound>
 
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
-		const playlistLoopProps = this._playoutModel.playlist.quickLoop
-		if (!playlistLoopProps) return null
-
-		return {
-			running: playlistLoopProps.running,
-			locked: playlistLoopProps.locked,
-		}
+		return createBlueprintQuickLoopInfo(this._playoutModel.playlist)
 	}
 
 	/** To be set by any mutation methods on this context. Indicates to core how extensive the changes are to the current partInstance */
