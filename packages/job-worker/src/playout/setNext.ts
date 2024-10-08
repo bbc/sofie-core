@@ -50,7 +50,13 @@ export async function setNextPart(
 	const attemptedPartIds = new Set<PartId | null>()
 	if (rawNextPart && 'part' in rawNextPart) attemptedPartIds.add(rawNextPart.part._id)
 
-	let moveNextToPart = await setNextPart2(context, playoutModel, rawNextPart, setManually, nextTimeOffset)
+	let moveNextToPart = await setNextPartAndCheckForPendingMoveNextPart(
+		context,
+		playoutModel,
+		rawNextPart,
+		setManually,
+		nextTimeOffset
+	)
 	while (moveNextToPart) {
 		// Ensure that we aren't stuck in an infinite loop. If this while loop is being run for a part twice, then the blueprints are behaving oddly and will likely get stuck
 		// Instead of throwing and causing a larger failure, we can stop processing here, and leave something as next
@@ -61,7 +67,7 @@ export async function setNextPart(
 		}
 		attemptedPartIds.add(nextedId)
 
-		moveNextToPart = await setNextPart2(
+		moveNextToPart = await setNextPartAndCheckForPendingMoveNextPart(
 			context,
 			playoutModel,
 			moveNextToPart.selectedPart
@@ -85,7 +91,7 @@ export async function setNextPart(
 	if (span) span.end()
 }
 
-async function setNextPart2(
+async function setNextPartAndCheckForPendingMoveNextPart(
 	context: JobContext,
 	playoutModel: PlayoutModel,
 	rawNextPart: ReadonlyDeep<Omit<SelectNextPartResult, 'index'>> | PlayoutPartInstanceModel | null,
