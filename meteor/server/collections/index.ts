@@ -46,6 +46,7 @@ import {
 	allowAccessToStudio,
 } from '../security/lib/security'
 import { SystemWriteAccess } from '../security/system'
+import type { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 export * from './bucket'
 export * from './packages-media'
@@ -101,6 +102,9 @@ registerIndex(ExternalMessageQueue, {
 	studioId: 1,
 	rundownId: 1,
 })
+
+// TODO - some indexes are missing here
+export const Notifications = createAsyncOnlyMongoCollection<DBNotificationObj>(CollectionName.Notifications, false)
 
 export const Organizations = createAsyncOnlyMongoCollection<DBOrganization>(CollectionName.Organizations, {
 	async update(userId, doc, fields, _modifier) {
