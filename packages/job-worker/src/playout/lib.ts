@@ -190,6 +190,7 @@ export async function updateTimelineFromStudioPlayoutModel(
 		const playlist = activePlaylists[0]
 
 		await runJobWithPlayoutModel(context, { playlistId: playlist._id }, null, async (playoutModel) => {
+			// nocommit - this needs to be run with the correct routeSet properties...
 			await updateTimeline(context, playoutModel)
 		})
 	} else {

@@ -348,9 +348,11 @@ async function getTimelineRundown(
 			timelineObjs = timelineObjs.concat(rundownTimelineResult.timeline)
 			timelineObjs = timelineObjs.concat(await pLookaheadObjs)
 
+			const studioWithPendingChanges = playoutModel.applyPendingChangesToStudio(context.studio)
+
 			const blueprint = await context.getShowStyleBlueprint(showStyle._id)
 			timelineVersions = generateTimelineVersions(
-				context.studio,
+				studioWithPendingChanges,
 				showStyle.blueprintId,
 				blueprint.blueprint.blueprintVersion
 			)
@@ -362,7 +364,7 @@ async function getTimelineRundown(
 					getCurrentTime()
 				)
 				const blueprintContext = new OnTimelineGenerateContext(
-					context.studio,
+					studioWithPendingChanges,
 					context.getStudioBlueprintConfig(),
 					showStyle,
 					context.getShowStyleBlueprintConfig(showStyle),
@@ -377,6 +379,7 @@ async function getTimelineRundown(
 					const abHelper = blueprintContext.abSessionsHelper // Future: this should be removed from OnTimelineGenerateContext once the methods are removed from the api
 					const newAbSessionsResult = applyAbPlaybackForTimeline(
 						context,
+						studioWithPendingChanges,
 						abHelper,
 						blueprint,
 						showStyle,

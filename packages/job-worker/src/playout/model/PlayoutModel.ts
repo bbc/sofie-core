@@ -31,6 +31,7 @@ import { PlayoutPieceInstanceModel } from './PlayoutPieceInstanceModel'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import type { INotificationsModel } from '../../notifications/NotificationsModel'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 export type DeferredFunction = (playoutModel: PlayoutModel) => void | Promise<void>
 export type DeferredAfterSaveFunction = (playoutModel: PlayoutModelReadonly) => void | Promise<void>
@@ -200,6 +201,12 @@ export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBa
 	 * @returns Whether the change may affect timeline generation
 	 */
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean
+
+	/**
+	 * Apply and pending changes to the Studio
+	 * @param studio The Studio to apply changes to
+	 */
+	applyPendingChangesToStudio(studio: ReadonlyDeep<DBStudio>): ReadonlyDeep<DBStudio>
 
 	/**
 	 * Clear the currently selected PartInstances, so that nothing is selected for playback

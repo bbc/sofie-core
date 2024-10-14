@@ -10,6 +10,7 @@ import { BaseModel } from '../../modelBase'
 import { ReadonlyDeep } from 'type-fest'
 import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 export interface StudioPlayoutModelBaseReadonly {
 	/**
@@ -76,4 +77,10 @@ export interface StudioPlayoutModel extends StudioPlayoutModelBase, BaseModel {
 	 * @returns Whether the change may affect timeline generation
 	 */
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean
+
+	/**
+	 * Apply and pending changes to the Studio
+	 * @param studio The Studio to apply changes to
+	 */
+	applyPendingChangesToStudio(studio: ReadonlyDeep<DBStudio>): ReadonlyDeep<DBStudio>
 }

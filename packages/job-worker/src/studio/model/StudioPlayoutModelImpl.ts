@@ -18,6 +18,7 @@ import { DatabasePersistedModel } from '../../modelBase'
 import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { StudioBaselineHelper } from './StudioBaselineHelper'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 /**
  * This is a model used for studio operations.
@@ -103,6 +104,10 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean {
 		return this.#baselineHelper.updateRouteSetActive(routeSetId, isActive)
+	}
+
+	applyPendingChangesToStudio(studio: ReadonlyDeep<DBStudio>): ReadonlyDeep<DBStudio> {
+		return this.#baselineHelper.applyPendingChangesToStudio(studio)
 	}
 
 	/**

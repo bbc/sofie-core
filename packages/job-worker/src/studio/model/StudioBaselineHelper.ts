@@ -6,7 +6,7 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { saveIntoDb } from '../../db/changes'
-import { StudioRouteBehavior, StudioRouteSet } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { DBStudio, StudioRouteBehavior, StudioRouteSet } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { logger } from '../../logging'
 import {
 	WrappedOverridableItemNormal,
@@ -14,6 +14,7 @@ import {
 	OverrideOpHelperImpl,
 } from '@sofie-automation/corelib/dist/overrideOpHelper'
 import { ObjectWithOverrides, SomeObjectOverrideOp } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import { ReadonlyDeep } from 'type-fest/source/readonly-deep'
 
 export class StudioBaselineHelper {
 	readonly #context: JobContext
@@ -128,6 +129,15 @@ export class StudioBaselineHelper {
 		overrideHelper.commit()
 
 		return mayAffectTimeline
+	}
+
+	applyPendingChangesToStudio(studio: ReadonlyDeep<DBStudio>): ReadonlyDeep<DBStudio> {
+		if (!this.#routeSetChanged) return studio
+
+		return {
+			...studio,
+			routeSetsWithOverrides: this.#overridesRouteSetBuffer,
+		}
 	}
 }
 

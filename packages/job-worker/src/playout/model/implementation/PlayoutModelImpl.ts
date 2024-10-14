@@ -62,6 +62,7 @@ import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/c
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelImpl'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -485,6 +486,10 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean {
 		return this.#baselineHelper.updateRouteSetActive(routeSetId, isActive)
+	}
+
+	applyPendingChangesToStudio(studio: ReadonlyDeep<DBStudio>): ReadonlyDeep<DBStudio> {
+		return this.#baselineHelper.applyPendingChangesToStudio(studio)
 	}
 
 	cycleSelectedPartInstances(): void {

@@ -21,6 +21,7 @@ import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settin
 import { abPoolFilterDisabled, findPlayersInRouteSets } from './routeSetDisabling'
 import type { INotification } from '../../notifications/NotificationsModel'
 import { generateTranslation } from '../../notifications/util'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 export interface ABPlaybackResult {
 	assignments: Record<string, ABSessionAssignments>
@@ -38,7 +39,8 @@ export interface ABPlaybackResult {
  * @returns New AB assignments to be persisted on the playlist for the next call
  */
 export function applyAbPlaybackForTimeline(
-	context: JobContext,
+	context: Omit<JobContext, 'studio'>,
+	studio: ReadonlyDeep<DBStudio>,
 	abSessionHelper: AbSessionHelper,
 	blueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 	showStyle: ReadonlyDeep<ProcessedShowStyleCompound>,
@@ -57,7 +59,7 @@ export function applyAbPlaybackForTimeline(
 			name: playlist.name,
 			identifier: `playlistId=${playlist._id},previousPartInstance=${playlist.previousPartInfo?.partInstanceId},currentPartInstance=${playlist.currentPartInfo?.partInstanceId},nextPartInstance=${playlist.nextPartInfo?.partInstanceId}`,
 		},
-		context.studio,
+		studio,
 		context.getStudioBlueprintConfig(),
 		showStyle,
 		context.getShowStyleBlueprintConfig(showStyle)
@@ -85,7 +87,7 @@ export function applyAbPlaybackForTimeline(
 	const notifications: INotification[] = []
 
 	const abConfiguration = blueprint.blueprint.getAbResolverConfiguration(blueprintContext)
-	const routeSetMembers = findPlayersInRouteSets(applyAndValidateOverrides(context.studio.routeSetsWithOverrides).obj)
+	const routeSetMembers = findPlayersInRouteSets(applyAndValidateOverrides(studio.routeSetsWithOverrides).obj)
 
 	for (const [poolName, players] of Object.entries<ABPlayerDefinition[]>(abConfiguration.pools)) {
 		// Filter out offline devices
