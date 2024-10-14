@@ -20,6 +20,7 @@ import { ABPlayerDefinition, NoteSeverity } from '@sofie-automation/blueprints-i
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { abPoolFilterDisabled, findPlayersInRouteSets } from './routeSetDisabling'
 import type { INotification } from '../../notifications/NotificationsModel'
+import { generateTranslation } from '../../notifications/util'
 
 export interface ABPlaybackResult {
 	assignments: Record<string, ABSessionAssignments>
@@ -121,7 +122,9 @@ export function applyAbPlaybackForTimeline(
 			notifications.push({
 				id: `failedRequired-${poolName}`,
 				severity: NoteSeverity.ERROR,
-				message: null, // TODO
+				message: generateTranslation('Failed to assign players for {{count}} sessions', {
+					count: assignments.failedRequired.length,
+				}),
 			})
 		}
 		if (assignments.failedOptional.length > 0) {
@@ -133,7 +136,9 @@ export function applyAbPlaybackForTimeline(
 			notifications.push({
 				id: `failedOptional-${poolName}`,
 				severity: NoteSeverity.WARNING,
-				message: null, // TODO
+				message: generateTranslation('Failed to assign players for {{count}} non-critical sessions', {
+					count: assignments.failedOptional.length,
+				}),
 			})
 		}
 

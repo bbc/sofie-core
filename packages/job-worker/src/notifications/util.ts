@@ -1,3 +1,4 @@
+import { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import type { INotification, INotificationsModel } from './NotificationsModel'
 
 export async function replaceAllNotificationsForCategory(
@@ -16,7 +17,20 @@ export async function replaceAllNotificationsForCategory(
 	const newNotificationKeys = new Set(newNotifications.map((n) => n.id))
 	for (const notification of existingNotifications) {
 		if (!newNotificationKeys.has(notification.id)) {
-			model.removeNotification(category, notification.id)
+			model.clearNotification(category, notification.id)
 		}
+	}
+}
+
+/** Generate the translation for a string, to be applied later when it gets rendered */
+export function generateTranslation(
+	key: string,
+	args?: { [k: string]: any },
+	namespaces?: string[]
+): ITranslatableMessage {
+	return {
+		key,
+		args,
+		namespaces,
 	}
 }

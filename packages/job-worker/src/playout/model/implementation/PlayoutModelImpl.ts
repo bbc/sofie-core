@@ -641,6 +641,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
 			this.#baselineHelper.saveAllToDatabase(),
+			this.#notificationsHelper.saveAllToDatabase(),
 		])
 
 		this.#playlistHasChanged = false
@@ -809,10 +810,10 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	): ReturnType<NotificationsModelHelper['getAllNotifications']> {
 		return this.#notificationsHelper.getAllNotifications(...args)
 	}
-	removeNotification(
-		...args: Parameters<NotificationsModelHelper['removeNotification']>
-	): ReturnType<NotificationsModelHelper['removeNotification']> {
-		return this.#notificationsHelper.removeNotification(...args)
+	clearNotification(
+		...args: Parameters<NotificationsModelHelper['clearNotification']>
+	): ReturnType<NotificationsModelHelper['clearNotification']> {
+		return this.#notificationsHelper.clearNotification(...args)
 	}
 	setNotification(
 		...args: Parameters<NotificationsModelHelper['setNotification']>
