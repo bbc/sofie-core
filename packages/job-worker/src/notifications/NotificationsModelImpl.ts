@@ -137,6 +137,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 			// If the category is fully in memory, we want to delete everything except those being updated
 			if (isFullyInMemory) {
+				// TODO - this is being fired too often sometimes, perhaps it can be avoided when we have actually loaded the data?
 				updates.push({
 					deleteMany: {
 						filter: {
@@ -145,7 +146,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 						},
 					},
 				})
-			} else {
+			} else if (idsToDelete.length > 0) {
 				// If the category is only partially in memory, delete only the ones explicitly marked for deletion
 				updates.push({
 					deleteMany: {
