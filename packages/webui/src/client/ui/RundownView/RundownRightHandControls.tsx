@@ -40,6 +40,7 @@ interface IProps {
 	isSupportPanelOpen: boolean
 	isStudioMode: boolean
 	onToggleNotifications?: (e: React.MouseEvent<HTMLButtonElement>, filter: NoticeLevel) => void
+	onToggleUserEditPanel?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onToggleSupportPanel?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onTake?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onStudioRouteSetSwitch?: (
@@ -150,6 +151,13 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 					onClick={(e) => props.onToggleNotifications?.(e, NoticeLevel.NOTIFICATION | NoticeLevel.TIP)}
 					isOpen={props.isNotificationCenterOpen === (NoticeLevel.NOTIFICATION | NoticeLevel.TIP)}
 					filter={NoticeLevel.NOTIFICATION | NoticeLevel.TIP}
+					className="type-notification"
+					title={t('Notes')}
+				/>
+				<NotificationCenterPanelToggle
+					onClick={(e) => props.onToggleNotifications?.(e, NoticeLevel.USEREDIT)}
+					isOpen={props.isNotificationCenterOpen === NoticeLevel.USEREDIT}
+					filter={NoticeLevel.USEREDIT}
 					className="type-notification"
 					title={t('Notes')}
 				/>

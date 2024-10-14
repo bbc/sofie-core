@@ -1,0 +1,133 @@
+@import '_colorScheme';
+@import '_variables';
+
+
+.usereditpanel-pop-up {
+	background: #919191;
+	border-radius: 3px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+	margin-bottom: 3px;
+
+	&:first-child {
+		margin-top: 0.9375rem;
+	}
+
+	&:last-child {
+		margin-bottom: 0.9375rem;
+	}
+
+	> .usereditpanel-pop-up__header {
+		background: #0A20ED;
+
+		min-width: 2.5rem;
+		font-size: 1.2em;
+
+		text-align: left;
+		padding-top: 0.5rem;
+		padding-left: 0.1rem;
+
+		> svg {
+			filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
+			width: 1.7em;
+			height: 1.7em;
+		}
+	}
+
+	> .usereditpanel-pop-up__contents {
+		flex: 1;
+		padding: 0.625rem 0.9375rem;
+		padding: 0.525rem 0.6375rem;
+		cursor: default;
+
+		overflow-wrap: break-word;
+
+		> h5 {
+			color: inherit;
+			margin: 0 0 0.5em;
+			font-weight: 500 !important;
+			line-height: 1.1em;
+			letter-spacing: 0.02em;
+		}
+
+		> .usereditpanel-pop-up__actions {
+			display: grid;
+			grid-template-columns: auto auto;
+			grid-template-areas: 'left right';
+			margin-top: 0.5em;
+
+			.usereditpanel-pop-up__actions--button {
+				font-weight: 500;
+				letter-spacing: 0.2px;
+				line-height: 1.43em;
+				padding-left: 10px;
+				padding-right: 10px;
+
+				> svg {
+					margin-top: -0.1em;
+					vertical-align: middle;
+					margin-right: -0.4em;
+					width: 1em;
+					height: 1em;
+				}
+
+				.label {
+					margin-left: 10px;
+					line-height: inherit;
+				}
+			}
+
+			.btn-default {
+				background: #d7dade;
+			}
+
+			> .usereditpanel-pop-up__actions--default {
+				grid-area: left;
+			}
+
+			> .usereditpanel-pop-up__actions--other {
+				text-align: right;
+				grid-area: right;
+			}
+		}
+	}
+
+	> .usereditpanel-pop-up__dismiss {
+		flex: 0;
+		min-width: 2.2rem;
+		padding: 0.625rem 0.625rem 0;
+
+		> .usereditpanel-pop-up__dismiss__button {
+			display: block;
+			background: none;
+			border: none;
+			margin: 0;
+			padding: 0;
+			font-size: 0.7rem;
+
+			> svg {
+				fill: #525252;
+				width: 2.25em;
+				height: 2.25em;
+				vertical-align: top;
+				margin-top: -0.4em;
+			}
+
+			&.usereditpanel-pop-up__dismiss__button--close {
+				> svg {
+					fill: #525252;
+					width: 1.5em;
+					height: 1.5em;
+					vertical-align: top;
+					margin-top: 0;
+				}
+			}
+
+			&:hover {
+				> svg {
+					fill: #727272;
+				}
+			}
+		}
+	}
+}
+

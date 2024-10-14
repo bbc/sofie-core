@@ -21,6 +21,8 @@ export interface CoreUserEditingDefinitionForm {
 	id: string
 	/** Label to show to the user for this operation */
 	label: ITranslatableMessage
+	//** A json schema to add filter selections to large schema lists */
+	filteringSchema?: JSONBlob<JSONSchema>
 	/** The json schema describing the form to display */
 	schema: JSONBlob<JSONSchema>
 	/** Current values to populate the form with */
