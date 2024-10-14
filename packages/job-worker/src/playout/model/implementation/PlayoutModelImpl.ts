@@ -61,6 +61,7 @@ import { QuickLoopService } from '../services/QuickLoopService'
 import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { NotificationsModelHelper } from '../../../notifications/NotificationsModelImpl'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -262,6 +263,7 @@ export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
  */
 export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements PlayoutModel, DatabasePersistedModel {
 	readonly #baselineHelper: StudioBaselineHelper
+	readonly #notificationsHelper: NotificationsModelHelper
 
 	#deferredBeforeSaveFunctions: DeferredFunction[] = []
 	#deferredAfterSaveFunctions: DeferredAfterSaveFunction[] = []
@@ -306,6 +308,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		context.trackCache(this)
 
 		this.#baselineHelper = new StudioBaselineHelper(context)
+		this.#notificationsHelper = new NotificationsModelHelper(context, 'playout')
 	}
 
 	public get displayName(): string {
@@ -798,6 +801,29 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	getSegmentsBetweenQuickLoopMarker(start: QuickLoopMarker, end: QuickLoopMarker): SegmentId[] {
 		return this.quickLoopService.getSegmentsBetweenMarkers(start, end)
+	}
+
+	/** Notifications */
+
+	async getAllNotifications(
+		...args: Parameters<NotificationsModelHelper['getAllNotifications']>
+	): ReturnType<NotificationsModelHelper['getAllNotifications']> {
+		return this.#notificationsHelper.getAllNotifications(...args)
+	}
+	removeNotification(
+		...args: Parameters<NotificationsModelHelper['removeNotification']>
+	): ReturnType<NotificationsModelHelper['removeNotification']> {
+		return this.#notificationsHelper.removeNotification(...args)
+	}
+	setNotification(
+		...args: Parameters<NotificationsModelHelper['setNotification']>
+	): ReturnType<NotificationsModelHelper['setNotification']> {
+		return this.#notificationsHelper.setNotification(...args)
+	}
+	clearAllNotifications(
+		...args: Parameters<NotificationsModelHelper['clearAllNotifications']>
+	): ReturnType<NotificationsModelHelper['clearAllNotifications']> {
+		return this.#notificationsHelper.clearAllNotifications(...args)
 	}
 
 	/** Lifecycle */

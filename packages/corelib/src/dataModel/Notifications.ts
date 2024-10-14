@@ -15,6 +15,23 @@ import type { ITranslatableMessage } from '../TranslatableMessage'
 export interface DBNotificationObj {
 	_id: NotificationId
 
+	/**
+	 * Used to group a certain group of notifications
+	 * Each source of these notifications should use its own value, so that it can find and cleanup after itself when appropriate
+	 */
+	category: string
+
+	/**
+	 * Unique id for this notification within the category
+	 */
+	localId: string
+
+	// /**
+	//  * Source of the notification
+	//  * This is a stricter ???
+	//  */
+	// source: 'system' | 'ingest' | 'playout'
+
 	severity: NoteSeverity
 	message: ITranslatableMessage
 	// type: 'event' | 'persistent'
@@ -24,12 +41,6 @@ export interface DBNotificationObj {
 
 	created: number // unix timestamp
 	modified: number // unix timestamp
-
-	/**
-	 * Used to group a certain group of notifications
-	 * Each source of these notifications should use its own value, so that it can find and cleanup after itself when appropriate
-	 */
-	category?: string
 
 	// /**
 	//  * When set, the notification will be automatically dismissed after this time
