@@ -23,7 +23,7 @@ export interface INotificationsModel {
 	 * @param category category of the notification
 	 * @param notificationId id of the notification to remove
 	 */
-	removeNotification(category: string, notificationId: string): void
+	clearNotification(category: string, notificationId: string): void
 
 	/**
 	 * Add/replace a notification to the list
