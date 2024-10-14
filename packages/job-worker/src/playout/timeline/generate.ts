@@ -47,6 +47,7 @@ import { getPartTimingsOrDefaults, PartCalculatedTimings } from '@sofie-automati
 import { applyAbPlaybackForTimeline } from '../abPlayback'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { PlayoutPartInstanceModel } from '../model/PlayoutPartInstanceModel'
+import { replaceAllNotificationsForCategory } from '../../notifications/util'
 
 function isModelForStudio(model: StudioPlayoutModelBase): model is StudioPlayoutModel {
 	const tmp = model as StudioPlayoutModel
@@ -384,6 +385,13 @@ async function getTimelineRundown(
 						timelineObjs
 					)
 
+					// Store the new notes in the model
+					await replaceAllNotificationsForCategory(
+						playoutModel,
+						'abPlayback',
+						newAbSessionsResult.notifications
+					)
+
 					let tlGenRes: BlueprintResultTimeline | undefined
 					if (blueprint.blueprint.onTimelineGenerate) {
 						const span = context.startSpan('blueprint.onTimelineGenerate')
@@ -408,7 +416,7 @@ async function getTimelineRundown(
 
 					playoutModel.setOnTimelineGenerateResult(
 						tlGenRes?.persistentState,
-						newAbSessionsResult,
+						newAbSessionsResult.assignments,
 						blueprintContext.abSessionsHelper.knownSessions
 					)
 				} catch (err) {
