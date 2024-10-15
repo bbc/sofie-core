@@ -13,7 +13,7 @@ import {
 } from '../lib/localStorage'
 import { parse as queryStringParse } from 'query-string'
 import { MeteorCall } from '../lib/meteorApi'
-import { UserLevel as UserPermissions } from '@sofie-automation/meteor-lib/dist/userLevel' // nocommit - avoid this alias
+import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 import { Settings } from '../lib/Settings'
 
 export type { UserPermissions }
@@ -56,7 +56,7 @@ export function useUserPermissions(): [roles: UserPermissions, ready: boolean] {
 			// TODO - this is a temorary hack!
 			// TODO - this should also be triggered by ddp reconnecting
 			MeteorCall.user
-				.getUserLevel()
+				.getUserPermissions()
 				.then((v) => {
 					setPermissions(
 						v || {

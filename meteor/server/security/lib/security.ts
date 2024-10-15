@@ -23,7 +23,7 @@ import {
 	UserId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { StudioLight } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { UserLevel } from '@sofie-automation/meteor-lib/dist/userLevel'
+import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 
 export const LIMIT_CACHE_TIME = 1000 * 60 * 15 // 15 minutes
 
@@ -152,7 +152,7 @@ export async function allowAccessToStudio(
 		if (!isProtectedString(studioId)) return noAccess('studioId is not a string')
 		if (!('userId' in cred0) || !cred0.userId) return noAccess('missing userId')
 
-		const userPermissions = JSON.parse(unprotectString(cred0.userId)) as UserLevel
+		const userPermissions = JSON.parse(unprotectString(cred0.userId)) as UserPermissions
 
 		const studio = await fetchStudioLight(studioId)
 		if (!studio) return noAccess('Studio not found')

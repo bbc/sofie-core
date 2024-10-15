@@ -4,8 +4,8 @@ import { logger } from './logging'
 import { sendTrace } from './api/integration/influx'
 import { PeripheralDevices } from './collections'
 import { MetricsGauge } from '@sofie-automation/corelib/dist/prometheus'
-import { parseUserLevel, USER_LEVEL_HEADER } from '../lib/userLevel'
-import { Settings } from '../lib/Settings'
+import { parseUserPermissions, USER_PERMISSIONS_HEADER } from '@sofie-automation/meteor-lib/dist/userPermissions'
+import { Settings } from './Settings'
 
 const connections = new Set<string>()
 const connectionsGauge = new MetricsGauge({
@@ -17,7 +17,7 @@ Meteor.onConnection((conn: Meteor.Connection) => {
 	// This is called whenever a new ddp-connection is opened (ie a web-client or a peripheral-device)
 
 	if (Settings.enableHeaderAuth) {
-		const userLevel = parseUserLevel(conn.httpHeaders[USER_LEVEL_HEADER])
+		const userLevel = parseUserPermissions(conn.httpHeaders[USER_PERMISSIONS_HEADER])
 		if (!userLevel) {
 			// Reject connection, not permitted
 			conn.close()

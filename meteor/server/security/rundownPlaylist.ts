@@ -16,8 +16,8 @@ import {
 	UserId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownPlaylists, Rundowns } from '../collections'
-import { MethodContext } from '../../lib/api/methods'
-import { parseUserLevel, USER_LEVEL_HEADER } from '../../lib/userLevel'
+import { parseUserPermissions, USER_PERMISSIONS_HEADER } from '@sofie-automation/meteor-lib/dist/userPermissions'
+import { MethodContext } from '../api/methodContext'
 
 export namespace RundownPlaylistReadAccess {
 	/** Handles read access for all playlist document */
@@ -104,8 +104,8 @@ export namespace RundownPlaylistContentWriteAccess {
 
 		if (context.connection) {
 			// A POC that 'fails auth' if the user doesn't have studio permissions
-			const userLevel = parseUserLevel(context.connection.httpHeaders[USER_LEVEL_HEADER])
-			if (!userLevel?.studio) throw new Meteor.Error(403, `Not allowed: no studio permission`)
+			const userPermissions = parseUserPermissions(context.connection.httpHeaders[USER_PERMISSIONS_HEADER])
+			if (!userPermissions?.studio) throw new Meteor.Error(403, `Not allowed: no studio permission`)
 		}
 
 		if (!Settings.enableUserAccounts) {
