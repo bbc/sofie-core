@@ -56,6 +56,7 @@ import {
 	UserEditingDefinition,
 	UserEditingDefinitionAction,
 	UserEditingDefinitionForm,
+	UserEditingGroupingType,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
 import type { PlayoutMutatablePart } from '../../playout/model/PlayoutPartInstanceModel'
@@ -510,6 +511,7 @@ function translateUserEditsToBlueprint(
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
 						svgIcon: userEdit.svgIcon,
+						svgIconDisabled: userEdit.svgIconDisabled,
 						isActive: userEdit.isActive,
 					} satisfies Complete<UserEditingDefinitionAction>
 				case UserEditingType.FORM:
@@ -518,6 +520,8 @@ function translateUserEditsToBlueprint(
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
 						schema: clone(userEdit.schema),
+						grouping: clone(userEdit.grouping) as UserEditingGroupingType[] | undefined,
+						schemas: clone(userEdit.schemas),
 						currentValues: clone(userEdit.currentValues),
 					} satisfies Complete<UserEditingDefinitionForm>
 				default:
@@ -543,6 +547,7 @@ export function translateUserEditsFromBlueprint(
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						svgIcon: userEdit.svgIcon,
+						svgIconDisabled: userEdit.svgIconDisabled,
 						isActive: userEdit.isActive,
 					} satisfies Complete<CoreUserEditingDefinitionAction>
 				case UserEditingType.FORM:
@@ -551,6 +556,8 @@ export function translateUserEditsFromBlueprint(
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						schema: clone(userEdit.schema),
+						grouping: clone(userEdit.grouping),
+						schemas: clone(userEdit.schemas),
 						currentValues: clone(userEdit.currentValues),
 						translationNamespaces: unprotectStringArray(blueprintIds),
 					} satisfies Complete<CoreUserEditingDefinitionForm>

@@ -40,7 +40,6 @@ interface IProps {
 	isSupportPanelOpen: boolean
 	isStudioMode: boolean
 	onToggleNotifications?: (e: React.MouseEvent<HTMLButtonElement>, filter: NoticeLevel) => void
-	onToggleUserEditPanel?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onToggleSupportPanel?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onTake?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	onStudioRouteSetSwitch?: (
