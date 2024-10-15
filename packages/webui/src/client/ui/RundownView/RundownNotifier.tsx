@@ -30,7 +30,7 @@ import { UIPieceContentStatus, UISegmentPartNote } from '@sofie-automation/meteo
 import { isTranslatableMessage, translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { NoteSeverity, StatusCode } from '@sofie-automation/blueprints-integration'
 import { getAllowStudio, getIgnorePieceContentStatus } from '../../lib/localStorage'
-import { RundownPlaylists } from '../../collections'
+import { Notifications, RundownPlaylists } from '../../collections'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import {
 	PartId,
@@ -88,6 +88,9 @@ class RundownViewNotifier extends WithManagedTracker {
 	private _rundownStatus: Record<string, Notification | undefined> = {}
 	private _rundownStatusDep: Tracker.Dependency
 
+	private _dbNotifications: Record<string, Notification | undefined> = {}
+	private _dbNotificationsDep: Tracker.Dependency
+
 	private _deviceStatus: Record<string, Notification | undefined> = {}
 	private _deviceStatusDep: Tracker.Dependency
 
@@ -105,6 +108,7 @@ class RundownViewNotifier extends WithManagedTracker {
 		this._notificationList = new NotificationList([])
 		this._mediaStatusDep = new Tracker.Dependency()
 		this._rundownStatusDep = new Tracker.Dependency()
+		this._dbNotificationsDep = new Tracker.Dependency()
 		this._deviceStatusDep = new Tracker.Dependency()
 		this._rundownImportVersionStatusDep = new Tracker.Dependency()
 		this._unsentExternalMessageStatusDep = new Tracker.Dependency()
@@ -118,6 +122,7 @@ class RundownViewNotifier extends WithManagedTracker {
 			if (playlistId) {
 				this.reactiveRundownStatus(playlistId)
 				this.reactiveVersionAndConfigStatus(playlistId)
+				this.reactiveDbNotifications(playlistId)
 
 				this.autorun(() => {
 					if (studio) {
@@ -145,6 +150,7 @@ class RundownViewNotifier extends WithManagedTracker {
 			this._mediaStatusDep.depend()
 			this._deviceStatusDep.depend()
 			this._rundownStatusDep.depend()
+			this._dbNotificationsDep.depend()
 			this._notesDep.depend()
 			this._rundownImportVersionStatusDep.depend()
 			this._unsentExternalMessageStatusDep.depend()
@@ -154,6 +160,7 @@ class RundownViewNotifier extends WithManagedTracker {
 				...Object.values<Notification | undefined>(this._deviceStatus),
 				...Object.values<Notification | undefined>(this._notes),
 				...Object.values<Notification | undefined>(this._rundownStatus),
+				...Object.values<Notification | undefined>(this._dbNotifications),
 				this._rundownImportVersionStatus,
 				this._rundownStudioConfigStatus,
 				...Object.values<Notification | undefined>(this._rundownShowStyleConfigStatuses),
@@ -284,6 +291,54 @@ class RundownViewNotifier extends WithManagedTracker {
 				this._rundownStatusDep.changed()
 			})
 
+			oldNoteIds = newNoteIds
+		})
+	}
+
+	private reactiveDbNotifications(playlistId: RundownPlaylistId) {
+		let oldNoteIds: Array<string> = []
+
+		const rRundowns = reactiveData.getRRundowns(playlistId, {
+			fields: {
+				_id: 1,
+			},
+		}) as ReactiveVar<Pick<Rundown, '_id'>[]>
+		this.autorun(() => {
+			const newNoteIds: Array<string> = []
+
+			const dbNotifications = Notifications.find({
+				$or: [
+					{
+						'relatedTo.rundownId': { $in: rRundowns.get().map((r) => r._id) },
+					},
+					{
+						'relatedTo.playlistId': playlistId,
+					},
+				],
+			}).fetch()
+
+			for (const dbNotification of dbNotifications) {
+				const id = `db_notification_${dbNotification._id}`
+				const uiNotification = new Notification(
+					id,
+					getNoticeLevelForNoteSeverity(dbNotification.severity),
+					dbNotification.message,
+					'rundownId' in dbNotification.relatedTo ? dbNotification.relatedTo.rundownId : undefined,
+					dbNotification.created,
+					true,
+					[]
+				)
+				newNoteIds.push(id)
+
+				if (!Notification.isEqual(this._dbNotifications[id], uiNotification)) {
+					this._dbNotifications[id] = uiNotification
+					this._dbNotificationsDep.changed()
+				}
+			}
+			_.difference(oldNoteIds, newNoteIds).forEach((item) => {
+				delete this._dbNotifications[item]
+				this._dbNotificationsDep.changed()
+			})
 			oldNoteIds = newNoteIds
 		})
 	}
@@ -713,7 +768,7 @@ interface IProps {
 	studio: UIStudio
 }
 
-export const RundownNotifier = class RundownNotifier extends React.Component<IProps> {
+export class RundownNotifier extends React.Component<IProps> {
 	private notifier: RundownViewNotifier
 
 	constructor(props: IProps) {
