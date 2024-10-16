@@ -84,18 +84,11 @@ meteorPublish(MeteorPubSub.notificationsForRundown, async function (studioId: St
 	check(studioId, String)
 	check(rundownId, String)
 
-	return Notifications.findWithCursor(
-		{
-			// Loosely match any notifications related to this rundown
-			'relatedTo.studioId': studioId,
-			'relatedTo.rundownId': rundownId,
-		}
-		// {
-		// 	fields: {
-
-		// 	},
-		// }
-	)
+	return Notifications.findWithCursor({
+		// Loosely match any notifications related to this rundown
+		'relatedTo.studioId': studioId,
+		'relatedTo.rundownId': rundownId,
+	})
 })
 
 meteorPublish(
@@ -107,17 +100,10 @@ meteorPublish(
 		check(studioId, String)
 		check(playlistId, String)
 
-		return Notifications.findWithCursor(
-			{
-				// Loosely match any notifications related to this playlist
-				'relatedTo.studioId': studioId,
-				'relatedTo.playlistId': playlistId,
-			}
-			// {
-			// 	fields: {
-
-			// 	},
-			// }
-		)
+		return Notifications.findWithCursor({
+			// Loosely match any notifications related to this playlist
+			'relatedTo.studioId': studioId,
+			'relatedTo.playlistId': playlistId,
+		})
 	}
 )
