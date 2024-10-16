@@ -244,6 +244,8 @@ async function generateBucketAdlibForVariant(
 	// pieceId: BucketAdLibId | BucketAdLibActionId,
 	payload: IngestAdlib
 ): Promise<IBlueprintAdLibPiece | IBlueprintActionManifest | null> {
+	if (!blueprint.blueprint.getAdlibItem) return null
+
 	const watchedPackages = await WatchedPackagesHelper.create(context, {
 		// We don't know what the `pieceId` will be, but we do know the `externalId`
 		pieceExternalId: payload.externalId,
@@ -264,9 +266,7 @@ async function generateBucketAdlibForVariant(
 	)
 
 	try {
-		if (blueprint.blueprint.getAdlibItem) {
-			return blueprint.blueprint.getAdlibItem(contextForVariant, payload)
-		}
+		return blueprint.blueprint.getAdlibItem(contextForVariant, payload)
 	} catch (err) {
 		logger.error(`Error in showStyleBlueprint.getShowStyleVariantId: ${stringifyError(err)}`)
 	}
