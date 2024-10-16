@@ -61,6 +61,7 @@ import { QuickLoopService } from '../services/QuickLoopService'
 import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { StudioRouteSet } from '@sofie-automation/blueprints-integration'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -478,6 +479,10 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		this.allPartInstances.set(newPartInstance._id, partInstance)
 
 		return partInstance
+	}
+
+	getRouteSets(): Record<string, StudioRouteSet> {
+		return Object.fromEntries(this.#baselineHelper.getRoutesets().map((rs) => [rs.id, rs.computed]))
 	}
 
 	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean {

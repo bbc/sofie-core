@@ -13,6 +13,7 @@ import {
 	Time,
 	TSR,
 	IBlueprintPlayoutDevice,
+	StudioRouteSet,
 } from '@sofie-automation/blueprints-integration'
 import { PartInstanceId, PeripheralDeviceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
@@ -222,6 +223,10 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		this._playoutModel.deferAfterSave(async () => {
 			await removeTimelineDatastoreValue(this._context, key)
 		})
+	}
+
+	async listRouteSets(): Promise<Record<string, StudioRouteSet>> {
+		return this._playoutModel.getRouteSets()
 	}
 
 	getCurrentTime(): number {

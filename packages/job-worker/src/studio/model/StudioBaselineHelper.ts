@@ -83,13 +83,14 @@ export class StudioBaselineHelper {
 		>
 	}
 
+	getRoutesets(): WrappedOverridableItemNormal<StudioRouteSet>[] {
+		return getAllCurrentItemsFromOverrides(this.#overridesRouteSetBuffer, null)
+	}
+
 	updateRouteSetActive(routeSetId: string, isActive: boolean | 'toggle'): boolean {
 		const studio = this.#context.studio
 
-		const routeSets: WrappedOverridableItemNormal<StudioRouteSet>[] = getAllCurrentItemsFromOverrides(
-			this.#overridesRouteSetBuffer,
-			null
-		)
+		const routeSets = this.getRoutesets()
 
 		const routeSet = routeSets.find((routeSet) => routeSet.id === routeSetId)
 

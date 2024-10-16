@@ -29,6 +29,7 @@ import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { PlayoutPieceInstanceModel } from './PlayoutPieceInstanceModel'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
+import { StudioRouteSet } from '@sofie-automation/blueprints-integration'
 
 export type DeferredFunction = (playoutModel: PlayoutModel) => void | Promise<void>
 export type DeferredAfterSaveFunction = (playoutModel: PlayoutModelReadonly) => void | Promise<void>
@@ -191,6 +192,10 @@ export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBa
 	 */
 	activatePlaylist(rehearsal: boolean): RundownPlaylistActivationId
 
+	/**
+	 * Get all the route sets in the studio
+	 */
+	getRouteSets(): Record<string, StudioRouteSet>
 	/**
 	 * Update the active state of a RouteSet
 	 * @param routeSetId
