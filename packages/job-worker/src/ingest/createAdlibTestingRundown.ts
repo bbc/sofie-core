@@ -31,7 +31,7 @@ export async function handleCreateAdlibTestingRundownForShowStyleVariant(
 		{
 			name: `Create Adlib Testing Rundown`,
 			identifier: `studioId=${context.studioId},showStyleBaseId=${showStyleCompound._id},showStyleVariantId=${showStyleCompound.showStyleVariantId}`,
-			tempSendUserNotesIntoBlackHole: true, // TODO-CONTEXT
+			tempSendUserNotesIntoBlackHole: true, // TODO: should/can this be stored on the generated rundown, or should this use the new notifications?
 		},
 		context,
 		showStyleCompound,
