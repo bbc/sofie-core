@@ -1,10 +1,10 @@
 import { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
-import type { INotification, INotificationsModel } from './NotificationsModel'
+import type { INotificationWithTarget, INotificationsModel } from './NotificationsModel'
 
 export async function replaceAllNotificationsForCategory(
 	model: INotificationsModel,
 	category: string,
-	newNotifications: INotification[]
+	newNotifications: INotificationWithTarget[]
 ): Promise<void> {
 	const existingNotifications = await model.getAllNotifications(category)
 

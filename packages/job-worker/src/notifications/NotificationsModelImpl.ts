@@ -1,7 +1,8 @@
 import { getCurrentTime } from '../lib'
 import type { JobContext } from '../jobs'
-import type { INotification, INotificationsModel } from './NotificationsModel'
+import type { INotificationsModel, INotificationTarget, INotificationWithTarget } from './NotificationsModel'
 import {
+	DBNotificationTarget,
 	DBNotificationTargetType,
 	type DBNotificationObj,
 } from '@sofie-automation/corelib/dist/dataModel/Notifications'
@@ -9,10 +10,12 @@ import { getHash } from '@sofie-automation/corelib/dist/hash'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import type { Complete } from '@sofie-automation/corelib/dist/lib'
 import type { AnyBulkWriteOperation } from 'mongodb'
+import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 export class NotificationsModelHelper implements INotificationsModel {
 	readonly #context: JobContext
 	readonly #categoryPrefix: string
+	readonly #playlistId: RundownPlaylistId
 
 	/**
 	 * These properties track both the loaded state, and what will be written to the database when saving
@@ -23,21 +26,24 @@ export class NotificationsModelHelper implements INotificationsModel {
 	readonly #loadedCategories = new Set<string>()
 	readonly #notificationsByCategory = new Map<string, Map<string, DBNotificationObj | null>>()
 
-	constructor(context: JobContext, categoryPrefix: string) {
+	constructor(context: JobContext, categoryPrefix: string, playlistId: RundownPlaylistId) {
 		this.#context = context
 		this.#categoryPrefix = categoryPrefix
+		this.#playlistId = playlistId
 	}
 
 	#getFullCategoryName(category: string): string {
 		return `${this.#categoryPrefix}:${category}`
 	}
 
-	async getAllNotifications(category: string): Promise<INotification[]> {
+	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
 		if (!this.#loadedCategories.has(category)) {
 			const dbNotifications = await this.#context.directCollections.Notifications.findFetch({
 				category: this.#getFullCategoryName(category),
+				// Ensure notifiations are owned by the current studio
+				'relatedTo.studioId': this.#context.studioId,
 				// nocommit - any better ownership?
 			})
 
@@ -64,7 +70,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 				id: notification.localId,
 				severity: notification.severity,
 				message: notification.message,
-				// nocommit - relatedTo
+				relatedTo: translateRelatedToFromDbType(notification.relatedTo),
 			}))
 	}
 
@@ -75,20 +81,20 @@ export class NotificationsModelHelper implements INotificationsModel {
 		notificationsForCategory.delete(notificationId)
 	}
 
-	setNotification(category: string, notification: INotification): void {
+	setNotification(category: string, notification: INotificationWithTarget): void {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
 		const existingNotification = notificationsForCategory.get(notification.id)
 
 		notificationsForCategory.set(notification.id, {
-			_id: protectString(getHash(`${this.#categoryPrefix}:${category}:${notification.id}`)), // nocommit - needs something about the relatedTo?
+			_id: protectString(
+				getHash(`${this.#context.studioId}:${this.#categoryPrefix}:${category}:${notification.id}`)
+			), // nocommit - needs something about the relatedTo?
 			category: this.#getFullCategoryName(category),
 			localId: notification.id,
 			severity: notification.severity,
 			message: notification.message,
-			relatedTo: {
-				type: DBNotificationTargetType.EVERYWHERE, // nocommit - proper relatedTo
-			},
+			relatedTo: translateRelatedToIntoDbType(this.#context.studioId, this.#playlistId, notification.relatedTo),
 			created: existingNotification?.created || 0, // 0 will be filled in when saving
 			modified: 0, // Filled in when saving
 		} satisfies Complete<DBNotificationObj>)
@@ -184,5 +190,57 @@ export class NotificationsModelHelper implements INotificationsModel {
 		if (updates.length > 0) {
 			await this.#context.directCollections.Notifications.bulkWrite(updates)
 		}
+	}
+}
+
+function translateRelatedToIntoDbType(
+	studioId: StudioId,
+	playlistId: RundownPlaylistId,
+	relatedTo: INotificationTarget
+): DBNotificationTarget {
+	switch (relatedTo.type) {
+		case 'playlist':
+			return { type: DBNotificationTargetType.PLAYLIST, studioId, playlistId }
+		case 'partInstance':
+			return {
+				type: DBNotificationTargetType.PARTINSTANCE,
+				studioId,
+				rundownId: relatedTo.rundownId,
+				partInstanceId: relatedTo.partInstanceId,
+			}
+		case 'pieceInstance':
+			return {
+				type: DBNotificationTargetType.PIECEINSTANCE,
+				studioId,
+				rundownId: relatedTo.rundownId,
+				partInstanceId: relatedTo.partInstanceId,
+				pieceInstanceId: relatedTo.pieceInstanceId,
+			}
+		default:
+			// nocommit - is this ok?
+			throw new Error(`Unknown relatedTo type: ${relatedTo}`)
+	}
+}
+
+function translateRelatedToFromDbType(relatedTo: DBNotificationTarget): INotificationTarget {
+	switch (relatedTo.type) {
+		case DBNotificationTargetType.PLAYLIST:
+			return { type: 'playlist' }
+		case DBNotificationTargetType.PARTINSTANCE:
+			return {
+				type: 'partInstance',
+				rundownId: relatedTo.rundownId,
+				partInstanceId: relatedTo.partInstanceId,
+			}
+		case DBNotificationTargetType.PIECEINSTANCE:
+			return {
+				type: 'pieceInstance',
+				rundownId: relatedTo.rundownId,
+				partInstanceId: relatedTo.partInstanceId,
+				pieceInstanceId: relatedTo.pieceInstanceId,
+			}
+		default:
+			// nocommit - is this ok?
+			throw new Error(`Unknown relatedTo type: ${relatedTo}`)
 	}
 }
