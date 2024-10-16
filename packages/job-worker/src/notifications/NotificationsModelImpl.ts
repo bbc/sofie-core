@@ -15,7 +15,7 @@ import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/data
 export class NotificationsModelHelper implements INotificationsModel {
 	readonly #context: JobContext
 	readonly #categoryPrefix: string
-	readonly #playlistId: RundownPlaylistId
+	readonly #playlistId: RundownPlaylistId | null
 
 	/**
 	 * These properties track both the loaded state, and what will be written to the database when saving
@@ -26,7 +26,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 	readonly #loadedCategories = new Set<string>()
 	readonly #notificationsByCategory = new Map<string, Map<string, DBNotificationObj | null>>()
 
-	constructor(context: JobContext, categoryPrefix: string, playlistId: RundownPlaylistId) {
+	constructor(context: JobContext, categoryPrefix: string, playlistId: RundownPlaylistId | null) {
 		this.#context = context
 		this.#categoryPrefix = categoryPrefix
 		this.#playlistId = playlistId
@@ -195,11 +195,12 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 function translateRelatedToIntoDbType(
 	studioId: StudioId,
-	playlistId: RundownPlaylistId,
+	playlistId: RundownPlaylistId | null,
 	relatedTo: INotificationTarget
 ): DBNotificationTarget {
 	switch (relatedTo.type) {
 		case 'playlist':
+			if (!playlistId) throw new Error('Cannot create a playlist related notification without a playlist')
 			return { type: DBNotificationTargetType.PLAYLIST, studioId, playlistId }
 		case 'partInstance':
 			return {
