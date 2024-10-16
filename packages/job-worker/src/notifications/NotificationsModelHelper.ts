@@ -65,13 +65,18 @@ export class NotificationsModelHelper implements INotificationsModel {
 		}
 
 		return Array.from(notificationsForCategory.values())
-			.filter((n): n is DBNotificationObj => !!n)
-			.map((notification) => ({
-				id: notification.localId,
-				severity: notification.severity,
-				message: notification.message,
-				relatedTo: translateRelatedToFromDbType(notification.relatedTo),
-			}))
+			.map((notification) => {
+				const relatedTo = notification && translateRelatedToFromDbType(notification.relatedTo)
+				if (!relatedTo) return null
+
+				return {
+					id: notification.localId,
+					severity: notification.severity,
+					message: notification.message,
+					relatedTo: relatedTo,
+				}
+			})
+			.filter((n): n is INotificationWithTarget => !!n)
 	}
 
 	clearNotification(category: string, notificationId: string): void {

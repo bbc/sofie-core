@@ -61,7 +61,7 @@ import { SaveIngestModelHelper } from './SaveIngestModel'
 import { generateWriteOpsForLazyDocuments } from './DocumentChangeTracker'
 import { IS_PRODUCTION } from '../../../environment'
 import { logger } from '../../../logging'
-import { NotificationsModelHelper } from '../../../notifications/NotificationsModelImpl'
+import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper'
 
 export interface IngestModelImplExistingData {
 	rundown: DBRundown

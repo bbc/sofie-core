@@ -32,7 +32,7 @@ import {
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { translateNoteToNotification } from '../notifications/util'
 import type { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
-import { NotificationsModelHelper } from '../notifications/NotificationsModelImpl'
+import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper'
 import type { INotificationsModel } from '../notifications/NotificationsModel'
 
 /**

@@ -16,7 +16,7 @@ import { logger } from '../logging'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { handleUpdatedRundown } from './ingestRundownJobs'
 import { runIngestUpdateOperation } from './runOperation'
-import { NotificationsModelHelper } from '../notifications/NotificationsModelImpl'
+import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { translateNoteToNotification } from '../notifications/util'
 
