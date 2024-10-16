@@ -8,8 +8,8 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { getHash } from '@sofie-automation/corelib/dist/hash'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import type { Complete } from '@sofie-automation/corelib/dist/lib'
-import type { AnyBulkWriteOperation } from 'mongodb'
+import { assertNever, type Complete } from '@sofie-automation/corelib/dist/lib'
+import { type AnyBulkWriteOperation } from 'mongodb'
 import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 export class NotificationsModelHelper implements INotificationsModel {
@@ -202,6 +202,12 @@ function translateRelatedToIntoDbType(
 		case 'playlist':
 			if (!playlistId) throw new Error('Cannot create a playlist related notification without a playlist')
 			return { type: DBNotificationTargetType.PLAYLIST, studioId, playlistId }
+		case 'rundown':
+			return {
+				type: DBNotificationTargetType.RUNDOWN,
+				studioId,
+				rundownId: relatedTo.rundownId,
+			}
 		case 'partInstance':
 			return {
 				type: DBNotificationTargetType.PARTINSTANCE,
@@ -218,15 +224,20 @@ function translateRelatedToIntoDbType(
 				pieceInstanceId: relatedTo.pieceInstanceId,
 			}
 		default:
-			// nocommit - is this ok?
+			assertNever(relatedTo)
 			throw new Error(`Unknown relatedTo type: ${relatedTo}`)
 	}
 }
 
-function translateRelatedToFromDbType(relatedTo: DBNotificationTarget): INotificationTarget {
+function translateRelatedToFromDbType(relatedTo: DBNotificationTarget): INotificationTarget | null {
 	switch (relatedTo.type) {
 		case DBNotificationTargetType.PLAYLIST:
 			return { type: 'playlist' }
+		case DBNotificationTargetType.RUNDOWN:
+			return {
+				type: 'rundown',
+				rundownId: relatedTo.rundownId,
+			}
 		case DBNotificationTargetType.PARTINSTANCE:
 			return {
 				type: 'partInstance',
@@ -240,8 +251,14 @@ function translateRelatedToFromDbType(relatedTo: DBNotificationTarget): INotific
 				partInstanceId: relatedTo.partInstanceId,
 				pieceInstanceId: relatedTo.pieceInstanceId,
 			}
+		// case DBNotificationTargetType.EVERYWHERE:
+		// case DBNotificationTargetType.STUDIO:
+		// case DBNotificationTargetType.SEGMENT:
+		// case DBNotificationTargetType.PART:
+		// case DBNotificationTargetType.PIECE:
+		// return null
 		default:
-			// nocommit - is this ok?
-			throw new Error(`Unknown relatedTo type: ${relatedTo}`)
+			assertNever(relatedTo)
+			return null
 	}
 }
