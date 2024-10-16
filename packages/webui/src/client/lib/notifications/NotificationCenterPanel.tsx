@@ -396,6 +396,11 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 		render(): JSX.Element | null {
 			const { t, highlightedSource, highlightedLevel, filter } = this.props
 
+			// For UserEditPanel ignore the filter:
+			if (Number(filter) >= NoticeLevel.USEREDIT) {
+				return <UserEditPanel contextMenuContext={this.props.contextMenuContext} />
+			}
+
 			const notifications = this.getNotificationsToDisplay()
 
 			const displayList = notifications.map((item) => {
@@ -414,11 +419,6 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 					/>
 				)
 			})
-
-			// For UserEditPanel ignore the filter:
-			if (Number(filter) >= NoticeLevel.USEREDIT) {
-				return <UserEditPanel contextMenuContext={this.props.contextMenuContext} />
-			}
 
 			return this.state.displayList ? (
 				<div

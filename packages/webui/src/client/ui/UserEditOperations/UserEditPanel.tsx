@@ -1,7 +1,6 @@
 import * as React from 'react'
 // @ts-expect-error No types available
 import * as VelocityReact from 'velocity-react'
-import { translateWithTracker, Translated } from '../../lib/ReactMeteorData/ReactMeteorData'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { i18nTranslator } from '../i18n'
 import { IContextMenuContext } from '../RundownView'
@@ -17,6 +16,7 @@ import {
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
+import { useTranslation } from 'react-i18next'
 
 /**
  * UserEditPanelPopUp props.
@@ -25,128 +25,91 @@ interface Props {
 	contextMenuContext: IContextMenuContext | null
 }
 
-interface State {
-	selectedGroup: string | undefined
-	selectedSource: Record<string, any>
-	dismissing: string[]
-	dismissingTransform: string[]
-}
-
-interface ITrackedProps {}
-
-/**
- * Presentational component that displays the currents user edit operations.
- * @class UserEditPanel
- * @extends React.Component<Props>
- */
-export const UserEditPanel = translateWithTracker<Props, State, ITrackedProps>(() => {
-	return {}
-})(
-	class UserEditPanelPopUp extends React.Component<Translated<Props & ITrackedProps>, State> {
-		t = i18nTranslator
-
-		constructor(props: Translated<Props & ITrackedProps>) {
-			super(props)
-
-			this.state = {
-				selectedGroup: undefined,
-				selectedSource: {},
-				dismissing: [],
-				dismissingTransform: [],
-			}
-		}
-
-		UNSAFE_componentWillUpdate() {
-			Array.from(document.querySelectorAll('.usereditpanel-pop-up.is-highlighted')).forEach((element0: Element) => {
-				const element = element0 as HTMLElement
-				if ('style' in element) {
+export const UserEditPanel: React.FC<Props> = ({ contextMenuContext }) => {
+	React.useEffect(() => {
+		return () => {
+			Array.from(document.querySelectorAll('.usereditpanel-pop-up.is-highlighted')).forEach((element: Element) => {
+				if (element instanceof HTMLElement) {
 					element.style.animationName = ''
 				}
 			})
 		}
+	})
 
-		componentDidUpdate(prevProps: Readonly<Translated<Props & ITrackedProps>>, prevState: State, snapshot: any) {
-			if (super.componentDidUpdate) super.componentDidUpdate(prevProps, prevState, snapshot)
-		}
-
-		dismissAll() {
-			// Dismiss all useredits
-			// this.props.dismissAll()
-		}
-
-		approveAll() {
-			// Approve all useredits
-			// this.props.approveAll()
-		}
-
-		render(): JSX.Element {
-			return (
-				<div className="usereditpanel-pop-up">
-					<div className="usereditpanel-pop-up__header">
-						PART : {String(this.props.contextMenuContext?.part?.instance.part.title)}
-					</div>
-					<div className="usereditpanel-pop-up__contents">
-						{this.props.contextMenuContext?.part?.instance._id &&
-							this.props.contextMenuContext?.part?.instance.part.userEditOperations?.map((userEditOperation, i) => {
-								this.props.contextMenuContext?.part?.instance.part.title
-								switch (userEditOperation.type) {
-									case UserEditingType.ACTION:
-										return (
-											<EditingTypeAction
-												userEditOperation={userEditOperation}
-												contextMenuContext={this.props.contextMenuContext}
-											/>
-										)
-									case UserEditingType.FORM:
-										return (
-											<EditingTypeChangeSource
-												userEditOperation={userEditOperation}
-												contextMenuContext={this.props.contextMenuContext}
-											/>
-										)
-									default:
-										assertNever(userEditOperation)
-										return null
-								}
-							})}
-					</div>
-					<hr />
-					<div className="usereditpanel-pop-up__contents">
-						<div className="usereditpanel-pop-up__label">
-							Debug (segment) : {String(this.props.contextMenuContext?.segment?.name)}
-						</div>
-						{this.props.contextMenuContext?.segment &&
-							this.props.contextMenuContext?.segment?.userEditOperations?.map((userEditOperation, i) => {
-								switch (userEditOperation.type) {
-									case UserEditingType.ACTION:
-										return (
-											<EditingTypeAction
-												userEditOperation={userEditOperation}
-												contextMenuContext={this.props.contextMenuContext}
-											/>
-										)
-									case UserEditingType.FORM:
-										return (
-											<EditingTypeChangeSource
-												userEditOperation={userEditOperation}
-												contextMenuContext={this.props.contextMenuContext}
-											/>
-										)
-									default:
-										assertNever(userEditOperation)
-										return null
-								}
-							})}
-					</div>
-					<ContextMenuTrigger
-						id="context-menu-dissmiss-all"
-						attributes={{ className: 'usereditpanel-pop-up__contents' }}
-					></ContextMenuTrigger>
-				</div>
-			)
-		}
+	const dismissAll = () => {
+		// Dismiss all useredits
+		// Implementation needed
 	}
-)
+
+	const approveAll = () => {
+		// Approve all useredits
+		// Implementation needed
+	}
+
+	return (
+		<div className="usereditpanel-pop-up">
+			<div className="usereditpanel-pop-up__header">PART : {String(contextMenuContext?.part?.instance.part.title)}</div>
+			<div className="usereditpanel-pop-up__contents">
+				{contextMenuContext?.part?.instance._id &&
+					contextMenuContext?.part?.instance.part.userEditOperations?.map((userEditOperation, i) => {
+						switch (userEditOperation.type) {
+							case UserEditingType.ACTION:
+								return (
+									<EditingTypeAction
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={contextMenuContext}
+									/>
+								)
+							case UserEditingType.FORM:
+								return (
+									<EditingTypeChangeSource
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={contextMenuContext}
+									/>
+								)
+							default:
+								assertNever(userEditOperation)
+								return null
+						}
+					})}
+			</div>
+			<hr />
+			<div className="usereditpanel-pop-up__contents">
+				<div className="usereditpanel-pop-up__label">Debug (segment) : {String(contextMenuContext?.segment?.name)}</div>
+				{contextMenuContext?.segment &&
+					contextMenuContext?.segment?.userEditOperations?.map((userEditOperation, i) => {
+						switch (userEditOperation.type) {
+							case UserEditingType.ACTION:
+								return (
+									<EditingTypeAction
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={contextMenuContext}
+									/>
+								)
+							case UserEditingType.FORM:
+								return (
+									<EditingTypeChangeSource
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={contextMenuContext}
+									/>
+								)
+							default:
+								assertNever(userEditOperation)
+								return null
+						}
+					})}
+			</div>
+			<ContextMenuTrigger
+				id="context-menu-dissmiss-all"
+				attributes={{ className: 'usereditpanel-pop-up__contents' }}
+			></ContextMenuTrigger>
+		</div>
+	)
+}
 
 function EditingTypeAction(props: {
 	userEditOperation: CoreUserEditingDefinitionAction
@@ -199,6 +162,7 @@ function EditingTypeChangeSource(props: {
 	userEditOperation: CoreUserEditingDefinitionForm
 	contextMenuContext: IContextMenuContext | null
 }) {
+	const { t } = useTranslation()
 	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
 		clone(props.userEditOperation.currentValues)
 	)
@@ -244,7 +208,7 @@ function EditingTypeChangeSource(props: {
 			</div>
 			{selectedGroup && schema && (
 				<>
-					<a className="usereditpanel-pop-up__label">Source:</a>
+					<a className="usereditpanel-pop-up__label">{t('Source')}:</a>
 					<br />
 					<select
 						title="Sources in the selected group"
