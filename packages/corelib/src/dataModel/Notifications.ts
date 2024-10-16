@@ -18,6 +18,7 @@ export interface DBNotificationObj {
 	/**
 	 * Used to group a certain group of notifications
 	 * Each source of these notifications should use its own value, so that it can find and cleanup after itself when appropriate
+	 * Typically, a method will clear all previous notifications for a category when it is called, and then possibly add new ones
 	 */
 	category: string
 

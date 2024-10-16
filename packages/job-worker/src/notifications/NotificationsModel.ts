@@ -15,11 +15,17 @@ export interface INotificationWithTarget extends INotification {
 
 export type INotificationTarget =
 	| INotificationTargetPlaylist
+	| INotificationTargetRundown
 	| INotificationTargetPartInstance
 	| INotificationTargetPieceInstance
 export interface INotificationTargetPlaylist {
 	type: 'playlist'
 }
+export interface INotificationTargetRundown {
+	type: 'rundown'
+	rundownId: RundownId
+}
+
 export interface INotificationTargetPartInstance {
 	type: 'partInstance'
 	rundownId: RundownId
