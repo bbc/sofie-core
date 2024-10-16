@@ -3,7 +3,6 @@ import { useSubscription, useTracker } from '../../../lib/ReactMeteorData/react-
 import { PeripheralDevice, PeripheralDeviceType } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { useTranslation } from 'react-i18next'
 import { protectString, unprotectString } from '../../../lib/tempLib'
-import * as _ from 'underscore'
 import { NotificationCenter, NoticeLevel, Notification } from '../../../lib/notifications/notifications'
 import { StatusResponse } from '@sofie-automation/meteor-lib/dist/api/systemStatus'
 import { MeteorCall } from '../../../lib/meteorApi'
@@ -27,7 +26,7 @@ export function SystemStatus(): JSX.Element {
 	const systemStatus = useSystemStatus()
 	const playoutDebugStates = usePlayoutDebugStates(devices)
 
-	const devicesHeirarchy = convertDevicesIntoHeirarchy(devices)
+	const devicesHierarchy = convertDevicesIntoHeirarchy(devices)
 
 	return (
 		<div className="mhl gutter system-status">
@@ -37,8 +36,13 @@ export function SystemStatus(): JSX.Element {
 			<div className="mod mvl">
 				{coreSystem && <CoreItem coreSystem={coreSystem} systemStatus={systemStatus} />}
 
-				{devicesHeirarchy.map((d) => (
-					<DeviceItemWithChildren playoutDebugStates={playoutDebugStates} parentDevice={null} device={d} />
+				{devicesHierarchy.map((d) => (
+					<DeviceItemWithChildren
+						key={unprotectString(d.device._id)}
+						playoutDebugStates={playoutDebugStates}
+						parentDevice={null}
+						device={d}
+					/>
 				))}
 			</div>
 		</div>
