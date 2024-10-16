@@ -5,7 +5,7 @@ import { resolveCredentials, ResolvedCredentials, Credentials, isResolvedCredent
 import { allAccess, noAccess, combineAccess, Access } from './access'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { isProtectedString } from '../../lib/tempLib'
+import { isProtectedString, unprotectString } from '../../lib/tempLib'
 import { DBOrganization } from '@sofie-automation/meteor-lib/dist/collections/Organization'
 import { PeripheralDevice } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
@@ -23,6 +23,7 @@ import {
 	UserId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { StudioLight } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 
 export const LIMIT_CACHE_TIME = 1000 * 60 * 15 // 15 minutes
 
@@ -146,18 +147,42 @@ export async function allowAccessToStudio(
 	cred0: Credentials | ResolvedCredentials,
 	studioId: StudioId
 ): Promise<Access<StudioLight | null>> {
-	if (!Settings.enableUserAccounts) return allAccess(null, 'No security')
-	if (!studioId) return noAccess('studioId not set')
-	if (!isProtectedString(studioId)) return noAccess('studioId is not a string')
-	const cred = await resolveCredentials(cred0)
+	if (Settings.enableHeaderAuth) {
+		if (!studioId) return noAccess('studioId not set')
+		if (!isProtectedString(studioId)) return noAccess('studioId is not a string')
+		if (!('userId' in cred0) || !cred0.userId) return noAccess('missing userId')
 
-	const studio = await fetchStudioLight(studioId)
-	if (!studio) return noAccess('Studio not found')
+		const userPermissions = JSON.parse(unprotectString(cred0.userId)) as UserPermissions
 
-	return {
-		...AccessRules.accessStudio(studio, cred),
-		insert: false, // only allowed through methods
-		remove: false, // only allowed through methods
+		const studio = await fetchStudioLight(studioId)
+		if (!studio) return noAccess('Studio not found')
+
+		return {
+			read: true,
+			insert: false, // only allowed through methods
+			update: !!userPermissions.configure,
+			remove: false, // only allowed through methods
+
+			playout: !!userPermissions.studio,
+			configure: !!userPermissions.configure,
+			reason: '',
+			document: studio,
+		}
+	} else if (Settings.enableUserAccounts) {
+		if (!studioId) return noAccess('studioId not set')
+		if (!isProtectedString(studioId)) return noAccess('studioId is not a string')
+		const cred = await resolveCredentials(cred0)
+
+		const studio = await fetchStudioLight(studioId)
+		if (!studio) return noAccess('Studio not found')
+
+		return {
+			...AccessRules.accessStudio(studio, cred),
+			insert: false, // only allowed through methods
+			remove: false, // only allowed through methods
+		}
+	} else {
+		return allAccess(null, 'No security')
 	}
 }
 export async function allowAccessToRundownPlaylist(

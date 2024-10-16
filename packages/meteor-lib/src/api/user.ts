@@ -1,12 +1,15 @@
 import { UserProfile } from '../collections/Users'
 import { UserId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { UserPermissions } from '../userPermissions'
 
 export interface NewUserAPI {
+	getUserPermissions(): Promise<UserPermissions | null>
 	enrollUser(email: string, name: string): Promise<UserId>
 	requestPasswordReset(email: string): Promise<boolean>
 	removeUser(): Promise<boolean>
 }
 export enum UserAPIMethods {
+	'getUserPermissions' = 'user.getUserPermissions',
 	'enrollUser' = 'user.enrollUser',
 	'requestPasswordReset' = 'user.requestPasswordReset',
 	'removeUser' = 'user.removeUser',

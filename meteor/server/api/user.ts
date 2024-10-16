@@ -16,6 +16,7 @@ import { resetCredentials } from '../security/lib/credentials'
 import { OrganizationId, UserId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Organizations, Users } from '../collections'
 import { logger } from '../logging'
+import { parseUserPermissions, USER_PERMISSIONS_HEADER } from '@sofie-automation/meteor-lib/dist/userPermissions'
 
 async function enrollUser(email: string, name: string): Promise<UserId> {
 	triggerWriteAccessBecauseNoCheckNecessary()
@@ -93,6 +94,9 @@ async function removeUser(context: MethodContext) {
 }
 
 class ServerUserAPI extends MethodContextAPI implements NewUserAPI {
+	async getUserPermissions() {
+		return parseUserPermissions(this.connection?.httpHeaders?.[USER_PERMISSIONS_HEADER])
+	}
 	async enrollUser(email: string, name: string) {
 		return enrollUser(email, name)
 	}
