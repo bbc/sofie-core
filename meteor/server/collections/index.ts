@@ -103,8 +103,25 @@ registerIndex(ExternalMessageQueue, {
 	rundownId: 1,
 })
 
-// TODO - some indexes are missing here
 export const Notifications = createAsyncOnlyMongoCollection<DBNotificationObj>(CollectionName.Notifications, false)
+// For NotificationsModelHelper.getAllNotifications
+registerIndex(Notifications, {
+	// @ts-expect-error nested property
+	'relatedTo.studioId': 1,
+	catgory: 1,
+})
+// For MeteorPubSub.notificationsForRundownPlaylist
+registerIndex(Notifications, {
+	// @ts-expect-error nested property
+	'relatedTo.studioId': 1,
+	'relatedTo.playlistId': 1,
+})
+// For MeteorPubSub.notificationsForRundown
+registerIndex(Notifications, {
+	// @ts-expect-error nested property
+	'relatedTo.studioId': 1,
+	'relatedTo.rundownId': 1,
+})
 
 export const Organizations = createAsyncOnlyMongoCollection<DBOrganization>(CollectionName.Organizations, {
 	async update(userId, doc, fields, _modifier) {

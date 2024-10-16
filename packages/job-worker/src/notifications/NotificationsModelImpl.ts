@@ -41,10 +41,10 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 		if (!this.#loadedCategories.has(category)) {
 			const dbNotifications = await this.#context.directCollections.Notifications.findFetch({
-				category: this.#getFullCategoryName(category),
 				// Ensure notifiations are owned by the current studio
 				'relatedTo.studioId': this.#context.studioId,
-				// nocommit - any better ownership?
+				// Limit to the current category
+				category: this.#getFullCategoryName(category),
 			})
 
 			// Interleave into the store, for any which haven't already been updated
@@ -89,7 +89,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 		notificationsForCategory.set(notification.id, {
 			_id: protectString(
 				getHash(`${this.#context.studioId}:${this.#categoryPrefix}:${category}:${notification.id}`)
-			), // nocommit - needs something about the relatedTo?
+			),
 			category: this.#getFullCategoryName(category),
 			localId: notification.id,
 			severity: notification.severity,

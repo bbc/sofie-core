@@ -12,6 +12,10 @@ import type {
 } from './Ids'
 import type { ITranslatableMessage } from '../TranslatableMessage'
 
+/**
+ * This describes a notification that should be shown to a user
+ * These can come from various sources, and are added and removed dynamically during system usage 
+ */
 export interface DBNotificationObj {
 	_id: NotificationId
 
