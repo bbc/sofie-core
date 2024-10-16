@@ -38,6 +38,13 @@ export default defineConfig({
 			// Commonjs monorepo dependencies
 			'@sofie-automation/blueprints-integration',
 		],
+		exclude: [
+			// Add all sofie paths, ensuring they use unix path syntax
+			...commonJsPaths.map((p) => p.replaceAll('\\', '/')),
+
+			// Commonjs monorepo dependencies
+			'@sofie-automation/blueprints-integration',
+		],
 	},
 	build: {
 		commonjsOptions: {

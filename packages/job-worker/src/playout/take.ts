@@ -10,7 +10,7 @@ import { resetPartInstancesWithPieceInstances } from './lib'
 import { selectNextPart } from './selectNextPart'
 import { setNextPart } from './setNext'
 import { getCurrentTime } from '../lib'
-import { PartEndState, VTContent } from '@sofie-automation/blueprints-integration'
+import { NoteSeverity, PartEndState, VTContent } from '@sofie-automation/blueprints-integration'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { ReadonlyDeep } from 'type-fest'
 import { getResolvedPiecesForCurrentPartInstance } from './resolvedPieces'
@@ -33,6 +33,7 @@ import {
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { PlayoutRundownModel } from './model/PlayoutRundownModel'
+import { generateTranslation, translateNoteToNotification } from '../notifications/util'
 
 /**
  * Take the currently Next:ed Part (start playing it)
@@ -288,18 +289,24 @@ async function executeOnTakeCallback(
 	blueprint: ReadonlyObjectDeep<WrappedShowStyleBlueprint>,
 	currentRundown: PlayoutRundownModel
 ): Promise<{ isTakeAborted: boolean }> {
+	const NOTIFICATION_CATEGORY = 'onTake'
+
 	let isTakeAborted = false
 	if (blueprint.blueprint.onTake) {
+		const rundownId = currentRundown.rundown._id
+		const partInstanceId = playoutModel.playlist.nextPartInfo?.partInstanceId
+		if (!partInstanceId) throw new Error('Cannot call blueprint onTake when there is no next partInstance!')
+
+		// Clear any existing notifications for this partInstance
+		playoutModel.clearAllNotifications(NOTIFICATION_CATEGORY)
+
 		const watchedPackagesHelper = WatchedPackagesHelper.empty(context)
 		const onSetAsNextContext = new OnTakeContext(
 			{
 				name: `${currentRundown.rundown.name}(${playoutModel.playlist.name})`,
-				identifier: `playlist=${playoutModel.playlist._id},rundown=${
-					currentRundown.rundown._id
-				},currentPartInstance=${
+				identifier: `playlist=${playoutModel.playlist._id},rundown=${rundownId},currentPartInstance=${
 					playoutModel.playlist.currentPartInfo?.partInstanceId
-				},execution=${getRandomId()}`,
-				tempSendUserNotesIntoBlackHole: true, // TODO-CONTEXT store these notes
+				},nextPartInstance=${partInstanceId},execution=${getRandomId()}`,
 			},
 			context,
 			playoutModel,
@@ -311,8 +318,30 @@ async function executeOnTakeCallback(
 			await blueprint.blueprint.onTake(onSetAsNextContext)
 			await applyOnTakeSideEffects(context, playoutModel, onSetAsNextContext)
 			isTakeAborted = onSetAsNextContext.isTakeAborted
+
+			for (const note of onSetAsNextContext.notes) {
+				playoutModel.setNotification(NOTIFICATION_CATEGORY, {
+					...translateNoteToNotification(note, [blueprint.blueprintId]),
+					relatedTo: {
+						type: 'partInstance',
+						rundownId,
+						partInstanceId,
+					},
+				})
+			}
 		} catch (err) {
 			logger.error(`Error in showStyleBlueprint.onTake: ${stringifyError(err)}`)
+
+			playoutModel.setNotification(NOTIFICATION_CATEGORY, {
+				id: 'onTakeError',
+				severity: NoteSeverity.ERROR,
+				message: generateTranslation('An error while performing the take, playout may be impacted'),
+				relatedTo: {
+					type: 'partInstance',
+					rundownId,
+					partInstanceId,
+				},
+			})
 		}
 	}
 	return { isTakeAborted }

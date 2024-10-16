@@ -195,7 +195,7 @@ export function produceRundownPlaylistInfoFromRundown(
 						identifier: `studioId=${context.studioId},playlistId=${playlistId},rundownIds=${rundowns
 							.map((r) => r._id)
 							.join(',')}`,
-						tempSendUserNotesIntoBlackHole: true,
+						tempSendUserNotesIntoBlackHole: true, // TODO: these should be stored on the playlist
 					},
 					context.studio,
 					context.getStudioBlueprintConfig()
@@ -207,6 +207,7 @@ export function produceRundownPlaylistInfoFromRundown(
 	} catch (err) {
 		logger.error(`Error in studioBlueprint.getRundownPlaylistInfo: ${stringifyError(err)}`)
 		playlistInfo = null
+		// TODO - a note should be added to the playlist for this
 	}
 
 	const rundownsInDefaultOrder = sortDefaultRundownInPlaylistOrder(rundowns)

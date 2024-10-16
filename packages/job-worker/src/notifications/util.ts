@@ -1,5 +1,11 @@
-import { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
-import type { INotificationWithTarget, INotificationsModel } from './NotificationsModel'
+import {
+	ITranslatableMessage,
+	wrapTranslatableMessageFromBlueprints,
+} from '@sofie-automation/corelib/dist/TranslatableMessage'
+import type { INotification, INotificationWithTarget, INotificationsModel } from './NotificationsModel'
+import { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
+import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { getHash } from '@sofie-automation/corelib/dist/hash'
 
 export async function replaceAllNotificationsForCategory(
 	model: INotificationsModel,
@@ -32,5 +38,13 @@ export function generateTranslation(
 		key,
 		args,
 		namespaces,
+	}
+}
+
+export function translateNoteToNotification(note: INoteBase, blueprintIds: BlueprintId[]): INotification {
+	return {
+		id: getHash(JSON.stringify(note.message)),
+		severity: note.type,
+		message: wrapTranslatableMessageFromBlueprints(note.message, blueprintIds),
 	}
 }
