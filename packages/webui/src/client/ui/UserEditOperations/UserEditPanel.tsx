@@ -12,10 +12,8 @@ import { t } from 'i18next'
 import { JSONBlobParse, UserEditingType } from '@sofie-automation/blueprints-integration'
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
 import { doModalDialog } from '../../lib/ModalDialog'
-import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import classNames from 'classnames'
 import {
-	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
@@ -155,10 +153,9 @@ function EditingTypeAction(props: {
 	contextMenuContext: IContextMenuContext | null
 }) {
 	return (
-		<>
-			<hr />
+		<div className="usereditpanel-pop-up__action">
 			<a
-				className={classNames('switch-button', 'sb-nocolor', {
+				className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', 'sb-nocolor', {
 					'sb-on': props.userEditOperation.isActive || false,
 				})}
 				role="button"
@@ -193,7 +190,7 @@ function EditingTypeAction(props: {
 			<span className="usereditpanel-pop-up__label">
 				{translateMessage(props.userEditOperation.label, i18nTranslator)}
 			</span>
-		</>
+		</div>
 	)
 }
 
@@ -201,14 +198,19 @@ function EditingTypeForm(props: {
 	userEditOperation: CoreUserEditingDefinitionForm
 	contextMenuContext: IContextMenuContext | null
 }) {
-	const [selectedGroup, setSelectedGroup] = React.useState<string | undefined>(undefined)
-	const [selectedSource, setSelectedSource] = React.useState<Record<string, any>>({})
-	const jsonSchema =
-		props.userEditOperation.schemas[
-			Object.keys(props.userEditOperation.schemas || {}).filter((key) => key === selectedGroup)[0]
-		]
+	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
+		clone(props.userEditOperation.currentValues)
+	)
+	const [selectedGroup, setSelectedGroup] = React.useState<string | undefined>(
+		// base initial selectedGroup on the first key in slectedSource:
+		Object.keys(selectedSource)[0]
+	)
+	const jsonSchema = props.userEditOperation.schemas[selectedGroup || '']
 	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
-	const values = clone(props.userEditOperation.currentValues)
+	const sourceList = (schema?.properties ? schema?.properties[selectedGroup ?? ''] : []) as {
+		enum: string[]
+		tsEnumNames: string[]
+	}
 	return (
 		<>
 			<div className="usereditpanel-pop-up__groupselector">
@@ -234,11 +236,21 @@ function EditingTypeForm(props: {
 			</div>
 			{selectedGroup && schema && (
 				<>
-					<SchemaFormInPlace
-						schema={schema}
-						object={values}
-						translationNamespaces={props.userEditOperation.translationNamespaces}
-					/>
+					<select
+						title="Sources in the selected group"
+						className="usereditpanel-pop-up__select"
+						value={selectedSource[selectedGroup] || ''}
+						onChange={(e) => {
+							setSelectedSource({ [selectedGroup]: e.target.value })
+						}}
+					>
+						{sourceList.enum.map((source, index) => (
+							<option key={index} value={source}>
+								{sourceList.tsEnumNames[index]}
+							</option>
+						))}
+					</select>
+					<br />
 					<button
 						className="usereditpanel-pop-up__button"
 						key={`${props.userEditOperation.id}`}
@@ -248,7 +260,7 @@ function EditingTypeForm(props: {
 								title: t(`Edit {{targetName}}`, {
 									targetName: props.contextMenuContext?.segment?.name,
 								}),
-								message: 'Change Source to: ' + values['camera'] || 'NONE',
+								message: 'Change Source to: ' + selectedSource[selectedGroup],
 
 								// acceptText: 'OK',
 								yes: t('Save Changes'),
@@ -263,7 +275,7 @@ function EditingTypeForm(props: {
 											//@ts-expect-error TODO: Fix this
 											this.props.contextMenuContext?.segment?.operationTarget,
 											{
-												...values,
+												values: selectedSource[selectedGroup],
 												id: props.userEditOperation.id,
 											}
 										)

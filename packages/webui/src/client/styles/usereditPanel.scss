@@ -19,14 +19,15 @@
 
 	> .usereditpanel-pop-up__header {
 		background: #0A20ED;
-		color: #fff;
+		color: #ddd;
 
 		min-width: 2.5rem;
+		height: 2.5rem;
 		font-size: 1.2em;
 
 		text-align: left;
 		padding-top: 0.5rem;
-		padding-left: 0.1rem;
+		padding-left: 1rem;
 
 		> svg {
 			filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
@@ -58,30 +59,44 @@
 			margin-bottom: 0.5em;
 
 			> .usereditpanel-pop-up__groupselector__button {
-				padding: 5px 5px 5px 5px;
+				width: 60px;
+				height: 35px;
+				border: 0px;
+				margin: 5px;
 				gap: 10px;
-				color: #fff;
-				opacity: 0.3;
+				color: #ddd;
+				opacity: 0.2;
 			}
 
 			> .usereditpanel-pop-up__groupselector__button-active {
-				padding: 5px 5px 5px 5px;
+				width: 60px;
+				height: 35px;
+				border: 0px;
+				margin: 5px;
 				gap: 10px;
-				color: #fff;
+				color: #ddd;
 				opacity: 1;
 			}
 
 		}
 
-		> .usereditpanel-pop-up__label {
-			margin-left: 0.5em;
-			color: #fff;
+		> .usereditpanel-pop-up__action {
+			margin-top: 10px;
+			color: #ddd;
 		}
 
-		> .usereditpanel-pop-up_dropdownmenu {
-			background: #303030;
-			margin-top: 0.5em;
+		> .usereditpanel-pop-up__label {
+			margin-left: 0.5em;
+			color: #ddd;
+		}
+
+		> .usereditpanel-pop-up__select{
+			margin-top: 10px;
+			width: 80%;
+			height: 3em;
+			background: #232323;
 			margin-bottom: 0.5em;
+			color: #ddd;
 		}
 
 		> .usereditpanel-pop-up__button {
@@ -92,7 +107,7 @@
 			border-radius: 5px;
 			border: 1px;
 			border: 1px solid #7F7F7F;
-			color: #fff;
+			color: #ddd;
 
 			> svg {
 				margin-top: -0.1em;
@@ -107,86 +122,6 @@
 				margin-right: 10px;
 				margin-top: 2px;
 				line-height: inherit;
-			}
-		}
-
-		> .usereditpanel-pop-up__actions {
-			display: grid;
-			grid-template-columns: auto auto;
-			grid-template-areas: 'left right';
-			margin-top: 0.5em;
-
-			.usereditpanel-pop-up__actions--button {
-				font-weight: 500;
-				letter-spacing: 0.2px;
-				line-height: 1.43em;
-				padding-left: 10px;
-				padding-right: 10px;
-
-				> svg {
-					margin-top: -0.1em;
-					vertical-align: middle;
-					margin-right: -0.4em;
-					width: 1em;
-					height: 1em;
-				}
-
-				.label {
-					margin-left: 10px;
-					line-height: inherit;
-				}
-			}
-
-			.btn-default {
-				background: #d7dade;
-			}
-
-			> .usereditpanel-pop-up__actions--default {
-				grid-area: left;
-			}
-
-			> .usereditpanel-pop-up__actions--other {
-				text-align: right;
-				grid-area: right;
-			}
-		}
-	}
-
-	> .usereditpanel-pop-up__dismiss {
-		flex: 0;
-		min-width: 2.2rem;
-		padding: 0.625rem 0.625rem 0;
-
-		> .usereditpanel-pop-up__dismiss__button {
-			display: block;
-			background: none;
-			border: none;
-			margin: 0;
-			padding: 0;
-			font-size: 0.7rem;
-
-			> svg {
-				fill: #525252;
-				width: 2.25em;
-				height: 2.25em;
-				vertical-align: top;
-				margin-top: -0.4em;
-			}
-
-			&.usereditpanel-pop-up__dismiss__button--close {
-				> svg {
-					fill: #525252;
-					width: 1.5em;
-					height: 1.5em;
-					vertical-align: top;
-					margin-top: 0;
-				}
-			}
-
-			&:hover {
-				> svg {
-					fill: #727272;
-				}
 			}
 		}
 	}
