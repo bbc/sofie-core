@@ -52,7 +52,7 @@ export enum UserEditingType {
  * Grouping of schemas
  */
 export interface UserEditingGroupingType {
-	filter: string
-	label: string
-	color: string
+	filter?: string
+	label?: string
+	color?: string
 }

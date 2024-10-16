@@ -9,7 +9,7 @@ import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMes
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
 import { t } from 'i18next'
-import { JSONBlobParse, UserEditingType } from '@sofie-automation/blueprints-integration'
+import { JSONBlobParse, UserEditingGroupingType, UserEditingType } from '@sofie-automation/blueprints-integration'
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
 import { doModalDialog } from '../../lib/ModalDialog'
 import classNames from 'classnames'
@@ -99,7 +99,7 @@ export const UserEditPanel = translateWithTracker<Props, State, ITrackedProps>((
 										)
 									case UserEditingType.FORM:
 										return (
-											<EditingTypeForm
+											<EditingTypeChangeSource
 												userEditOperation={userEditOperation}
 												contextMenuContext={this.props.contextMenuContext}
 											/>
@@ -127,7 +127,7 @@ export const UserEditPanel = translateWithTracker<Props, State, ITrackedProps>((
 										)
 									case UserEditingType.FORM:
 										return (
-											<EditingTypeForm
+											<EditingTypeChangeSource
 												userEditOperation={userEditOperation}
 												contextMenuContext={this.props.contextMenuContext}
 											/>
@@ -188,13 +188,14 @@ function EditingTypeAction(props: {
 				</div>
 			</a>
 			<span className="usereditpanel-pop-up__label">
+				{' '}
 				{translateMessage(props.userEditOperation.label, i18nTranslator)}
 			</span>
 		</div>
 	)
 }
 
-function EditingTypeForm(props: {
+function EditingTypeChangeSource(props: {
 	userEditOperation: CoreUserEditingDefinitionForm
 	contextMenuContext: IContextMenuContext | null
 }) {
@@ -211,11 +212,17 @@ function EditingTypeForm(props: {
 		enum: string[]
 		tsEnumNames: string[]
 	}
+	let groups: UserEditingGroupingType[] = clone(props.userEditOperation.grouping) || []
+	const numberOfEmptySlots = 14 - groups.length
+	for (let i = 0; i < numberOfEmptySlots; i++) {
+		groups.push({})
+	}
+
 	return (
 		<>
 			<div className="usereditpanel-pop-up__groupselector">
 				{props.userEditOperation.grouping &&
-					props.userEditOperation.grouping.map((group, index) => {
+					groups.map((group, index) => {
 						return (
 							<button
 								className={
@@ -228,6 +235,7 @@ function EditingTypeForm(props: {
 								onClick={(e) => {
 									setSelectedGroup(group.filter)
 								}}
+								disabled={!group.filter}
 							>
 								{group.label}
 							</button>
@@ -236,6 +244,8 @@ function EditingTypeForm(props: {
 			</div>
 			{selectedGroup && schema && (
 				<>
+					<a className="usereditpanel-pop-up__label">Source:</a>
+					<br />
 					<select
 						title="Sources in the selected group"
 						className="usereditpanel-pop-up__select"
