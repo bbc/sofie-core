@@ -297,7 +297,7 @@ async function executeOnTakeCallback(
 		const partInstanceId = playoutModel.playlist.nextPartInfo?.partInstanceId
 		if (!partInstanceId) throw new Error('Cannot call blueprint onTake when there is no next partInstance!')
 
-		// Clear any existing notifications for this partInstance
+		// Clear any existing notifications for this partInstance. This will clear any from the previous take
 		playoutModel.clearAllNotifications(NOTIFICATION_CATEGORY)
 
 		const watchedPackagesHelper = WatchedPackagesHelper.empty(context)
@@ -320,6 +320,7 @@ async function executeOnTakeCallback(
 			isTakeAborted = onSetAsNextContext.isTakeAborted
 
 			for (const note of onSetAsNextContext.notes) {
+				// Update the notifications. Even though these are related to a partInstance, they will be cleared on the next take
 				playoutModel.setNotification(NOTIFICATION_CATEGORY, {
 					...translateNoteToNotification(note, [blueprint.blueprintId]),
 					relatedTo: {
