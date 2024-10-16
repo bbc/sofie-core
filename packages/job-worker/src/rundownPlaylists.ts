@@ -16,7 +16,11 @@ import {
 	RemovePlaylistProps,
 } from '@sofie-automation/corelib/dist/worker/studio'
 import { ReadonlyDeep } from 'type-fest'
-import { BlueprintResultRundownPlaylist, IBlueprintRundown } from '@sofie-automation/blueprints-integration'
+import {
+	BlueprintResultRundownPlaylist,
+	IBlueprintRundown,
+	NoteSeverity,
+} from '@sofie-automation/blueprints-integration'
 import { JobContext } from './jobs'
 import { logger } from './logging'
 import { resetRundownPlaylist } from './playout/lib'
@@ -38,6 +42,8 @@ import { PlaylistLock, RundownLock } from './jobs/lock'
 import { runWithRundownLock } from './ingest/lock'
 import { convertRundownToBlueprints } from './blueprints/context/lib'
 import { sortRundownIDsInPlaylist } from '@sofie-automation/corelib/dist/playout/playlist'
+import { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
+import { generateTranslation } from './notifications/util'
 
 /**
  * Debug: Remove a Playlist and all its contents
@@ -186,28 +192,38 @@ export function produceRundownPlaylistInfoFromRundown(
 	rundowns: ReadonlyDeep<Array<DBRundown>>
 ): DBRundownPlaylist {
 	let playlistInfo: BlueprintResultRundownPlaylist | null = null
+
+	let notes: INoteBase[] = []
+
 	try {
 		if (studioBlueprint?.blueprint?.getRundownPlaylistInfo) {
+			const blueprintContext = new StudioUserContext(
+				{
+					name: 'produceRundownPlaylistInfoFromRundown',
+					identifier: `studioId=${context.studioId},playlistId=${playlistId},rundownIds=${rundowns
+						.map((r) => r._id)
+						.join(',')}`,
+				},
+				context.studio,
+				context.getStudioBlueprintConfig()
+			)
+
 			playlistInfo = studioBlueprint.blueprint.getRundownPlaylistInfo(
-				new StudioUserContext(
-					{
-						name: 'produceRundownPlaylistInfoFromRundown',
-						identifier: `studioId=${context.studioId},playlistId=${playlistId},rundownIds=${rundowns
-							.map((r) => r._id)
-							.join(',')}`,
-						tempSendUserNotesIntoBlackHole: true, // TODO: these should be stored on the playlist
-					},
-					context.studio,
-					context.getStudioBlueprintConfig()
-				),
+				blueprintContext,
 				rundowns.map(convertRundownToBlueprints),
 				playlistExternalId
 			)
+
+			notes = blueprintContext.notes
 		}
 	} catch (err) {
 		logger.error(`Error in studioBlueprint.getRundownPlaylistInfo: ${stringifyError(err)}`)
 		playlistInfo = null
-		// TODO - a note should be added to the playlist for this
+
+		notes.push({
+			type: NoteSeverity.ERROR,
+			message: generateTranslation(`Internal Error generating RundownPlaylist`),
+		})
 	}
 
 	const rundownsInDefaultOrder = sortDefaultRundownInPlaylistOrder(rundowns)
@@ -255,6 +271,14 @@ export function produceRundownPlaylistInfoFromRundown(
 			externalId: playlistExternalId,
 		}
 	}
+
+	// Update the notes on the playlist
+	newPlaylist.notes = notes.map((note) => ({
+		...note,
+		origin: {
+			name: 'produceRundownPlaylistInfoFromRundown',
+		},
+	}))
 
 	if (!newPlaylist.rundownRanksAreSetInSofie) {
 		if (playlistInfo?.order) {
