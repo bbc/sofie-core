@@ -15,6 +15,7 @@ import { updatePartInstanceRanksAndOrphanedState } from '../updatePartInstanceRa
 import {
 	getPlaylistIdFromExternalId,
 	produceRundownPlaylistInfoFromRundown,
+	removePlaylistFromDb,
 	removeRundownFromDb,
 } from '../rundownPlaylists'
 import { ReadonlyDeep } from 'type-fest'
@@ -496,7 +497,7 @@ export async function regeneratePlaylistAndRundownOrder(
 		return newPlaylist
 	} else {
 		// Playlist is empty and should be removed
-		await context.directCollections.RundownPlaylists.remove(oldPlaylist._id)
+		await removePlaylistFromDb(context, lock)
 
 		return null
 	}
@@ -518,7 +519,7 @@ export async function updatePlayoutAfterChangingRundownInPlaylist(
 				throw new Error(`RundownPlaylist "${playoutModel.playlistId}" has no contents but is active...`)
 
 			// Remove an empty playlist
-			await context.directCollections.RundownPlaylists.remove({ _id: playoutModel.playlistId })
+			await removePlaylistFromDb(context, playlistLock)
 
 			playoutModel.assertNoChanges()
 			return
