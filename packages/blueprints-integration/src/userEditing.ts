@@ -33,8 +33,6 @@ export interface UserEditingDefinitionForm {
 	id: string
 	/** Label to show to the user for this operation */
 	label: ITranslatableMessage
-	/** The json schema describing the form to display */
-	schema: JSONBlob<JSONSchema>
 	/** Used to group the schemas and filter them */
 	grouping?: UserEditingGroupingType[]
 	/** The json schemas describing the form to display */
