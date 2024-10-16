@@ -1,4 +1,5 @@
 import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import { RundownId, PartInstanceId, PieceInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
 export interface INotification {
@@ -6,8 +7,29 @@ export interface INotification {
 
 	severity: NoteSeverity
 	message: ITranslatableMessage
+}
 
-	// TODO
+export interface INotificationWithTarget extends INotification {
+	relatedTo: INotificationTarget
+}
+
+export type INotificationTarget =
+	| INotificationTargetPlaylist
+	| INotificationTargetPartInstance
+	| INotificationTargetPieceInstance
+export interface INotificationTargetPlaylist {
+	type: 'playlist'
+}
+export interface INotificationTargetPartInstance {
+	type: 'partInstance'
+	rundownId: RundownId
+	partInstanceId: PartInstanceId
+}
+export interface INotificationTargetPieceInstance {
+	type: 'pieceInstance'
+	rundownId: RundownId
+	partInstanceId: PartInstanceId
+	pieceInstanceId: PieceInstanceId
 }
 
 export interface INotificationsModel {
@@ -16,7 +38,7 @@ export interface INotificationsModel {
 	 * This may fetch the notifications from the database if they are not already loaded
 	 * @param category category of notifications to get
 	 */
-	getAllNotifications(category: string): Promise<INotification[]>
+	getAllNotifications(category: string): Promise<INotificationWithTarget[]>
 
 	/**
 	 * Remove a notification from the list
@@ -30,7 +52,7 @@ export interface INotificationsModel {
 	 * @param category category of the notification
 	 * @param notification notification to add
 	 */
-	setNotification(category: string, notification: INotification): void
+	setNotification(category: string, notification: INotificationWithTarget): void
 
 	/**
 	 * Clear all notifications for a category

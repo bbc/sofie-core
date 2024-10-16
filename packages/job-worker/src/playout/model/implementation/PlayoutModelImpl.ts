@@ -308,7 +308,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		context.trackCache(this)
 
 		this.#baselineHelper = new StudioBaselineHelper(context)
-		this.#notificationsHelper = new NotificationsModelHelper(context, 'playout')
+		this.#notificationsHelper = new NotificationsModelHelper(context, 'playout', playlistId)
 	}
 
 	public get displayName(): string {

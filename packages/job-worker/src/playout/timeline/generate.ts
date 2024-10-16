@@ -389,7 +389,7 @@ async function getTimelineRundown(
 					await replaceAllNotificationsForCategory(
 						playoutModel,
 						'abPlayback',
-						newAbSessionsResult.notifications
+						newAbSessionsResult.notifications.map((n) => ({ ...n, relatedTo: { type: 'playlist' } }))
 					)
 
 					let tlGenRes: BlueprintResultTimeline | undefined
