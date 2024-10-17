@@ -36,6 +36,48 @@
 		}
 	}
 
+	> .usereditpanel-pop-up__footer {
+		flex: 1;
+		position: absolute;
+		bottom: 10px;
+		padding: 0.625rem 0.9375rem;
+		padding: 0.525rem 0.6375rem;
+		cursor: default;
+
+		overflow-wrap: break-word;
+
+		> hr {
+			margin-left: 0px;
+			border-color: #7F7F7F;
+		}
+
+		> .usereditpanel-pop-up__button {
+			margin-top: 10px;
+			background: #636363;
+			padding: 5px 5px 5px 5px;
+			gap: 10px;
+			border-radius: 5px;
+			border: 1px;
+			border: 1px solid #7F7F7F;
+			color: #ddd;
+
+			> svg {
+				margin-top: -0.1em;
+				vertical-align: middle;
+				margin-right: -0.4em;
+				width: 1em;
+				height: 1em;
+			}
+
+			.label {
+				margin-left: 10px;
+				margin-right: 10px;
+				margin-top: 2px;
+				line-height: inherit;
+			}
+		}
+	}
+
 	> .usereditpanel-pop-up__contents {
 		flex: 1;
 		padding: 0.625rem 0.9375rem;
@@ -44,12 +86,9 @@
 
 		overflow-wrap: break-word;
 
-		> h5 {
-			color: inherit;
-			margin: 0 0 0.5em;
-			font-weight: 500 !important;
-			line-height: 1.1em;
-			letter-spacing: 0.02em;
+		> hr {
+			margin-left: 0px;
+			border-color: #7F7F7F;
 		}
 
 		> .usereditpanel-pop-up__groupselector {
@@ -62,7 +101,7 @@
 				width: 50px;
 				height: 30px;
 				border: 0px;
-				margin: 5px;
+				margin: 4px;
 				gap: 10px;
 				color: #ddd;
 				opacity: 0.2;
@@ -72,7 +111,7 @@
 				width: 50px;
 				height: 30px;
 				border: 0px;
-				margin: 5px;
+				margin: 4px;
 				gap: 10px;
 				color: #ddd;
 				opacity: 1;
@@ -91,7 +130,7 @@
 
 		> .usereditpanel-pop-up__select{
 			margin-top: 10px;
-			width: 80%;
+			width: 86%;
 			height: 3em;
 			background: #232323;
 			margin-bottom: 0.5em;

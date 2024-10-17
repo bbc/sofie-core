@@ -1,16 +1,19 @@
 import * as React from 'react'
 // @ts-expect-error No types available
 import * as VelocityReact from 'velocity-react'
-import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { i18nTranslator } from '../i18n'
 import { IContextMenuContext } from '../RundownView'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
 import { t } from 'i18next'
-import { JSONBlobParse, UserEditingGroupingType, UserEditingType } from '@sofie-automation/blueprints-integration'
+import {
+	DefaultUserOperationsTypes,
+	JSONBlobParse,
+	UserEditingGroupingType,
+	UserEditingType,
+} from '@sofie-automation/blueprints-integration'
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
-import { doModalDialog } from '../../lib/ModalDialog'
 import classNames from 'classnames'
 import {
 	CoreUserEditingDefinitionAction,
@@ -25,7 +28,7 @@ interface Props {
 	contextMenuContext: IContextMenuContext | null
 }
 
-export const UserEditPanel: React.FC<Props> = ({ contextMenuContext }) => {
+export function UserEditPanel(props: Props) {
 	React.useEffect(() => {
 		return () => {
 			Array.from(document.querySelectorAll('.usereditpanel-pop-up.is-highlighted')).forEach((element: Element) => {
@@ -36,29 +39,21 @@ export const UserEditPanel: React.FC<Props> = ({ contextMenuContext }) => {
 		}
 	})
 
-	const dismissAll = () => {
-		// Dismiss all useredits
-		// Implementation needed
-	}
-
-	const approveAll = () => {
-		// Approve all useredits
-		// Implementation needed
-	}
-
 	return (
 		<div className="usereditpanel-pop-up">
-			<div className="usereditpanel-pop-up__header">PART : {String(contextMenuContext?.part?.instance.part.title)}</div>
+			<div className="usereditpanel-pop-up__header">
+				PART : {String(props.contextMenuContext?.part?.instance.part.title)}
+			</div>
 			<div className="usereditpanel-pop-up__contents">
-				{contextMenuContext?.part?.instance._id &&
-					contextMenuContext?.part?.instance.part.userEditOperations?.map((userEditOperation, i) => {
+				{props.contextMenuContext?.part?.instance._id &&
+					props.contextMenuContext?.part?.instance.part.userEditOperations?.map((userEditOperation, i) => {
 						switch (userEditOperation.type) {
 							case UserEditingType.ACTION:
 								return (
 									<EditingTypeAction
 										key={i}
 										userEditOperation={userEditOperation}
-										contextMenuContext={contextMenuContext}
+										contextMenuContext={props.contextMenuContext}
 									/>
 								)
 							case UserEditingType.FORM:
@@ -66,7 +61,38 @@ export const UserEditPanel: React.FC<Props> = ({ contextMenuContext }) => {
 									<EditingTypeChangeSource
 										key={i}
 										userEditOperation={userEditOperation}
-										contextMenuContext={contextMenuContext}
+										contextMenuContext={props.contextMenuContext}
+									/>
+								)
+							default:
+								assertNever(userEditOperation)
+								return null
+						}
+					})}
+				<hr />
+			</div>
+			<div className="usereditpanel-pop-up__contents">
+				<div className="usereditpanel-pop-up__label">
+					Debug (segment) : {String(props.contextMenuContext?.segment?.name)}
+				</div>
+				{/* This is only until selection of segment is implemented in UI */}
+				{props.contextMenuContext?.segment &&
+					props.contextMenuContext?.segment?.userEditOperations?.map((userEditOperation, i) => {
+						switch (userEditOperation.type) {
+							case UserEditingType.ACTION:
+								return (
+									<EditingTypeAction
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={props.contextMenuContext}
+									/>
+								)
+							case UserEditingType.FORM:
+								return (
+									<EditingTypeChangeSource
+										key={i}
+										userEditOperation={userEditOperation}
+										contextMenuContext={props.contextMenuContext}
 									/>
 								)
 							default:
@@ -75,38 +101,31 @@ export const UserEditPanel: React.FC<Props> = ({ contextMenuContext }) => {
 						}
 					})}
 			</div>
-			<hr />
-			<div className="usereditpanel-pop-up__contents">
-				<div className="usereditpanel-pop-up__label">Debug (segment) : {String(contextMenuContext?.segment?.name)}</div>
-				{contextMenuContext?.segment &&
-					contextMenuContext?.segment?.userEditOperations?.map((userEditOperation, i) => {
-						switch (userEditOperation.type) {
-							case UserEditingType.ACTION:
-								return (
-									<EditingTypeAction
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={contextMenuContext}
-									/>
-								)
-							case UserEditingType.FORM:
-								return (
-									<EditingTypeChangeSource
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={contextMenuContext}
-									/>
-								)
-							default:
-								assertNever(userEditOperation)
-								return null
-						}
-					})}
+			<div className="usereditpanel-pop-up__footer">
+				<button
+					className="usereditpanel-pop-up__button"
+					onClick={(e) => {
+						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+							MeteorCall.userAction.executeUserChangeOperation(
+								e,
+								ts,
+								//@ts-expect-error TODO: Fix this
+								props.contextMenuContext?.segment?.rundownId,
+								{
+									segmentExternalId: props.contextMenuContext?.segment?.externalId,
+									partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+									pieceExternalId: undefined,
+								},
+								{
+									id: DefaultUserOperationsTypes.REVERT_SEGMENT,
+								}
+							)
+						)
+					}}
+				>
+					<span className="usereditpanel-pop-up__label">REVERT SEGMENT</span>
+				</button>
 			</div>
-			<ContextMenuTrigger
-				id="context-menu-dissmiss-all"
-				attributes={{ className: 'usereditpanel-pop-up__contents' }}
-			></ContextMenuTrigger>
 		</div>
 	)
 }
@@ -128,7 +147,7 @@ function EditingTypeAction(props: {
 							e,
 							ts,
 							//@ts-expect-error TODO: Fix this
-							this.props.contextMenuContext?.segment?.rundownId,
+							props.contextMenuContext?.segment?.rundownId,
 							{
 								segmentExternalId: props.contextMenuContext?.segment?.externalId,
 								partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
@@ -216,6 +235,23 @@ function EditingTypeChangeSource(props: {
 						value={selectedSource[selectedGroup] || ''}
 						onChange={(e) => {
 							setSelectedSource({ [selectedGroup]: e.target.value })
+							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+								MeteorCall.userAction.executeUserChangeOperation(
+									e,
+									ts,
+									//@ts-expect-error TODO: Fix this
+									props.contextMenuContext?.segment?.rundownId,
+									{
+										segmentExternalId: props.contextMenuContext?.segment?.externalId,
+										partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+										pieceExternalId: undefined,
+									},
+									{
+										values: selectedSource[selectedGroup],
+										id: props.userEditOperation.id,
+									}
+								)
+							)
 						}}
 					>
 						{sourceList.enum.map((source, index) => (
@@ -224,42 +260,7 @@ function EditingTypeChangeSource(props: {
 							</option>
 						))}
 					</select>
-					<br />
-					<button
-						className="usereditpanel-pop-up__button"
-						key={`${props.userEditOperation.id}`}
-						onClick={(e) => {
-							// TODO:
-							doModalDialog({
-								title: t(`Edit {{targetName}}`, {
-									targetName: props.contextMenuContext?.segment?.name,
-								}),
-								message: 'Change Source to: ' + selectedSource[selectedGroup],
-
-								// acceptText: 'OK',
-								yes: t('Save Changes'),
-								no: t('Cancel'),
-								onAccept: () => {
-									doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-										MeteorCall.userAction.executeUserChangeOperation(
-											e,
-											ts,
-											//@ts-expect-error TODO: Fix this
-											this.props.contextMenuContext?.segment?.rundownId,
-											//@ts-expect-error TODO: Fix this
-											this.props.contextMenuContext?.segment?.operationTarget,
-											{
-												values: selectedSource[selectedGroup],
-												id: props.userEditOperation.id,
-											}
-										)
-									)
-								},
-							})
-						}}
-					>
-						<span className="label">{translateMessage(props.userEditOperation.label, i18nTranslator)}</span>
-					</button>
+					<hr />
 				</>
 			)}
 		</>
