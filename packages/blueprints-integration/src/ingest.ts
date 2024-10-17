@@ -124,10 +124,34 @@ export interface UserOperationTarget {
 	pieceExternalId: string | undefined
 }
 
-export type DefaultUserOperations = {
-	id: '__sofie-move-segment' // Future: define properly
+export enum DefaultUserOperationsTypes {
+	REVERT_SEGMENT = 'revert-segment',
+	REVERT_PART = 'revert-part',
+	REVERT_RUNDOWN = 'revert-rundown',
+}
+
+export interface DefaultUserOperationRevertRundown {
+	id: DefaultUserOperationsTypes.REVERT_RUNDOWN
 	payload: Record<string, never>
 }
+
+export interface DefaultUserOperationRevertSegment {
+	id: DefaultUserOperationsTypes.REVERT_SEGMENT
+	payload: Record<string, never>
+}
+
+export interface DefaultUserOperationRevertPart {
+	id: DefaultUserOperationsTypes.REVERT_PART
+}
+
+export type DefaultUserOperations =
+	| {
+			id: '__sofie-move-segment' // Future: define properly
+			payload: Record<string, never>
+	  }
+	| DefaultUserOperationRevertRundown
+	| DefaultUserOperationRevertSegment
+	| DefaultUserOperationRevertPart
 
 export interface UserOperationChange<TCustomBlueprintOperations extends { id: string } = never> {
 	/** Indicate that this change is from user operations */
