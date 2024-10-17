@@ -36,156 +36,153 @@ export const SegmentContextMenu = withTranslation()(
 		constructor(props: Translated<IProps>) {
 			super(props)
 		}
+
 		render(): JSX.Element | null {
-			return <></>
+			const { t } = this.props
+
+			if (!this.props.studioMode || !this.props.playlist || !this.props.playlist.activationId) return null
+
+			const part = this.getPartFromContext()
+			const segment = this.getSegmentFromContext()
+			const timecode = this.getTimePosition()
+			const startsAt = this.getPartStartsAt()
+
+			const isCurrentPart =
+				(part && this.props.playlist && part.instance._id === this.props.playlist.currentPartInfo?.partInstanceId) ||
+				undefined
+
+			const isSegmentEditAble = segment?._id !== this.props.playlist.queuedSegmentId
+
+			const isPartEditAble =
+				isSegmentEditAble &&
+				part?.instance._id !== this.props.playlist.currentPartInfo?.partInstanceId &&
+				part?.instance._id !== this.props.playlist.nextPartInfo?.partInstanceId &&
+				part?.instance._id !== this.props.playlist.previousPartInfo?.partInstanceId
+
+			const canSetAsNext = !!this.props.playlist?.activationId
+
+			return segment?.orphaned !== SegmentOrphanedReason.ADLIB_TESTING ? (
+				<Escape to="document">
+					<ContextMenu id="segment-timeline-context-menu">
+						{part && timecode === null && (
+							<>
+								<MenuItem
+									onClick={(e) => this.props.onSetNextSegment(part.instance.segmentId, e)}
+									disabled={isCurrentPart || !canSetAsNext}
+								>
+									<span dangerouslySetInnerHTML={{ __html: t('Set segment as <strong>Next</strong>') }}></span>
+								</MenuItem>
+								{part.instance.segmentId !== this.props.playlist.queuedSegmentId ? (
+									<MenuItem
+										onClick={(e) => this.props.onQueueNextSegment(part.instance.segmentId, e)}
+										disabled={!canSetAsNext}
+									>
+										<span>{t('Queue segment')}</span>
+									</MenuItem>
+								) : (
+									<MenuItem onClick={(e) => this.props.onQueueNextSegment(null, e)} disabled={!canSetAsNext}>
+										<span>{t('Clear queued segment')}</span>
+									</MenuItem>
+								)}
+								{segment &&
+									RenderUserEditOperations(
+										isSegmentEditAble,
+										segment.rundownId,
+										segment.name,
+										segment.userEditOperations,
+										{
+											segmentExternalId: segment?.externalId,
+											partExternalId: undefined,
+											pieceExternalId: undefined,
+										}
+									)}
+								<hr />
+							</>
+						)}
+						{part && !part.instance.part.invalid && timecode !== null && (
+							<>
+								<MenuItem
+									onClick={(e) => this.props.onSetNext(part.instance.part, e)}
+									disabled={!!part.instance.orphaned || !canSetAsNext}
+								>
+									<span dangerouslySetInnerHTML={{ __html: t('Set this part as <strong>Next</strong>') }}></span>
+									{startsAt !== null &&
+										'\u00a0(' + RundownUtils.formatTimeToShortTime(Math.floor(startsAt / 1000) * 1000) + ')'}
+								</MenuItem>
+								{startsAt !== null && part && this.props.enablePlayFromAnywhere ? (
+									<>
+										{/* <MenuItem
+											onClick={(e) => this.onSetAsNextFromHere(part.instance.part, e)}
+											disabled={isCurrentPart || !!part.instance.orphaned || !canSetAsNext}
+										>
+											<span dangerouslySetInnerHTML={{ __html: t('Set <strong>Next</strong> Here') }}></span> (
+											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
+										</MenuItem> */}
+										<MenuItem
+											onClick={(e) => this.onPlayFromHere(part.instance.part, e)}
+											disabled={!!part.instance.orphaned || !canSetAsNext}
+										>
+											<span>{t('Play from Here')}</span> (
+											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
+										</MenuItem>
+									</>
+								) : null}
+								{this.props.enableQuickLoop && !RundownResolver.isLoopLocked(this.props.playlist) && (
+									<>
+										{RundownResolver.isQuickLoopStart(part.partId, this.props.playlist) ? (
+											<MenuItem onClick={(e) => this.props.onSetQuickLoopStart(null, e)}>
+												<span>{t('Clear QuickLoop Start')}</span>
+											</MenuItem>
+										) : (
+											<MenuItem
+												onClick={(e) =>
+													this.props.onSetQuickLoopStart(
+														{ type: QuickLoopMarkerType.PART, id: part.instance.part._id },
+														e
+													)
+												}
+												disabled={!!part.instance.orphaned || !canSetAsNext}
+											>
+												<span>{t('Set as QuickLoop Start')}</span>
+											</MenuItem>
+										)}
+										{RundownResolver.isQuickLoopEnd(part.partId, this.props.playlist) ? (
+											<MenuItem onClick={(e) => this.props.onSetQuickLoopEnd(null, e)}>
+												<span>{t('Clear QuickLoop End')}</span>
+											</MenuItem>
+										) : (
+											<MenuItem
+												onClick={(e) =>
+													this.props.onSetQuickLoopEnd(
+														{ type: QuickLoopMarkerType.PART, id: part.instance.part._id },
+														e
+													)
+												}
+												disabled={!!part.instance.orphaned || !canSetAsNext}
+											>
+												<span>{t('Set as QuickLoop End')}</span>
+											</MenuItem>
+										)}
+									</>
+								)}
+
+								{RenderUserEditOperations(
+									isPartEditAble,
+									part.instance.rundownId,
+									part.instance.part.title,
+									part.instance.part.userEditOperations,
+									{
+										segmentExternalId: segment?.externalId,
+										partExternalId: part.instance.part.externalId,
+										pieceExternalId: undefined,
+									}
+								)}
+							</>
+						)}
+					</ContextMenu>
+				</Escape>
+			) : null
 		}
-
-		// render(): JSX.Element | null {
-		// 	const { t } = this.props
-
-		// 	if (!this.props.studioMode || !this.props.playlist || !this.props.playlist.activationId) return null
-
-		// 	const part = this.getPartFromContext()
-		// 	const segment = this.getSegmentFromContext()
-		// 	const timecode = this.getTimePosition()
-		// 	const startsAt = this.getPartStartsAt()
-
-		// 	const isCurrentPart =
-		// 		(part && this.props.playlist && part.instance._id === this.props.playlist.currentPartInfo?.partInstanceId) ||
-		// 		undefined
-
-		// 	const isSegmentEditAble = segment?._id !== this.props.playlist.queuedSegmentId
-
-		// 	const isPartEditAble =
-		// 		isSegmentEditAble &&
-		// 		part?.instance._id !== this.props.playlist.currentPartInfo?.partInstanceId &&
-		// 		part?.instance._id !== this.props.playlist.nextPartInfo?.partInstanceId &&
-		// 		part?.instance._id !== this.props.playlist.previousPartInfo?.partInstanceId
-
-		// 	const canSetAsNext = !!this.props.playlist?.activationId
-
-		// 	return segment?.orphaned !== SegmentOrphanedReason.ADLIB_TESTING ? (
-		// 		<Escape to="document">
-		// 			<ContextMenu id="segment-timeline-context-menu">
-		// 				{part && timecode === null && (
-		// 					<>
-		// 						<MenuItem
-		// 							onClick={(e) => this.props.onSetNextSegment(part.instance.segmentId, e)}
-		// 							disabled={isCurrentPart || !canSetAsNext}
-		// 						>
-		// 							<span dangerouslySetInnerHTML={{ __html: t('Set segment as <strong>Next</strong>') }}></span>
-		// 						</MenuItem>
-		// 						{part.instance.segmentId !== this.props.playlist.queuedSegmentId ? (
-		// 							<MenuItem
-		// 								onClick={(e) => this.props.onQueueNextSegment(part.instance.segmentId, e)}
-		// 								disabled={!canSetAsNext}
-		// 							>
-		// 								<span>{t('Queue segment')}</span>
-		// 							</MenuItem>
-		// 						) : (
-		// 							<MenuItem onClick={(e) => this.props.onQueueNextSegment(null, e)} disabled={!canSetAsNext}>
-		// 								<span>{t('Clear queued segment')}</span>
-		// 							</MenuItem>
-		// 						)}
-		// 						{segment &&
-		// 							RenderUserEditOperations(
-		// 								isSegmentEditAble,
-		// 								segment.rundownId,
-		// 								segment.name,
-		// 								segment.userEditOperations,
-		// 								{
-		// 									segmentExternalId: segment?.externalId,
-		// 									partExternalId: undefined,
-		// 									pieceExternalId: undefined,
-		// 								}
-		// 							)}
-		// 						<hr />
-		// 					</>
-		// 				)}
-		// 				{part && !part.instance.part.invalid && timecode !== null && (
-		// 					<>
-		// 						<MenuItem
-		// 							onClick={(e) => this.props.onSetNext(part.instance.part, e)}
-		// 							disabled={!!part.instance.orphaned || !canSetAsNext}
-		// 						>
-		// 							<span dangerouslySetInnerHTML={{ __html: t('Set this part as <strong>Next</strong>') }}></span>
-		// 							{startsAt !== null &&
-		// 								'\u00a0(' + RundownUtils.formatTimeToShortTime(Math.floor(startsAt / 1000) * 1000) + ')'}
-		// 						</MenuItem>
-		// 						{startsAt !== null && part && this.props.enablePlayFromAnywhere ? (
-		// 							<>
-		// 								{/* <MenuItem
-		// 									onClick={(e) => this.onSetAsNextFromHere(part.instance.part, e)}
-		// 									disabled={isCurrentPart || !!part.instance.orphaned || !canSetAsNext}
-		// 								>
-		// 									<span dangerouslySetInnerHTML={{ __html: t('Set <strong>Next</strong> Here') }}></span> (
-		// 									{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
-		// 								</MenuItem> */}
-		// 								<MenuItem
-		// 									onClick={(e) => this.onPlayFromHere(part.instance.part, e)}
-		// 									disabled={!!part.instance.orphaned || !canSetAsNext}
-		// 								>
-		// 									<span>{t('Play from Here')}</span> (
-		// 									{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
-		// 								</MenuItem>
-		// 							</>
-		// 						) : null}
-		// 						{this.props.enableQuickLoop && !RundownResolver.isLoopLocked(this.props.playlist) && (
-		// 							<>
-		// 								{RundownResolver.isQuickLoopStart(part.partId, this.props.playlist) ? (
-		// 									<MenuItem onClick={(e) => this.props.onSetQuickLoopStart(null, e)}>
-		// 										<span>{t('Clear QuickLoop Start')}</span>
-		// 									</MenuItem>
-		// 								) : (
-		// 									<MenuItem
-		// 										onClick={(e) =>
-		// 											this.props.onSetQuickLoopStart(
-		// 												{ type: QuickLoopMarkerType.PART, id: part.instance.part._id },
-		// 												e
-		// 											)
-		// 										}
-		// 										disabled={!!part.instance.orphaned || !canSetAsNext}
-		// 									>
-		// 										<span>{t('Set as QuickLoop Start')}</span>
-		// 									</MenuItem>
-		// 								)}
-		// 								{RundownResolver.isQuickLoopEnd(part.partId, this.props.playlist) ? (
-		// 									<MenuItem onClick={(e) => this.props.onSetQuickLoopEnd(null, e)}>
-		// 										<span>{t('Clear QuickLoop End')}</span>
-		// 									</MenuItem>
-		// 								) : (
-		// 									<MenuItem
-		// 										onClick={(e) =>
-		// 											this.props.onSetQuickLoopEnd(
-		// 												{ type: QuickLoopMarkerType.PART, id: part.instance.part._id },
-		// 												e
-		// 											)
-		// 										}
-		// 										disabled={!!part.instance.orphaned || !canSetAsNext}
-		// 									>
-		// 										<span>{t('Set as QuickLoop End')}</span>
-		// 									</MenuItem>
-		// 								)}
-		// 							</>
-		// 						)}
-
-		// 						{RenderUserEditOperations(
-		// 							isPartEditAble,
-		// 							part.instance.rundownId,
-		// 							part.instance.part.title,
-		// 							part.instance.part.userEditOperations,
-		// 							{
-		// 								segmentExternalId: segment?.externalId,
-		// 								partExternalId: part.instance.part.externalId,
-		// 								pieceExternalId: undefined,
-		// 							}
-		// 						)}
-		// 					</>
-		// 				)}
-		// 			</ContextMenu>
-		// 		</Escape>
-		// 	) : null
-		// }
 
 		getSegmentFromContext = (): SegmentUi | null => {
 			if (this.props.contextMenuContext && this.props.contextMenuContext.segment) {
