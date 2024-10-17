@@ -20,9 +20,9 @@ export function generateTranslation(
 	}
 }
 
-export function translateNoteToNotification(note: INoteBase, blueprintIds: BlueprintId[]): INotification {
+export function convertNoteToNotification(note: INoteBase, blueprintIds: BlueprintId[]): INotification {
 	return {
-		id: getHash(JSON.stringify(note.message)),
+		id: getHash(JSON.stringify(note.message)), // Notes don't have an id, so fake one from the message
 		severity: note.type,
 		message: wrapTranslatableMessageFromBlueprints(note.message, blueprintIds),
 	}

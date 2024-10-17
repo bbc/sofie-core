@@ -30,7 +30,7 @@ import {
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { translateNoteToNotification, generateTranslation } from '../notifications/util'
+import { convertNoteToNotification, generateTranslation } from '../notifications/util'
 
 /**
  * Set or clear the nexted part, from a given PartInstance, or SelectNextPartResult
@@ -182,7 +182,7 @@ async function executeOnSetAsNextCallback(
 				for (const note of onSetAsNextContext.notes) {
 					// Update the notifications. Even though these are related to a partInstance, they will be cleared on the next take
 					playoutModel.setNotification(NOTIFICATION_CATEGORY, {
-						...translateNoteToNotification(note, [blueprint.blueprintId]),
+						...convertNoteToNotification(note, [blueprint.blueprintId]),
 						relatedTo: partInstanceId
 							? {
 									type: 'partInstance',

@@ -18,7 +18,7 @@ import { handleUpdatedRundown } from './ingestRundownJobs'
 import { runIngestUpdateOperation } from './runOperation'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
-import { translateNoteToNotification } from '../notifications/util'
+import { convertNoteToNotification } from '../notifications/util'
 
 export async function handleCreateAdlibTestingRundownForShowStyleVariant(
 	context: JobContext,
@@ -74,7 +74,7 @@ export async function handleCreateAdlibTestingRundownForShowStyleVariant(
 	notificationsHelper.clearAllNotifications(notificationCategory)
 	for (const note of blueprintContext.notes) {
 		notificationsHelper.setNotification(notificationCategory, {
-			...translateNoteToNotification(note, [showStyleBlueprint.blueprintId]),
+			...convertNoteToNotification(note, [showStyleBlueprint.blueprintId]),
 			relatedTo: {
 				type: 'rundown',
 				rundownId: createdRundownId,

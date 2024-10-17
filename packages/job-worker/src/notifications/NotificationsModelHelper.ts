@@ -12,6 +12,12 @@ import { assertNever, type Complete } from '@sofie-automation/corelib/dist/lib'
 import { type AnyBulkWriteOperation } from 'mongodb'
 import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
+interface NotificationsLoadState {
+	hasBeenLoaded: boolean
+
+	notifications: Map<string, DBNotificationObj | null>
+}
+
 export class NotificationsModelHelper implements INotificationsModel {
 	readonly #context: JobContext
 	readonly #categoryPrefix: string
@@ -23,8 +29,8 @@ export class NotificationsModelHelper implements INotificationsModel {
 	 * An entry of a cateogy in #notificationsByCategory indicates that it has been modified in memory and has data to be written to the database.
 	 * Only when a category is in both #loadedCategories and #notificationsByCategory is it considered to be fully loaded and up to date, otherwise it is considered to be a partial 'diff'
 	 */
-	readonly #loadedCategories = new Set<string>()
-	readonly #notificationsByCategory = new Map<string, Map<string, DBNotificationObj | null>>()
+	// readonly #loadedCategories = new Set<string>()
+	readonly #notificationsByCategory = new Map<string, NotificationsLoadState>()
 
 	constructor(context: JobContext, categoryPrefix: string, playlistId: RundownPlaylistId | null) {
 		this.#context = context
@@ -39,7 +45,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
-		if (!this.#loadedCategories.has(category)) {
+		if (!notificationsForCategory.hasBeenLoaded) {
 			const dbNotifications = await this.#context.directCollections.Notifications.findFetch({
 				// Ensure notifiations are owned by the current studio
 				'relatedTo.studioId': this.#context.studioId,
@@ -49,11 +55,11 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 			// Interleave into the store, for any which haven't already been updated
 			for (const dbNotification of dbNotifications) {
-				if (!notificationsForCategory.has(dbNotification.localId)) {
-					notificationsForCategory.set(dbNotification.localId, dbNotification)
+				if (!notificationsForCategory.notifications.has(dbNotification.localId)) {
+					notificationsForCategory.notifications.set(dbNotification.localId, dbNotification)
 				} else {
 					// Preserve the created time from the db
-					const existingNotification = notificationsForCategory.get(dbNotification.localId)
+					const existingNotification = notificationsForCategory.notifications.get(dbNotification.localId)
 					if (existingNotification) {
 						existingNotification.created = dbNotification.created
 					}
@@ -61,10 +67,10 @@ export class NotificationsModelHelper implements INotificationsModel {
 			}
 
 			// Indicate that this is now fully loaded in memory
-			this.#loadedCategories.add(category)
+			notificationsForCategory.hasBeenLoaded = true
 		}
 
-		return Array.from(notificationsForCategory.values())
+		return Array.from(notificationsForCategory.notifications.values())
 			.map((notification) => {
 				const relatedTo = notification && translateRelatedToFromDbType(notification.relatedTo)
 				if (!relatedTo) return null
@@ -83,19 +89,18 @@ export class NotificationsModelHelper implements INotificationsModel {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
 		// The notification may or may not be loaded, but this indicates that to the saving that we intend to delete it
-		notificationsForCategory.delete(notificationId)
+		notificationsForCategory.notifications.set(notificationId, null)
 	}
 
 	setNotification(category: string, notification: INotificationWithTarget): void {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
-		const existingNotification = notificationsForCategory.get(notification.id)
+		const existingNotification = notificationsForCategory.notifications.get(notification.id)
 
-		notificationsForCategory.set(notification.id, {
-			_id: protectString(
-				getHash(`${this.#context.studioId}:${this.#categoryPrefix}:${category}:${notification.id}`)
-			),
-			category: this.#getFullCategoryName(category),
+		const fullCategory = this.#getFullCategoryName(category)
+		notificationsForCategory.notifications.set(notification.id, {
+			_id: protectString(getHash(`${this.#context.studioId}:${fullCategory}:${notification.id}`)),
+			category: fullCategory,
 			localId: notification.id,
 			severity: notification.severity,
 			message: notification.message,
@@ -106,17 +111,22 @@ export class NotificationsModelHelper implements INotificationsModel {
 	}
 
 	clearAllNotifications(category: string): void {
+		const notificationsForCategory = this.#getOrCategoryEntry(category)
+
 		// Tell this store that the category is loaded, and so should perform a full write to the db
-		this.#loadedCategories.add(category)
+		notificationsForCategory.hasBeenLoaded = true
 
 		// Clear any known in memory notifications
-		this.#notificationsByCategory.get(category)?.clear()
+		notificationsForCategory.notifications.clear()
 	}
 
-	#getOrCategoryEntry(category: string): Map<string, DBNotificationObj | null> {
+	#getOrCategoryEntry(category: string): NotificationsLoadState {
 		let notificationsForCategory = this.#notificationsByCategory.get(category)
 		if (!notificationsForCategory) {
-			notificationsForCategory = new Map<string, DBNotificationObj | null>()
+			notificationsForCategory = {
+				hasBeenLoaded: false,
+				notifications: new Map(),
+			}
 			this.#notificationsByCategory.set(category, notificationsForCategory)
 		}
 		return notificationsForCategory
@@ -124,21 +134,16 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 	async saveAllToDatabase(): Promise<void> {
 		// Quick return if there is nothing to save
-		if (this.#loadedCategories.size === 0 && this.#notificationsByCategory.size === 0) return
+		if (this.#notificationsByCategory.size === 0) return
 
 		const updates: AnyBulkWriteOperation<DBNotificationObj>[] = []
 
-		const allCategoriesToUpdate = new Set<string>([
-			...this.#loadedCategories,
-			...this.#notificationsByCategory.keys(),
-		])
-		for (const category of allCategoriesToUpdate) {
-			const notificationsForCategory = this.#notificationsByCategory.get(category)
-			const isFullyInMemory = this.#loadedCategories.has(category)
+		for (const [category, notificationsForCategory] of this.#notificationsByCategory) {
+			const isFullyInMemory = notificationsForCategory?.hasBeenLoaded
 
 			const idsToDelete: string[] = []
 			const idsToUpdate: string[] = []
-			for (const [id, notification] of notificationsForCategory || []) {
+			for (const [id, notification] of notificationsForCategory.notifications) {
 				if (notification) {
 					idsToUpdate.push(id)
 				} else {
@@ -170,25 +175,23 @@ export class NotificationsModelHelper implements INotificationsModel {
 			}
 
 			// Update each notification
-			if (notificationsForCategory) {
-				for (const notification of notificationsForCategory.values()) {
-					if (!notification) continue
+			for (const notification of notificationsForCategory.notifications.values()) {
+				if (!notification) continue
 
-					updates.push({
-						replaceOne: {
-							filter: {
-								category: this.#getFullCategoryName(category),
-								localId: notification.localId,
-							},
-							replacement: {
-								...notification,
-								created: notification.created || getCurrentTime(), // nocommit - preserve created time from db?
-								modified: getCurrentTime(),
-							},
-							upsert: true,
+				updates.push({
+					replaceOne: {
+						filter: {
+							category: this.#getFullCategoryName(category),
+							localId: notification.localId,
 						},
-					})
-				}
+						replacement: {
+							...notification,
+							created: notification.created || getCurrentTime(), // nocommit - preserve created time from db?
+							modified: getCurrentTime(),
+						},
+						upsert: true,
+					},
+				})
 			}
 		}
 

@@ -30,7 +30,7 @@ import {
 	PartAndPieceInstanceActionService,
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
-import { translateNoteToNotification } from '../notifications/util'
+import { convertNoteToNotification } from '../notifications/util'
 import type { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper'
 import type { INotificationsModel } from '../notifications/NotificationsModel'
@@ -327,7 +327,7 @@ function storeNotificationsForCategory(
 ) {
 	for (const note of notes) {
 		notificationHelper.setNotification(notificationCategory, {
-			...translateNoteToNotification(note, [blueprintId]),
+			...convertNoteToNotification(note, [blueprintId]),
 			relatedTo: partInstanceInfo
 				? {
 						type: 'partInstance',

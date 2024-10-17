@@ -33,7 +33,7 @@ import {
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { PlayoutRundownModel } from './model/PlayoutRundownModel'
-import { generateTranslation, translateNoteToNotification } from '../notifications/util'
+import { generateTranslation, convertNoteToNotification } from '../notifications/util'
 
 /**
  * Take the currently Next:ed Part (start playing it)
@@ -322,7 +322,7 @@ async function executeOnTakeCallback(
 			for (const note of onSetAsNextContext.notes) {
 				// Update the notifications. Even though these are related to a partInstance, they will be cleared on the next take
 				playoutModel.setNotification(NOTIFICATION_CATEGORY, {
-					...translateNoteToNotification(note, [blueprint.blueprintId]),
+					...convertNoteToNotification(note, [blueprint.blueprintId]),
 					relatedTo: {
 						type: 'partInstance',
 						rundownId,

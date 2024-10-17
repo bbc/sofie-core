@@ -29,7 +29,7 @@ import {
 import { validateAdlibTestingPartInstanceProperties } from '../playout/adlibTesting'
 import { ReadonlyDeep } from 'type-fest'
 import { convertIngestModelToPlayoutRundownWithSegments } from './commit'
-import { translateNoteToNotification } from '../notifications/util'
+import { convertNoteToNotification } from '../notifications/util'
 
 type PlayStatus = 'previous' | 'current' | 'next'
 type SyncedInstance = {
@@ -198,7 +198,7 @@ export async function syncChangesToPartInstances(
 				playoutModel.clearAllNotifications(notificationCategory)
 				for (const note of syncContext.notes) {
 					playoutModel.setNotification(notificationCategory, {
-						...translateNoteToNotification(note, [blueprint.blueprintId]),
+						...convertNoteToNotification(note, [blueprint.blueprintId]),
 						relatedTo: {
 							type: 'partInstance',
 							rundownId: existingPartInstance.partInstance.part.rundownId,
