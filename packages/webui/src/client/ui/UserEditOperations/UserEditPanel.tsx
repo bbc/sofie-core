@@ -20,6 +20,10 @@ import {
 	CoreUserEditingDefinitionForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { useTranslation } from 'react-i18next'
+import { Translated, useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
+import _ from 'underscore'
+import { Segments } from '../../collections'
+import { UIParts } from '../Collections'
 
 /**
  * UserEditPanelPopUp props.
@@ -28,7 +32,10 @@ interface Props {
 	contextMenuContext: IContextMenuContext | null
 }
 
-export function UserEditPanel(props: Props) {
+//function UserEditPanelBase(props: Translated<Props & TrackedProps>) {
+export function UserEditPanel(props: Translated<Props>) {
+	const { t } = useTranslation()
+
 	React.useEffect(() => {
 		return () => {
 			Array.from(document.querySelectorAll('.usereditpanel-pop-up.is-highlighted')).forEach((element: Element) => {
@@ -37,16 +44,28 @@ export function UserEditPanel(props: Props) {
 				}
 			})
 		}
-	})
+	}, [])
+
+	const rundownId = props.contextMenuContext?.segment?.rundownId
+	const part = useTracker(
+		() => UIParts.findOne({ _id: props.contextMenuContext?.part?.instance.part?._id }),
+		[props.contextMenuContext?.part?.instance.part],
+		props.contextMenuContext?.part?.instance.part
+	)
+
+	const segment = useTracker(
+		() => Segments.findOne({ rundownId: rundownId, _id: props.contextMenuContext?.segment?._id }),
+		[props.contextMenuContext?.segment],
+		props.contextMenuContext?.segment
+	)
 
 	return (
 		<div className="usereditpanel-pop-up">
-			<div className="usereditpanel-pop-up__header">
-				PART : {String(props.contextMenuContext?.part?.instance.part.title)}
-			</div>
+			<div className="usereditpanel-pop-up__header">PART : {String(part?.title)}</div>
 			<div className="usereditpanel-pop-up__contents">
-				{props.contextMenuContext?.part?.instance._id &&
-					props.contextMenuContext?.part?.instance.part.userEditOperations?.map((userEditOperation, i) => {
+				{segment &&
+					part?._id &&
+					part.userEditOperations?.map((userEditOperation, i) => {
 						switch (userEditOperation.type) {
 							case UserEditingType.ACTION:
 								return (
@@ -72,12 +91,10 @@ export function UserEditPanel(props: Props) {
 				<hr />
 			</div>
 			<div className="usereditpanel-pop-up__contents">
-				<div className="usereditpanel-pop-up__label">
-					Debug (segment) : {String(props.contextMenuContext?.segment?.name)}
-				</div>
+				<div className="usereditpanel-pop-up__label">Debug (segment) : {String(segment?.name)}</div>
 				{/* This is only until selection of segment is implemented in UI */}
-				{props.contextMenuContext?.segment &&
-					props.contextMenuContext?.segment?.userEditOperations?.map((userEditOperation, i) => {
+				{segment &&
+					segment?.userEditOperations?.map((userEditOperation, i) => {
 						switch (userEditOperation.type) {
 							case UserEditingType.ACTION:
 								return (
@@ -105,22 +122,22 @@ export function UserEditPanel(props: Props) {
 				<button
 					className="usereditpanel-pop-up__button"
 					onClick={(e) => {
-						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-							MeteorCall.userAction.executeUserChangeOperation(
-								e,
-								ts,
-								//@ts-expect-error TODO: Fix this
-								props.contextMenuContext?.segment?.rundownId,
-								{
-									segmentExternalId: props.contextMenuContext?.segment?.externalId,
-									partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
-									pieceExternalId: undefined,
-								},
-								{
-									id: DefaultUserOperationsTypes.REVERT_SEGMENT,
-								}
+						rundownId &&
+							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+								MeteorCall.userAction.executeUserChangeOperation(
+									e,
+									ts,
+									rundownId,
+									{
+										segmentExternalId: segment?.externalId,
+										partExternalId: part?.externalId,
+										pieceExternalId: undefined,
+									},
+									{
+										id: DefaultUserOperationsTypes.REVERT_SEGMENT,
+									}
+								)
 							)
-						)
 					}}
 				>
 					<span className="usereditpanel-pop-up__label">REVERT SEGMENT</span>
