@@ -9,6 +9,7 @@ import {
 	Notification,
 	NoticeLevel,
 	getNoticeLevelForPieceStatus,
+	NotificationsSource,
 } from '../../lib/notifications/notifications'
 import { WithManagedTracker } from '../../lib/reactiveData/reactiveDataHelper'
 import { reactiveData } from '../../lib/reactiveData/reactiveData'
@@ -42,11 +43,14 @@ import {
 	SegmentId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
+import { UIPartInstances, UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil'
 import { logger } from '../../lib/logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { UserPermissionsContext, UserPermissions } from '../UserPermissions'
+import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
+import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 export const onRONotificationClick = new ReactiveVar<((e: RONotificationEvent) => void) | undefined>(undefined)
 export const reloadRundownPlaylistClick = new ReactiveVar<((e: any) => void) | undefined>(undefined)
@@ -345,12 +349,36 @@ class RundownViewNotifier extends WithManagedTracker {
 			}).fetch()
 
 			for (const dbNotification of dbNotifications) {
+				let source: NotificationsSource
+
+				const relatedTo = dbNotification.relatedTo
+				switch (relatedTo.type) {
+					case DBNotificationTargetType.RUNDOWN:
+						source = relatedTo.rundownId
+						break
+					case DBNotificationTargetType.PARTINSTANCE:
+					case DBNotificationTargetType.PIECEINSTANCE: {
+						const partInstanceDoc = UIPartInstances.findOne(relatedTo.partInstanceId, {
+							fields: { segmentId: 1 },
+						}) as Pick<PartInstance, 'segmentId'> | undefined
+						source = partInstanceDoc?.segmentId ?? relatedTo.rundownId
+						break
+					}
+					case DBNotificationTargetType.PLAYLIST:
+						// No mapping
+						source = undefined
+						break
+					default:
+						assertNever(relatedTo)
+						break
+				}
+
 				const id = `db_notification_${dbNotification._id}`
 				const uiNotification = new Notification(
 					id,
 					getNoticeLevelForNoteSeverity(dbNotification.severity),
 					dbNotification.message,
-					'rundownId' in dbNotification.relatedTo ? dbNotification.relatedTo.rundownId : undefined,
+					source,
 					dbNotification.created,
 					true,
 					[]
