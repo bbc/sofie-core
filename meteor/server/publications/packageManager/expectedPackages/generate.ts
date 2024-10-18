@@ -17,7 +17,6 @@ import { CustomPublishCollection } from '../../../lib/customPublication'
 import { logger } from '../../../logging'
 import { ExpectedPackagesContentCache } from './contentCache'
 import type { StudioFields } from './publication'
-import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 
 /**
  * Regenerate the output for the provided ExpectedPackage `regenerateIds`, updating the data in `collection` as needed
@@ -39,7 +38,6 @@ export async function updateCollectionForExpectedPackageIds(
 ): Promise<void> {
 	const updatedDocIds = new Set<PackageManagerExpectedPackageId>()
 	const missingExpectedPackageIds = new Set<ExpectedPackageId>()
-	const packageContainers = applyAndValidateOverrides(studio.packageContainersWithOverrides).obj
 
 	for (const packageId of regenerateIds) {
 		const packageDoc = contentCache.ExpectedPackages.findOne(packageId)
@@ -110,7 +108,6 @@ export async function updateCollectionForPieceInstanceIds(
 ): Promise<void> {
 	const updatedDocIds = new Set<PackageManagerExpectedPackageId>()
 	const missingPieceInstanceIds = new Set<PieceInstanceId>()
-	const packageContainers = applyAndValidateOverrides(studio.packageContainersWithOverrides).obj
 
 	for (const pieceInstanceId of regenerateIds) {
 		const pieceInstanceDoc = contentCache.PieceInstances.findOne(pieceInstanceId)

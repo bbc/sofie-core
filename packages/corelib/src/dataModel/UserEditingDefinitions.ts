@@ -1,7 +1,15 @@
-import type { UserEditingType, JSONBlob, JSONSchema } from '@sofie-automation/blueprints-integration'
+import type {
+	UserEditingType,
+	JSONBlob,
+	JSONSchema,
+	DefaultUserOperationsIDs,
+} from '@sofie-automation/blueprints-integration'
 import type { ITranslatableMessage } from '../TranslatableMessage'
 
-export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction | CoreUserEditingDefinitionForm
+export type CoreUserEditingDefinition =
+	| CoreUserEditingDefinitionAction
+	| CoreUserEditingDefinitionForm
+	| CoreUserEditingDefinitionSofie
 
 export interface CoreUserEditingDefinitionAction {
 	type: UserEditingType.ACTION
@@ -27,4 +35,10 @@ export interface CoreUserEditingDefinitionForm {
 	currentValues: Record<string, any>
 	/** Translation namespaces to use when rendering this form */
 	translationNamespaces: string[]
+}
+
+export interface CoreUserEditingDefinitionSofie {
+	type: UserEditingType.SOFIE
+	/** Id of this operation */
+	id: DefaultUserOperationsIDs
 }
