@@ -6,7 +6,7 @@ import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { getIgnorePieceContentStatus } from '../../lib/localStorage'
 import { UIPartInstances, UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
 import { SegmentNoteCounts, SegmentUi } from './withResolvedSegment'
-import { Notifications, PartInstances } from '../../collections'
+import { Notifications } from '../../collections'
 import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 

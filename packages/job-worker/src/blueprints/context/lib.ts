@@ -99,7 +99,7 @@ export const IBlueprintPieceObjectsSampleKeys = allKeysOfObject<IBlueprintPiece>
 })
 
 // Compile a list of the keys which are allowed to be set
-export const IBlueprintMutatablePartSampleKeys = allKeysOfObject<IBlueprintMutatablePart>({
+export const PlayoutMutatablePartSampleKeys = allKeysOfObject<PlayoutMutatablePart>({
 	title: true,
 	prompterTitle: true,
 	privateData: true,

@@ -699,6 +699,7 @@ describe('rundown Timing Calculator', () => {
 					asDisplayedPlaylistDuration: 7000,
 					asPlayedPlaylistDuration: 7000,
 					currentPartWillAutoNext: false,
+					currentSegmentId: protectString(segmentId1),
 					currentTime: 3500,
 					rundownExpectedDurations: {
 						[rundownId1]: 7000,
@@ -854,6 +855,7 @@ describe('rundown Timing Calculator', () => {
 					asDisplayedPlaylistDuration: 11000,
 					asPlayedPlaylistDuration: 11000,
 					currentPartWillAutoNext: false,
+					currentSegmentId: protectString(segmentId1),
 					currentTime: 10000,
 					rundownExpectedDurations: {
 						[rundownId1]: 7000,
@@ -1465,6 +1467,7 @@ describe('rundown Timing Calculator', () => {
 				asPlayedPlaylistDuration: 8000,
 				currentPartWillAutoNext: false,
 				currentTime: 0,
+				partsInQuickLoop: {},
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
 				},
@@ -1610,6 +1613,7 @@ describe('rundown Timing Calculator', () => {
 				asPlayedPlaylistDuration: 8000,
 				currentPartWillAutoNext: false,
 				currentTime: 3000,
+				partsInQuickLoop: {},
 				rundownExpectedDurations: {
 					[rundownId1]: 6000,
 				},
@@ -1755,6 +1759,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 4000,
 				asPlayedPlaylistDuration: 4000,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId1),
 				currentTime: 1500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
@@ -1903,6 +1908,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 5500,
 				asPlayedPlaylistDuration: 5500,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId1),
 				currentTime: 3500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
@@ -2057,6 +2063,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 4000,
 				asPlayedPlaylistDuration: 4000,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId2),
 				currentTime: 2500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
@@ -2205,6 +2212,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 4000,
 				asPlayedPlaylistDuration: 4000,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId1),
 				currentTime: 1500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
@@ -2353,6 +2361,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 5500,
 				asPlayedPlaylistDuration: 5500,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId1),
 				currentTime: 3500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
@@ -2507,6 +2516,7 @@ describe('rundown Timing Calculator', () => {
 				asDisplayedPlaylistDuration: 4000,
 				asPlayedPlaylistDuration: 4000,
 				currentPartWillAutoNext: false,
+				currentSegmentId: protectString(segmentId2),
 				currentTime: 2500,
 				rundownExpectedDurations: {
 					[rundownId1]: 4000,
