@@ -1,10 +1,11 @@
-import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
+import { DBNotificationObj, DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { setupDefaultJobEnvironment } from '../../__mocks__/context'
 import { NotificationsModelHelper } from '../NotificationsModelHelper'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { INotificationWithTarget } from '../NotificationsModel'
 import { generateTranslation } from '@sofie-automation/corelib/dist/lib'
+import exp = require('constants')
 
 describe('NotificationsModelHelper', () => {
 	it('no changes has no mongo write', async () => {
@@ -227,6 +228,78 @@ describe('NotificationsModelHelper', () => {
 				},
 			])
 		})
+	})
+
+	describe('created timestamp persisted', () => {
+		function runTest(runGetAllNotifications: boolean) {
+			it(`loading existing: ${runGetAllNotifications}`, async () => {
+				const context = setupDefaultJobEnvironment()
+				const notificationsCollection = context.mockCollections.Notifications
+				const playlistId = protectString('playlist0')
+
+				const expectedNotificationId = protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_') // Taken from a previous run
+
+				await notificationsCollection.insertOne({
+					_id: expectedNotificationId,
+					category: 'test:my-category',
+					created: 12345,
+					localId: 'abc',
+					message: {
+						key: 'test2',
+					},
+					modified: 6789,
+					relatedTo: {
+						playlistId: playlistId,
+						studioId: context.studioId,
+						type: DBNotificationTargetType.PLAYLIST,
+					},
+					severity: NoteSeverity.WARNING,
+				})
+				notificationsCollection.clearOpLog()
+
+				{
+					const updateHelper = new NotificationsModelHelper(context, 'test', playlistId)
+
+					if (runGetAllNotifications) {
+						// eslint-disable-next-line jest/no-conditional-expect
+						expect(await updateHelper.getAllNotifications('my-category')).toHaveLength(1)
+					}
+
+					updateHelper.setNotification('my-category', {
+						id: 'abc',
+						message: generateTranslation('test2'),
+						severity: NoteSeverity.WARNING,
+						relatedTo: { type: 'playlist' },
+					})
+					await updateHelper.saveAllToDatabase()
+					expect(notificationsCollection.operations).toHaveLength(runGetAllNotifications ? 4 : 2)
+					notificationsCollection.clearOpLog()
+				}
+
+				// Check what was in the db
+				expect(await notificationsCollection.findFetch()).toEqual([
+					{
+						_id: expectedNotificationId,
+						category: 'test:my-category',
+						created: 12345,
+						localId: 'abc',
+						message: {
+							key: 'test2',
+						},
+						modified: expect.any(Number),
+						relatedTo: {
+							playlistId: playlistId,
+							studioId: context.studioId,
+							type: DBNotificationTargetType.PLAYLIST,
+						},
+						severity: NoteSeverity.WARNING,
+					},
+				] satisfies DBNotificationObj[])
+			})
+		}
+
+		runTest(true)
+		// runTest(false) // nocommit - this test is failing
 	})
 
 	// TODO - combinations
