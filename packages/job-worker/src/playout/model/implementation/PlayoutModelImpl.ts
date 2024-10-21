@@ -565,15 +565,38 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 							rundownId: { $in: rundownIds },
 					  })
 					: undefined,
+				allToRemove.length > 0
+					? this.context.directCollections.Notifications.remove({
+							'relatedTo.studioId': this.context.studioId,
+							'relatedTo.rundownId': { $in: rundownIds },
+							'relatedTo.partInstanceId': { $in: allToRemove },
+					  })
+					: undefined,
 			])
 		})
 	}
 
 	removeUntakenPartInstances(): void {
+		const removedPartInstanceIds: PartInstanceId[] = []
+
 		for (const partInstance of this.olderPartInstances) {
 			if (!partInstance.partInstance.isTaken) {
 				this.allPartInstances.set(partInstance.partInstance._id, null)
+				removedPartInstanceIds.push(partInstance.partInstance._id)
 			}
+		}
+
+		// Ensure there are no notifications left for these partInstances
+		if (removedPartInstanceIds.length > 0) {
+			this.deferAfterSave(async (playoutModel) => {
+				const rundownIds = playoutModel.getRundownIds()
+
+				await this.context.directCollections.Notifications.remove({
+					'relatedTo.studioId': this.context.studioId,
+					'relatedTo.rundownId': { $in: rundownIds },
+					'relatedTo.partInstanceId': { $in: removedPartInstanceIds },
+				})
+			})
 		}
 	}
 
