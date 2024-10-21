@@ -76,64 +76,72 @@ export function UserEditPanel(props: Translated<Props>) {
 
 	return (
 		<div className="usereditpanel-pop-up">
-			<div className="usereditpanel-pop-up__header">PART : {String(part?.title)}</div>
-			<div className="usereditpanel-pop-up__contents">
-				{timePosition &&
-					segment &&
-					part?._id &&
-					part.userEditOperations?.map((userEditOperation, i) => {
-						switch (userEditOperation.type) {
-							case UserEditingType.ACTION:
-								return (
-									<EditingTypeAction
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={props.contextMenuContext}
-									/>
-								)
-							case UserEditingType.FORM:
-								return (
-									<EditingTypeChangeSource
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={props.contextMenuContext}
-									/>
-								)
-							default:
-								assertNever(userEditOperation)
-								return null
-						}
-					})}
-				<hr />
-			</div>
-			<div className="usereditpanel-pop-up__contents">
-				<div className="usereditpanel-pop-up__label">Debug (segment) : {String(segment?.name)}</div>
-				{/* This is only until selection of segment is implemented in UI */}
-				{segment &&
-					segment?.userEditOperations?.map((userEditOperation, i) => {
-						switch (userEditOperation.type) {
-							case UserEditingType.ACTION:
-								return (
-									<EditingTypeAction
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={props.contextMenuContext}
-									/>
-								)
-							case UserEditingType.FORM:
-								return (
-									<EditingTypeChangeSource
-										key={i}
-										userEditOperation={userEditOperation}
-										contextMenuContext={props.contextMenuContext}
-									/>
-								)
-							default:
-								assertNever(userEditOperation)
-								return null
-						}
-					})}
-			</div>
+			{timePosition && (
+				<>
+					<div className="usereditpanel-pop-up__header">PART : {String(part?.title)}</div>
+					<div className="usereditpanel-pop-up__contents">
+						{timePosition &&
+							segment &&
+							part?._id &&
+							part.userEditOperations?.map((userEditOperation, i) => {
+								switch (userEditOperation.type) {
+									case UserEditingType.ACTION:
+										return (
+											<EditingTypeAction
+												key={i}
+												userEditOperation={userEditOperation}
+												contextMenuContext={props.contextMenuContext}
+											/>
+										)
+									case UserEditingType.FORM:
+										return (
+											<EditingTypeChangeSource
+												key={i}
+												userEditOperation={userEditOperation}
+												contextMenuContext={props.contextMenuContext}
+											/>
+										)
+									default:
+										assertNever(userEditOperation)
+										return null
+								}
+							})}
+						<hr />
+					</div>
+				</>
+			)}
+			{!timePosition && (
+				<>
+					<div className="usereditpanel-pop-up__header">Segment : {String(segment?.name)}</div>
+					<div className="usereditpanel-pop-up__contents">
+						{/* This is only until selection of segment is implemented in UI */}
+						{segment &&
+							segment?.userEditOperations?.map((userEditOperation, i) => {
+								switch (userEditOperation.type) {
+									case UserEditingType.ACTION:
+										return (
+											<EditingTypeAction
+												key={i}
+												userEditOperation={userEditOperation}
+												contextMenuContext={props.contextMenuContext}
+											/>
+										)
+									case UserEditingType.FORM:
+										return (
+											<EditingTypeChangeSource
+												key={i}
+												userEditOperation={userEditOperation}
+												contextMenuContext={props.contextMenuContext}
+											/>
+										)
+									default:
+										assertNever(userEditOperation)
+										return null
+								}
+							})}
+					</div>
+				</>
+			)}
 			<div className="usereditpanel-pop-up__footer">
 				<button
 					className="usereditpanel-pop-up__button"
