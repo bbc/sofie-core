@@ -20,7 +20,7 @@ import { ABPlayerDefinition, NoteSeverity } from '@sofie-automation/blueprints-i
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { abPoolFilterDisabled, findPlayersInRouteSets } from './routeSetDisabling'
 import type { INotification } from '../../notifications/NotificationsModel'
-import { generateTranslation } from '../../notifications/util'
+import { generateTranslation } from '@sofie-automation/corelib/dist/lib'
 
 export interface ABPlaybackResult {
 	assignments: Record<string, ABSessionAssignments>

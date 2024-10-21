@@ -1,4 +1,4 @@
-import { assertNever, getRandomId } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, getRandomId, generateTranslation } from '@sofie-automation/corelib/dist/lib'
 import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart, isPartPlayable } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { JobContext } from '../jobs'
@@ -30,7 +30,7 @@ import {
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { convertNoteToNotification, generateTranslation } from '../notifications/util'
+import { convertNoteToNotification } from '../notifications/util'
 
 /**
  * Set or clear the nexted part, from a given PartInstance, or SelectNextPartResult

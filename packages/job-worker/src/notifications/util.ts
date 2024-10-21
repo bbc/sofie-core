@@ -1,24 +1,8 @@
-import {
-	ITranslatableMessage,
-	wrapTranslatableMessageFromBlueprints,
-} from '@sofie-automation/corelib/dist/TranslatableMessage'
+import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import type { INotification } from './NotificationsModel'
 import { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { getHash } from '@sofie-automation/corelib/dist/hash'
-
-/** Generate the translation for a string, to be applied later when it gets rendered */
-export function generateTranslation(
-	key: string,
-	args?: { [k: string]: any },
-	namespaces?: string[]
-): ITranslatableMessage {
-	return {
-		key,
-		args,
-		namespaces,
-	}
-}
 
 export function convertNoteToNotification(note: INoteBase, blueprintIds: BlueprintId[]): INotification {
 	return {

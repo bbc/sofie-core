@@ -2,9 +2,9 @@ import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataMod
 import { setupDefaultJobEnvironment } from '../../__mocks__/context'
 import { NotificationsModelHelper } from '../NotificationsModelHelper'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { generateTranslation } from '../util'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { INotificationWithTarget } from '../NotificationsModel'
+import { generateTranslation } from '@sofie-automation/corelib/dist/lib'
 
 describe('NotificationsModelHelper', () => {
 	it('no changes has no mongo write', async () => {

@@ -14,7 +14,7 @@ import { NoteSeverity, PartEndState, VTContent } from '@sofie-automation/bluepri
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { ReadonlyDeep } from 'type-fest'
 import { getResolvedPiecesForCurrentPartInstance } from './resolvedPieces'
-import { clone, getRandomId } from '@sofie-automation/corelib/dist/lib'
+import { clone, generateTranslation, getRandomId } from '@sofie-automation/corelib/dist/lib'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { updateTimeline } from './timeline/generate'
 import { OnTakeContext, PartEventContext, RundownContext } from '../blueprints/context'
@@ -33,7 +33,7 @@ import {
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService'
 import { PlayoutRundownModel } from './model/PlayoutRundownModel'
-import { generateTranslation, convertNoteToNotification } from '../notifications/util'
+import { convertNoteToNotification } from '../notifications/util'
 
 /**
  * Take the currently Next:ed Part (start playing it)

@@ -5,7 +5,13 @@ import {
 	ForceQuickLoopAutoNext,
 	QuickLoopMarkerType,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { clone, getHash, getRandomString, normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
+import {
+	clone,
+	getHash,
+	getRandomString,
+	normalizeArrayToMap,
+	generateTranslation,
+} from '@sofie-automation/corelib/dist/lib'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { IngestJobs } from '@sofie-automation/corelib/dist/worker/ingest'
@@ -43,7 +49,6 @@ import { runWithRundownLock } from './ingest/lock'
 import { convertRundownToBlueprints } from './blueprints/context/lib'
 import { sortRundownIDsInPlaylist } from '@sofie-automation/corelib/dist/playout/playlist'
 import { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
-import { generateTranslation } from './notifications/util'
 
 /**
  * Debug: Remove a Playlist and all its contents

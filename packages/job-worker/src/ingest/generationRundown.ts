@@ -137,7 +137,8 @@ export async function updateRundownFromIngestDataInner(
 	const allRundownWatchedPackages = await pAllRundownWatchedPackages
 
 	const extraRundownNotes: RundownNote[] = selectShowStyleContext.notes.map((note) => ({
-		...note,
+		type: note.type,
+		message: wrapTranslatableMessageFromBlueprints(note.message, [showStyleBlueprint.blueprintId]),
 		origin: {
 			name: 'selectShowStyleVariant',
 		},
