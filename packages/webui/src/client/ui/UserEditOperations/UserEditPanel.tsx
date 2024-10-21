@@ -25,18 +25,6 @@ import _ from 'underscore'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
 
-function getTimePosition(contextMenuContext: IContextMenuContext): number | null {
-	let offset = 0
-	if (contextMenuContext && contextMenuContext.partDocumentOffset) {
-		const left = contextMenuContext.partDocumentOffset.left || 0
-		const timeScale = contextMenuContext.timeScale || 1
-		const menuPosition = contextMenuContext.mousePosition || { left }
-		offset = (menuPosition.left - left) / timeScale
-		return offset
-	}
-	return null
-}
-
 /**
  * UserEditPanelPopUp props.
  */
@@ -72,7 +60,6 @@ export function UserEditPanel(props: Translated<Props>) {
 	)
 
 	const timePosition = getTimePosition(props.contextMenuContext || {})
-	console.log('timePosition', timePosition)
 
 	return (
 		<div className="usereditpanel-pop-up">
@@ -306,4 +293,19 @@ function EditingTypeChangeSource(props: {
 			)}
 		</>
 	)
+}
+
+// This is simmilar implementation as the function in SegmentContextMenu.tsx
+// and is used to check if a segment or a part is used.
+// A better implementation of what is selected in the UI should be implemented.
+function getTimePosition(contextMenuContext: IContextMenuContext): number | null {
+	let offset = 0
+	if (contextMenuContext && contextMenuContext.partDocumentOffset) {
+		const left = contextMenuContext.partDocumentOffset.left || 0
+		const timeScale = contextMenuContext.timeScale || 1
+		const menuPosition = contextMenuContext.mousePosition || { left }
+		offset = (menuPosition.left - left) / timeScale
+		return offset
+	}
+	return null
 }
