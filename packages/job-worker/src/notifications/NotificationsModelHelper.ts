@@ -23,13 +23,6 @@ export class NotificationsModelHelper implements INotificationsModel {
 	readonly #categoryPrefix: string
 	readonly #playlistId: RundownPlaylistId | null
 
-	/**
-	 * These properties track both the loaded state, and what will be written to the database when saving
-	 * If a category is included in #loadedCategories, it has either been loaded from the database or the in memory version is the source of truth (ie, it has been cleared)
-	 * An entry of a cateogy in #notificationsByCategory indicates that it has been modified in memory and has data to be written to the database.
-	 * Only when a category is in both #loadedCategories and #notificationsByCategory is it considered to be fully loaded and up to date, otherwise it is considered to be a partial 'diff'
-	 */
-	// readonly #loadedCategories = new Set<string>()
 	readonly #notificationsByCategory = new Map<string, NotificationsLoadState>()
 
 	constructor(context: JobContext, categoryPrefix: string, playlistId: RundownPlaylistId | null) {
@@ -159,6 +152,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 						filter: {
 							category: this.#getFullCategoryName(category),
 							localId: { $nin: idsToUpdate },
+							'relatedTo.studioId': this.#context.studioId,
 						},
 					},
 				})
@@ -169,6 +163,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 						filter: {
 							category: this.#getFullCategoryName(category),
 							localId: { $in: idsToDelete },
+							'relatedTo.studioId': this.#context.studioId,
 						},
 					},
 				})
@@ -183,6 +178,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 						filter: {
 							category: this.#getFullCategoryName(category),
 							localId: notification.localId,
+							'relatedTo.studioId': this.#context.studioId,
 						},
 						replacement: {
 							...notification,

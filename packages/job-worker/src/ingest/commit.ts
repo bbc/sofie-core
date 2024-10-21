@@ -361,8 +361,6 @@ async function updatePartInstancesSegmentIds(
 				},
 			}))
 		)
-
-		// nocommit - any notifications need to be pushed across?
 	}
 }
 

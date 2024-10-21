@@ -259,7 +259,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 			this.#rundownBaselineAdLibActions = new LazyInitialise(async () => [])
 		}
 
-		this.#notificationsHelper = new NotificationsModelHelper(context, 'ingest', null)
+		this.#notificationsHelper = new NotificationsModelHelper(context, `ingest:${this.rundownId}`, null)
 	}
 
 	getRundown(): ReadonlyDeep<DBRundown> {

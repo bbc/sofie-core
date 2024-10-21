@@ -122,7 +122,7 @@ export async function executeAdlibActionAndSaveModel(
 
 		// Save the notes immediately, as they are not dependent on the action and want to be saved even if the action fails
 		if (dataStoreActionNotes.length > 0) {
-			const notificationHelper = new NotificationsModelHelper(context, 'playout', playlist._id)
+			const notificationHelper = new NotificationsModelHelper(context, `playout:${playlist._id}`, playlist._id)
 			storeNotificationsForCategory(
 				notificationHelper,
 				`dataStoreAction:${getRandomId()}`, // Always append and leave existing notes
@@ -157,8 +157,6 @@ export async function executeAdlibActionAndSaveModel(
 				watchedPackages,
 				actionParameters
 			)
-
-			// Save the playout model
 
 			await playoutModel.saveAllToDatabase()
 

@@ -53,6 +53,7 @@ describe('NotificationsModelHelper', () => {
 						{
 							category: 'test:my-category',
 							localId: { $in: ['id0'] },
+							'relatedTo.studioId': 'mockStudio0',
 						},
 					],
 				},
@@ -94,6 +95,7 @@ describe('NotificationsModelHelper', () => {
 						{
 							category: 'test:my-category',
 							localId: { $nin: [] },
+							'relatedTo.studioId': 'mockStudio0',
 						},
 					],
 				},
@@ -158,6 +160,7 @@ describe('NotificationsModelHelper', () => {
 						{
 							category: 'test:my-category',
 							localId: { $nin: ['abc'] },
+							'relatedTo.studioId': 'mockStudio0',
 						},
 					],
 				},
@@ -218,6 +221,7 @@ describe('NotificationsModelHelper', () => {
 						{
 							category: 'test:my-category',
 							localId: { $nin: [] },
+							'relatedTo.studioId': 'mockStudio0',
 						},
 					],
 				},
