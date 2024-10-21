@@ -22,6 +22,8 @@ export interface UserEditingDefinitionAction {
 	svgIconDisabled?: string
 	/** Whether this action should be indicated as being active */
 	isActive?: boolean
+	/** Button Type */
+	buttonType?: UserEditingButtonType
 }
 
 /**
@@ -55,4 +57,13 @@ export interface UserEditingGroupingType {
 	filter?: string
 	label?: string
 	color?: string
+}
+
+export enum UserEditingButtonType {
+	/** Button */
+	BUTTON = 'button',
+	/** Icon */
+	SWITCH = 'switch',
+	/** Hidden */
+	HIDDEN = 'hidden',
 }

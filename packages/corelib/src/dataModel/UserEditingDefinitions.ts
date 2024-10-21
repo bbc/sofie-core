@@ -3,6 +3,7 @@ import type {
 	UserEditingGroupingType,
 	JSONBlob,
 	JSONSchema,
+	UserEditingButtonType,
 } from '@sofie-automation/blueprints-integration'
 import type { ITranslatableMessage } from '../TranslatableMessage'
 
@@ -20,6 +21,8 @@ export interface CoreUserEditingDefinitionAction {
 	svgIconDisabled?: string
 	/** Whether this action should be indicated as being active */
 	isActive?: boolean
+	//** Button Type */
+	buttonType?: UserEditingButtonType
 }
 
 export interface CoreUserEditingDefinitionForm {

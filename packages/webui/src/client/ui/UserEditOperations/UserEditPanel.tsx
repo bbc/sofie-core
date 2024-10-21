@@ -10,6 +10,7 @@ import { t } from 'i18next'
 import {
 	DefaultUserOperationsTypes,
 	JSONBlobParse,
+	UserEditingButtonType,
 	UserEditingGroupingType,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
@@ -24,7 +25,6 @@ import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import _ from 'underscore'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 
 /**
  * UserEditPanelPopUp props.
@@ -221,47 +221,86 @@ function EditingTypeAction(props: {
 	userEditOperation: CoreUserEditingDefinitionAction
 	contextMenuContext: IContextMenuContext | null
 }) {
-	return (
-		<div className="usereditpanel-pop-up__action">
-			<a
-				className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', 'sb-nocolor', {
-					'sb-on': props.userEditOperation.isActive || false,
-				})}
-				role="button"
-				onClick={(e) => {
-					doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-						MeteorCall.userAction.executeUserChangeOperation(
-							e,
-							ts,
-							//@ts-expect-error TODO: Fix this
-							props.contextMenuContext?.segment?.rundownId,
-							{
-								segmentExternalId: props.contextMenuContext?.segment?.externalId,
-								partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
-								pieceExternalId: undefined,
-							},
-							{
-								id: props.userEditOperation.id,
-							}
+	if (!props.userEditOperation.buttonType) return null
+	switch (props.userEditOperation.buttonType) {
+		case UserEditingButtonType.BUTTON:
+			return (
+				<button
+					title={'User Action : ' + props.userEditOperation.label}
+					className="usereditpanel-pop-up__button"
+					onClick={(e) => {
+						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+							MeteorCall.userAction.executeUserChangeOperation(
+								e,
+								ts,
+								//@ts-expect-error TODO: Fix this
+								props.contextMenuContext?.segment?.rundownId,
+								{
+									segmentExternalId: props.contextMenuContext?.segment?.externalId,
+									partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+									pieceExternalId: undefined,
+								},
+								{
+									id: props.userEditOperation.id,
+								}
+							)
 						)
-					)
-				}}
-				tabIndex={0}
-			>
-				<div className="sb-content">
-					<div className="sb-label">
-						<span className="mls">&nbsp;</span>
-						<span className="mrs right">&nbsp;</span>
-					</div>
-					<div className="sb-switch"></div>
+					}}
+				>
+					<span className="usereditpanel-pop-up__label">
+						{' '}
+						{translateMessage(props.userEditOperation.label, i18nTranslator)}
+					</span>
+				</button>
+			)
+		case UserEditingButtonType.SWITCH:
+			return (
+				<div className="usereditpanel-pop-up__action">
+					<a
+						className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', 'sb-nocolor', {
+							'sb-on': props.userEditOperation.isActive || false,
+						})}
+						role="button"
+						onClick={(e) => {
+							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+								MeteorCall.userAction.executeUserChangeOperation(
+									e,
+									ts,
+									//@ts-expect-error TODO: Fix this
+									props.contextMenuContext?.segment?.rundownId,
+									{
+										segmentExternalId: props.contextMenuContext?.segment?.externalId,
+										partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+										pieceExternalId: undefined,
+									},
+									{
+										id: props.userEditOperation.id,
+									}
+								)
+							)
+						}}
+						tabIndex={0}
+					>
+						<div className="sb-content">
+							<div className="sb-label">
+								<span className="mls">&nbsp;</span>
+								<span className="mrs right">&nbsp;</span>
+							</div>
+							<div className="sb-switch"></div>
+						</div>
+					</a>
+					<span className="usereditpanel-pop-up__label">
+						{' '}
+						{translateMessage(props.userEditOperation.label, i18nTranslator)}
+					</span>
 				</div>
-			</a>
-			<span className="usereditpanel-pop-up__label">
-				{' '}
-				{translateMessage(props.userEditOperation.label, i18nTranslator)}
-			</span>
-		</div>
-	)
+			)
+		case UserEditingButtonType.HIDDEN || undefined:
+			return null
+		default:
+			assertNever(props.userEditOperation.buttonType)
+			return null
+	}
 }
 
 function EditingTypeChangeSource(props: {
@@ -302,7 +341,7 @@ function EditingTypeChangeSource(props: {
 								}
 								style={{ backgroundColor: group.color }}
 								key={index}
-								onClick={(e) => {
+								onClick={() => {
 									setSelectedGroup(group.filter)
 								}}
 								disabled={!group.filter}
@@ -367,27 +406,4 @@ function getTimePosition(contextMenuContext: IContextMenuContext): number | null
 		return offset
 	}
 	return null
-}
-
-interface EditStatesIconsProps {
-	userEditOperations: DBSegment['userEditOperations']
-}
-function EditStatesIcons({ userEditOperations }: EditStatesIconsProps) {
-	return (
-		<div className="usereditpanel-pop-up__svg-icon">
-			{userEditOperations &&
-				userEditOperations.map((operation) => {
-					if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
-
-					return (
-						<div
-							key={operation.id}
-							dangerouslySetInnerHTML={{
-								__html: operation.svgIcon,
-							}}
-						></div>
-					)
-				})}
-		</div>
-	)
 }

@@ -513,6 +513,7 @@ function translateUserEditsToBlueprint(
 						svgIcon: userEdit.svgIcon,
 						svgIconDisabled: userEdit.svgIconDisabled,
 						isActive: userEdit.isActive,
+						buttonType: userEdit.buttonType,
 					} satisfies Complete<UserEditingDefinitionAction>
 				case UserEditingType.FORM:
 					return {
@@ -548,6 +549,7 @@ export function translateUserEditsFromBlueprint(
 						svgIcon: userEdit.svgIcon,
 						svgIconDisabled: userEdit.svgIconDisabled,
 						isActive: userEdit.isActive,
+						buttonType: userEdit.buttonType,
 					} satisfies Complete<CoreUserEditingDefinitionAction>
 				case UserEditingType.FORM:
 					return {
