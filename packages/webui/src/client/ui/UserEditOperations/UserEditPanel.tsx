@@ -25,6 +25,18 @@ import _ from 'underscore'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
 
+function getTimePosition(contextMenuContext: IContextMenuContext): number | null {
+	let offset = 0
+	if (contextMenuContext && contextMenuContext.partDocumentOffset) {
+		const left = contextMenuContext.partDocumentOffset.left || 0
+		const timeScale = contextMenuContext.timeScale || 1
+		const menuPosition = contextMenuContext.mousePosition || { left }
+		offset = (menuPosition.left - left) / timeScale
+		return offset
+	}
+	return null
+}
+
 /**
  * UserEditPanelPopUp props.
  */
@@ -59,11 +71,15 @@ export function UserEditPanel(props: Translated<Props>) {
 		props.contextMenuContext?.segment
 	)
 
+	const timePosition = getTimePosition(props.contextMenuContext || {})
+	console.log('timePosition', timePosition)
+
 	return (
 		<div className="usereditpanel-pop-up">
 			<div className="usereditpanel-pop-up__header">PART : {String(part?.title)}</div>
 			<div className="usereditpanel-pop-up__contents">
-				{segment &&
+				{timePosition &&
+					segment &&
 					part?._id &&
 					part.userEditOperations?.map((userEditOperation, i) => {
 						switch (userEditOperation.type) {
