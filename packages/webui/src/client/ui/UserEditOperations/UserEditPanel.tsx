@@ -185,7 +185,7 @@ export function UserEditPanel(props: Props) {
 								)
 						}}
 					>
-						<span className="usereditpanel-pop-up__label">REVERT PART</span>
+						<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
 					</button>
 				) : (
 					<button
@@ -209,7 +209,7 @@ export function UserEditPanel(props: Props) {
 								)
 						}}
 					>
-						<span className="usereditpanel-pop-up__label">REVERT SEGMENT</span>
+						<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
 					</button>
 				)}
 			</div>
