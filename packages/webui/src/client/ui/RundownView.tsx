@@ -558,7 +558,7 @@ const RundownHeader = withTranslation()(
 
 		clearQuickLoop = (e: any) => {
 			const { t } = this.props
-			if (this.props.studioMode && this.props.playlist.activationId) {
+			if (this.props.userPermissions.studio && this.props.playlist.activationId) {
 				doUserAction(t, e, UserAction.CLEAR_QUICK_LOOP, (e, ts) =>
 					MeteorCall.userAction.clearQuickLoop(e, ts, this.props.playlist._id)
 				)
