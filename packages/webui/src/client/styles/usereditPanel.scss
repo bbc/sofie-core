@@ -28,11 +28,14 @@
 		text-align: left;
 		padding-top: 0.5rem;
 		padding-left: 1rem;
+		display: flex;
+		align-items: center;
+  		gap: 0.5rem;
 
-		> svg {
+		> .svg {
 			filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
-			width: 1.7em;
-			height: 1.7em;
+			width: 1.1em;
+			height: 1.1em;
 		}
 	}
 

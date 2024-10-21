@@ -20,10 +20,11 @@ import {
 	CoreUserEditingDefinitionForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { useTranslation } from 'react-i18next'
-import { Translated, useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
+import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import _ from 'underscore'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 
 /**
  * UserEditPanelPopUp props.
@@ -33,7 +34,7 @@ interface Props {
 }
 
 //function UserEditPanelBase(props: Translated<Props & TrackedProps>) {
-export function UserEditPanel(props: Translated<Props>) {
+export function UserEditPanel(props: Props) {
 	const { t } = useTranslation()
 
 	React.useEffect(() => {
@@ -59,15 +60,31 @@ export function UserEditPanel(props: Translated<Props>) {
 		props.contextMenuContext?.segment
 	)
 
-	const timePosition = getTimePosition(props.contextMenuContext || {})
+	const isPartSelected = getTimePosition(props.contextMenuContext || {})
 
 	return (
 		<div className="usereditpanel-pop-up">
-			{timePosition && (
+			{isPartSelected && (
 				<>
-					<div className="usereditpanel-pop-up__header">PART : {String(part?.title)}</div>
+					<div className="usereditpanel-pop-up__header">
+						{part?.userEditOperations &&
+							part.userEditOperations.map((operation) => {
+								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+
+								return (
+									<div
+										key={operation.id}
+										className="svg"
+										dangerouslySetInnerHTML={{
+											__html: operation.svgIcon,
+										}}
+									></div>
+								)
+							})}
+						PART : {String(part?.title)}
+					</div>
 					<div className="usereditpanel-pop-up__contents">
-						{timePosition &&
+						{isPartSelected &&
 							segment &&
 							part?._id &&
 							part.userEditOperations?.map((userEditOperation, i) => {
@@ -97,9 +114,25 @@ export function UserEditPanel(props: Translated<Props>) {
 					</div>
 				</>
 			)}
-			{!timePosition && (
+			{!isPartSelected && (
 				<>
-					<div className="usereditpanel-pop-up__header">Segment : {String(segment?.name)}</div>
+					<div className="usereditpanel-pop-up__header">
+						{segment?.userEditOperations &&
+							segment.userEditOperations.map((operation) => {
+								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+
+								return (
+									<div
+										key={operation.id}
+										className="svg"
+										dangerouslySetInnerHTML={{
+											__html: operation.svgIcon,
+										}}
+									></div>
+								)
+							})}
+						SEGMENT : {String(segment?.name)}
+					</div>
 					<div className="usereditpanel-pop-up__contents">
 						{/* This is only until selection of segment is implemented in UI */}
 						{segment &&
@@ -130,29 +163,55 @@ export function UserEditPanel(props: Translated<Props>) {
 				</>
 			)}
 			<div className="usereditpanel-pop-up__footer">
-				<button
-					className="usereditpanel-pop-up__button"
-					onClick={(e) => {
-						rundownId &&
-							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-								MeteorCall.userAction.executeUserChangeOperation(
-									e,
-									ts,
-									rundownId,
-									{
-										segmentExternalId: segment?.externalId,
-										partExternalId: part?.externalId,
-										pieceExternalId: undefined,
-									},
-									{
-										id: DefaultUserOperationsTypes.REVERT_SEGMENT,
-									}
+				{isPartSelected ? (
+					<button
+						className="usereditpanel-pop-up__button"
+						onClick={(e) => {
+							rundownId &&
+								doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+									MeteorCall.userAction.executeUserChangeOperation(
+										e,
+										ts,
+										rundownId,
+										{
+											segmentExternalId: segment?.externalId,
+											partExternalId: part?.externalId,
+											pieceExternalId: undefined,
+										},
+										{
+											id: DefaultUserOperationsTypes.REVERT_PART,
+										}
+									)
 								)
-							)
-					}}
-				>
-					<span className="usereditpanel-pop-up__label">REVERT SEGMENT</span>
-				</button>
+						}}
+					>
+						<span className="usereditpanel-pop-up__label">REVERT PART</span>
+					</button>
+				) : (
+					<button
+						className="usereditpanel-pop-up__button"
+						onClick={(e) => {
+							rundownId &&
+								doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+									MeteorCall.userAction.executeUserChangeOperation(
+										e,
+										ts,
+										rundownId,
+										{
+											segmentExternalId: segment?.externalId,
+											partExternalId: undefined,
+											pieceExternalId: undefined,
+										},
+										{
+											id: DefaultUserOperationsTypes.REVERT_SEGMENT,
+										}
+									)
+								)
+						}}
+					>
+						<span className="usereditpanel-pop-up__label">REVERT SEGMENT</span>
+					</button>
+				)}
 			</div>
 		</div>
 	)
@@ -308,4 +367,27 @@ function getTimePosition(contextMenuContext: IContextMenuContext): number | null
 		return offset
 	}
 	return null
+}
+
+interface EditStatesIconsProps {
+	userEditOperations: DBSegment['userEditOperations']
+}
+function EditStatesIcons({ userEditOperations }: EditStatesIconsProps) {
+	return (
+		<div className="usereditpanel-pop-up__svg-icon">
+			{userEditOperations &&
+				userEditOperations.map((operation) => {
+					if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+
+					return (
+						<div
+							key={operation.id}
+							dangerouslySetInnerHTML={{
+								__html: operation.svgIcon,
+							}}
+						></div>
+					)
+				})}
+		</div>
+	)
 }
