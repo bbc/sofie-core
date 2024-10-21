@@ -49,6 +49,7 @@ describe('ActivePlaylistTopic', () => {
 			currentSegment: null,
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: undefined,
+			quickLoop: undefined,
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -139,6 +140,7 @@ describe('ActivePlaylistTopic', () => {
 			},
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: { a: 'b' },
+			quickLoop: undefined,
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
