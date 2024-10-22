@@ -2099,7 +2099,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 		onContextMenu = (contextMenuContext: IContextMenuContext) => {
 			this.setState({
-				isNotificationsCenterOpen: NoticeLevel.USEREDIT,
+				isNotificationsCenterOpen: NoticeLevel.PROPERTIES_PANEL,
 			})
 			this.setState({
 				contextMenuContext,

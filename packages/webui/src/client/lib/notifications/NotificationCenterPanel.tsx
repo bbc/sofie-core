@@ -12,8 +12,8 @@ import update from 'immutability-helper'
 import { i18nTranslator } from '../../ui/i18n'
 import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
-import { UserEditPanel } from '../../ui/UserEditOperations/UserEditPanel'
-import { UserEditPanelIcon } from '../ui/icons/useredits'
+import { PropertiesPanel } from '../../ui/UserEditOperations/PropertiesPanel'
+import { UserEditsIcon } from '../ui/icons/useredits'
 import { IContextMenuContext } from '../../ui/RundownView'
 
 interface IPopUpProps {
@@ -396,9 +396,9 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 		render(): JSX.Element | null {
 			const { t, highlightedSource, highlightedLevel, filter } = this.props
 
-			// For UserEditPanel ignore the filter:
-			if (Number(filter) >= NoticeLevel.USEREDIT) {
-				return <UserEditPanel contextMenuContext={this.props.contextMenuContext} />
+			// For PropertiesPanel ignore the filter:
+			if (Number(filter) >= NoticeLevel.PROPERTIES_PANEL) {
+				return <PropertiesPanel contextMenuContext={this.props.contextMenuContext} />
 			}
 
 			const notifications = this.getNotificationsToDisplay()
@@ -554,8 +554,8 @@ export function NotificationCenterPanelToggle({
 							<WarningIcon />
 						) : ((filter || 0) & (NoticeLevel.NOTIFICATION | NoticeLevel.TIP)) !== 0 ? (
 							<InformationIcon />
-						) : ((filter || 0) & NoticeLevel.USEREDIT) !== 0 ? (
-							<UserEditPanelIcon />
+						) : ((filter || 0) & NoticeLevel.PROPERTIES_PANEL) !== 0 ? (
+							<UserEditsIcon />
 						) : (
 							<WarningIcon />
 						)}

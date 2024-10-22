@@ -1,6 +1,6 @@
 import { JSX } from 'react'
 
-export function UserEditPanelIcon(): JSX.Element {
+export function UserEditsIcon(): JSX.Element {
 	return (
 		<svg width="25" height="28" viewBox="0 0 25 28" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<path

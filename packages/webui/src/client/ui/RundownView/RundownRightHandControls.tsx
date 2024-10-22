@@ -154,9 +154,9 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 					title={t('Notes')}
 				/>
 				<NotificationCenterPanelToggle
-					onClick={(e) => props.onToggleNotifications?.(e, NoticeLevel.USEREDIT)}
-					isOpen={props.isNotificationCenterOpen === NoticeLevel.USEREDIT}
-					filter={NoticeLevel.USEREDIT}
+					onClick={(e) => props.onToggleNotifications?.(e, NoticeLevel.PROPERTIES_PANEL)}
+					isOpen={props.isNotificationCenterOpen === NoticeLevel.PROPERTIES_PANEL}
+					filter={NoticeLevel.PROPERTIES_PANEL}
 					className="type-notification"
 					title={t('Notes')}
 				/>

@@ -27,22 +27,21 @@ import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
 
 /**
- * UserEditPanelPopUp props.
+ * Propertiespanel PopUp props.
  */
 interface Props {
 	// Currently selected context menu context
 	// Plan is to replace this with a more specific selection of what is selected in the UI
-	// When selected element for UserEditPanel has been implemented
+	// When selected element for propertiesPanel has been implemented
 	contextMenuContext: IContextMenuContext | null
 }
 
-//function UserEditPanelBase(props: Translated<Props & TrackedProps>) {
-export function UserEditPanel(props: Props) {
+export function PropertiesPanel(props: Props) {
 	const { t } = useTranslation()
 
 	React.useEffect(() => {
 		return () => {
-			Array.from(document.querySelectorAll('.usereditpanel-pop-up.is-highlighted')).forEach((element: Element) => {
+			Array.from(document.querySelectorAll('.propertiespanel-pop-up.is-highlighted')).forEach((element: Element) => {
 				if (element instanceof HTMLElement) {
 					element.style.animationName = ''
 				}
@@ -66,10 +65,10 @@ export function UserEditPanel(props: Props) {
 	const isPartSelected = getTimePosition(props.contextMenuContext || {})
 
 	return (
-		<div className="usereditpanel-pop-up">
+		<div className="propertiespanel-pop-up">
 			{isPartSelected && (
 				<>
-					<div className="usereditpanel-pop-up__header">
+					<div className="propertiespanel-pop-up__header">
 						{part?.userEditOperations &&
 							part.userEditOperations.map((operation) => {
 								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
@@ -86,7 +85,7 @@ export function UserEditPanel(props: Props) {
 							})}
 						PART : {String(part?.title)}
 					</div>
-					<div className="usereditpanel-pop-up__contents">
+					<div className="propertiespanel-pop-up__contents">
 						{isPartSelected &&
 							segment &&
 							part?._id &&
@@ -119,7 +118,7 @@ export function UserEditPanel(props: Props) {
 			)}
 			{!isPartSelected && (
 				<>
-					<div className="usereditpanel-pop-up__header">
+					<div className="propertiespanel-pop-up__header">
 						{segment?.userEditOperations &&
 							segment.userEditOperations.map((operation) => {
 								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
@@ -136,7 +135,7 @@ export function UserEditPanel(props: Props) {
 							})}
 						SEGMENT : {String(segment?.name)}
 					</div>
-					<div className="usereditpanel-pop-up__contents">
+					<div className="propertiespanel-pop-up__contents">
 						{/* This is only until selection of segment is implemented in UI */}
 						{segment &&
 							segment?.userEditOperations?.map((userEditOperation, i) => {
@@ -165,9 +164,9 @@ export function UserEditPanel(props: Props) {
 					</div>
 				</>
 			)}
-			<div className="usereditpanel-pop-up__footer">
+			<div className="propertiespanel-pop-up__footer">
 				<button
-					className="usereditpanel-pop-up__button"
+					className="propertiespanel-pop-up__button"
 					onClick={(e) => {
 						rundownId &&
 							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
@@ -189,7 +188,7 @@ export function UserEditPanel(props: Props) {
 							)
 					}}
 				>
-					<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
+					<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
 				</button>
 			</div>
 		</div>
@@ -206,7 +205,7 @@ function EditingTypeAction(props: {
 			return (
 				<button
 					title={'User Action : ' + props.userEditOperation.label}
-					className="usereditpanel-pop-up__button"
+					className="propertiespanel-pop-up__button"
 					onClick={(e) => {
 						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
 							MeteorCall.userAction.executeUserChangeOperation(
@@ -226,7 +225,7 @@ function EditingTypeAction(props: {
 						)
 					}}
 				>
-					<span className="usereditpanel-pop-up__label">
+					<span className="propertiespanel-pop-up__label">
 						{' '}
 						{translateMessage(props.userEditOperation.label, i18nTranslator)}
 					</span>
@@ -234,9 +233,9 @@ function EditingTypeAction(props: {
 			)
 		case UserEditingButtonType.SWITCH:
 			return (
-				<div className="usereditpanel-pop-up__action">
+				<div className="propertiespanel-pop-up__action">
 					<a
-						className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', {
+						className={classNames('propertiespanel-pop-up__switchbutton', 'switch-button', {
 							'sb-on': props.userEditOperation.isActive || false,
 						})}
 						role="button"
@@ -268,7 +267,7 @@ function EditingTypeAction(props: {
 							<div className="sb-switch"></div>
 						</div>
 					</a>
-					<span className="usereditpanel-pop-up__label">
+					<span className="propertiespanel-pop-up__label">
 						{' '}
 						{translateMessage(props.userEditOperation.label, i18nTranslator)}
 					</span>
@@ -308,15 +307,15 @@ function EditingTypeChangeSource(props: {
 
 	return (
 		<>
-			<div className="usereditpanel-pop-up__groupselector">
+			<div className="propertiespanel-pop-up__groupselector">
 				{props.userEditOperation.grouping &&
 					groups.map((group, index) => {
 						return !group.svgIcon ? (
 							<button
 								className={
 									selectedGroup !== group.filter
-										? `usereditpanel-pop-up__groupselector__button`
-										: `usereditpanel-pop-up__groupselector__button-active`
+										? `propertiespanel-pop-up__groupselector__button`
+										: `propertiespanel-pop-up__groupselector__button-active`
 								}
 								style={{ backgroundColor: group.color }}
 								key={index}
@@ -337,8 +336,8 @@ function EditingTypeChangeSource(props: {
 							<button
 								className={
 									selectedGroup !== group.filter
-										? `usereditpanel-pop-up__groupselector__button-svg`
-										: `usereditpanel-pop-up__groupselector__button-svg-active`
+										? `propertiespanel-pop-up__groupselector__button-svg`
+										: `propertiespanel-pop-up__groupselector__button-svg-active`
 								}
 								key={index}
 								onClick={() => {
@@ -358,11 +357,11 @@ function EditingTypeChangeSource(props: {
 			</div>
 			{selectedGroup && schema && (
 				<>
-					<a className="usereditpanel-pop-up__label">{t('Source')}:</a>
+					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
 					<br />
 					<select
 						title="Sources in the selected group"
-						className="usereditpanel-pop-up__select"
+						className="propertiespanel-pop-up__select"
 						value={selectedSource[selectedGroup] || ''}
 						onChange={(e) => {
 							setSelectedSource({ [selectedGroup]: e.target.value })
