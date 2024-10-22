@@ -236,7 +236,7 @@ function EditingTypeAction(props: {
 			return (
 				<div className="usereditpanel-pop-up__action">
 					<a
-						className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', 'sb-nocolor', {
+						className={classNames('usereditpanel-pop-up__switchbutton', 'switch-button', {
 							'sb-on': props.userEditOperation.isActive || false,
 						})}
 						role="button"

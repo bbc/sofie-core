@@ -8,6 +8,7 @@
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 	margin: 1px;
 	height: 100%;
+	width: 87%;
 
 	&:first-child {
 		margin-top: 0.9375rem;
@@ -42,17 +43,12 @@
 	> .usereditpanel-pop-up__footer {
 		flex: 1;
 		position: absolute;
+		left: 0;
+		right: 0;
 		bottom: 10px;
-		padding: 0.625rem 0.9375rem;
-		padding: 0.525rem 0.6375rem;
-		cursor: default;
-
-		overflow-wrap: break-word;
-
-		> hr {
-			margin-left: 0px;
-			border-color: #7F7F7F;
-		}
+		display: flex;
+		justify-content: center;
+		align-items: center; 
 
 		> .usereditpanel-pop-up__button {
 			margin-top: 10px;
@@ -63,6 +59,8 @@
 			border: 1px;
 			border: 1px solid #7F7F7F;
 			color: #ddd;
+			display: block;
+			margin: 10px auto;
 
 			> svg {
 				margin-top: -0.1em;
@@ -104,7 +102,7 @@
 				width: 50px;
 				height: 30px;
 				border: 0px;
-				margin: 4px;
+				margin: 3px;
 				gap: 10px;
 				color: #ddd;
 				opacity: 0.2;
@@ -114,7 +112,7 @@
 				width: 50px;
 				height: 30px;
 				border: 0px;
-				margin: 4px;
+				margin: 3px;
 				gap: 10px;
 				color: #fff;
 				opacity: 1;
@@ -124,7 +122,7 @@
 				width: 50px;
 				height: 30px;
 				border: 0;
-				margin: 4px;
+				margin: 3px;
 				color: #ddd;
 				padding: 0;
 				display: flex;
