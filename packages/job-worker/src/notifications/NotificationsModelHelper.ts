@@ -8,17 +8,17 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { getHash } from '@sofie-automation/corelib/dist/hash'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { assertNever, flatten, type Complete } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, flatten, omit, type Complete } from '@sofie-automation/corelib/dist/lib'
 import { type AnyBulkWriteOperation } from 'mongodb'
 import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { isEqual } from 'underscore'
 
 interface NotificationsLoadState {
-	hasBeenLoaded: boolean
-	hasBeenCleared: boolean
+	dbNotifications: ReadonlyMap<string, DBNotificationObj> | null
+	updatedNotifications: Map<string, Omit<DBNotificationObj, 'created' | 'modified'> | null>
+	// createdTimestamps: Map<string, number>
 
-	// dbNotifications: ReadonlyMap<string, DBNotificationObj> | null
-	notifications: Map<string, DBNotificationObj | null>
-	createdTimestamps: Map<string, number>
+	removeAllMissing: boolean
 }
 
 export class NotificationsModelHelper implements INotificationsModel {
@@ -38,10 +38,11 @@ export class NotificationsModelHelper implements INotificationsModel {
 		return `${this.#categoryPrefix}:${category}`
 	}
 
-	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
-		const notificationsForCategory = this.#getOrCategoryEntry(category)
-
-		if (!notificationsForCategory.hasBeenLoaded && !notificationsForCategory.hasBeenCleared) {
+	async #getAllNotificationsRaw(
+		notificationsForCategory: NotificationsLoadState,
+		category: string
+	): Promise<ReadonlyMap<string, DBNotificationObj> | null> {
+		if (!notificationsForCategory.dbNotifications) {
 			const dbNotifications = await this.#context.directCollections.Notifications.findFetch({
 				// Ensure notifiations are owned by the current studio
 				'relatedTo.studioId': this.#context.studioId,
@@ -49,84 +50,93 @@ export class NotificationsModelHelper implements INotificationsModel {
 				category: this.#getFullCategoryName(category),
 			})
 
+			const dbNotificationMap = new Map<string, DBNotificationObj>()
+
 			// Interleave into the store, for any which haven't already been updated
 			for (const dbNotification of dbNotifications) {
-				notificationsForCategory.createdTimestamps.set(dbNotification.localId, dbNotification.created)
-
-				if (!notificationsForCategory.notifications.has(dbNotification.localId)) {
-					notificationsForCategory.notifications.set(dbNotification.localId, dbNotification)
-				} else {
-					// Preserve the created time from the db
-					const existingNotification = notificationsForCategory.notifications.get(dbNotification.localId)
-					if (existingNotification) {
-						existingNotification.created = dbNotification.created
-					}
-				}
+				dbNotificationMap.set(dbNotification.localId, dbNotification)
 			}
 
 			// Indicate that this is now fully loaded in memory
-			notificationsForCategory.hasBeenLoaded = true
+			notificationsForCategory.dbNotifications = dbNotificationMap
+
+			return dbNotificationMap
 		}
 
-		return Array.from(notificationsForCategory.notifications.values())
-			.map((notification) => {
-				const relatedTo = notification && translateRelatedToFromDbType(notification.relatedTo)
-				if (!relatedTo) return null
+		return null
+	}
 
-				return {
-					id: notification.localId,
-					severity: notification.severity,
-					message: notification.message,
-					relatedTo: relatedTo,
-				}
+	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
+		const notificationsForCategory = this.#getOrCategoryEntry(category)
+
+		await this.#getAllNotificationsRaw(notificationsForCategory, category)
+
+		const allLocalIds = new Set<string>([
+			...Array.from(notificationsForCategory.updatedNotifications.keys()),
+			...(notificationsForCategory.dbNotifications
+				? Array.from(notificationsForCategory.dbNotifications.keys())
+				: []),
+		])
+
+		const allNotifications: INotificationWithTarget[] = []
+		for (const localId of allLocalIds) {
+			const notification = notificationsForCategory.updatedNotifications.has(localId)
+				? notificationsForCategory.updatedNotifications.get(localId)
+				: notificationsForCategory.dbNotifications?.get(localId)
+
+			const relatedTo = notification && translateRelatedToFromDbType(notification.relatedTo)
+			if (!relatedTo) continue
+
+			allNotifications.push({
+				id: notification.localId,
+				severity: notification.severity,
+				message: notification.message,
+				relatedTo: relatedTo,
 			})
-			.filter((n): n is INotificationWithTarget => !!n)
+		}
+
+		return allNotifications
 	}
 
 	clearNotification(category: string, notificationId: string): void {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
 		// The notification may or may not be loaded, but this indicates that to the saving that we intend to delete it
-		notificationsForCategory.notifications.set(notificationId, null)
+		notificationsForCategory.updatedNotifications.set(notificationId, null)
 	}
 
 	setNotification(category: string, notification: INotificationWithTarget): void {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
-		const existingNotification = notificationsForCategory.notifications.get(notification.id)
-
 		const fullCategory = this.#getFullCategoryName(category)
-		notificationsForCategory.notifications.set(notification.id, {
+		notificationsForCategory.updatedNotifications.set(notification.id, {
 			_id: protectString(getHash(`${this.#context.studioId}:${fullCategory}:${notification.id}`)),
 			category: fullCategory,
 			localId: notification.id,
 			severity: notification.severity,
 			message: notification.message,
 			relatedTo: translateRelatedToIntoDbType(this.#context.studioId, this.#playlistId, notification.relatedTo),
-			created: existingNotification?.created || 0, // 0 will be filled in when saving
-			modified: 0, // Filled in when saving
-		} satisfies Complete<DBNotificationObj>)
+		} satisfies Complete<Omit<DBNotificationObj, 'created' | 'modified'>>)
 	}
 
 	clearAllNotifications(category: string): void {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
-		// Tell this store that the category is loaded, and so should perform a full write to the db
-		// notificationsForCategory.hasBeenLoaded = true
-		notificationsForCategory.hasBeenCleared = true
+		// Tell this store that any documents not in the `updatedNotifications` should be deleted
+		notificationsForCategory.removeAllMissing = true
 
 		// Clear any known in memory notifications
-		notificationsForCategory.notifications.clear()
+		notificationsForCategory.updatedNotifications.clear()
 	}
 
 	#getOrCategoryEntry(category: string): NotificationsLoadState {
 		let notificationsForCategory = this.#notificationsByCategory.get(category)
 		if (!notificationsForCategory) {
 			notificationsForCategory = {
-				hasBeenLoaded: false,
-				hasBeenCleared: false,
-				notifications: new Map(),
-				createdTimestamps: new Map(),
+				dbNotifications: null,
+				updatedNotifications: new Map(),
+
+				removeAllMissing: false,
 			}
 			this.#notificationsByCategory.set(category, notificationsForCategory)
 		}
@@ -137,95 +147,92 @@ export class NotificationsModelHelper implements INotificationsModel {
 		// Quick return if there is nothing to save
 		if (this.#notificationsByCategory.size === 0) return
 
+		const now = getCurrentTime()
+
 		const allUpdates = flatten(
 			await Promise.all(
 				Array.from(this.#notificationsByCategory).map(async ([category, notificationsForCategory]) => {
+					/**
+					 * This isn't the most efficient, to be loading all the notifications for every modified category,
+					 * but it's a lot simpler than an optimal solution. The documents should be small and compact, so it should be quick enough.
+					 */
+
+					const dbNotifications =
+						notificationsForCategory.dbNotifications ??
+						(await this.#getAllNotificationsRaw(notificationsForCategory, category))
+
+					const allLocalIds = new Set<string>([
+						...Array.from(notificationsForCategory.updatedNotifications.keys()),
+						...(dbNotifications ? Array.from(dbNotifications.keys()) : []),
+					])
+
 					const updates: AnyBulkWriteOperation<DBNotificationObj>[] = []
+					const localIdsToKeep: string[] = []
+					const localIdsToDelete: string[] = []
+					for (const localId of allLocalIds) {
+						const updatedNotification = notificationsForCategory.updatedNotifications.get(localId)
+						const dbNotification = dbNotifications?.get(localId)
 
-					const idsToDelete: string[] = []
-					const idsToUpdate: string[] = []
-					const idsToFetchCreatedTime: string[] = []
-					for (const [id, notification] of notificationsForCategory.notifications) {
-						if (notification) {
-							idsToUpdate.push(id)
+						// Marked for deletion
+						if (updatedNotification === null) {
+							if (dbNotification) {
+								// This notification has been deleted
+								localIdsToDelete.push(localId)
+							}
+							continue
+						}
 
-							if (
-								!notificationsForCategory.hasBeenLoaded &&
-								!notificationsForCategory.createdTimestamps.has(id)
-							)
-								idsToFetchCreatedTime.push(id)
-						} else {
-							idsToDelete.push(id)
+						// No change made, keep it
+						if (updatedNotification === undefined) {
+							if (!notificationsForCategory.removeAllMissing) {
+								localIdsToKeep.push(localId)
+							}
+							continue
+						}
+
+						localIdsToKeep.push(localId)
+
+						if (
+							!dbNotification ||
+							!isEqual(omit(dbNotification, 'created', 'modified'), updatedNotification)
+						) {
+							updates.push({
+								replaceOne: {
+									filter: {
+										category: this.#getFullCategoryName(category),
+										localId: localId,
+										'relatedTo.studioId': this.#context.studioId,
+									},
+									replacement: {
+										...updatedNotification,
+										created: dbNotification?.created ?? now,
+										modified: now,
+									},
+									upsert: true,
+								},
+							})
 						}
 					}
 
-					// If the category is fully in memory, we want to delete everything except those being updated
-					if (notificationsForCategory.hasBeenLoaded) {
+					if (notificationsForCategory.removeAllMissing) {
 						updates.push({
 							deleteMany: {
 								filter: {
 									category: this.#getFullCategoryName(category),
-									localId: { $nin: idsToUpdate },
+									localId: { $nin: localIdsToKeep },
 									'relatedTo.studioId': this.#context.studioId,
 								},
 							},
 						})
-					} else if (idsToDelete.length > 0) {
-						// If the category is only partially in memory, delete only the ones explicitly marked for deletion
+					} else if (localIdsToDelete.length > 0) {
+						// Some documents were deleted
 						updates.push({
 							deleteMany: {
 								filter: {
 									category: this.#getFullCategoryName(category),
-									localId: { $in: idsToDelete },
+									localId: { $in: localIdsToDelete },
 									'relatedTo.studioId': this.#context.studioId,
 								},
-							},
-						})
-					}
-
-					// Fetch current created timestamps for notifications that are being updated
-					const dbNotificationsToPreserveTimestamps =
-						idsToFetchCreatedTime.length > 0
-							? ((await this.#context.directCollections.Notifications.findFetch(
-									{
-										category: this.#getFullCategoryName(category),
-										localId: { $in: idsToFetchCreatedTime },
-										'relatedTo.studioId': this.#context.studioId,
-									},
-									{
-										projection: {
-											localId: 1,
-											created: 1,
-										},
-									}
-							  )) as Pick<DBNotificationObj, 'localId' | 'created'>[])
-							: []
-					const dbNotificationCreatedMap = new Map<string, number>()
-					for (const notification of dbNotificationsToPreserveTimestamps) {
-						dbNotificationCreatedMap.set(notification.localId, notification.created)
-					}
-
-					// Update each notification
-					for (const notification of notificationsForCategory.notifications.values()) {
-						if (!notification) continue
-
-						updates.push({
-							replaceOne: {
-								filter: {
-									category: this.#getFullCategoryName(category),
-									localId: notification.localId,
-									'relatedTo.studioId': this.#context.studioId,
-								},
-								replacement: {
-									...notification,
-									created:
-										notification.created ||
-										notificationsForCategory.createdTimestamps.get(notification.localId) ||
-										dbNotificationCreatedMap.get(notification.localId) ||
-										getCurrentTime(), // nocommit - preserve created time from db?
-									modified: getCurrentTime(),
-								},
-								upsert: true,
 							},
 						})
 					}
@@ -234,6 +241,8 @@ export class NotificationsModelHelper implements INotificationsModel {
 				})
 			)
 		)
+
+		this.#notificationsByCategory.clear()
 
 		if (allUpdates.length > 0) {
 			await this.#context.directCollections.Notifications.bulkWrite(allUpdates)

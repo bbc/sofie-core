@@ -48,16 +48,11 @@ describe('NotificationsModelHelper', () => {
 			await helper.saveAllToDatabase()
 			expect(notificationsCollection.operations).toEqual([
 				{
-					type: 'bulkWrite',
-					args: [1],
-				},
-				{
-					type: 'remove',
+					type: 'findFetch',
 					args: [
 						{
 							category: 'test:my-category',
-							localId: { $in: ['id0'] },
-							'relatedTo.studioId': 'mockStudio0',
+							'relatedTo.studioId': context.studioId,
 						},
 					],
 				},
@@ -84,16 +79,11 @@ describe('NotificationsModelHelper', () => {
 			await helper.saveAllToDatabase()
 			expect(notificationsCollection.operations).toEqual([
 				{
-					type: 'bulkWrite',
-					args: [1],
-				},
-				{
-					type: 'remove',
+					type: 'findFetch',
 					args: [
 						{
 							category: 'test:my-category',
-							localId: { $in: ['id0'] },
-							'relatedTo.studioId': 'mockStudio0',
+							'relatedTo.studioId': context.studioId,
 						},
 					],
 				},
@@ -124,22 +114,7 @@ describe('NotificationsModelHelper', () => {
 			// Save performs some cleanup
 			notificationsCollection.clearOpLog()
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toEqual([
-				{
-					type: 'bulkWrite',
-					args: [1],
-				},
-				{
-					type: 'remove',
-					args: [
-						{
-							category: 'test:my-category',
-							localId: { $nin: [] },
-							'relatedTo.studioId': 'mockStudio0',
-						},
-					],
-				},
-			])
+			expect(notificationsCollection.operations).toHaveLength(0)
 		})
 
 		it('getAllNotifications - with documents', async () => {
@@ -189,26 +164,7 @@ describe('NotificationsModelHelper', () => {
 			// Save performs some cleanup
 			notificationsCollection.clearOpLog()
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toEqual([
-				{
-					type: 'bulkWrite',
-					args: [2],
-				},
-				{
-					type: 'remove',
-					args: [
-						{
-							category: 'test:my-category',
-							localId: { $nin: ['abc'] },
-							'relatedTo.studioId': 'mockStudio0',
-						},
-					],
-				},
-				{
-					type: 'replace',
-					args: ['id0'],
-				},
-			])
+			expect(notificationsCollection.operations).toHaveLength(0)
 		})
 
 		it('setNotification', async () => {
@@ -228,6 +184,15 @@ describe('NotificationsModelHelper', () => {
 
 			await helper.saveAllToDatabase()
 			expect(notificationsCollection.operations).toEqual([
+				{
+					type: 'findFetch',
+					args: [
+						{
+							category: 'test:my-category',
+							'relatedTo.studioId': context.studioId,
+						},
+					],
+				},
 				{
 					type: 'bulkWrite',
 					args: [1],
@@ -251,6 +216,15 @@ describe('NotificationsModelHelper', () => {
 
 			await helper.saveAllToDatabase()
 			expect(notificationsCollection.operations).toEqual([
+				{
+					type: 'findFetch',
+					args: [
+						{
+							category: 'test:my-category',
+							'relatedTo.studioId': context.studioId,
+						},
+					],
+				},
 				{
 					type: 'bulkWrite',
 					args: [1],
@@ -311,7 +285,7 @@ describe('NotificationsModelHelper', () => {
 						relatedTo: { type: 'playlist' },
 					})
 					await updateHelper.saveAllToDatabase()
-					expect(notificationsCollection.operations).toHaveLength(runGetAllNotifications ? 4 : 2)
+					expect(notificationsCollection.operations).toHaveLength(3)
 					notificationsCollection.clearOpLog()
 				}
 
@@ -357,10 +331,7 @@ describe('NotificationsModelHelper', () => {
 				relatedTo: { type: 'playlist' },
 			})
 
-			expect(notificationsCollection.operations).toHaveLength(0)
-
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toHaveLength(2)
 
 			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
 			expect(doc).toBeTruthy()
@@ -401,10 +372,7 @@ describe('NotificationsModelHelper', () => {
 				relatedTo: { type: 'rundown', rundownId },
 			})
 
-			expect(notificationsCollection.operations).toHaveLength(0)
-
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toHaveLength(2)
 
 			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
 			expect(doc).toBeTruthy()
@@ -435,10 +403,7 @@ describe('NotificationsModelHelper', () => {
 				},
 			})
 
-			expect(notificationsCollection.operations).toHaveLength(0)
-
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toHaveLength(2)
 
 			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
 			expect(doc).toBeTruthy()
@@ -472,10 +437,7 @@ describe('NotificationsModelHelper', () => {
 				},
 			})
 
-			expect(notificationsCollection.operations).toHaveLength(0)
-
 			await helper.saveAllToDatabase()
-			expect(notificationsCollection.operations).toHaveLength(2)
 
 			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
 			expect(doc).toBeTruthy()
@@ -587,7 +549,6 @@ describe('NotificationsModelHelper', () => {
 						pieceInstanceId: protectString('pieceInstance0'),
 					},
 				},
-				// TODO
 			] satisfies Partial<INotificationWithTarget>[])
 		})
 	})
@@ -610,6 +571,15 @@ describe('NotificationsModelHelper', () => {
 		await helper.saveAllToDatabase()
 		expect(notificationsCollection.operations).toEqual([
 			{
+				type: 'findFetch',
+				args: [
+					{
+						category: 'test:my-category',
+						'relatedTo.studioId': context.studioId,
+					},
+				],
+			},
+			{
 				type: 'bulkWrite',
 				args: [1],
 			},
@@ -627,6 +597,15 @@ describe('NotificationsModelHelper', () => {
 		await helper.saveAllToDatabase()
 		expect(notificationsCollection.operations).toEqual([
 			{
+				type: 'findFetch',
+				args: [
+					{
+						category: 'test:my-category',
+						'relatedTo.studioId': context.studioId,
+					},
+				],
+			},
+			{
 				type: 'bulkWrite',
 				args: [1],
 			},
@@ -636,6 +615,54 @@ describe('NotificationsModelHelper', () => {
 					{
 						category: 'test:my-category',
 						localId: { $nin: [] },
+						'relatedTo.studioId': 'mockStudio0',
+					},
+				],
+			},
+		])
+	})
+
+	it('clearAllNotifications then setNotification', async () => {
+		const context = setupDefaultJobEnvironment()
+		const notificationsCollection = context.mockCollections.Notifications
+
+		const helper = new NotificationsModelHelper(context, 'test', protectString('playlist0'))
+
+		helper.clearAllNotifications('my-category')
+		helper.setNotification('my-category', {
+			id: 'abc',
+			message: generateTranslation('test'),
+			severity: NoteSeverity.INFO,
+			relatedTo: { type: 'playlist' },
+		})
+
+		expect(notificationsCollection.operations).toHaveLength(0)
+
+		await helper.saveAllToDatabase()
+		expect(notificationsCollection.operations).toEqual([
+			{
+				type: 'findFetch',
+				args: [
+					{
+						category: 'test:my-category',
+						'relatedTo.studioId': context.studioId,
+					},
+				],
+			},
+			{
+				type: 'bulkWrite',
+				args: [2],
+			},
+			{
+				type: 'replace',
+				args: ['b8ynzcdIk5RXEAkIHXShWJ26FTQ_'],
+			},
+			{
+				type: 'remove',
+				args: [
+					{
+						category: 'test:my-category',
+						localId: { $nin: ['abc'] },
 						'relatedTo.studioId': 'mockStudio0',
 					},
 				],
