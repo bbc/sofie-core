@@ -1,11 +1,14 @@
-import { DBNotificationObj, DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
+import {
+	DBNotificationObj,
+	DBNotificationTarget,
+	DBNotificationTargetType,
+} from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { setupDefaultJobEnvironment } from '../../__mocks__/context'
 import { NotificationsModelHelper } from '../NotificationsModelHelper'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { INotificationWithTarget } from '../NotificationsModel'
 import { generateTranslation } from '@sofie-automation/corelib/dist/lib'
-import exp = require('constants')
 
 describe('NotificationsModelHelper', () => {
 	it('no changes has no mongo write', async () => {
@@ -37,6 +40,42 @@ describe('NotificationsModelHelper', () => {
 			const notificationsCollection = context.mockCollections.Notifications
 
 			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			helper.clearNotification('my-category', 'id0')
+
+			expect(notificationsCollection.operations).toHaveLength(0)
+
+			await helper.saveAllToDatabase()
+			expect(notificationsCollection.operations).toEqual([
+				{
+					type: 'bulkWrite',
+					args: [1],
+				},
+				{
+					type: 'remove',
+					args: [
+						{
+							category: 'test:my-category',
+							localId: { $in: ['id0'] },
+							'relatedTo.studioId': 'mockStudio0',
+						},
+					],
+				},
+			])
+		})
+
+		it('set then clear Notification', async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			const helper = new NotificationsModelHelper(context, 'test', protectString('playlist0'))
+
+			helper.setNotification('my-category', {
+				id: 'id0',
+				message: generateTranslation('test'),
+				severity: NoteSeverity.INFO,
+				relatedTo: { type: 'playlist' },
+			})
 
 			helper.clearNotification('my-category', 'id0')
 
@@ -299,8 +338,308 @@ describe('NotificationsModelHelper', () => {
 		}
 
 		runTest(true)
-		// runTest(false) // nocommit - this test is failing
+		runTest(false)
 	})
 
-	// TODO - combinations
+	describe('notifications with different relatedTo', () => {
+		it(`type: playlist`, async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			const playlistId = protectString('playlist0')
+
+			const helper = new NotificationsModelHelper(context, 'test', playlistId)
+
+			helper.setNotification('my-category', {
+				id: 'abc',
+				message: generateTranslation('test'),
+				severity: NoteSeverity.INFO,
+				relatedTo: { type: 'playlist' },
+			})
+
+			expect(notificationsCollection.operations).toHaveLength(0)
+
+			await helper.saveAllToDatabase()
+			expect(notificationsCollection.operations).toHaveLength(2)
+
+			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
+			expect(doc).toBeTruthy()
+			expect(doc?.relatedTo).toEqual({
+				type: DBNotificationTargetType.PLAYLIST,
+				studioId: context.studioId,
+				playlistId,
+			} satisfies DBNotificationTarget)
+		})
+
+		it(`type: playlist without it`, async () => {
+			const context = setupDefaultJobEnvironment()
+
+			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			expect(() =>
+				helper.setNotification('my-category', {
+					id: 'abc',
+					message: generateTranslation('test'),
+					severity: NoteSeverity.INFO,
+					relatedTo: { type: 'playlist' },
+				})
+			).toThrow(/without a playlist/)
+		})
+
+		it(`type: rundown`, async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			const rundownId = protectString('rundown0')
+
+			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			helper.setNotification('my-category', {
+				id: 'abc',
+				message: generateTranslation('test'),
+				severity: NoteSeverity.INFO,
+				relatedTo: { type: 'rundown', rundownId },
+			})
+
+			expect(notificationsCollection.operations).toHaveLength(0)
+
+			await helper.saveAllToDatabase()
+			expect(notificationsCollection.operations).toHaveLength(2)
+
+			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
+			expect(doc).toBeTruthy()
+			expect(doc?.relatedTo).toEqual({
+				type: DBNotificationTargetType.RUNDOWN,
+				studioId: context.studioId,
+				rundownId,
+			} satisfies DBNotificationTarget)
+		})
+
+		it(`type: partInstance`, async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			const rundownId = protectString('rundown0')
+			const partInstanceId = protectString('partInstance0')
+
+			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			helper.setNotification('my-category', {
+				id: 'abc',
+				message: generateTranslation('test'),
+				severity: NoteSeverity.INFO,
+				relatedTo: {
+					type: 'partInstance',
+					rundownId,
+					partInstanceId,
+				},
+			})
+
+			expect(notificationsCollection.operations).toHaveLength(0)
+
+			await helper.saveAllToDatabase()
+			expect(notificationsCollection.operations).toHaveLength(2)
+
+			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
+			expect(doc).toBeTruthy()
+			expect(doc?.relatedTo).toEqual({
+				type: DBNotificationTargetType.PARTINSTANCE,
+				studioId: context.studioId,
+				rundownId,
+				partInstanceId,
+			} satisfies DBNotificationTarget)
+		})
+
+		it(`type: pieceInstance`, async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			const rundownId = protectString('rundown0')
+			const partInstanceId = protectString('partInstance0')
+			const pieceInstanceId = protectString('pieceInstance0')
+
+			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			helper.setNotification('my-category', {
+				id: 'abc',
+				message: generateTranslation('test'),
+				severity: NoteSeverity.INFO,
+				relatedTo: {
+					type: 'pieceInstance',
+					rundownId,
+					partInstanceId,
+					pieceInstanceId,
+				},
+			})
+
+			expect(notificationsCollection.operations).toHaveLength(0)
+
+			await helper.saveAllToDatabase()
+			expect(notificationsCollection.operations).toHaveLength(2)
+
+			const doc = await notificationsCollection.findOne(protectString('b8ynzcdIk5RXEAkIHXShWJ26FTQ_'))
+			expect(doc).toBeTruthy()
+			expect(doc?.relatedTo).toEqual({
+				type: DBNotificationTargetType.PIECEINSTANCE,
+				studioId: context.studioId,
+				rundownId,
+				partInstanceId,
+				pieceInstanceId,
+			} satisfies DBNotificationTarget)
+		})
+
+		it('retrieve docs', async () => {
+			const context = setupDefaultJobEnvironment()
+			const notificationsCollection = context.mockCollections.Notifications
+
+			await notificationsCollection.insertOne({
+				_id: protectString('id1'),
+				category: 'test:my-category',
+				relatedTo: {
+					type: DBNotificationTargetType.PLAYLIST,
+					studioId: context.studioId,
+					playlistId: protectString('playlist0'),
+				},
+				created: 1,
+				modified: 2,
+				message: generateTranslation('test playlist'),
+				severity: NoteSeverity.INFO,
+				localId: 'test-playlist',
+			})
+			await notificationsCollection.insertOne({
+				_id: protectString('id2'),
+				category: 'test:my-category',
+				relatedTo: {
+					type: DBNotificationTargetType.RUNDOWN,
+					studioId: context.studioId,
+					rundownId: protectString('rundown0'),
+				},
+				created: 1,
+				modified: 2,
+				message: generateTranslation('test rundown'),
+				severity: NoteSeverity.WARNING,
+				localId: 'test-rundown',
+			})
+			await notificationsCollection.insertOne({
+				_id: protectString('id3'),
+				category: 'test:my-category',
+				relatedTo: {
+					type: DBNotificationTargetType.PARTINSTANCE,
+					studioId: context.studioId,
+					rundownId: protectString('rundown0'),
+					partInstanceId: protectString('partInstance0'),
+				},
+				created: 1,
+				modified: 2,
+				message: generateTranslation('test partInstance'),
+				severity: NoteSeverity.ERROR,
+				localId: 'test-partInstance',
+			})
+			await notificationsCollection.insertOne({
+				_id: protectString('id4'),
+				category: 'test:my-category',
+				relatedTo: {
+					type: DBNotificationTargetType.PIECEINSTANCE,
+					studioId: context.studioId,
+					rundownId: protectString('rundown0'),
+					partInstanceId: protectString('partInstance0'),
+					pieceInstanceId: protectString('pieceInstance0'),
+				},
+				created: 1,
+				modified: 2,
+				message: generateTranslation('test pieceInstance'),
+				severity: NoteSeverity.INFO,
+				localId: 'test-pieceInstance',
+			})
+			notificationsCollection.clearOpLog()
+
+			const helper = new NotificationsModelHelper(context, 'test', null)
+
+			const notifications = await helper.getAllNotifications('my-category')
+			expect(notifications).toHaveLength(4)
+
+			expect(notifications).toMatchObject([
+				{
+					id: 'test-playlist',
+					relatedTo: { type: 'playlist' },
+				},
+				{
+					id: 'test-rundown',
+					relatedTo: {
+						type: 'rundown',
+						rundownId: protectString('rundown0'),
+					},
+				},
+				{
+					id: 'test-partInstance',
+					relatedTo: {
+						type: 'partInstance',
+						rundownId: protectString('rundown0'),
+						partInstanceId: protectString('partInstance0'),
+					},
+				},
+				{
+					id: 'test-pieceInstance',
+					relatedTo: {
+						type: 'pieceInstance',
+						rundownId: protectString('rundown0'),
+						partInstanceId: protectString('partInstance0'),
+						pieceInstanceId: protectString('pieceInstance0'),
+					},
+				},
+				// TODO
+			] satisfies Partial<INotificationWithTarget>[])
+		})
+	})
+
+	it('setNotification and clearAllNotifications', async () => {
+		const context = setupDefaultJobEnvironment()
+		const notificationsCollection = context.mockCollections.Notifications
+
+		const helper = new NotificationsModelHelper(context, 'test', protectString('playlist0'))
+
+		helper.setNotification('my-category', {
+			id: 'abc',
+			message: generateTranslation('test'),
+			severity: NoteSeverity.INFO,
+			relatedTo: { type: 'playlist' },
+		})
+
+		expect(notificationsCollection.operations).toHaveLength(0)
+
+		await helper.saveAllToDatabase()
+		expect(notificationsCollection.operations).toEqual([
+			{
+				type: 'bulkWrite',
+				args: [1],
+			},
+			{
+				type: 'replace',
+				args: ['b8ynzcdIk5RXEAkIHXShWJ26FTQ_'],
+			},
+		])
+		notificationsCollection.clearOpLog()
+
+		helper.clearAllNotifications('my-category')
+
+		expect(notificationsCollection.operations).toHaveLength(0)
+
+		await helper.saveAllToDatabase()
+		expect(notificationsCollection.operations).toEqual([
+			{
+				type: 'bulkWrite',
+				args: [1],
+			},
+			{
+				type: 'remove',
+				args: [
+					{
+						category: 'test:my-category',
+						localId: { $nin: [] },
+						'relatedTo.studioId': 'mockStudio0',
+					},
+				],
+			},
+		])
+	})
 })

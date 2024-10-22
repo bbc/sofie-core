@@ -8,14 +8,17 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { getHash } from '@sofie-automation/corelib/dist/hash'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { assertNever, type Complete } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, flatten, type Complete } from '@sofie-automation/corelib/dist/lib'
 import { type AnyBulkWriteOperation } from 'mongodb'
 import { StudioId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 interface NotificationsLoadState {
 	hasBeenLoaded: boolean
+	hasBeenCleared: boolean
 
+	// dbNotifications: ReadonlyMap<string, DBNotificationObj> | null
 	notifications: Map<string, DBNotificationObj | null>
+	createdTimestamps: Map<string, number>
 }
 
 export class NotificationsModelHelper implements INotificationsModel {
@@ -38,7 +41,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
-		if (!notificationsForCategory.hasBeenLoaded) {
+		if (!notificationsForCategory.hasBeenLoaded && !notificationsForCategory.hasBeenCleared) {
 			const dbNotifications = await this.#context.directCollections.Notifications.findFetch({
 				// Ensure notifiations are owned by the current studio
 				'relatedTo.studioId': this.#context.studioId,
@@ -48,6 +51,8 @@ export class NotificationsModelHelper implements INotificationsModel {
 
 			// Interleave into the store, for any which haven't already been updated
 			for (const dbNotification of dbNotifications) {
+				notificationsForCategory.createdTimestamps.set(dbNotification.localId, dbNotification.created)
+
 				if (!notificationsForCategory.notifications.has(dbNotification.localId)) {
 					notificationsForCategory.notifications.set(dbNotification.localId, dbNotification)
 				} else {
@@ -107,7 +112,8 @@ export class NotificationsModelHelper implements INotificationsModel {
 		const notificationsForCategory = this.#getOrCategoryEntry(category)
 
 		// Tell this store that the category is loaded, and so should perform a full write to the db
-		notificationsForCategory.hasBeenLoaded = true
+		// notificationsForCategory.hasBeenLoaded = true
+		notificationsForCategory.hasBeenCleared = true
 
 		// Clear any known in memory notifications
 		notificationsForCategory.notifications.clear()
@@ -118,7 +124,9 @@ export class NotificationsModelHelper implements INotificationsModel {
 		if (!notificationsForCategory) {
 			notificationsForCategory = {
 				hasBeenLoaded: false,
+				hasBeenCleared: false,
 				notifications: new Map(),
+				createdTimestamps: new Map(),
 			}
 			this.#notificationsByCategory.set(category, notificationsForCategory)
 		}
@@ -129,70 +137,106 @@ export class NotificationsModelHelper implements INotificationsModel {
 		// Quick return if there is nothing to save
 		if (this.#notificationsByCategory.size === 0) return
 
-		const updates: AnyBulkWriteOperation<DBNotificationObj>[] = []
+		const allUpdates = flatten(
+			await Promise.all(
+				Array.from(this.#notificationsByCategory).map(async ([category, notificationsForCategory]) => {
+					const updates: AnyBulkWriteOperation<DBNotificationObj>[] = []
 
-		for (const [category, notificationsForCategory] of this.#notificationsByCategory) {
-			const isFullyInMemory = notificationsForCategory?.hasBeenLoaded
+					const idsToDelete: string[] = []
+					const idsToUpdate: string[] = []
+					const idsToFetchCreatedTime: string[] = []
+					for (const [id, notification] of notificationsForCategory.notifications) {
+						if (notification) {
+							idsToUpdate.push(id)
 
-			const idsToDelete: string[] = []
-			const idsToUpdate: string[] = []
-			for (const [id, notification] of notificationsForCategory.notifications) {
-				if (notification) {
-					idsToUpdate.push(id)
-				} else {
-					idsToDelete.push(id)
-				}
-			}
+							if (
+								!notificationsForCategory.hasBeenLoaded &&
+								!notificationsForCategory.createdTimestamps.has(id)
+							)
+								idsToFetchCreatedTime.push(id)
+						} else {
+							idsToDelete.push(id)
+						}
+					}
 
-			// If the category is fully in memory, we want to delete everything except those being updated
-			if (isFullyInMemory) {
-				// TODO - this is being fired too often sometimes, perhaps it can be avoided when we have actually loaded the data?
-				updates.push({
-					deleteMany: {
-						filter: {
-							category: this.#getFullCategoryName(category),
-							localId: { $nin: idsToUpdate },
-							'relatedTo.studioId': this.#context.studioId,
-						},
-					},
+					// If the category is fully in memory, we want to delete everything except those being updated
+					if (notificationsForCategory.hasBeenLoaded) {
+						updates.push({
+							deleteMany: {
+								filter: {
+									category: this.#getFullCategoryName(category),
+									localId: { $nin: idsToUpdate },
+									'relatedTo.studioId': this.#context.studioId,
+								},
+							},
+						})
+					} else if (idsToDelete.length > 0) {
+						// If the category is only partially in memory, delete only the ones explicitly marked for deletion
+						updates.push({
+							deleteMany: {
+								filter: {
+									category: this.#getFullCategoryName(category),
+									localId: { $in: idsToDelete },
+									'relatedTo.studioId': this.#context.studioId,
+								},
+							},
+						})
+					}
+
+					// Fetch current created timestamps for notifications that are being updated
+					const dbNotificationsToPreserveTimestamps =
+						idsToFetchCreatedTime.length > 0
+							? ((await this.#context.directCollections.Notifications.findFetch(
+									{
+										category: this.#getFullCategoryName(category),
+										localId: { $in: idsToFetchCreatedTime },
+										'relatedTo.studioId': this.#context.studioId,
+									},
+									{
+										projection: {
+											localId: 1,
+											created: 1,
+										},
+									}
+							  )) as Pick<DBNotificationObj, 'localId' | 'created'>[])
+							: []
+					const dbNotificationCreatedMap = new Map<string, number>()
+					for (const notification of dbNotificationsToPreserveTimestamps) {
+						dbNotificationCreatedMap.set(notification.localId, notification.created)
+					}
+
+					// Update each notification
+					for (const notification of notificationsForCategory.notifications.values()) {
+						if (!notification) continue
+
+						updates.push({
+							replaceOne: {
+								filter: {
+									category: this.#getFullCategoryName(category),
+									localId: notification.localId,
+									'relatedTo.studioId': this.#context.studioId,
+								},
+								replacement: {
+									...notification,
+									created:
+										notification.created ||
+										notificationsForCategory.createdTimestamps.get(notification.localId) ||
+										dbNotificationCreatedMap.get(notification.localId) ||
+										getCurrentTime(), // nocommit - preserve created time from db?
+									modified: getCurrentTime(),
+								},
+								upsert: true,
+							},
+						})
+					}
+
+					return updates
 				})
-			} else if (idsToDelete.length > 0) {
-				// If the category is only partially in memory, delete only the ones explicitly marked for deletion
-				updates.push({
-					deleteMany: {
-						filter: {
-							category: this.#getFullCategoryName(category),
-							localId: { $in: idsToDelete },
-							'relatedTo.studioId': this.#context.studioId,
-						},
-					},
-				})
-			}
+			)
+		)
 
-			// Update each notification
-			for (const notification of notificationsForCategory.notifications.values()) {
-				if (!notification) continue
-
-				updates.push({
-					replaceOne: {
-						filter: {
-							category: this.#getFullCategoryName(category),
-							localId: notification.localId,
-							'relatedTo.studioId': this.#context.studioId,
-						},
-						replacement: {
-							...notification,
-							created: notification.created || getCurrentTime(), // nocommit - preserve created time from db?
-							modified: getCurrentTime(),
-						},
-						upsert: true,
-					},
-				})
-			}
-		}
-
-		if (updates.length > 0) {
-			await this.#context.directCollections.Notifications.bulkWrite(updates)
+		if (allUpdates.length > 0) {
+			await this.#context.directCollections.Notifications.bulkWrite(allUpdates)
 		}
 	}
 }
