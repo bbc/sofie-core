@@ -57,6 +57,7 @@ export interface UserEditingGroupingType {
 	filter?: string
 	label?: string
 	color?: string
+	svgIcon?: string
 }
 
 export enum UserEditingButtonType {

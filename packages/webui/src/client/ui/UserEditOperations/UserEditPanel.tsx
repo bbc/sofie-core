@@ -30,6 +30,9 @@ import { UIParts } from '../Collections'
  * UserEditPanelPopUp props.
  */
 interface Props {
+	// Currently selected context menu context
+	// Plan is to replace this with a more specific selection of what is selected in the UI
+	// When selected element for UserEditPanel has been implemented
 	contextMenuContext: IContextMenuContext | null
 }
 
@@ -163,55 +166,31 @@ export function UserEditPanel(props: Props) {
 				</>
 			)}
 			<div className="usereditpanel-pop-up__footer">
-				{isPartSelected ? (
-					<button
-						className="usereditpanel-pop-up__button"
-						onClick={(e) => {
-							rundownId &&
-								doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-									MeteorCall.userAction.executeUserChangeOperation(
-										e,
-										ts,
-										rundownId,
-										{
-											segmentExternalId: segment?.externalId,
-											partExternalId: part?.externalId,
-											pieceExternalId: undefined,
-										},
-										{
-											id: DefaultUserOperationsTypes.REVERT_PART,
-										}
-									)
+				<button
+					className="usereditpanel-pop-up__button"
+					onClick={(e) => {
+						rundownId &&
+							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+								MeteorCall.userAction.executeUserChangeOperation(
+									e,
+									ts,
+									rundownId,
+									{
+										segmentExternalId: segment?.externalId,
+										partExternalId: part?.externalId,
+										pieceExternalId: undefined,
+									},
+									{
+										id: isPartSelected
+											? DefaultUserOperationsTypes.REVERT_PART
+											: DefaultUserOperationsTypes.REVERT_SEGMENT,
+									}
 								)
-						}}
-					>
-						<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
-					</button>
-				) : (
-					<button
-						className="usereditpanel-pop-up__button"
-						onClick={(e) => {
-							rundownId &&
-								doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-									MeteorCall.userAction.executeUserChangeOperation(
-										e,
-										ts,
-										rundownId,
-										{
-											segmentExternalId: segment?.externalId,
-											partExternalId: undefined,
-											pieceExternalId: undefined,
-										},
-										{
-											id: DefaultUserOperationsTypes.REVERT_SEGMENT,
-										}
-									)
-								)
-						}}
-					>
-						<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
-					</button>
-				)}
+							)
+					}}
+				>
+					<span className="usereditpanel-pop-up__label">REVERT CHANGES</span>
+				</button>
 			</div>
 		</div>
 	)
@@ -332,7 +311,7 @@ function EditingTypeChangeSource(props: {
 			<div className="usereditpanel-pop-up__groupselector">
 				{props.userEditOperation.grouping &&
 					groups.map((group, index) => {
-						return (
+						return !group.svgIcon ? (
 							<button
 								className={
 									selectedGroup !== group.filter
@@ -346,7 +325,33 @@ function EditingTypeChangeSource(props: {
 								}}
 								disabled={!group.filter}
 							>
-								{group.label}
+								<div
+									className="svg"
+									dangerouslySetInnerHTML={{
+										__html: group.svgIcon || '',
+									}}
+								></div>
+								{!group.svgIcon && group.label}
+							</button>
+						) : (
+							<button
+								className={
+									selectedGroup !== group.filter
+										? `usereditpanel-pop-up__groupselector__button-svg`
+										: `usereditpanel-pop-up__groupselector__button-svg-active`
+								}
+								key={index}
+								onClick={() => {
+									setSelectedGroup(group.filter)
+								}}
+								disabled={!group.filter}
+							>
+								<div
+									className="svg-icon"
+									dangerouslySetInnerHTML={{
+										__html: group.svgIcon,
+									}}
+								></div>
 							</button>
 						)
 					})}
