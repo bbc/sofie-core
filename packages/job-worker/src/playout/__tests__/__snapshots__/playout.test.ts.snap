@@ -75,6 +75,11 @@ exports[`Playout API Basic rundown control 4`] = `
   "nextTimeOffset": null,
   "organizationId": null,
   "previousPartInfo": null,
+  "quickLoop": {
+    "forceAutoNext": "disabled",
+    "locked": false,
+    "running": false,
+  },
   "rehearsal": false,
   "resetTime": 0,
   "rundownIdsInOrder": [],

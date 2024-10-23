@@ -1,15 +1,15 @@
 import classNames from 'classnames'
 import { ReactNode } from 'react'
 import { withTiming, WithTiming } from './withTiming'
-import { unprotectString } from '../../../lib/tempLib'
 import { RundownUtils } from '../../../lib/rundown'
 import { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
-import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { getPartInstanceTimingId } from '../../../lib/rundownTiming'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { CountdownType } from '@sofie-automation/blueprints-integration'
 
 interface ISegmentDurationProps {
-	segmentId: SegmentId
+	segment: DBSegment
 	parts: PartUi[]
 	label?: ReactNode
 	className?: string
@@ -29,32 +29,40 @@ export const SegmentDuration = withTiming<ISegmentDurationProps, {}>()(function 
 	props: WithTiming<ISegmentDurationProps>
 ) {
 	let duration: number | undefined = undefined
-	let budget = 0
 	let playedOut = 0
 
-	const segmentBudgetDuration =
-		props.timingDurations.segmentBudgetDurations &&
-		props.timingDurations.segmentBudgetDurations[unprotectString(props.segmentId)]
+	const segmentBudgetDuration = props.segment.segmentTiming?.budgetDuration
+	const segmentTimingType = props.segment.segmentTiming?.countdownType ?? CountdownType.PART_EXPECTED_DURATION
 
-	if (segmentBudgetDuration !== undefined) {
-		budget = segmentBudgetDuration
-	}
-	if (props.parts && props.timingDurations.partPlayed) {
-		const { partPlayed } = props.timingDurations
-		if (segmentBudgetDuration === undefined) {
+	let budget = segmentBudgetDuration ?? 0
+	let hardFloor = false
+
+	if (segmentTimingType === CountdownType.SEGMENT_BUDGET_DURATION) {
+		hardFloor = true
+
+		if (props.timingDurations.currentSegmentId === props.segment._id) {
+			duration = props.timingDurations.remainingBudgetOnCurrentSegment ?? segmentBudgetDuration ?? 0
+		} else {
+			duration = segmentBudgetDuration ?? 0
+		}
+	} else {
+		if (props.parts && props.timingDurations.partPlayed) {
+			const { partPlayed } = props.timingDurations
+			if (segmentBudgetDuration === undefined) {
+				props.parts.forEach((part) => {
+					budget +=
+						part.instance.orphaned || part.instance.part.untimed
+							? 0
+							: calculatePartInstanceExpectedDurationWithTransition(part.instance) || 0
+				})
+			}
 			props.parts.forEach((part) => {
-				budget +=
-					part.instance.orphaned || part.instance.part.untimed
-						? 0
-						: calculatePartInstanceExpectedDurationWithTransition(part.instance) || 0
+				playedOut += (!part.instance.part.untimed ? partPlayed[getPartInstanceTimingId(part.instance)] : 0) || 0
 			})
 		}
-		props.parts.forEach((part) => {
-			playedOut += (!part.instance.part.untimed ? partPlayed[getPartInstanceTimingId(part.instance)] : 0) || 0
-		})
-	}
 
-	duration = budget - playedOut
+		duration = budget - playedOut
+	}
 
 	const showNegativeStyling = !props.fixed && !props.countUp
 
@@ -75,7 +83,7 @@ export const SegmentDuration = withTiming<ISegmentDurationProps, {}>()(function 
 					})}
 					role="timer"
 				>
-					{RundownUtils.formatDiffToTimecode(value, false, false, true, false, true, '+')}
+					{RundownUtils.formatDiffToTimecode(value, false, false, true, false, true, '+', false, hardFloor)}
 				</span>
 			</>
 		)

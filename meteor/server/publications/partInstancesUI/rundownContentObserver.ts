@@ -3,12 +3,13 @@ import { RundownId, RundownPlaylistActivationId, StudioId } from '@sofie-automat
 import { logger } from '../../logging'
 import {
 	ContentCache,
+	partFieldSpecifier,
 	partInstanceFieldSpecifier,
 	rundownPlaylistFieldSpecifier,
 	segmentFieldSpecifier,
 	studioFieldSpecifier,
 } from './reactiveContentCache'
-import { PartInstances, RundownPlaylists, Segments, Studios } from '../../collections'
+import { PartInstances, Parts, RundownPlaylists, Segments, Studios } from '../../collections'
 
 export class RundownContentObserver {
 	#observers: Meteor.LiveQueryHandle[] = []
@@ -51,6 +52,17 @@ export class RundownContentObserver {
 				cache.Segments.link(),
 				{
 					projection: segmentFieldSpecifier,
+				}
+			),
+			Parts.observeChanges(
+				{
+					rundownId: {
+						$in: rundownIds,
+					},
+				},
+				cache.Parts.link(),
+				{
+					projection: partFieldSpecifier,
 				}
 			),
 			PartInstances.observeChanges(

@@ -5,6 +5,7 @@ import { MongoFieldSpecifierOnesStrict, MongoFieldSpecifierZeroes } from '@sofie
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
+import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 
 export type RundownPlaylistCompact = Pick<DBRundownPlaylist, '_id' | 'activationId' | 'quickLoop' | 'rundownIdsInOrder'>
 export const rundownPlaylistFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<RundownPlaylistCompact>>({
@@ -18,6 +19,14 @@ export type SegmentFields = '_id' | '_rank' | 'rundownId'
 export const segmentFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBSegment, SegmentFields>>>({
 	_id: 1,
 	_rank: 1,
+	rundownId: 1,
+})
+
+export type PartFields = '_id' | '_rank' | 'rundownId' | 'segmentId'
+export const partFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBPart, PartFields>>>({
+	_id: 1,
+	_rank: 1,
+	segmentId: 1,
 	rundownId: 1,
 })
 
@@ -36,6 +45,7 @@ export const studioFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<D
 export interface ContentCache {
 	Studios: ReactiveCacheCollection<Pick<DBStudio, StudioFields>>
 	Segments: ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>
+	Parts: ReactiveCacheCollection<Pick<DBPart, PartFields>>
 	PartInstances: ReactiveCacheCollection<Omit<DBPartInstance, PartInstanceOmitedFields>>
 	RundownPlaylists: ReactiveCacheCollection<RundownPlaylistCompact>
 }
@@ -44,6 +54,7 @@ export function createReactiveContentCache(): ContentCache {
 	const cache: ContentCache = {
 		Studios: new ReactiveCacheCollection<Pick<DBStudio, StudioFields>>('studios'),
 		Segments: new ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>('segments'),
+		Parts: new ReactiveCacheCollection<Pick<DBPart, PartFields>>('parts'),
 		PartInstances: new ReactiveCacheCollection<Omit<DBPartInstance, PartInstanceOmitedFields>>('partInstances'),
 		RundownPlaylists: new ReactiveCacheCollection<RundownPlaylistCompact>('rundownPlaylists'),
 	}
