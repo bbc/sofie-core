@@ -29,6 +29,7 @@ import { DatastorePersistenceMode } from '@sofie-automation/shared-lib/dist/core
 import { removeTimelineDatastoreValue, setTimelineDatastoreValue } from '../../playout/datastore'
 import { executePeripheralDeviceAction, listPlayoutDevices } from '../../peripheralDevice'
 import { ActionPartChange, PartAndPieceInstanceActionService } from './services/PartAndPieceInstanceActionService'
+import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 
 export class DatastoreActionExecutionContext
 	extends ShowStyleUserContext
@@ -226,7 +227,7 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 	}
 
 	async listRouteSets(): Promise<Record<string, StudioRouteSet>> {
-		return this._playoutModel.getRouteSets()
+		return applyAndValidateOverrides(this._context.studio.routeSetsWithOverrides).obj
 	}
 
 	getCurrentTime(): number {
