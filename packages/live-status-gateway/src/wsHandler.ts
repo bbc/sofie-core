@@ -4,6 +4,7 @@ import { Logger } from 'winston'
 import { WebSocket } from 'ws'
 import { CoreHandler } from './coreHandler'
 import { CorelibPubSub, CorelibPubSubCollections, CorelibPubSubTypes } from '@sofie-automation/corelib/dist/pubsub'
+import { AllMessages } from '@sofie-automation/live-status-gateway-api'
 
 export abstract class WebSocketTopicBase {
 	protected _name: string
@@ -34,7 +35,7 @@ export abstract class WebSocketTopicBase {
 		this._logger.error(`Process ${this._name} message not expected '${JSON.stringify(msg)}'`)
 	}
 
-	sendMessage(recipients: WebSocket | Iterable<WebSocket>, msg: object): void {
+	sendMessage(recipients: WebSocket | Iterable<WebSocket>, msg: AllMessages): void {
 		recipients = isIterable(recipients) ? recipients : [recipients]
 
 		let count = 0

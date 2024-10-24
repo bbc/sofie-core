@@ -7,21 +7,7 @@ import { literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { WebSocketTopicBase, WebSocketTopic, CollectionObserver } from '../wsHandler'
 import { StudioHandler } from '../collections/studioHandler'
 import { PlaylistsHandler } from '../collections/playlistHandler'
-
-type PlaylistActivationStatus = 'deactivated' | 'rehearsal' | 'activated'
-
-interface PlaylistStatus {
-	id: string
-	name: string
-	activationStatus: PlaylistActivationStatus
-}
-
-interface StudioStatus {
-	event: string
-	id: string | null
-	name: string
-	playlists: PlaylistStatus[]
-}
+import { StudioEvent, PlaylistStatus, PlaylistActivationStatus } from '@sofie-automation/live-status-gateway-api'
 
 export class StudioTopic
 	extends WebSocketTopicBase
@@ -41,7 +27,7 @@ export class StudioTopic
 	}
 
 	sendStatus(subscribers: Iterable<WebSocket>): void {
-		const studioStatus: StudioStatus = this._studio
+		const studioStatus: StudioEvent = this._studio
 			? {
 					event: 'studio',
 					id: unprotectString(this._studio._id),
@@ -70,9 +56,12 @@ export class StudioTopic
 			case PlaylistsHandler.name:
 				this.logUpdateReceived('playlists', source)
 				this._playlists = rundownPlaylists.map((p) => {
-					let activationStatus: PlaylistActivationStatus =
-						p.activationId === undefined ? 'deactivated' : 'activated'
-					if (p.activationId && p.rehearsal) activationStatus = 'rehearsal'
+					let activationStatus =
+						p.activationId === undefined
+							? PlaylistActivationStatus.DEACTIVATED
+							: PlaylistActivationStatus.ACTIVATED
+					if (p.activationId && p.rehearsal) activationStatus = PlaylistActivationStatus.REHEARSAL
+
 					return literal<PlaylistStatus>({
 						id: unprotectString(p._id),
 						name: p.name,

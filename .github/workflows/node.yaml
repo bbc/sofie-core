@@ -567,7 +567,7 @@ jobs:
           CI: true
       - name: Run generator
         run: |
-          cd packages/live-status-gateway
+          cd packages/live-status-gateway-api
 
           yarn gendocs
           yarn genserver

@@ -2,6 +2,7 @@
 	"private": true,
 	"workspaces": {
 		"packages": [
+			"live-status-gateway-api",
 			"*-integration",
 			"*-gateway",
 			"corelib",
