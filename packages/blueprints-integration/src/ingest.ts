@@ -1,4 +1,5 @@
 import { IngestPart, IngestSegment } from '@sofie-automation/shared-lib/dist/peripheralDevice/ingest'
+import { DefaultUserOperations } from '@sofie-automation/shared-lib/dist/core/model/ingest'
 import { IBlueprintRundownDBData } from './documents'
 import { ReadonlyDeep } from 'type-fest'
 import { SofieIngestRundown } from './ingest-types'
@@ -10,6 +11,7 @@ export {
 	IngestSegment,
 	IngestAdlib,
 } from '@sofie-automation/shared-lib/dist/peripheralDevice/ingest'
+export * from '@sofie-automation/shared-lib/dist/core/model/ingest'
 
 /** The IngestRundown is extended with data from Core */
 export interface ExtendedIngestRundown<TRundownPayload = unknown, TSegmentPayload = unknown, TPartPayload = unknown>
@@ -122,11 +124,6 @@ export interface UserOperationTarget {
 	segmentExternalId: string | undefined
 	partExternalId: string | undefined
 	pieceExternalId: string | undefined
-}
-
-export type DefaultUserOperations = {
-	id: '__sofie-move-segment' // Future: define properly
-	payload: Record<string, never>
 }
 
 export interface UserOperationChange<TCustomBlueprintOperations extends { id: string } = never> {
