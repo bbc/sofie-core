@@ -73,7 +73,7 @@ export interface ActivePlaylistStatus {
 		timingMode: PlaylistTimingType
 		startedPlayback?: number
 		expectedStart?: number
-		expectedDuration?: number
+		expectedDurationMs?: number
 		expectedEnd?: number
 	}
 }
@@ -181,7 +181,7 @@ export class ActivePlaylistTopic
 					timing: {
 						timingMode: this._activePlaylist.timing.type,
 						startedPlayback: this._activePlaylist.startedPlayback,
-						expectedDuration: this._activePlaylist.timing.expectedDuration,
+						expectedDurationMs: this._activePlaylist.timing.expectedDuration,
 						expectedStart:
 							this._activePlaylist.timing.type !== PlaylistTimingType.None
 								? this._activePlaylist.timing.expectedStart

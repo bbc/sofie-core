@@ -12,6 +12,7 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { SegmentHandler } from '../../collections/segmentHandler'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
+import { PlaylistTimingType } from '@sofie-automation/blueprints-integration'
 
 function makeEmptyTestPartInstances(): SelectedPartInstances {
 	return {
@@ -50,6 +51,9 @@ describe('ActivePlaylistTopic', () => {
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: undefined,
 			quickLoop: undefined,
+			timing: {
+				timingMode: PlaylistTimingType.None,
+			},
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -141,6 +145,9 @@ describe('ActivePlaylistTopic', () => {
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: { a: 'b' },
 			quickLoop: undefined,
+			timing: {
+				timingMode: PlaylistTimingType.None,
+			},
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method

@@ -349,6 +349,7 @@ async function checkPieceContentMediaObjectStatus(
 										codec_time_base: stream.codec.time_base,
 										channels: stream.channels,
 										r_frame_rate: undefined,
+										field_order: undefined,
 									})
 								),
 								(stream) => buildFormatString(mediainfo.field_order, stream),
