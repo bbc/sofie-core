@@ -27,22 +27,43 @@ export function RenderUserEditOperations(
 				switch (userEditOperation.type) {
 					case UserEditingType.ACTION:
 						return (
-							<MenuItem
-								key={`${userEditOperation.id}_${i}`}
-								onClick={(e) => {
-									doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-										MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
-											id: userEditOperation.id,
-										})
-									)
-								}}
-							>
-								{
-									// ToDo: use CSS to Style state instead of asterix
-									userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
-								}
-								<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
-							</MenuItem>
+							<>
+								{typeof userEditOperation.isActive == 'undefined' ? (
+									<MenuItem
+										key={`${userEditOperation.id}_${i}`}
+										onClick={(e) => {
+											doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+												MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
+													id: userEditOperation.id,
+												})
+											)
+										}}
+									>
+										{
+											// ToDo: use CSS to Style state instead of asterix
+											userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
+										}
+										<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
+									</MenuItem>
+								) : (
+									<MenuItem
+										key={`${userEditOperation.id}_${i}`}
+										onClick={(e) => {
+											doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+												MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
+													id: userEditOperation.id,
+												})
+											)
+										}}
+									>
+										{
+											// ToDo: use CSS to Style state instead of asterix
+											userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
+										}
+										<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
+									</MenuItem>
+								)}
+							</>
 						)
 					case UserEditingType.FORM:
 						return (
@@ -50,7 +71,7 @@ export function RenderUserEditOperations(
 								disabled={!isFormEditable}
 								key={`${userEditOperation.id}_${i}`}
 								onClick={(e) => {
-									const schema = JSONBlobParse(userEditOperation.schema)
+									const schema = JSONBlobParse(userEditOperation.schemas['camera'])
 									const values = clone(userEditOperation.currentValues)
 
 									// TODO:
@@ -77,7 +98,7 @@ export function RenderUserEditOperations(
 									})
 								}}
 							>
-								<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
+								<span>Open Properties</span>
 							</MenuItem>
 						)
 					default:

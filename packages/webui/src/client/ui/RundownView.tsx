@@ -2151,6 +2151,9 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 
 		onContextMenu = (contextMenuContext: IContextMenuContext) => {
 			this.setState({
+				isNotificationsCenterOpen: NoticeLevel.PROPERTIES_PANEL,
+			})
+			this.setState({
 				contextMenuContext,
 			})
 		}
@@ -3090,7 +3093,10 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									}}
 								>
 									{this.state.isNotificationsCenterOpen && (
-										<NotificationCenterPanel filter={this.state.isNotificationsCenterOpen} />
+										<NotificationCenterPanel
+											filter={this.state.isNotificationsCenterOpen}
+											contextMenuContext={this.state.contextMenuContext}
+										/>
 									)}
 								</VelocityReact.VelocityTransitionGroup>
 								<VelocityReact.VelocityTransitionGroup

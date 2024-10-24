@@ -12,6 +12,9 @@ import update from 'immutability-helper'
 import { i18nTranslator } from '../../ui/i18n'
 import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
+import { PropertiesPanel } from '../../ui/UserEditOperations/PropertiesPanel'
+import { UserEditsIcon } from '../ui/icons/useredits'
+import { IContextMenuContext } from '../../ui/RundownView'
 
 interface IPopUpProps {
 	id?: string
@@ -153,6 +156,7 @@ interface IProps {
 	limitCount?: number
 
 	filter?: NoticeLevel
+	contextMenuContext: IContextMenuContext | null
 }
 
 interface IState {
@@ -391,7 +395,12 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 		}
 
 		render(): JSX.Element | null {
-			const { t, highlightedSource, highlightedLevel } = this.props
+			const { t, highlightedSource, highlightedLevel, filter } = this.props
+
+			// For PropertiesPanel ignore the filter:
+			if (Number(filter) >= NoticeLevel.PROPERTIES_PANEL) {
+				return <PropertiesPanel contextMenuContext={this.props.contextMenuContext} />
+			}
 
 			const notifications = this.getNotificationsToDisplay()
 
@@ -459,13 +468,18 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
  * @class NotificationCenterPanel
  * @extends React.Component
  */
-export const NotificationCenterPanel = (props: { limitCount?: number; filter?: NoticeLevel }): JSX.Element => (
+export const NotificationCenterPanel = (props: {
+	limitCount?: number
+	filter?: NoticeLevel
+	contextMenuContext: IContextMenuContext | null
+}): JSX.Element => (
 	<div className="notification-center-panel">
 		<NotificationCenterPopUps
 			showEmptyListLabel={true}
 			showSnoozed={true}
 			limitCount={props.limitCount}
 			filter={props.filter}
+			contextMenuContext={props.contextMenuContext}
 		/>
 	</div>
 )
@@ -541,6 +555,8 @@ export function NotificationCenterPanelToggle({
 							<WarningIcon />
 						) : ((filter || 0) & (NoticeLevel.NOTIFICATION | NoticeLevel.TIP)) !== 0 ? (
 							<InformationIcon />
+						) : ((filter || 0) & NoticeLevel.PROPERTIES_PANEL) !== 0 ? (
+							<UserEditsIcon />
 						) : (
 							<WarningIcon />
 						)}
