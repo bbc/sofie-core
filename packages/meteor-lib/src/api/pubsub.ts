@@ -224,7 +224,10 @@ export interface MeteorPubSubTypes {
 	[MeteorPubSub.buckets]: (studioId: StudioId, bucketId: BucketId | null, token?: string) => CollectionName.Buckets
 	[MeteorPubSub.translationsBundles]: (token?: string) => CollectionName.TranslationsBundles
 	[MeteorPubSub.notificationsForRundown]: (studioId: StudioId, rundownId: RundownId) => CollectionName.Notifications
-	[MeteorPubSub.notificationsForRundownPlaylist]: (studioId: StudioId, playlistId: RundownPlaylistId) => CollectionName.Notifications
+	[MeteorPubSub.notificationsForRundownPlaylist]: (
+		studioId: StudioId,
+		playlistId: RundownPlaylistId
+	) => CollectionName.Notifications
 
 	// custom publications:
 

@@ -46,10 +46,12 @@ import {
 	PackageContainerStatuses,
 	TimelineDatastore,
 	SofieIngestDataCache,
+	Notifications,
 } from '../../collections'
 import { Collections } from '../../collections/lib'
 import { generateTranslationBundleOriginId } from '../translationsBundles'
 import { CollectionCleanupResult } from '@sofie-automation/meteor-lib/dist/api/system'
+import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 describe('Cleanup', () => {
 	let env: DefaultEnvironment
@@ -444,6 +446,21 @@ async function setDefaultDatatoDB(env: DefaultEnvironment, now: number) {
 		language: '',
 		originId: generateTranslationBundleOriginId(deviceId, 'peripheralDevice'),
 		type: '' as any,
+	})
+
+	await Notifications.insertAsync({
+		_id: getRandomId(),
+		category: '',
+		created: now,
+		localId: '',
+		message: {} as any,
+		severity: 0 as any,
+		modified: now,
+		relatedTo: {
+			type: DBNotificationTargetType.RUNDOWN,
+			studioId,
+			rundownId,
+		},
 	})
 
 	// Ensure that we have added one of everything:
