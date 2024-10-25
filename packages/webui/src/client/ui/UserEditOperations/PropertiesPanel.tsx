@@ -217,8 +217,7 @@ function EditingTypeAction(props: {
 							MeteorCall.userAction.executeUserChangeOperation(
 								e,
 								ts,
-								//@ts-expect-error TODO: Fix this
-								props.contextMenuContext?.segment?.rundownId,
+								props.rundownId,
 								{
 									segmentExternalId: props.segment?.externalId,
 									partExternalId: props.part?.externalId,
@@ -250,8 +249,7 @@ function EditingTypeAction(props: {
 								MeteorCall.userAction.executeUserChangeOperation(
 									e,
 									ts,
-									//@ts-expect-error TODO: Fix this
-									props.contextMenuContext?.segment?.rundownId,
+									props.rundownId,
 									{
 										segmentExternalId: props.segment?.externalId,
 										partExternalId: props.part?.externalId,
@@ -377,8 +375,7 @@ function EditingTypeChangeSource(props: {
 								MeteorCall.userAction.executeUserChangeOperation(
 									e,
 									ts,
-									//@ts-expect-error TODO: Fix this
-									props.contextMenuContext?.segment?.rundownId,
+									props.rundownId,
 									{
 										segmentExternalId: props.segment?.externalId,
 										partExternalId: props.part?.externalId,

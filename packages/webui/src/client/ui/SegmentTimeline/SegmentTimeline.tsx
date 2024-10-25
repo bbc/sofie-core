@@ -1077,7 +1077,6 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							}
 						}}
 					>
-						{/* for debugging: */ this.state.isSelected && <span>**</span>}
 						{/* for debugging: */ this.props.isSelected && <span>!!</span>}
 						{this.props.segment.name}
 					</h2>
