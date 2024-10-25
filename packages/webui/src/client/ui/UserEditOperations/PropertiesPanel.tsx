@@ -25,6 +25,7 @@ import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import _ from 'underscore'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
+import { useSelection } from '../RundownView/SelectedElementsContext'
 
 /**
  * Propertiespanel PopUp props.
@@ -36,7 +37,11 @@ interface Props {
 	contextMenuContext: IContextMenuContext | null
 }
 
-export function PropertiesPanel(props: Props) {
+export function PropertiesPanel(props: Props): JSX.Element {
+	const { listSelectedElements } = useSelection()
+	console.log('listSelectedElements', listSelectedElements())
+	const selectedElement = listSelectedElements()?.[0]
+
 	const { t } = useTranslation()
 
 	React.useEffect(() => {
@@ -50,23 +55,17 @@ export function PropertiesPanel(props: Props) {
 	}, [])
 
 	const rundownId = props.contextMenuContext?.segment?.rundownId
-	const part = useTracker(
-		() => UIParts.findOne({ _id: props.contextMenuContext?.part?.instance.part?._id }),
-		[props.contextMenuContext?.part?.instance.part],
-		props.contextMenuContext?.part?.instance.part
-	)
+	const part = useTracker(() => UIParts.findOne({ _id: selectedElement.elementId }), [selectedElement.elementId])
 
+	console.log('Context Segment id', props.contextMenuContext?.segment?._id)
 	const segment = useTracker(
-		() => Segments.findOne({ rundownId: rundownId, _id: props.contextMenuContext?.segment?._id }),
-		[props.contextMenuContext?.segment],
-		props.contextMenuContext?.segment
+		() => Segments.findOne({ rundownId: rundownId, _id: selectedElement.elementId }),
+		[selectedElement.elementId]
 	)
-
-	const isPartSelected = getTimePosition(props.contextMenuContext || {})
 
 	return (
 		<div className="propertiespanel-pop-up">
-			{isPartSelected && (
+			{selectedElement.type === 'partInstance' && (
 				<>
 					<div className="propertiespanel-pop-up__header">
 						{part?.userEditOperations &&
@@ -86,8 +85,7 @@ export function PropertiesPanel(props: Props) {
 						PART : {String(part?.title)}
 					</div>
 					<div className="propertiespanel-pop-up__contents">
-						{isPartSelected &&
-							segment &&
+						{segment &&
 							part?._id &&
 							part.userEditOperations?.map((userEditOperation, i) => {
 								switch (userEditOperation.type) {
@@ -116,7 +114,7 @@ export function PropertiesPanel(props: Props) {
 					</div>
 				</>
 			)}
-			{!isPartSelected && (
+			{selectedElement.type === 'segment' && (
 				<>
 					<div className="propertiespanel-pop-up__header">
 						{segment?.userEditOperations &&
@@ -180,9 +178,10 @@ export function PropertiesPanel(props: Props) {
 										pieceExternalId: undefined,
 									},
 									{
-										id: isPartSelected
-											? DefaultUserOperationsTypes.REVERT_PART
-											: DefaultUserOperationsTypes.REVERT_SEGMENT,
+										id:
+											selectedElement.type === 'partInstance'
+												? DefaultUserOperationsTypes.REVERT_PART
+												: DefaultUserOperationsTypes.REVERT_SEGMENT,
 									}
 								)
 							)
