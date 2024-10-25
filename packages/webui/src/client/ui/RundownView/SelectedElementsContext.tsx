@@ -37,7 +37,7 @@ interface AdlibActionElement {
 type SelectedElement = RundownElement | SegmentElement | PartInstanceElement | PieceElement | AdlibActionElement
 type ElementId = SelectedElement['elementId']
 
-interface SelectionContextType {
+export interface SelectionContextType {
 	isSelected: (elementId: ElementId) => boolean
 	listSelectedElements: () => SelectedElement[]
 	clearAndSetSelection: (element: SelectedElement) => void

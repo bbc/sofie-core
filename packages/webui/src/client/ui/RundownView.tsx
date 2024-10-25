@@ -3043,10 +3043,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 										}}
 									>
 										{this.state.isNotificationsCenterOpen && (
-											<NotificationCenterPanel
-												filter={this.state.isNotificationsCenterOpen}
-												contextMenuContext={this.state.contextMenuContext}
-											/>
+											<NotificationCenterPanel filter={this.state.isNotificationsCenterOpen} />
 										)}
 									</VelocityReact.VelocityTransitionGroup>
 									<VelocityReact.VelocityTransitionGroup

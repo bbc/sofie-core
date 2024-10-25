@@ -2,7 +2,6 @@ import * as React from 'react'
 // @ts-expect-error No types available
 import * as VelocityReact from 'velocity-react'
 import { i18nTranslator } from '../i18n'
-import { IContextMenuContext } from '../RundownView'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
@@ -24,20 +23,13 @@ import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import _ from 'underscore'
 import { Segments } from '../../collections'
-import { UIParts } from '../Collections'
+import { UIPartInstances, UIParts } from '../Collections'
 import { useSelection } from '../RundownView/SelectedElementsContext'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
-/**
- * Propertiespanel PopUp props.
- */
-interface Props {
-	// Currently selected context menu context
-	// Plan is to replace this with a more specific selection of what is selected in the UI
-	// When selected element for propertiesPanel has been implemented
-	contextMenuContext: IContextMenuContext | null
-}
-
-export function PropertiesPanel(props: Props): JSX.Element {
+export function PropertiesPanel(): JSX.Element {
 	const { listSelectedElements } = useSelection()
 	console.log('listSelectedElements', listSelectedElements())
 	const selectedElement = listSelectedElements()?.[0]
@@ -54,14 +46,19 @@ export function PropertiesPanel(props: Props): JSX.Element {
 		}
 	}, [])
 
-	const rundownId = props.contextMenuContext?.segment?.rundownId
-	const part = useTracker(() => UIParts.findOne({ _id: selectedElement.elementId }), [selectedElement.elementId])
-
-	console.log('Context Segment id', props.contextMenuContext?.segment?._id)
-	const segment = useTracker(
-		() => Segments.findOne({ rundownId: rundownId, _id: selectedElement.elementId }),
+	const partInstance = useTracker(
+		() => UIPartInstances.findOne({ _id: selectedElement.elementId }),
 		[selectedElement.elementId]
 	)
+	const part = useTracker(() => UIParts.findOne({ _id: partInstance?.part._id }), [partInstance?.part._id])
+
+	const segment: DBSegment | undefined = useTracker(
+		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement.elementId }),
+		[selectedElement.elementId]
+	)
+	const rundownId = part ? part.rundownId : segment?.rundownId
+
+	if (!rundownId) return <></>
 
 	return (
 		<div className="propertiespanel-pop-up">
@@ -94,7 +91,9 @@ export function PropertiesPanel(props: Props): JSX.Element {
 											<EditingTypeAction
 												key={i}
 												userEditOperation={userEditOperation}
-												contextMenuContext={props.contextMenuContext}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
 											/>
 										)
 									case UserEditingType.FORM:
@@ -102,7 +101,9 @@ export function PropertiesPanel(props: Props): JSX.Element {
 											<EditingTypeChangeSource
 												key={i}
 												userEditOperation={userEditOperation}
-												contextMenuContext={props.contextMenuContext}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
 											/>
 										)
 									default:
@@ -143,7 +144,9 @@ export function PropertiesPanel(props: Props): JSX.Element {
 											<EditingTypeAction
 												key={i}
 												userEditOperation={userEditOperation}
-												contextMenuContext={props.contextMenuContext}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
 											/>
 										)
 									case UserEditingType.FORM:
@@ -151,7 +154,9 @@ export function PropertiesPanel(props: Props): JSX.Element {
 											<EditingTypeChangeSource
 												key={i}
 												userEditOperation={userEditOperation}
-												contextMenuContext={props.contextMenuContext}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
 											/>
 										)
 									default:
@@ -196,7 +201,9 @@ export function PropertiesPanel(props: Props): JSX.Element {
 
 function EditingTypeAction(props: {
 	userEditOperation: CoreUserEditingDefinitionAction
-	contextMenuContext: IContextMenuContext | null
+	segment: DBSegment | undefined
+	part: DBPart | undefined
+	rundownId: RundownId
 }) {
 	if (!props.userEditOperation.buttonType) return null
 	switch (props.userEditOperation.buttonType) {
@@ -213,8 +220,8 @@ function EditingTypeAction(props: {
 								//@ts-expect-error TODO: Fix this
 								props.contextMenuContext?.segment?.rundownId,
 								{
-									segmentExternalId: props.contextMenuContext?.segment?.externalId,
-									partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+									segmentExternalId: props.segment?.externalId,
+									partExternalId: props.part?.externalId,
 									pieceExternalId: undefined,
 								},
 								{
@@ -246,8 +253,8 @@ function EditingTypeAction(props: {
 									//@ts-expect-error TODO: Fix this
 									props.contextMenuContext?.segment?.rundownId,
 									{
-										segmentExternalId: props.contextMenuContext?.segment?.externalId,
-										partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+										segmentExternalId: props.segment?.externalId,
+										partExternalId: props.part?.externalId,
 										pieceExternalId: undefined,
 									},
 									{
@@ -282,7 +289,9 @@ function EditingTypeAction(props: {
 
 function EditingTypeChangeSource(props: {
 	userEditOperation: CoreUserEditingDefinitionForm
-	contextMenuContext: IContextMenuContext | null
+	segment: DBSegment | undefined
+	part: DBPart | undefined
+	rundownId: RundownId
 }) {
 	const { t } = useTranslation()
 	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
@@ -371,8 +380,8 @@ function EditingTypeChangeSource(props: {
 									//@ts-expect-error TODO: Fix this
 									props.contextMenuContext?.segment?.rundownId,
 									{
-										segmentExternalId: props.contextMenuContext?.segment?.externalId,
-										partExternalId: props.contextMenuContext?.part?.instance.part.externalId,
+										segmentExternalId: props.segment?.externalId,
+										partExternalId: props.part?.externalId,
 										pieceExternalId: undefined,
 									},
 									{
@@ -394,19 +403,4 @@ function EditingTypeChangeSource(props: {
 			)}
 		</>
 	)
-}
-
-// This is simmilar implementation as the function in SegmentContextMenu.tsx
-// and is used to check if a segment or a part is used.
-// A better implementation of what is selected in the UI should be implemented.
-function getTimePosition(contextMenuContext: IContextMenuContext): number | null {
-	let offset = 0
-	if (contextMenuContext && contextMenuContext.partDocumentOffset) {
-		const left = contextMenuContext.partDocumentOffset.left || 0
-		const timeScale = contextMenuContext.timeScale || 1
-		const menuPosition = contextMenuContext.mousePosition || { left }
-		offset = (menuPosition.left - left) / timeScale
-		return offset
-	}
-	return null
 }

@@ -14,7 +14,6 @@ import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/I
 import { useTranslation } from 'react-i18next'
 import { PropertiesPanel } from '../../ui/UserEditOperations/PropertiesPanel'
 import { UserEditsIcon } from '../ui/icons/useredits'
-import { IContextMenuContext } from '../../ui/RundownView'
 
 interface IPopUpProps {
 	id?: string
@@ -155,7 +154,6 @@ interface IProps {
 	limitCount?: number
 
 	filter?: NoticeLevel
-	contextMenuContext: IContextMenuContext | null
 }
 
 interface IState {
@@ -398,7 +396,7 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 
 			// For PropertiesPanel ignore the filter:
 			if (Number(filter) >= NoticeLevel.PROPERTIES_PANEL) {
-				return <PropertiesPanel contextMenuContext={this.props.contextMenuContext} />
+				return <PropertiesPanel />
 			}
 
 			const notifications = this.getNotificationsToDisplay()
@@ -467,18 +465,13 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
  * @class NotificationCenterPanel
  * @extends React.Component
  */
-export const NotificationCenterPanel = (props: {
-	limitCount?: number
-	filter?: NoticeLevel
-	contextMenuContext: IContextMenuContext | null
-}): JSX.Element => (
+export const NotificationCenterPanel = (props: { limitCount?: number; filter?: NoticeLevel }): JSX.Element => (
 	<div className="notification-center-panel">
 		<NotificationCenterPopUps
 			showEmptyListLabel={true}
 			showSnoozed={true}
 			limitCount={props.limitCount}
 			filter={props.filter}
-			contextMenuContext={props.contextMenuContext}
 		/>
 	</div>
 )
