@@ -1453,6 +1453,7 @@ describe('rundown Timing Calculator', () => {
 			toPartPostroll: 500,
 			fromPartRemaining: 0,
 			fromPartPostroll: 0,
+			fromPartKeepalive: 0,
 		}
 		const partInstance2 = wrapPartToTemporaryInstance(protectString(''), parts[1])
 		partInstance2.isTemporary = false
@@ -1466,6 +1467,7 @@ describe('rundown Timing Calculator', () => {
 			toPartPostroll: 0,
 			fromPartRemaining: 500,
 			fromPartPostroll: 500,
+			fromPartKeepalive: 0,
 		}
 		const partInstances = [partInstance1, partInstance2, ...convertPartsToPartInstances([parts[2], parts[3]])]
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
