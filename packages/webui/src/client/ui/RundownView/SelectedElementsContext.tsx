@@ -2,7 +2,7 @@ import React from 'react'
 import {
 	AdLibActionId,
 	PartInstanceId,
-	PieceId,
+	PieceInstanceId,
 	RundownId,
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
@@ -23,9 +23,9 @@ interface PartInstanceElement {
 	elementId: PartInstanceId
 }
 
-interface PieceElement {
-	type: 'piece'
-	elementId: PieceId
+interface PieceInstanceElement {
+	type: 'pieceInstance'
+	elementId: PieceInstanceId
 }
 
 interface AdlibActionElement {
@@ -34,7 +34,7 @@ interface AdlibActionElement {
 }
 
 // Union types for all possible elements
-type SelectedElement = RundownElement | SegmentElement | PartInstanceElement | PieceElement | AdlibActionElement
+type SelectedElement = RundownElement | SegmentElement | PartInstanceElement | PieceInstanceElement | AdlibActionElement
 type ElementId = SelectedElement['elementId']
 
 export interface SelectionContextType {
@@ -155,11 +155,13 @@ export const useSelection = (): SelectionContextType => {
 }
 
 // Helper hook for common selection patterns
-export const useElementSelection = (element: SelectedElement): { isSelected: boolean; toggleSelection: () => void } => {
-	const { isSelected, toggleSelection } = useSelection()
+export const useElementSelection = (
+	element: SelectedElement
+): { isSelected: boolean; clearAndSetSelection: () => void } => {
+	const { isSelected, clearAndSetSelection } = useSelection()
 
 	return {
 		isSelected: React.useMemo(() => isSelected(element.elementId), [isSelected, element.elementId]),
-		toggleSelection: React.useCallback(() => toggleSelection(element), [toggleSelection, element]),
+		clearAndSetSelection: React.useCallback(() => clearAndSetSelection(element), [clearAndSetSelection, element]),
 	}
 }

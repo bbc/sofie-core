@@ -23,6 +23,7 @@ import { TransitionSourceRenderer } from './Renderers/TransitionSourceRenderer'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { ReadonlyDeep } from 'type-fest'
 import { PieceContentStatusObj } from '@sofie-automation/meteor-lib/dist/api/pieceContentStatus'
+import { useSelection } from '../RundownView/SelectedElementsContext'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -102,11 +103,20 @@ interface ISourceLayerItemState {
 	/** Set to `true` when the segment is "highlighted" (in focus, generally from a scroll event) */
 	highlight: boolean
 }
-export const SourceLayerItem = withTranslation()(
-	class SourceLayerItem extends React.Component<ISourceLayerItemProps & WithTranslation, ISourceLayerItemState> {
+
+interface WithSelectionProps {
+	handlePieceSelect: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
+	isPieceSelected: boolean
+}
+
+const SourceLayerItemWithSelection = withTranslation()(
+	class SourceLayerItem extends React.Component<
+		ISourceLayerItemProps & WithTranslation & WithSelectionProps,
+		ISourceLayerItemState
+	> {
 		animFrameHandle: number | undefined
 
-		constructor(props: ISourceLayerItemProps & WithTranslation) {
+		constructor(props: ISourceLayerItemProps & WithTranslation & WithSelectionProps) {
 			super(props)
 			this.state = {
 				showMiniInspector: false,
@@ -465,11 +475,15 @@ export const SourceLayerItem = withTranslation()(
 		}
 
 		itemDblClick = (e: React.MouseEvent<HTMLDivElement>) => {
-			e.preventDefault()
-			e.stopPropagation()
+			if (this.props.studio?.settings.enableUserEdits) {
+				this.props.handlePieceSelect(this.props.piece, e)
+			} else {
+				e.preventDefault()
+				e.stopPropagation()
 
-			if (typeof this.props.onDoubleClick === 'function') {
-				this.props.onDoubleClick(this.props.piece, e)
+				if (typeof this.props.onDoubleClick === 'function') {
+					this.props.onDoubleClick(this.props.piece, e)
+				}
 			}
 		}
 
@@ -714,3 +728,21 @@ export const SourceLayerItem = withTranslation()(
 		}
 	}
 )
+
+export const SourceLayerItem = (props: ISourceLayerItemProps & WithTranslation): React.ReactElement => {
+	const { isSelected, clearAndSetSelection } = useSelection()
+
+	const isPieceSelected = isSelected(props.piece.instance._id)
+
+	const handlePieceSelect = React.useCallback(
+		(piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => {
+			clearAndSetSelection({ type: 'pieceInstance', elementId: piece.instance._id })
+			props.onClick?.(piece, e)
+		},
+		[isPieceSelected]
+	)
+
+	return (
+		<SourceLayerItemWithSelection {...props} handlePieceSelect={handlePieceSelect} isPieceSelected={isPieceSelected} />
+	)
+}
