@@ -32,6 +32,8 @@ export function PropertiesPanel(): JSX.Element {
 	console.log('listSelectedElements', listSelectedElements())
 	const selectedElement = listSelectedElements()?.[0]
 
+	if (!selectedElement) return <></>
+
 	const { t } = useTranslation()
 
 	React.useEffect(() => {
