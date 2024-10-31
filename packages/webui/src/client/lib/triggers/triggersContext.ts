@@ -39,7 +39,13 @@ export const UiTriggersContext: TriggersContext = {
 
 	doUserAction: (...args) => Tracker.nonreactive(() => doUserAction(...args)),
 
-	memoizedIsolatedAutorun,
+	memoizedIsolatedAutorun: async (fnc, reactive, functionName, ...params) => {
+		if (!reactive) {
+			return Tracker.nonreactive(() => memoizedIsolatedAutorun(fnc, functionName, ...params))
+		} else {
+			return memoizedIsolatedAutorun(fnc, functionName, ...params)
+		}
+	},
 
 	async createContextForRundownPlaylistChain(
 		_studioId: StudioId,

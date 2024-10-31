@@ -634,30 +634,34 @@ export function compileAdLibFilter(
 				// because _.isEqual (used in memoizedIsolatedAutorun) doesn't work with Maps..
 
 				const rundownPlaylistId = context.rundownPlaylistId.get()
-				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
-					const playlist = (await triggersContext.RundownPlaylists.findOneAsync(rundownPlaylistId, {
-						projection: {
-							rundownIdsInOrder: 1,
-						},
-					})) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
-
-					if (playlist?.rundownIdsInOrder) {
-						return playlist.rundownIdsInOrder
-					} else {
-						const rundowns = (await triggersContext.Rundowns.findFetchAsync(
-							{
-								playlistId: rundownPlaylistId,
+				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(
+					async () => {
+						const playlist = (await triggersContext.RundownPlaylists.findOneAsync(rundownPlaylistId, {
+							projection: {
+								rundownIdsInOrder: 1,
 							},
-							{
-								fields: {
-									_id: 1,
-								},
-							}
-						)) as Pick<DBRundown, '_id'>[]
+						})) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
 
-						return rundowns.map((r) => r._id)
-					}
-				}, `rundownsRanksForPlaylist_${rundownPlaylistId}`)
+						if (playlist?.rundownIdsInOrder) {
+							return playlist.rundownIdsInOrder
+						} else {
+							const rundowns = (await triggersContext.Rundowns.findFetchAsync(
+								{
+									playlistId: rundownPlaylistId,
+								},
+								{
+									fields: {
+										_id: 1,
+									},
+								}
+							)) as Pick<DBRundown, '_id'>[]
+
+							return rundowns.map((r) => r._id)
+						}
+					},
+					reactive,
+					`rundownsRanksForPlaylist_${rundownPlaylistId}`
+				)
 				rundownRanks.forEach((id, index) => {
 					rundownRankMap.set(id, index)
 				})
@@ -675,41 +679,46 @@ export function compileAdLibFilter(
 								},
 							}
 						)) as Pick<DBSegment, '_id' | '_rank'>[],
+					reactive,
 					`segmentRanksForRundowns_${Array.from(rundownRankMap.keys()).join(',')}`
 				)
 				segmentRanks.forEach((segment) => {
 					segmentRankMap.set(segment._id, segment._rank)
 				})
 
-				const partRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
-					if (!partFilter) {
-						return (await triggersContext.Parts.findFetchAsync(
-							{
-								rundownId: { $in: Array.from(rundownRankMap.keys()) },
-							},
-							{
-								fields: {
-									_id: 1,
-									segmentId: 1,
-									rundownId: 1,
-									_rank: 1,
+				const partRanks = await triggersContext.memoizedIsolatedAutorun(
+					async () => {
+						if (!partFilter) {
+							return (await triggersContext.Parts.findFetchAsync(
+								{
+									rundownId: { $in: Array.from(rundownRankMap.keys()) },
 								},
-							}
-						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
-					} else {
-						return (await triggersContext.Parts.findFetchAsync(
-							{ _id: { $in: partFilter } },
-							{
-								fields: {
-									_id: 1,
-									segmentId: 1,
-									rundownId: 1,
-									_rank: 1,
-								},
-							}
-						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
-					}
-				}, `partRanks_${JSON.stringify(partFilter ?? rundownRankMap.keys())}`)
+								{
+									fields: {
+										_id: 1,
+										segmentId: 1,
+										rundownId: 1,
+										_rank: 1,
+									},
+								}
+							)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						} else {
+							return (await triggersContext.Parts.findFetchAsync(
+								{ _id: { $in: partFilter } },
+								{
+									fields: {
+										_id: 1,
+										segmentId: 1,
+										rundownId: 1,
+										_rank: 1,
+									},
+								}
+							)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						}
+					},
+					reactive,
+					`partRanks_${JSON.stringify(partFilter ?? rundownRankMap.keys())}`
+				)
 
 				partRanks.forEach((part) => {
 					partRankMap.set(part._id, part)

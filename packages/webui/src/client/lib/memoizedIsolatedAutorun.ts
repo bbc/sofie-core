@@ -19,8 +19,6 @@ const isolatedAutorunsMem: {
  * If the `fnc` computation is invalidated, the outer computations will only be invalidated if the value returned from
  * `fnc` fails a deep equality check (_.isEqual).
  *
- * If used in server code, thie `fnc` will be run as-is, without any reactivity
- *
  * @export
  * @template T
  * @param {T} fnc The computation function to be memoized and calculated separately from the outer one.
