@@ -732,11 +732,15 @@ const SourceLayerItemWithSelection = withTranslation()(
 export const SourceLayerItem = (props: ISourceLayerItemProps): React.ReactElement => {
 	const { isSelected, clearAndSetSelection } = useSelection()
 
-	const isPieceSelected = isSelected(props.piece.instance._id)
+	const isPieceSelected = isSelected(props.piece.instance.piece._id)
 
 	const handlePieceSelect = React.useCallback(
 		(piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => {
-			clearAndSetSelection({ type: 'pieceInstance', elementId: piece.instance._id })
+			// This is only selected the corresponding part
+			// As the piece currently doesn't have a unique ID, that can be used for back reference
+			// If it's not an instance
+			const partId = props.part.instance.part._id
+			clearAndSetSelection({ type: 'part', elementId: partId })
 			props.onClick?.(piece, e)
 		},
 		[isPieceSelected]

@@ -19,9 +19,8 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
-import _ from 'underscore'
-import { Segments, PieceInstances } from '../../collections'
-import { UIPartInstances, UIParts } from '../Collections'
+import { Segments } from '../../collections'
+import { UIParts } from '../Collections'
 import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
@@ -46,16 +45,9 @@ export function PropertiesPanel(): JSX.Element {
 		}
 	}, [])
 
-	const pieceInstance = useTracker(
-		() => PieceInstances.findOne({ _id: selectedElement.elementId }),
-		[selectedElement?.elementId]
-	)
+	//const piece = useTracker(() => Pieces.findOne({ _id: selectedElement.elementId }), [selectedElement?.elementId])
 
-	const partInstance = useTracker(
-		() => UIPartInstances.findOne({ _id: pieceInstance ? pieceInstance.partInstanceId : selectedElement.elementId }),
-		[selectedElement?.elementId]
-	)
-	const part = useTracker(() => UIParts.findOne({ _id: partInstance?.part._id }), [partInstance?.part._id])
+	const part = useTracker(() => UIParts.findOne({ _id: selectedElement.elementId }), [selectedElement?.elementId])
 
 	const segment: DBSegment | undefined = useTracker(
 		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement.elementId }),
@@ -67,60 +59,59 @@ export function PropertiesPanel(): JSX.Element {
 
 	return (
 		<div className="propertiespanel-pop-up">
-			{selectedElement.type === 'partInstance' ||
-				(selectedElement.type === 'pieceInstance' && (
-					<>
-						<div className="propertiespanel-pop-up__header">
-							{part?.userEditOperations &&
-								part.userEditOperations.map((operation) => {
-									if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+			{selectedElement.type === 'part' && (
+				<>
+					<div className="propertiespanel-pop-up__header">
+						{part?.userEditOperations &&
+							part.userEditOperations.map((operation) => {
+								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
 
-									return (
-										<div
-											key={operation.id}
-											className="svg"
-											dangerouslySetInnerHTML={{
-												__html: operation.svgIcon,
-											}}
-										></div>
-									)
-								})}
-							PART : {String(part?.title)}
-						</div>
-						<div className="propertiespanel-pop-up__contents">
-							{segment &&
-								part?._id &&
-								part.userEditOperations?.map((userEditOperation, i) => {
-									switch (userEditOperation.type) {
-										case UserEditingType.ACTION:
-											return (
-												<EditingTypeAction
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-												/>
-											)
-										case UserEditingType.FORM:
-											return (
-												<EditingTypeChangeSource
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-												/>
-											)
-										default:
-											assertNever(userEditOperation)
-											return null
-									}
-								})}
-							<hr />
-						</div>
-					</>
-				))}
+								return (
+									<div
+										key={operation.id}
+										className="svg"
+										dangerouslySetInnerHTML={{
+											__html: operation.svgIcon,
+										}}
+									></div>
+								)
+							})}
+						PART : {String(part?.title)}
+					</div>
+					<div className="propertiespanel-pop-up__contents">
+						{segment &&
+							part?._id &&
+							part.userEditOperations?.map((userEditOperation, i) => {
+								switch (userEditOperation.type) {
+									case UserEditingType.ACTION:
+										return (
+											<EditingTypeAction
+												key={i}
+												userEditOperation={userEditOperation}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
+											/>
+										)
+									case UserEditingType.FORM:
+										return (
+											<EditingTypeChangeSource
+												key={i}
+												userEditOperation={userEditOperation}
+												segment={segment}
+												part={part}
+												rundownId={rundownId}
+											/>
+										)
+									default:
+										assertNever(userEditOperation)
+										return null
+								}
+							})}
+						<hr />
+					</div>
+				</>
+			)}
 			{selectedElement.type === 'segment' && (
 				<>
 					<div className="propertiespanel-pop-up__header">
