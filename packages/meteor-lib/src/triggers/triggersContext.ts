@@ -46,7 +46,6 @@ export interface TriggersContext {
 
 	memoizedIsolatedAutorun<TArgs extends any[], TRes>(
 		fnc: (...args: TArgs) => Promise<TRes>,
-		reactive: boolean,
 		functionName: string,
 		...params: TArgs
 	): Promise<TRes>
