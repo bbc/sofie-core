@@ -1050,6 +1050,11 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				role="region"
 				aria-roledescription={t('segment')}
 				aria-labelledby={`segment-name-${this.props.segment._id}`}
+				onDoubleClick={() => {
+					if (this.props.studio.settings.enableUserEdits && this.props.onSegmentSelect) {
+						this.props.onSegmentSelect(this.props.segment._id)
+					}
+				}}
 			>
 				<ContextMenuTrigger
 					id="segment-timeline-context-menu"
@@ -1068,11 +1073,6 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							(this.state.isSelected ? ' selected' : '')
 						}
 						data-identifier={this.props.segment.identifier}
-						onDoubleClick={() => {
-							if (this.props.studio.settings.enableUserEdits && this.props.onSegmentSelect) {
-								this.props.onSegmentSelect(this.props.segment._id)
-							}
-						}}
 					>
 						{/* for debugging: */ this.props.isSelected && <span>!!</span>}
 						{this.props.segment.name}
