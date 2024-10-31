@@ -457,7 +457,7 @@ export const TriggersHandler: React.FC<IProps> = function TriggersHandler(
 				isolatedAutorunWithCleanup(() => {
 					let previewAdLibs: IWrappedAdLib[] = []
 					try {
-						previewAdLibs = await action.preview()
+						previewAdLibs = action.preview()
 					} catch (e) {
 						logger.error(e)
 					}

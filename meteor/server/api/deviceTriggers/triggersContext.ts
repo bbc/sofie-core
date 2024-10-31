@@ -6,6 +6,7 @@ import { MeteorCall } from '../methods'
 import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
 import { UserAction } from '@sofie-automation/meteor-lib/dist/userAction'
 import { TFunction } from 'i18next'
+import { Tracker } from 'meteor/tracker'
 
 import { logger } from '../../logging'
 import { IBaseFilterLink, IRundownPlaylistFilterLink } from '@sofie-automation/blueprints-integration'
@@ -65,6 +66,8 @@ export const MeteorTriggersContext: TriggersContext = {
 			(reason) => typeof callback === 'function' && callback(reason)
 		)
 	},
+
+	nonreactiveTracker: Tracker.nonreactive,
 
 	memoizedIsolatedAutorun: async <TArgs extends any[], TRes>(
 		fnc: (...args: TArgs) => Promise<TRes>,
