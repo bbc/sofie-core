@@ -249,6 +249,18 @@ export const StudioGenericProperties = withTranslation()(
 					</label>
 
 					<label className="field">
+						<LabelActual label={t('Double click selection for properties panel')} />
+						<EditAttribute
+							modifiedClassName="bghl"
+							attribute="settings.enableUserEdits"
+							obj={this.props.studio}
+							type="checkbox"
+							collection={Studios}
+						/>
+						<span className="text-s dimmed field-hint">{t('This feature enables user edits')}</span>
+					</label>
+
+					<label className="field">
 						<LabelActual label={t('Enable QuickLoop')} />
 						<EditAttribute
 							modifiedClassName="bghl"

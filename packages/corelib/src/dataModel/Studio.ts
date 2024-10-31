@@ -88,6 +88,11 @@ export interface IStudioSettings {
 	 * Default: 3000
 	 */
 	fallbackPartDuration?: number
+
+	/**
+	 * Doubleclick changes behaviour as selector for userediting
+	 */
+	enableUserEdits?: boolean
 }
 
 export type StudioLight = Omit<DBStudio, 'mappingsWithOverrides' | 'blueprintConfigWithOverrides'>
