@@ -3,7 +3,6 @@ import { i18nTranslator } from '../i18n'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
-import { t } from 'i18next'
 import {
 	DefaultUserOperationsTypes,
 	JSONBlobParse,
@@ -26,14 +25,21 @@ import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
+interface PendingChange {
+	operationId: string
+	type: 'action' | 'form'
+	values?: any
+	switchState?: boolean
+}
+
 export function PropertiesPanel(): JSX.Element {
 	const { listSelectedElements } = useSelection()
-	console.log('listSelectedElements', listSelectedElements())
 	const selectedElement = listSelectedElements()?.[0]
-
+	const { t } = useTranslation()
 	if (!selectedElement) return <></>
 
-	const { t } = useTranslation()
+	const [pendingChanges, setPendingChanges] = React.useState<PendingChange[]>([])
+	const hasPendingChanges = pendingChanges.length > 0
 
 	React.useEffect(() => {
 		return () => {
@@ -45,17 +51,64 @@ export function PropertiesPanel(): JSX.Element {
 		}
 	}, [])
 
-	//const piece = useTracker(() => Pieces.findOne({ _id: selectedElement.elementId }), [selectedElement?.elementId])
-
-	const part = useTracker(() => UIParts.findOne({ _id: selectedElement.elementId }), [selectedElement?.elementId])
+	const part = useTracker(() => {
+		const foundPart = UIParts.findOne({ _id: selectedElement.elementId })
+		setPendingChanges([])
+		return foundPart
+	}, [selectedElement.elementId])
 
 	const segment: DBSegment | undefined = useTracker(
 		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement.elementId }),
-		[selectedElement?.elementId]
+		[selectedElement.elementId]
 	)
 	const rundownId = part ? part.rundownId : segment?.rundownId
 
 	if (!rundownId) return <></>
+
+	const handleCommitChanges = async (e: React.MouseEvent) => {
+		for (const change of pendingChanges) {
+			doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+				MeteorCall.userAction.executeUserChangeOperation(
+					e,
+					ts,
+					rundownId,
+					{
+						segmentExternalId: segment?.externalId,
+						partExternalId: part?.externalId,
+						pieceExternalId: undefined,
+					},
+					{
+						id: change.operationId,
+						values: change.values,
+					}
+				)
+			)
+		}
+		setPendingChanges([])
+	}
+
+	const handleRevertChanges = (e: React.MouseEvent) => {
+		setPendingChanges([])
+		rundownId &&
+			doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+				MeteorCall.userAction.executeUserChangeOperation(
+					e,
+					ts,
+					rundownId,
+					{
+						segmentExternalId: segment?.externalId,
+						partExternalId: part?.externalId,
+						pieceExternalId: undefined,
+					},
+					{
+						id:
+							selectedElement.type === 'partInstance'
+								? DefaultUserOperationsTypes.REVERT_PART
+								: DefaultUserOperationsTypes.REVERT_SEGMENT,
+					}
+				)
+			)
+	}
 
 	return (
 		<div className="propertiespanel-pop-up">
@@ -65,7 +118,6 @@ export function PropertiesPanel(): JSX.Element {
 						{part?.userEditOperations &&
 							part.userEditOperations.map((operation) => {
 								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
-
 								return (
 									<div
 										key={operation.id}
@@ -91,6 +143,8 @@ export function PropertiesPanel(): JSX.Element {
 												segment={segment}
 												part={part}
 												rundownId={rundownId}
+												pendingChanges={pendingChanges}
+												setPendingChanges={setPendingChanges}
 											/>
 										)
 									case UserEditingType.FORM:
@@ -101,6 +155,8 @@ export function PropertiesPanel(): JSX.Element {
 												segment={segment}
 												part={part}
 												rundownId={rundownId}
+												pendingChanges={pendingChanges}
+												setPendingChanges={setPendingChanges}
 											/>
 										)
 									default:
@@ -144,6 +200,8 @@ export function PropertiesPanel(): JSX.Element {
 												segment={segment}
 												part={part}
 												rundownId={rundownId}
+												pendingChanges={pendingChanges}
+												setPendingChanges={setPendingChanges}
 											/>
 										)
 									case UserEditingType.FORM:
@@ -154,6 +212,8 @@ export function PropertiesPanel(): JSX.Element {
 												segment={segment}
 												part={part}
 												rundownId={rundownId}
+												pendingChanges={pendingChanges}
+												setPendingChanges={setPendingChanges}
 											/>
 										)
 									default:
@@ -165,31 +225,11 @@ export function PropertiesPanel(): JSX.Element {
 				</>
 			)}
 			<div className="propertiespanel-pop-up__footer">
-				<button
-					className="propertiespanel-pop-up__button"
-					onClick={(e) => {
-						rundownId &&
-							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-								MeteorCall.userAction.executeUserChangeOperation(
-									e,
-									ts,
-									rundownId,
-									{
-										segmentExternalId: segment?.externalId,
-										partExternalId: part?.externalId,
-										pieceExternalId: undefined,
-									},
-									{
-										id:
-											selectedElement.type === 'partInstance'
-												? DefaultUserOperationsTypes.REVERT_PART
-												: DefaultUserOperationsTypes.REVERT_SEGMENT,
-									}
-								)
-							)
-					}}
-				>
+				<button className="propertiespanel-pop-up__button" onClick={handleRevertChanges}>
 					<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
+				</button>
+				<button className="propertiespanel-pop-up__button" onClick={handleCommitChanges} disabled={!hasPendingChanges}>
+					<span className="propertiespanel-pop-up__label">COMMIT CHANGES</span>
 				</button>
 			</div>
 		</div>
@@ -201,34 +241,52 @@ function EditingTypeAction(props: {
 	segment: DBSegment | undefined
 	part: DBPart | undefined
 	rundownId: RundownId
+	pendingChanges: PendingChange[]
+	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
 	if (!props.userEditOperation.buttonType) return null
+
+	const getPendingState = (operationId: string) => {
+		const pendingChange = props.pendingChanges.find((change) => change.operationId === operationId)
+		return pendingChange?.switchState
+	}
+
+	const addPendingChange = () => {
+		props.setPendingChanges((prev) => {
+			// Find if there's an existing pending change for this operation
+			const existingChangeIndex = prev.findIndex((change) => change.operationId === props.userEditOperation.id)
+
+			if (existingChangeIndex !== -1) {
+				// If exists, toggle the switch state
+				const newChanges = [...prev]
+				newChanges[existingChangeIndex] = {
+					...newChanges[existingChangeIndex],
+					switchState: !newChanges[existingChangeIndex].switchState,
+				}
+				return newChanges
+			}
+
+			// If doesn't exist, add new change with opposite of current state
+			return [
+				...prev,
+				{
+					operationId: props.userEditOperation.id,
+					type: 'action',
+					switchState: !props.userEditOperation.isActive,
+				},
+			]
+		})
+	}
+
 	switch (props.userEditOperation.buttonType) {
 		case UserEditingButtonType.BUTTON:
 			return (
 				<button
 					title={'User Action : ' + props.userEditOperation.label}
 					className="propertiespanel-pop-up__button"
-					onClick={(e) => {
-						doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-							MeteorCall.userAction.executeUserChangeOperation(
-								e,
-								ts,
-								props.rundownId,
-								{
-									segmentExternalId: props.segment?.externalId,
-									partExternalId: props.part?.externalId,
-									pieceExternalId: undefined,
-								},
-								{
-									id: props.userEditOperation.id,
-								}
-							)
-						)
-					}}
+					onClick={addPendingChange}
 				>
 					<span className="propertiespanel-pop-up__label">
-						{' '}
 						{translateMessage(props.userEditOperation.label, i18nTranslator)}
 					</span>
 				</button>
@@ -238,26 +296,10 @@ function EditingTypeAction(props: {
 				<div className="propertiespanel-pop-up__action">
 					<a
 						className={classNames('propertiespanel-pop-up__switchbutton', 'switch-button', {
-							'sb-on': props.userEditOperation.isActive || false,
+							'sb-on': getPendingState(props.userEditOperation.id) ?? (props.userEditOperation.isActive || false),
 						})}
 						role="button"
-						onClick={(e) => {
-							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-								MeteorCall.userAction.executeUserChangeOperation(
-									e,
-									ts,
-									props.rundownId,
-									{
-										segmentExternalId: props.segment?.externalId,
-										partExternalId: props.part?.externalId,
-										pieceExternalId: undefined,
-									},
-									{
-										id: props.userEditOperation.id,
-									}
-								)
-							)
-						}}
+						onClick={addPendingChange}
 						tabIndex={0}
 					>
 						<div className="sb-content">
@@ -287,15 +329,15 @@ function EditingTypeChangeSource(props: {
 	segment: DBSegment | undefined
 	part: DBPart | undefined
 	rundownId: RundownId
+	pendingChanges: PendingChange[]
+	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
 	const { t } = useTranslation()
 	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
 		clone(props.userEditOperation.currentValues)
 	)
-	const [selectedGroup, setSelectedGroup] = React.useState<string | undefined>(
-		// base initial selectedGroup on the first key in slectedSource:
-		Object.keys(selectedSource)[0]
-	)
+	const [selectedGroup, setSelectedGroup] = React.useState<string | undefined>(Object.keys(selectedSource)[0])
+
 	const jsonSchema = props.userEditOperation.schemas[selectedGroup || '']
 	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
 	const sourceList = (schema?.properties ? schema?.properties[selectedGroup ?? ''] : []) as {
@@ -306,6 +348,29 @@ function EditingTypeChangeSource(props: {
 	const numberOfEmptySlots = 14 - groups.length
 	for (let i = 0; i < numberOfEmptySlots; i++) {
 		groups.push({})
+	}
+
+	const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const newValue = e.target.value
+		if (selectedGroup) {
+			const newSelectedSource = { [selectedGroup]: newValue }
+			setSelectedSource(newSelectedSource)
+
+			// Add to pending changes instead of executing immediately
+			props.setPendingChanges((prev) => {
+				const filtered = prev.filter(
+					(change) => !(change.operationId === props.userEditOperation.id && change.type === 'form')
+				)
+				return [
+					...filtered,
+					{
+						operationId: props.userEditOperation.id,
+						type: 'form',
+						values: newValue,
+					},
+				]
+			})
+		}
 	}
 
 	return (
@@ -366,25 +431,7 @@ function EditingTypeChangeSource(props: {
 						title="Sources in the selected group"
 						className="propertiespanel-pop-up__select"
 						value={selectedSource[selectedGroup] || ''}
-						onChange={(e) => {
-							setSelectedSource({ [selectedGroup]: e.target.value })
-							doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-								MeteorCall.userAction.executeUserChangeOperation(
-									e,
-									ts,
-									props.rundownId,
-									{
-										segmentExternalId: props.segment?.externalId,
-										partExternalId: props.part?.externalId,
-										pieceExternalId: undefined,
-									},
-									{
-										values: selectedSource[selectedGroup],
-										id: props.userEditOperation.id,
-									}
-								)
-							)
-						}}
+						onChange={handleSourceChange}
 					>
 						{sourceList.enum.map((source, index) => (
 							<option key={index} value={source}>
