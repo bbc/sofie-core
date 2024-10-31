@@ -490,7 +490,7 @@ export function compileAdLibFilter(
 	triggersContext: TriggersContext,
 	filterChain: AdLibFilterChainLink[],
 	sourceLayers: SourceLayers
-): (context: ReactivePlaylistActionContext) => Promise<IWrappedAdLib[]> {
+): (context: ReactivePlaylistActionContext, reactive: boolean) => Promise<IWrappedAdLib[]> {
 	const onlyAdLibLinks = filterChain.filter((link) => link.object === 'adLib') as IAdLibFilterLink[]
 	const adLibPieceTypeFilter = compileAdLibPieceFilter(onlyAdLibLinks, sourceLayers)
 	const adLibActionTypeFilter = compileAdLibActionFilter(onlyAdLibLinks, sourceLayers)
@@ -498,7 +498,8 @@ export function compileAdLibFilter(
 	const clearAdLibs = compileAndRunClearFilter(onlyAdLibLinks, sourceLayers)
 	const stickyAdLibs = compileAndRunStickyFilter(onlyAdLibLinks, sourceLayers)
 
-	return async (context: ReactivePlaylistActionContext) => {
+	// The contents of this method should be entirely non-reactive.
+	return async (context: ReactivePlaylistActionContext, reactive: boolean) => {
 		let rundownBaselineAdLibItems: IWrappedAdLib[] = []
 		let adLibPieces: IWrappedAdLib[] = []
 		let rundownBaselineAdLibActions: IWrappedAdLib[] = []
@@ -564,7 +565,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<RundownBaselineAdLibItem>,
-							{ ...adLibPieceTypeFilter.options, reactive: false }
+							{ ...adLibPieceTypeFilter.options, reactive }
 						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.rundownBaselineAdLibItem))
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === false)
@@ -575,7 +576,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<AdLibPiece>,
-							{ ...adLibPieceTypeFilter.options, reactive: false }
+							{ ...adLibPieceTypeFilter.options, reactive }
 						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.adLibPiece))
 			}
@@ -605,7 +606,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<RundownBaselineAdLibAction>,
-							{ ...adLibActionTypeFilter.options, reactive: false }
+							{ ...adLibActionTypeFilter.options, reactive }
 						)
 					).map((item) =>
 						wrapRundownBaselineAdLibAction(item, MountedAdLibTriggerType.rundownBaselineAdLibAction)
@@ -618,7 +619,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<AdLibAction>,
-							{ ...adLibActionTypeFilter.options, reactive: false }
+							{ ...adLibActionTypeFilter.options, reactive }
 						)
 					).map((item) => wrapAdLibAction(item, MountedAdLibTriggerType.adLibAction))
 			}

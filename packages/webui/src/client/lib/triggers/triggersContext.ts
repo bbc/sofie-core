@@ -37,9 +37,7 @@ export const UiTriggersContext: TriggersContext = {
 
 	hashSingleUseToken,
 
-	doUserAction,
-
-	nonreactiveTracker: Tracker.nonreactive,
+	doUserAction: (...args) => Tracker.nonreactive(() => doUserAction(...args)),
 
 	memoizedIsolatedAutorun,
 

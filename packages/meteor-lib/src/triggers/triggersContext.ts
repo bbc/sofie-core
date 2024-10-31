@@ -44,8 +44,6 @@ export interface TriggersContext {
 		_okMessage?: string
 	): void
 
-	nonreactiveTracker<T>(func: () => T): T
-
 	memoizedIsolatedAutorun<TArgs extends any[], TRes>(
 		fnc: (...args: TArgs) => Promise<TRes>,
 		functionName: string,
