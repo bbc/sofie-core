@@ -729,7 +729,7 @@ const SourceLayerItemWithSelection = withTranslation()(
 	}
 )
 
-export const SourceLayerItem = (props: ISourceLayerItemProps & WithTranslation): React.ReactElement => {
+export const SourceLayerItem = (props: ISourceLayerItemProps): React.ReactElement => {
 	const { isSelected, clearAndSetSelection } = useSelection()
 
 	const isPieceSelected = isSelected(props.piece.instance._id)

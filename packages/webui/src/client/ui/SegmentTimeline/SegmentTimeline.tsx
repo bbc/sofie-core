@@ -92,7 +92,7 @@ interface IProps {
 	onShowEntireSegment?: (event: React.MouseEvent | undefined) => void
 	onContextMenu?: (contextMenuContext: IContextMenuContext) => void
 	onItemClick?: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
-	onItemDoubleClick?: (item: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
+	onPieceDoubleClick?: (item: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
 	onHeaderNoteClick?: (segmentId: SegmentId, level: NoteSeverity) => void
 	onSwitchViewMode?: (newViewMode: SegmentViewMode) => void
 	segmentRef?: (el: SegmentTimelineClass, segmentId: SegmentId) => void
@@ -790,7 +790,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 						onFollowLiveLine={this.props.onFollowLiveLine}
 						onContextMenu={this.props.onContextMenu}
 						onPieceClick={this.props.onItemClick}
-						onPieceDoubleClick={this.props.onItemDoubleClick}
+						onPieceDoubleClick={this.props.onPieceDoubleClick}
 						onPartTooSmallChanged={this.onPartTooSmallChanged}
 						scrollWidth={this.state.timelineWidth / this.props.timeScale}
 						firstPartInSegment={firstPartInSegment}
@@ -867,7 +867,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				onFollowLiveLine={this.props.onFollowLiveLine}
 				onContextMenu={this.props.onContextMenu}
 				onPieceClick={this.props.onItemClick}
-				onPieceDoubleClick={this.props.onItemDoubleClick}
+				onPieceDoubleClick={this.props.onPieceDoubleClick}
 				scrollWidth={this.state.timelineWidth / this.props.timeScale}
 				firstPartInSegment={firstPartInSegment}
 				lastPartInSegment={this.props.parts[this.props.parts.length - 1]}
@@ -1068,12 +1068,9 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							(this.state.isSelected ? ' selected' : '')
 						}
 						data-identifier={this.props.segment.identifier}
-						onClick={(e: React.MouseEvent) => {
-							// If Alt/Option key is pressed
-							if (e.altKey) {
-								if (this.props.onSegmentSelect) {
-									this.props.onSegmentSelect(this.props.segment._id)
-								}
+						onDoubleClick={() => {
+							if (this.props.studio.settings.enableUserEdits && this.props.onSegmentSelect) {
+								this.props.onSegmentSelect(this.props.segment._id)
 							}
 						}}
 					>
