@@ -43,10 +43,10 @@ export const UiTriggersContext: TriggersContext = {
 
 	memoizedIsolatedAutorun,
 
-	createContextForRundownPlaylistChain(
+	async createContextForRundownPlaylistChain(
 		_studioId: StudioId,
 		_filterChain: IBaseFilterLink[]
-	): ReactivePlaylistActionContext | undefined {
+	): Promise<ReactivePlaylistActionContext | undefined> {
 		// Server only
 
 		throw new Error('Invalid filter combination')

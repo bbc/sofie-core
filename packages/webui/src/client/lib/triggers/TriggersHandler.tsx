@@ -97,16 +97,22 @@ function createAction(
 	collectContext: () => ReactivePlaylistActionContext | null
 ): {
 	listener: HotkeyTriggerListener
-	preview: () => IWrappedAdLib[]
+	preview: () => Promise<IWrappedAdLib[]>
 } {
 	const executableActions = actions.map((value) =>
 		libCreateAction(UiTriggersContext, value, showStyleBase.sourceLayers)
 	)
 	return {
-		preview: () => {
+		preview: async () => {
 			const ctx = collectContext()
 			if (ctx) {
-				return flatten(executableActions.map((action) => (isPreviewableAction(action) ? action.preview(ctx) : [])))
+				return flatten(
+					await Promise.all(
+						executableActions.map(
+							async (action): Promise<IWrappedAdLib[]> => (isPreviewableAction(action) ? action.preview(ctx) : [])
+						)
+					)
+				)
 			} else {
 				return []
 			}
@@ -117,7 +123,11 @@ function createAction(
 
 			const ctx = collectContext()
 			if (ctx) {
-				executableActions.forEach((action) => action.execute(t, e, ctx))
+				executableActions.forEach((action) =>
+					Promise.resolve(action.execute(t, e, ctx)).catch((e) => {
+						// nocommit - log error
+					})
+				)
 			}
 		},
 	}

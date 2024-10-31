@@ -68,7 +68,7 @@ type PlainActionContext = XOR<PlainPlaylistContext, PlainStudioContext>
 
 export type ActionContext = XOR<ReactivePlaylistActionContext, PlainActionContext>
 
-type ActionExecutor = (t: TFunction, e: any, ctx: ActionContext) => void
+type ActionExecutor = (t: TFunction, e: any, ctx: ActionContext) => Promise<void> | void
 
 /**
  * An action compiled down to a single function that can be executed
@@ -89,7 +89,7 @@ export interface ExecutableAction {
  * @extends {ExecutableAction}
  */
 interface PreviewableAction extends ExecutableAction {
-	preview: (ctx: ReactivePlaylistActionContext) => IWrappedAdLib[]
+	preview: (ctx: ReactivePlaylistActionContext) => Promise<IWrappedAdLib[]>
 }
 
 interface ExecutableAdLibAction extends PreviewableAction {
@@ -99,11 +99,11 @@ interface ExecutableAdLibAction extends PreviewableAction {
 export function isPreviewableAction(action: ExecutableAction): action is PreviewableAction {
 	return action.action && 'preview' in action && typeof action['preview'] === 'function'
 }
-function createRundownPlaylistContext(
+async function createRundownPlaylistContext(
 	triggersContext: TriggersContext,
 	context: ActionContext,
 	filterChain: IBaseFilterLink[]
-): ReactivePlaylistActionContext | undefined {
+): Promise<ReactivePlaylistActionContext | undefined> {
 	if (filterChain.length < 1) {
 		return undefined
 	} else if (filterChain[0].object === 'view' && context.rundownPlaylistId) {
@@ -124,6 +124,7 @@ function createRundownPlaylistContext(
 			),
 		}
 	} else if (filterChain[0].object === 'rundownPlaylist' && context.studio) {
+		// Note: this is only implemented on the server
 		return triggersContext.createContextForRundownPlaylistChain(context.studio._id, filterChain)
 	} else {
 		throw new Error('Invalid filter combination')
@@ -148,8 +149,8 @@ function createAdLibAction(
 
 	return {
 		action: PlayoutActions.adlib,
-		preview: (ctx) => {
-			const innerCtx = createRundownPlaylistContext(triggersContext, ctx, filterChain)
+		preview: async (ctx) => {
+			const innerCtx = await createRundownPlaylistContext(triggersContext, ctx, filterChain)
 
 			if (innerCtx) {
 				try {
@@ -162,8 +163,8 @@ function createAdLibAction(
 				return []
 			}
 		},
-		execute: (t, e, ctx) => {
-			const innerCtx = createRundownPlaylistContext(triggersContext, ctx, filterChain)
+		execute: async (t, e, ctx) => {
+			const innerCtx = await createRundownPlaylistContext(triggersContext, ctx, filterChain)
 
 			if (!innerCtx) {
 				triggersContext.logger.warn(
@@ -409,8 +410,8 @@ function createUserActionWithCtx(
 ): ExecutableAction {
 	return {
 		action: action.action,
-		execute: (t, e, ctx) => {
-			const innerCtx = triggersContext.nonreactiveTracker(() =>
+		execute: async (t, e, ctx) => {
+			const innerCtx = await triggersContext.nonreactiveTracker(() =>
 				createRundownPlaylistContext(triggersContext, ctx, action.filterChain)
 			)
 			if (innerCtx) {

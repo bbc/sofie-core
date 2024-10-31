@@ -2,7 +2,7 @@ import { UserAction } from '../userAction'
 import { IMeteorCall } from '../api/methods'
 import { Time } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { ClientAPI } from '../api/client'
-import { MongoReadOnlyCollection } from '../collections/lib'
+import { MongoAsyncReadOnlyCollection } from '../collections/lib'
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
@@ -24,14 +24,14 @@ export interface TriggersContext {
 
 	readonly isClient: boolean
 
-	readonly AdLibActions: MongoReadOnlyCollection<AdLibAction>
-	readonly AdLibPieces: MongoReadOnlyCollection<AdLibPiece>
-	readonly Parts: MongoReadOnlyCollection<DBPart>
-	readonly RundownBaselineAdLibActions: MongoReadOnlyCollection<RundownBaselineAdLibAction>
-	readonly RundownBaselineAdLibPieces: MongoReadOnlyCollection<RundownBaselineAdLibItem>
-	readonly RundownPlaylists: MongoReadOnlyCollection<DBRundownPlaylist>
-	readonly Rundowns: MongoReadOnlyCollection<DBRundown>
-	readonly Segments: MongoReadOnlyCollection<DBSegment>
+	readonly AdLibActions: MongoAsyncReadOnlyCollection<AdLibAction>
+	readonly AdLibPieces: MongoAsyncReadOnlyCollection<AdLibPiece>
+	readonly Parts: MongoAsyncReadOnlyCollection<DBPart>
+	readonly RundownBaselineAdLibActions: MongoAsyncReadOnlyCollection<RundownBaselineAdLibAction>
+	readonly RundownBaselineAdLibPieces: MongoAsyncReadOnlyCollection<RundownBaselineAdLibItem>
+	readonly RundownPlaylists: MongoAsyncReadOnlyCollection<DBRundownPlaylist>
+	readonly Rundowns: MongoAsyncReadOnlyCollection<DBRundown>
+	readonly Segments: MongoAsyncReadOnlyCollection<DBSegment>
 
 	hashSingleUseToken(token: string): string
 
@@ -46,14 +46,14 @@ export interface TriggersContext {
 
 	nonreactiveTracker<T>(func: () => T): T
 
-	memoizedIsolatedAutorun<T extends (...args: any) => any>(
-		fnc: T,
+	memoizedIsolatedAutorun<TArgs extends any[], TRes>(
+		fnc: (...args: TArgs) => Promise<TRes>,
 		functionName: string,
-		...params: Parameters<T>
-	): ReturnType<T>
+		...params: TArgs
+	): Promise<TRes>
 
 	createContextForRundownPlaylistChain(
 		_studioId: StudioId,
 		_filterChain: IBaseFilterLink[]
-	): ReactivePlaylistActionContext | undefined
+	): Promise<ReactivePlaylistActionContext | undefined>
 }

@@ -490,7 +490,7 @@ export function compileAdLibFilter(
 	triggersContext: TriggersContext,
 	filterChain: AdLibFilterChainLink[],
 	sourceLayers: SourceLayers
-): (context: ReactivePlaylistActionContext) => IWrappedAdLib[] {
+): (context: ReactivePlaylistActionContext) => Promise<IWrappedAdLib[]> {
 	const onlyAdLibLinks = filterChain.filter((link) => link.object === 'adLib') as IAdLibFilterLink[]
 	const adLibPieceTypeFilter = compileAdLibPieceFilter(onlyAdLibLinks, sourceLayers)
 	const adLibActionTypeFilter = compileAdLibActionFilter(onlyAdLibLinks, sourceLayers)
@@ -498,7 +498,7 @@ export function compileAdLibFilter(
 	const clearAdLibs = compileAndRunClearFilter(onlyAdLibLinks, sourceLayers)
 	const stickyAdLibs = compileAndRunStickyFilter(onlyAdLibLinks, sourceLayers)
 
-	return (context: ReactivePlaylistActionContext) => {
+	return async (context: ReactivePlaylistActionContext) => {
 		let rundownBaselineAdLibItems: IWrappedAdLib[] = []
 		let adLibPieces: IWrappedAdLib[] = []
 		let rundownBaselineAdLibActions: IWrappedAdLib[] = []
@@ -557,22 +557,26 @@ export function compileAdLibFilter(
 			const currentRundownId = context.currentRundownId.get()
 			if (!skip && currentRundownId) {
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === true)
-					rundownBaselineAdLibItems = triggersContext.RundownBaselineAdLibPieces.find(
-						{
-							...adLibPieceTypeFilter.selector,
-							...currentNextOverride,
-							rundownId: currentRundownId,
-						} as MongoQuery<RundownBaselineAdLibItem>,
-						adLibPieceTypeFilter.options
+					rundownBaselineAdLibItems = (
+						await triggersContext.RundownBaselineAdLibPieces.findFetchAsync(
+							{
+								...adLibPieceTypeFilter.selector,
+								...currentNextOverride,
+								rundownId: currentRundownId,
+							} as MongoQuery<RundownBaselineAdLibItem>,
+							{ ...adLibPieceTypeFilter.options, reactive: false }
+						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.rundownBaselineAdLibItem))
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === false)
-					adLibPieces = triggersContext.AdLibPieces.find(
-						{
-							...adLibPieceTypeFilter.selector,
-							...currentNextOverride,
-							rundownId: currentRundownId,
-						} as MongoQuery<AdLibPiece>,
-						adLibPieceTypeFilter.options
+					adLibPieces = (
+						await triggersContext.AdLibPieces.findFetchAsync(
+							{
+								...adLibPieceTypeFilter.selector,
+								...currentNextOverride,
+								rundownId: currentRundownId,
+							} as MongoQuery<AdLibPiece>,
+							{ ...adLibPieceTypeFilter.options, reactive: false }
+						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.adLibPiece))
 			}
 		}
@@ -594,24 +598,28 @@ export function compileAdLibFilter(
 			const currentRundownId = context.currentRundownId.get()
 			if (!skip && currentRundownId) {
 				if (adLibActionTypeFilter.global === undefined || adLibActionTypeFilter.global === true)
-					rundownBaselineAdLibActions = triggersContext.RundownBaselineAdLibActions.find(
-						{
-							...adLibActionTypeFilter.selector,
-							...currentNextOverride,
-							rundownId: currentRundownId,
-						} as MongoQuery<RundownBaselineAdLibAction>,
-						adLibActionTypeFilter.options
+					rundownBaselineAdLibActions = (
+						await triggersContext.RundownBaselineAdLibActions.findFetchAsync(
+							{
+								...adLibActionTypeFilter.selector,
+								...currentNextOverride,
+								rundownId: currentRundownId,
+							} as MongoQuery<RundownBaselineAdLibAction>,
+							{ ...adLibActionTypeFilter.options, reactive: false }
+						)
 					).map((item) =>
 						wrapRundownBaselineAdLibAction(item, MountedAdLibTriggerType.rundownBaselineAdLibAction)
 					)
 				if (adLibActionTypeFilter.global === undefined || adLibActionTypeFilter.global === false)
-					adLibActions = triggersContext.AdLibActions.find(
-						{
-							...adLibActionTypeFilter.selector,
-							...currentNextOverride,
-							rundownId: currentRundownId,
-						} as MongoQuery<AdLibAction>,
-						adLibActionTypeFilter.options
+					adLibActions = (
+						await triggersContext.AdLibActions.findFetchAsync(
+							{
+								...adLibActionTypeFilter.selector,
+								...currentNextOverride,
+								rundownId: currentRundownId,
+							} as MongoQuery<AdLibAction>,
+							{ ...adLibActionTypeFilter.options, reactive: false }
+						)
 					).map((item) => wrapAdLibAction(item, MountedAdLibTriggerType.adLibAction))
 			}
 		}
@@ -625,17 +633,17 @@ export function compileAdLibFilter(
 				// because _.isEqual (used in memoizedIsolatedAutorun) doesn't work with Maps..
 
 				const rundownPlaylistId = context.rundownPlaylistId.get()
-				const rundownRanks = triggersContext.memoizedIsolatedAutorun(() => {
-					const playlist = triggersContext.RundownPlaylists.findOne(rundownPlaylistId, {
+				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
+					const playlist = (await triggersContext.RundownPlaylists.findOneAsync(rundownPlaylistId, {
 						projection: {
 							rundownIdsInOrder: 1,
 						},
-					}) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
+					})) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
 
 					if (playlist?.rundownIdsInOrder) {
 						return playlist.rundownIdsInOrder
 					} else {
-						const rundowns = triggersContext.Rundowns.find(
+						const rundowns = (await triggersContext.Rundowns.findFetchAsync(
 							{
 								playlistId: rundownPlaylistId,
 							},
@@ -644,7 +652,7 @@ export function compileAdLibFilter(
 									_id: 1,
 								},
 							}
-						).fetch() as Pick<DBRundown, '_id'>[]
+						)) as Pick<DBRundown, '_id'>[]
 
 						return rundowns.map((r) => r._id)
 					}
@@ -653,9 +661,9 @@ export function compileAdLibFilter(
 					rundownRankMap.set(id, index)
 				})
 
-				const segmentRanks = triggersContext.memoizedIsolatedAutorun(
-					() =>
-						triggersContext.Segments.find(
+				const segmentRanks = await triggersContext.memoizedIsolatedAutorun(
+					async () =>
+						(await triggersContext.Segments.findFetchAsync(
 							{
 								rundownId: { $in: Array.from(rundownRankMap.keys()) },
 							},
@@ -665,16 +673,16 @@ export function compileAdLibFilter(
 									_rank: 1,
 								},
 							}
-						).fetch() as Pick<DBSegment, '_id' | '_rank'>[],
+						)) as Pick<DBSegment, '_id' | '_rank'>[],
 					`segmentRanksForRundowns_${Array.from(rundownRankMap.keys()).join(',')}`
 				)
 				segmentRanks.forEach((segment) => {
 					segmentRankMap.set(segment._id, segment._rank)
 				})
 
-				const partRanks = triggersContext.memoizedIsolatedAutorun(() => {
+				const partRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
 					if (!partFilter) {
-						return triggersContext.Parts.find(
+						return (await triggersContext.Parts.findFetchAsync(
 							{
 								rundownId: { $in: Array.from(rundownRankMap.keys()) },
 							},
@@ -686,9 +694,9 @@ export function compileAdLibFilter(
 									_rank: 1,
 								},
 							}
-						).fetch() as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
 					} else {
-						return triggersContext.Parts.find(
+						return (await triggersContext.Parts.findFetchAsync(
 							{ _id: { $in: partFilter } },
 							{
 								fields: {
@@ -698,7 +706,7 @@ export function compileAdLibFilter(
 									_rank: 1,
 								},
 							}
-						).fetch() as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
 					}
 				}, `partRanks_${JSON.stringify(partFilter ?? rundownRankMap.keys())}`)
 
