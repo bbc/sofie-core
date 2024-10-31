@@ -342,17 +342,26 @@ export type Translated<T> = T & WithTranslation
  * @param {K} [initial] An optional, initial state of the tracker. If not provided, the tracker may return undefined.
  * @return {*}  {(T | K)}
  */
-export function useTracker<T>(autorun: () => T, deps: React.DependencyList): T | undefined
-export function useTracker<T>(autorun: () => T, deps: React.DependencyList, initial: T): T
+export function useTracker<T>(
+	autorun: (computation: Tracker.Computation) => T,
+	deps: React.DependencyList
+): T | undefined
+export function useTracker<T>(
+	autorun: (computation: Tracker.Computation) => T,
+	deps: React.DependencyList,
+	initial: T
+): T
 export function useTracker<T, K extends undefined | T = undefined>(
-	autorun: () => T,
+	autorun: (computation: Tracker.Computation) => T,
 	deps: React.DependencyList,
 	initial?: K
 ): T | K {
 	const [meteorData, setMeteorData] = useState<T | K>(initial as K)
 
 	useEffect(() => {
-		const computation = Tracker.nonreactive(() => Tracker.autorun(() => setMeteorData(autorun())))
+		const computation = Tracker.nonreactive(() =>
+			Tracker.autorun((innerComputation) => setMeteorData(autorun(innerComputation)))
+		)
 		return () => computation.stop()
 	}, deps)
 

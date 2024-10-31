@@ -44,7 +44,7 @@ MeteorStartupAsync(async () => {
 		const manager = new StudioDeviceTriggerManager(studioId)
 		const observer = new StudioObserver(studioId, (showStyleBaseId, cache) => {
 			workInQueue(async () => {
-				manager.updateTriggers(cache, showStyleBaseId)
+				await manager.updateTriggers(cache, showStyleBaseId, null) // nocommit - confirm this
 			})
 
 			return () => {

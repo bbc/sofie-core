@@ -30,6 +30,8 @@ import { SomeAction, SomeBlueprintTrigger } from '@sofie-automation/blueprints-i
 import { DeviceActions } from '@sofie-automation/shared-lib/dist/core/model/ShowStyle'
 import { DummyReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 import { MeteorTriggersContext } from './triggersContext'
+import { Tracker } from 'meteor/tracker'
+import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 export class StudioDeviceTriggerManager {
 	#lastShowStyleBaseId: ShowStyleBaseId | null = null
@@ -43,7 +45,11 @@ export class StudioDeviceTriggerManager {
 		StudioActionManagers.set(studioId, new StudioActionManager())
 	}
 
-	updateTriggers(cache: ContentCache, showStyleBaseId: ShowStyleBaseId): void {
+	async updateTriggers(
+		cache: ContentCache,
+		showStyleBaseId: ShowStyleBaseId,
+		computation: Tracker.Computation | null
+	): Promise<void> {
 		const studioId = this.studioId
 		this.#lastShowStyleBaseId = showStyleBaseId
 
@@ -88,7 +94,7 @@ export class StudioDeviceTriggerManager {
 
 			const addedPreviewIds: PreviewWrappedAdLibId[] = []
 
-			Object.entries<SomeAction>(triggeredAction.actions).forEach(([key, action]) => {
+			for (const [key, action] of Object.entries<SomeAction>(triggeredAction.actions)) {
 				// Since the compiled action is cached using this actionId as a key, having the action
 				// and the filterChain allows for a quicker invalidation without doing a deepEquals
 				const actionId = protectString<DeviceActionId>(
@@ -106,7 +112,7 @@ export class StudioDeviceTriggerManager {
 				}
 				touchedActionIds.push(actionId)
 
-				Object.entries<SomeBlueprintTrigger>(triggeredAction.triggers).forEach(([key, trigger]) => {
+				for (const [key, trigger] of Object.entries<SomeBlueprintTrigger>(triggeredAction.triggers)) {
 					if (!isDeviceTrigger(trigger)) {
 						return
 					}
@@ -141,7 +147,7 @@ export class StudioDeviceTriggerManager {
 						},
 					})
 					upsertedDeviceTriggerMountedActionIds.push(deviceTriggerMountedActionId)
-				})
+				}
 
 				if (!isPreviewableAction(thisAction)) {
 					const adLibPreviewId = protectString(`${actionId}_preview`)
@@ -165,7 +171,10 @@ export class StudioDeviceTriggerManager {
 
 					addedPreviewIds.push(adLibPreviewId)
 				} else {
-					const previewedAdLibs = thisAction.preview(context)
+					const previewedAdLibs = await thisAction.preview(
+						context,
+						computation as any as TriggerTrackerComputation | null
+					)
 
 					previewedAdLibs.forEach((adLib) => {
 						const adLibPreviewId = protectString<PreviewWrappedAdLibId>(
@@ -195,7 +204,7 @@ export class StudioDeviceTriggerManager {
 						addedPreviewIds.push(adLibPreviewId)
 					})
 				}
-			})
+			}
 
 			DeviceTriggerMountedActionAdlibsPreview.remove({
 				triggeredActionId: triggeredAction._id,

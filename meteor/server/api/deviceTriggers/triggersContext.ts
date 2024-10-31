@@ -1,6 +1,10 @@
-import { TriggersContext } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
+import {
+	TriggersAsyncCollection,
+	TriggersContext,
+	TriggerTrackerComputation,
+} from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 import { SINGLE_USE_TOKEN_SALT } from '@sofie-automation/meteor-lib/dist/api/userActions'
-import { assertNever, getHash, Time } from '../../lib/tempLib'
+import { assertNever, getHash, ProtectedString, Time } from '../../lib/tempLib'
 import { getCurrentTime } from '../../lib/lib'
 import { MeteorCall } from '../methods'
 import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
@@ -28,9 +32,40 @@ import {
 } from '../../collections'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
+import { AsyncOnlyReadOnlyMongoCollection } from '../../collections/collection'
 
 export function hashSingleUseToken(token: string): string {
 	return getHash(SINGLE_USE_TOKEN_SALT + token)
+}
+
+class TriggersCollection2<DBInterface extends { _id: ProtectedString<any> }>
+	implements TriggersAsyncCollection<DBInterface>
+{
+	readonly #collection: AsyncOnlyReadOnlyMongoCollection<DBInterface>
+
+	constructor(collection: AsyncOnlyReadOnlyMongoCollection<DBInterface>) {
+		this.#collection = collection
+	}
+
+	async findFetchAsync(
+		computation: TriggerTrackerComputation | null,
+		selector: any,
+		options?: any
+	): Promise<Array<DBInterface>> {
+		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
+			return this.#collection.findFetchAsync(selector, options)
+		})
+	}
+
+	async findOneAsync(
+		computation: TriggerTrackerComputation | null,
+		selector: any,
+		options?: any
+	): Promise<DBInterface | undefined> {
+		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
+			return this.#collection.findOneAsync(selector, options)
+		})
+	}
 }
 
 export const MeteorTriggersContext: TriggersContext = {
@@ -40,14 +75,14 @@ export const MeteorTriggersContext: TriggersContext = {
 
 	isClient: false,
 
-	AdLibActions,
-	AdLibPieces,
-	Parts,
-	RundownBaselineAdLibActions,
-	RundownBaselineAdLibPieces,
-	RundownPlaylists,
-	Rundowns,
-	Segments,
+	AdLibActions: new TriggersCollection2(AdLibActions),
+	AdLibPieces: new TriggersCollection2(AdLibPieces),
+	Parts: new TriggersCollection2(Parts),
+	RundownBaselineAdLibActions: new TriggersCollection2(RundownBaselineAdLibActions),
+	RundownBaselineAdLibPieces: new TriggersCollection2(RundownBaselineAdLibPieces),
+	RundownPlaylists: new TriggersCollection2(RundownPlaylists),
+	Rundowns: new TriggersCollection2(Rundowns),
+	Segments: new TriggersCollection2(Segments),
 
 	hashSingleUseToken,
 
@@ -67,14 +102,17 @@ export const MeteorTriggersContext: TriggersContext = {
 		)
 	},
 
-	nonreactiveTracker: Tracker.nonreactive,
+	withComputation: async (computation, func) => {
+		return Tracker.withComputation(computation as Tracker.Computation | null, func)
+	},
 
 	memoizedIsolatedAutorun: async <TArgs extends any[], TRes>(
-		fnc: (...args: TArgs) => Promise<TRes>,
+		computation: TriggerTrackerComputation | null,
+		fnc: (computation: TriggerTrackerComputation | null, ...args: TArgs) => Promise<TRes>,
 		_functionName: string,
 		...params: TArgs
 	): Promise<TRes> => {
-		return fnc(...params)
+		return fnc(computation, ...params)
 	},
 
 	createContextForRundownPlaylistChain,

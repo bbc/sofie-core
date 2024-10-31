@@ -46,6 +46,7 @@ import { catchError } from '../lib'
 import { logger } from '../logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { UiTriggersContext } from './triggersContext'
+import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 type HotkeyTriggerListener = (e: KeyboardEvent) => void
 
@@ -97,19 +98,21 @@ function createAction(
 	collectContext: () => ReactivePlaylistActionContext | null
 ): {
 	listener: HotkeyTriggerListener
-	preview: () => Promise<IWrappedAdLib[]>
+	preview: (computation: Tracker.Computation) => Promise<IWrappedAdLib[]>
 } {
 	const executableActions = actions.map((value) =>
 		libCreateAction(UiTriggersContext, value, showStyleBase.sourceLayers)
 	)
 	return {
-		preview: async () => {
+		preview: async (computation: Tracker.Computation) => {
+			const trackerComputation = computation as any as TriggerTrackerComputation
 			const ctx = collectContext()
 			if (ctx) {
 				return flatten(
 					await Promise.all(
 						executableActions.map(
-							async (action): Promise<IWrappedAdLib[]> => (isPreviewableAction(action) ? action.preview(ctx) : [])
+							async (action): Promise<IWrappedAdLib[]> =>
+								isPreviewableAction(action) ? action.preview(ctx, trackerComputation) : []
 						)
 					)
 				)
@@ -155,10 +158,12 @@ export function isMountedAdLibTrigger(
 	return 'targetId' in mountedTrigger && !!mountedTrigger['targetId']
 }
 
-function isolatedAutorunWithCleanup(autorun: () => void | (() => void)): Tracker.Computation {
+function isolatedAutorunWithCleanup(
+	autorun: (computation: Tracker.Computation) => Promise<void | (() => void)>
+): Tracker.Computation {
 	return Tracker.nonreactive(() =>
-		Tracker.autorun((computation) => {
-			const cleanUp = autorun()
+		Tracker.autorun(async (computation) => {
+			const cleanUp = await autorun(computation)
 
 			if (typeof cleanUp === 'function') {
 				computation.onInvalidate(cleanUp)
@@ -454,10 +459,10 @@ export const TriggersHandler: React.FC<IProps> = function TriggersHandler(
 			const hotkeyFinalKeys = hotkeyTriggers.map((key) => getFinalKey(key))
 
 			previewAutoruns.push(
-				isolatedAutorunWithCleanup(() => {
+				isolatedAutorunWithCleanup(async (computation) => {
 					let previewAdLibs: IWrappedAdLib[] = []
 					try {
-						previewAdLibs = action.preview()
+						previewAdLibs = await action.preview(computation)
 					} catch (e) {
 						logger.error(e)
 					}

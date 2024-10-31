@@ -25,7 +25,7 @@ import { IWrappedAdLibBase } from '@sofie-automation/shared-lib/dist/input-gatew
 import { MountedAdLibTriggerType } from '../api/MountedTriggers'
 import { assertNever, generateTranslation } from '@sofie-automation/corelib/dist/lib'
 import { FindOptions } from '../collections/lib'
-import { TriggersContext } from './triggersContext'
+import { TriggersContext, TriggerTrackerComputation } from './triggersContext'
 
 export type AdLibFilterChainLink = IRundownPlaylistFilterLink | IGUIContextFilterLink | IAdLibFilterLink
 
@@ -490,7 +490,7 @@ export function compileAdLibFilter(
 	triggersContext: TriggersContext,
 	filterChain: AdLibFilterChainLink[],
 	sourceLayers: SourceLayers
-): (context: ReactivePlaylistActionContext) => Promise<IWrappedAdLib[]> {
+): (context: ReactivePlaylistActionContext, computation: TriggerTrackerComputation | null) => Promise<IWrappedAdLib[]> {
 	const onlyAdLibLinks = filterChain.filter((link) => link.object === 'adLib') as IAdLibFilterLink[]
 	const adLibPieceTypeFilter = compileAdLibPieceFilter(onlyAdLibLinks, sourceLayers)
 	const adLibActionTypeFilter = compileAdLibActionFilter(onlyAdLibLinks, sourceLayers)
@@ -498,7 +498,7 @@ export function compileAdLibFilter(
 	const clearAdLibs = compileAndRunClearFilter(onlyAdLibLinks, sourceLayers)
 	const stickyAdLibs = compileAndRunStickyFilter(onlyAdLibLinks, sourceLayers)
 
-	return async (context: ReactivePlaylistActionContext) => {
+	return async (context: ReactivePlaylistActionContext, computation: TriggerTrackerComputation | null) => {
 		let rundownBaselineAdLibItems: IWrappedAdLib[] = []
 		let adLibPieces: IWrappedAdLib[] = []
 		let rundownBaselineAdLibActions: IWrappedAdLib[] = []
@@ -559,6 +559,7 @@ export function compileAdLibFilter(
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === true)
 					rundownBaselineAdLibItems = (
 						await triggersContext.RundownBaselineAdLibPieces.findFetchAsync(
+							computation,
 							{
 								...adLibPieceTypeFilter.selector,
 								...currentNextOverride,
@@ -570,6 +571,7 @@ export function compileAdLibFilter(
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === false)
 					adLibPieces = (
 						await triggersContext.AdLibPieces.findFetchAsync(
+							computation,
 							{
 								...adLibPieceTypeFilter.selector,
 								...currentNextOverride,
@@ -600,6 +602,7 @@ export function compileAdLibFilter(
 				if (adLibActionTypeFilter.global === undefined || adLibActionTypeFilter.global === true)
 					rundownBaselineAdLibActions = (
 						await triggersContext.RundownBaselineAdLibActions.findFetchAsync(
+							computation,
 							{
 								...adLibActionTypeFilter.selector,
 								...currentNextOverride,
@@ -613,6 +616,7 @@ export function compileAdLibFilter(
 				if (adLibActionTypeFilter.global === undefined || adLibActionTypeFilter.global === false)
 					adLibActions = (
 						await triggersContext.AdLibActions.findFetchAsync(
+							computation,
 							{
 								...adLibActionTypeFilter.selector,
 								...currentNextOverride,
@@ -633,37 +637,48 @@ export function compileAdLibFilter(
 				// because _.isEqual (used in memoizedIsolatedAutorun) doesn't work with Maps..
 
 				const rundownPlaylistId = context.rundownPlaylistId.get()
-				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
-					const playlist = (await triggersContext.RundownPlaylists.findOneAsync(rundownPlaylistId, {
-						projection: {
-							rundownIdsInOrder: 1,
-						},
-					})) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
-
-					if (playlist?.rundownIdsInOrder) {
-						return playlist.rundownIdsInOrder
-					} else {
-						const rundowns = (await triggersContext.Rundowns.findFetchAsync(
+				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(
+					computation,
+					async (computation) => {
+						const playlist = (await triggersContext.RundownPlaylists.findOneAsync(
+							computation,
+							rundownPlaylistId,
 							{
-								playlistId: rundownPlaylistId,
-							},
-							{
-								fields: {
-									_id: 1,
+								projection: {
+									rundownIdsInOrder: 1,
 								},
 							}
-						)) as Pick<DBRundown, '_id'>[]
+						)) as Pick<DBRundownPlaylist, 'rundownIdsInOrder'> | undefined
 
-						return rundowns.map((r) => r._id)
-					}
-				}, `rundownsRanksForPlaylist_${rundownPlaylistId}`)
+						if (playlist?.rundownIdsInOrder) {
+							return playlist.rundownIdsInOrder
+						} else {
+							const rundowns = (await triggersContext.Rundowns.findFetchAsync(
+								computation,
+								{
+									playlistId: rundownPlaylistId,
+								},
+								{
+									fields: {
+										_id: 1,
+									},
+								}
+							)) as Pick<DBRundown, '_id'>[]
+
+							return rundowns.map((r) => r._id)
+						}
+					},
+					`rundownsRanksForPlaylist_${rundownPlaylistId}`
+				)
 				rundownRanks.forEach((id, index) => {
 					rundownRankMap.set(id, index)
 				})
 
 				const segmentRanks = await triggersContext.memoizedIsolatedAutorun(
-					async () =>
+					computation,
+					async (computation) =>
 						(await triggersContext.Segments.findFetchAsync(
+							computation,
 							{
 								rundownId: { $in: Array.from(rundownRankMap.keys()) },
 							},
@@ -680,35 +695,41 @@ export function compileAdLibFilter(
 					segmentRankMap.set(segment._id, segment._rank)
 				})
 
-				const partRanks = await triggersContext.memoizedIsolatedAutorun(async () => {
-					if (!partFilter) {
-						return (await triggersContext.Parts.findFetchAsync(
-							{
-								rundownId: { $in: Array.from(rundownRankMap.keys()) },
-							},
-							{
-								fields: {
-									_id: 1,
-									segmentId: 1,
-									rundownId: 1,
-									_rank: 1,
+				const partRanks = await triggersContext.memoizedIsolatedAutorun(
+					computation,
+					async (computation) => {
+						if (!partFilter) {
+							return (await triggersContext.Parts.findFetchAsync(
+								computation,
+								{
+									rundownId: { $in: Array.from(rundownRankMap.keys()) },
 								},
-							}
-						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
-					} else {
-						return (await triggersContext.Parts.findFetchAsync(
-							{ _id: { $in: partFilter } },
-							{
-								fields: {
-									_id: 1,
-									segmentId: 1,
-									rundownId: 1,
-									_rank: 1,
-								},
-							}
-						)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
-					}
-				}, `partRanks_${JSON.stringify(partFilter ?? rundownRankMap.keys())}`)
+								{
+									fields: {
+										_id: 1,
+										segmentId: 1,
+										rundownId: 1,
+										_rank: 1,
+									},
+								}
+							)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						} else {
+							return (await triggersContext.Parts.findFetchAsync(
+								computation,
+								{ _id: { $in: partFilter } },
+								{
+									fields: {
+										_id: 1,
+										segmentId: 1,
+										rundownId: 1,
+										_rank: 1,
+									},
+								}
+							)) as Pick<DBPart, '_id' | '_rank' | 'segmentId' | 'rundownId'>[]
+						}
+					},
+					`partRanks_${JSON.stringify(partFilter ?? rundownRankMap.keys())}`
+				)
 
 				partRanks.forEach((part) => {
 					partRankMap.set(part._id, part)

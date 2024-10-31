@@ -37,6 +37,7 @@ import { TriggeredActions } from '../../../../collections'
 import { catchError } from '../../../../lib/lib'
 import { UiTriggersContext } from '../../../../lib/triggers/triggersContext'
 import { last, literal } from '@sofie-automation/shared-lib/dist/lib/lib'
+import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 interface IProps {
 	sourceLayers: SourceLayers | undefined
@@ -180,8 +181,9 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 	)
 
 	const previewItems = useTracker(
-		() => {
+		(computation) => {
 			try {
+				const triggerComputation = computation as any as TriggerTrackerComputation
 				if (resolvedActions && selected && sourceLayers) {
 					const executableActions = Object.values<SomeAction>(resolvedActions).map((value) =>
 						createAction(UiTriggersContext, value, sourceLayers)
@@ -189,7 +191,12 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 					const ctx = previewContext
 					if (ctx && ctx.rundownPlaylist) {
 						return flatten(
-							executableActions.map((action) => (isPreviewableAction(action) ? action.preview(ctx as any) : []))
+							await Promise.all(
+								executableActions.map(
+									async (action): Promise<IWrappedAdLib[]> =>
+										isPreviewableAction(action) ? action.preview(ctx as any, triggerComputation) : []
+								)
+							)
 						)
 					}
 				}
