@@ -2,24 +2,6 @@ import type { Collection as RawCollection, Db as RawDb } from 'mongodb'
 import { MongoFieldSpecifier, MongoModifier, MongoQuery, SortSpecifier } from '@sofie-automation/corelib/dist/mongo'
 import { ProtectedString } from '@sofie-automation/corelib/dist/protectedString'
 
-export interface MongoAsyncReadOnlyCollection<DBInterface extends { _id: ProtectedString<any> }> {
-	/**
-	 * Find and return multiple documents
-	 * @param selector A query describing the documents to find
-	 * @param options Options for the operation
-	 */
-	findFetchAsync(selector: MongoQuery<DBInterface>, options?: FindOptions<DBInterface>): Promise<Array<DBInterface>>
-
-	/**
-	 * Finds the first document that matches the selector, as ordered by sort and skip options. Returns `undefined` if no matching document is found.
-	 * @param selector A query describing the documents to find
-	 */
-	findOneAsync(
-		selector: MongoQuery<DBInterface> | DBInterface['_id'],
-		options?: FindOneOptions<DBInterface>
-	): Promise<DBInterface | undefined>
-}
-
 export interface MongoReadOnlyCollection<DBInterface extends { _id: ProtectedString<any> }> {
 	/**
 	 * Find the documents in a collection that match the selector.
@@ -127,8 +109,12 @@ export interface MongoLiveQueryHandle {
 }
 
 // Note: This is a subset of the Meteor Mongo.Cursor type
-
-export interface MongoAsyncCursor<DBInterface extends { _id: ProtectedString<any> }> {
+export interface MongoCursor<DBInterface extends { _id: ProtectedString<any> }> {
+	/**
+	 * Returns the number of documents that match a query.
+	 * @param applySkipLimit If set to `false`, the value returned will reflect the total number of matching documents, ignoring any value supplied for limit. (Default: true)
+	 */
+	count(applySkipLimit?: boolean): number
 	/**
 	 * Returns the number of documents that match a query.
 	 * @param applySkipLimit If set to `false`, the value returned will reflect the total number of matching documents, ignoring any value supplied for limit. (Default: true)
@@ -137,7 +123,18 @@ export interface MongoAsyncCursor<DBInterface extends { _id: ProtectedString<any
 	/**
 	 * Return all matching documents as an Array.
 	 */
+	fetch(): Array<DBInterface>
+	/**
+	 * Return all matching documents as an Array.
+	 */
 	fetchAsync(): Promise<Array<DBInterface>>
+	/**
+	 * Call `callback` once for each matching document, sequentially and
+	 *          synchronously.
+	 * @param callback Function to call. It will be called with three arguments: the document, a 0-based index, and <em>cursor</em> itself.
+	 * @param thisArg An object which will be the value of `this` inside `callback`.
+	 */
+	forEach(callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => void, thisArg?: any): void
 	/**
 	 * Call `callback` once for each matching document, sequentially and
 	 *          synchronously.
@@ -153,54 +150,19 @@ export interface MongoAsyncCursor<DBInterface extends { _id: ProtectedString<any
 	 * @param callback Function to call. It will be called with three arguments: the document, a 0-based index, and <em>cursor</em> itself.
 	 * @param thisArg An object which will be the value of `this` inside `callback`.
 	 */
-	mapAsync<M>(
-		callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => M,
-		thisArg?: any
-	): Promise<Array<M>>
-
-	[Symbol.asyncIterator](): AsyncIterator<DBInterface, never, never>
-
-	/**
-	 * Watch a query. Receive callbacks as the result set changes.
-	 * @param callbacks Functions to call to deliver the result set as it changes
-	 */
-	observeAsync(callbacks: ObserveCallbacks<DBInterface>): Promise<MongoLiveQueryHandle>
-	/**
-	 * Watch a query. Receive callbacks as the result set changes. Only the differences between the old and new documents are passed to the callbacks.
-	 * @param callbacks Functions to call to deliver the result set as it changes
-	 * @param options { nonMutatingCallbacks: boolean }
-	 */
-	observeChangesAsync(
-		callbacks: ObserveChangesCallbacks<DBInterface>,
-		options?: { nonMutatingCallbacks?: boolean | undefined }
-	): Promise<MongoLiveQueryHandle>
-}
-
-export interface MongoCursor<DBInterface extends { _id: ProtectedString<any> }> extends MongoAsyncCursor<DBInterface> {
-	/**
-	 * Returns the number of documents that match a query.
-	 * @param applySkipLimit If set to `false`, the value returned will reflect the total number of matching documents, ignoring any value supplied for limit. (Default: true)
-	 */
-	count(applySkipLimit?: boolean): number
-	/**
-	 * Return all matching documents as an Array.
-	 */
-	fetch(): Array<DBInterface>
-	/**
-	 * Call `callback` once for each matching document, sequentially and
-	 *          synchronously.
-	 * @param callback Function to call. It will be called with three arguments: the document, a 0-based index, and <em>cursor</em> itself.
-	 * @param thisArg An object which will be the value of `this` inside `callback`.
-	 */
-	forEach(callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => void, thisArg?: any): void
+	map<M>(callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => M, thisArg?: any): Array<M>
 	/**
 	 * Map callback over all matching documents. Returns an Array.
 	 * @param callback Function to call. It will be called with three arguments: the document, a 0-based index, and <em>cursor</em> itself.
 	 * @param thisArg An object which will be the value of `this` inside `callback`.
 	 */
-	map<M>(callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => M, thisArg?: any): Array<M>
+	mapAsync<M>(
+		callback: (doc: DBInterface, index: number, cursor: MongoCursor<DBInterface>) => M,
+		thisArg?: any
+	): Promise<Array<M>>
 
 	[Symbol.iterator](): Iterator<DBInterface, never, never>
+	[Symbol.asyncIterator](): AsyncIterator<DBInterface, never, never>
 
 	/**
 	 * Watch a query. Receive callbacks as the result set changes.
