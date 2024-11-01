@@ -108,7 +108,7 @@ export class StudioDeviceTriggerManager {
 
 				for (const [key, trigger] of Object.entries<SomeBlueprintTrigger>(triggeredAction.triggers)) {
 					if (!isDeviceTrigger(trigger)) {
-						return
+						continue
 					}
 
 					let deviceActionArguments: ShiftRegisterActionArguments | undefined = undefined
