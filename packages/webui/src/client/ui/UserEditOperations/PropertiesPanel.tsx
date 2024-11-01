@@ -57,7 +57,7 @@ export function PropertiesPanel(): JSX.Element {
 
 	const segment: DBSegment | undefined = useTracker(
 		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId }),
-		[selectedElement?.elementId]
+		[selectedElement?.elementId, part]
 	)
 	const rundownId = part ? part.rundownId : segment?.rundownId
 
