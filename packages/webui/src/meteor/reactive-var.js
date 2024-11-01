@@ -62,7 +62,7 @@ export const ReactiveVar = function (initialValue, equalsFunc) {
    * @locus Client
    */
   ReactiveVar.prototype.get = function (computation) {
-    if (Tracker.active)
+    if (Tracker.active || computation)
       this.dep.depend(computation);
   
     return this.curValue;

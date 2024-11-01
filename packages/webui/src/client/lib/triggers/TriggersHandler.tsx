@@ -95,7 +95,7 @@ function createAction(
 	actions: SomeAction[],
 	showStyleBase: UIShowStyleBase,
 	t: TFunction,
-	collectContext: () => ReactivePlaylistActionContext | null
+	collectContext: (computation: Tracker.Computation | null) => ReactivePlaylistActionContext | null
 ): {
 	listener: HotkeyTriggerListener
 	preview: (computation: Tracker.Computation) => Promise<IWrappedAdLib[]>
@@ -106,25 +106,23 @@ function createAction(
 	return {
 		preview: async (computation: Tracker.Computation) => {
 			const trackerComputation = computation as any as TriggerTrackerComputation
-			const ctx = collectContext()
-			if (ctx) {
-				return flatten(
-					await Promise.all(
-						executableActions.map(
-							async (action): Promise<IWrappedAdLib[]> =>
-								isPreviewableAction(action) ? action.preview(ctx, trackerComputation) : []
-						)
+			const ctx = collectContext(computation)
+			if (!ctx) return []
+
+			return flatten(
+				await Promise.all(
+					executableActions.map(
+						async (action): Promise<IWrappedAdLib[]> =>
+							isPreviewableAction(action) ? action.preview(ctx, trackerComputation) : []
 					)
 				)
-			} else {
-				return []
-			}
+			)
 		},
 		listener: (e) => {
 			e.preventDefault()
 			e.stopPropagation()
 
-			const ctx = collectContext()
+			const ctx = collectContext(null)
 			if (ctx) {
 				executableActions.forEach((action) =>
 					Promise.resolve()
@@ -143,8 +141,8 @@ const rundownPlaylistContext: ReactiveVar<ReactivePlaylistActionContext | null> 
 function setRundownPlaylistContext(ctx: ReactivePlaylistActionContext | null) {
 	rundownPlaylistContext.set(ctx)
 }
-function getCurrentContext(): ReactivePlaylistActionContext | null {
-	return rundownPlaylistContext.get()
+function getCurrentContext(computation: Tracker.Computation | null): ReactivePlaylistActionContext | null {
+	return rundownPlaylistContext.get(computation ?? undefined)
 }
 
 export const MountedAdLibTriggers = createInMemorySyncMongoCollection<MountedAdLibTrigger & MountedHotkeyMixin>(
