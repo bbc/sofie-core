@@ -14,7 +14,11 @@ import { useTracker, useTrackerAsyncTest } from '../../../../lib/ReactMeteorData
 import { ActionEditor } from './actionEditors/ActionEditor'
 import { OutputLayers, SourceLayers } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { flatten, getRandomString } from '../../../../lib/tempLib'
-import { createAction, isPreviewableAction } from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
+import {
+	createAction,
+	isPreviewableAction,
+	PlainActionContext,
+} from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
 import { PreviewContext } from './TriggeredActionsEditor'
 import { IWrappedAdLib } from '@sofie-automation/meteor-lib/dist/triggers/actionFilterChainCompilers'
 import { RundownUtils } from '../../../../lib/rundown'
@@ -193,12 +197,16 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 				const ctx = previewContext
 				if (!ctx || !ctx.rundownPlaylist) return []
 
+				const actionCtx = ctx as PlainActionContext
+
+				console.log('aa,', computation, ctx, executableActions)
+
 				return flatten(
 					await Promise.all(
-						executableActions.map(
-							async (action): Promise<IWrappedAdLib[]> =>
-								isPreviewableAction(action) ? action.preview(ctx as any, triggerComputation) : []
-						)
+						executableActions.map(async (action): Promise<IWrappedAdLib[]> => {
+							console.log('check', action, isPreviewableAction(action))
+							return isPreviewableAction(action) ? action.preview(actionCtx, triggerComputation) : []
+						})
 					)
 				)
 			} catch (e) {

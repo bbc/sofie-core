@@ -64,7 +64,7 @@ interface PlainStudioContext {
 	showStyleBase: DBShowStyleBase
 }
 
-type PlainActionContext = XOR<PlainPlaylistContext, PlainStudioContext>
+export type PlainActionContext = XOR<PlainPlaylistContext, PlainStudioContext>
 
 export type ActionContext = XOR<ReactivePlaylistActionContext, PlainActionContext>
 
@@ -89,10 +89,7 @@ export interface ExecutableAction {
  * @extends {ExecutableAction}
  */
 interface PreviewableAction extends ExecutableAction {
-	preview: (
-		ctx: ReactivePlaylistActionContext,
-		computation: TriggerTrackerComputation | null
-	) => Promise<IWrappedAdLib[]>
+	preview: (ctx: ActionContext, computation: TriggerTrackerComputation | null) => Promise<IWrappedAdLib[]>
 }
 
 interface ExecutableAdLibAction extends PreviewableAction {
@@ -156,6 +153,7 @@ function createAdLibAction(
 	return {
 		action: PlayoutActions.adlib,
 		preview: async (ctx, computation) => {
+			console.log('vv', ctx)
 			const innerCtx = await createRundownPlaylistContext(computation, triggersContext, ctx, filterChain)
 
 			if (innerCtx) {
