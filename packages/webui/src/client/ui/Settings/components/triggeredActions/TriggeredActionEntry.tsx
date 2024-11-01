@@ -10,7 +10,7 @@ import {
 } from '@sofie-automation/blueprints-integration'
 import classNames from 'classnames'
 import { DBBlueprintTrigger } from '@sofie-automation/meteor-lib/dist/collections/TriggeredActions'
-import { useTracker } from '../../../../lib/ReactMeteorData/ReactMeteorData'
+import { useTracker, useTrackerAsyncTest } from '../../../../lib/ReactMeteorData/ReactMeteorData'
 import { ActionEditor } from './actionEditors/ActionEditor'
 import { OutputLayers, SourceLayers } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { flatten, getRandomString } from '../../../../lib/tempLib'
@@ -180,33 +180,34 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 		[triggeredAction?.actionsWithOverrides]
 	)
 
-	const previewItems = useTracker(
-		(computation) => {
+	const previewItems = useTrackerAsyncTest<IWrappedAdLib[], IWrappedAdLib[]>(
+		async (computation) => {
 			try {
+				if (!resolvedActions || !selected || !sourceLayers) return []
+
 				const triggerComputation = computation as any as TriggerTrackerComputation
-				if (resolvedActions && selected && sourceLayers) {
-					const executableActions = Object.values<SomeAction>(resolvedActions).map((value) =>
-						createAction(UiTriggersContext, value, sourceLayers)
-					)
-					const ctx = previewContext
-					if (ctx && ctx.rundownPlaylist) {
-						return flatten(
-							await Promise.all(
-								executableActions.map(
-									async (action): Promise<IWrappedAdLib[]> =>
-										isPreviewableAction(action) ? action.preview(ctx as any, triggerComputation) : []
-								)
-							)
+
+				const executableActions = Object.values<SomeAction>(resolvedActions).map((value) =>
+					createAction(UiTriggersContext, value, sourceLayers)
+				)
+				const ctx = previewContext
+				if (!ctx || !ctx.rundownPlaylist) return []
+
+				return flatten(
+					await Promise.all(
+						executableActions.map(
+							async (action): Promise<IWrappedAdLib[]> =>
+								isPreviewableAction(action) ? action.preview(ctx as any, triggerComputation) : []
 						)
-					}
-				}
+					)
+				)
 			} catch (e) {
 				catchError('TriggeredActionEntry previewItems')(e)
 			}
-			return [] as IWrappedAdLib[]
+			return []
 		},
 		[selected, resolvedActions, sourceLayers, previewContext],
-		[] as IWrappedAdLib[]
+		[]
 	)
 
 	function getType(sourceLayerId: string | undefined): SourceLayerType {
