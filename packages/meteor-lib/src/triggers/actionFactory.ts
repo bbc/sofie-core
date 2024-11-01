@@ -180,7 +180,7 @@ function createAdLibAction(
 
 			const sourceLayerIdsToClear: string[] = []
 
-			// This withComputation is probably not needed, but is a nice safeguard
+			// This withComputation is probably not needed, but it ensures there is no accidental reactivity
 			const wrappedAdLibs = await triggersContext.withComputation(null, async () =>
 				compiledAdLibFilter(innerCtx, null)
 			)

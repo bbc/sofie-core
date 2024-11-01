@@ -22,10 +22,11 @@ import {
 import { logger } from '../logging'
 import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReactivePlaylistActionContext } from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
-import { MongoReadOnlyCollection } from '../../collections/lib'
+import { FindOneOptions, MongoReadOnlyCollection } from '../../collections/lib'
 import { ProtectedString } from '../tempLib'
 import { ReactiveVar as MeteorReactiveVar } from 'meteor/reactive-var'
 import { TriggerReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
+import { FindOptions, MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 
 class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any> }>
 	implements TriggersAsyncCollection<DBInterface>
@@ -38,8 +39,8 @@ class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any
 
 	async findFetchAsync(
 		computation: TriggerTrackerComputation | null,
-		selector: any,
-		options?: any
+		selector: MongoQuery<DBInterface>,
+		options?: FindOptions<DBInterface>
 	): Promise<Array<DBInterface>> {
 		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
 			return this.#collection.find(selector, options).fetch()
@@ -48,8 +49,8 @@ class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any
 
 	async findOneAsync(
 		computation: TriggerTrackerComputation | null,
-		selector: any,
-		options?: any
+		selector: MongoQuery<DBInterface> | DBInterface['_id'],
+		options?: FindOneOptions<DBInterface>
 	): Promise<DBInterface | undefined> {
 		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
 			return this.#collection.findOne(selector, options)
@@ -104,4 +105,8 @@ export const UiTriggersContext: TriggersContext = {
 
 export function toTriggersReactiveVar<T>(reactiveVar: MeteorReactiveVar<T>): TriggerReactiveVar<T> {
 	return reactiveVar as any
+}
+
+export function toTriggersComputation(computation: Tracker.Computation): TriggerTrackerComputation {
+	return computation as any
 }

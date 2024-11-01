@@ -45,8 +45,7 @@ import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylist
 import { catchError } from '../lib'
 import { logger } from '../logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
-import { toTriggersReactiveVar, UiTriggersContext } from './triggersContext'
-import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
+import { toTriggersComputation, toTriggersReactiveVar, UiTriggersContext } from './triggersContext'
 
 type HotkeyTriggerListener = (e: KeyboardEvent) => void
 
@@ -105,7 +104,7 @@ function createAction(
 	)
 	return {
 		preview: async (computation: Tracker.Computation) => {
-			const trackerComputation = computation as any as TriggerTrackerComputation
+			const trackerComputation = toTriggersComputation(computation)
 			const ctx = collectContext(computation)
 			if (!ctx) return []
 

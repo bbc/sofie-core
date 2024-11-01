@@ -39,9 +39,8 @@ import { isHotkeyTrigger } from '@sofie-automation/meteor-lib/dist/triggers/trig
 import { getAllCurrentAndDeletedItemsFromOverrides, useOverrideOpHelper } from '../../util/OverrideOpHelper'
 import { TriggeredActions } from '../../../../collections'
 import { catchError } from '../../../../lib/lib'
-import { UiTriggersContext } from '../../../../lib/triggers/triggersContext'
+import { toTriggersComputation, UiTriggersContext } from '../../../../lib/triggers/triggersContext'
 import { last, literal } from '@sofie-automation/shared-lib/dist/lib/lib'
-import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 interface IProps {
 	sourceLayers: SourceLayers | undefined
@@ -189,7 +188,7 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 			try {
 				if (!resolvedActions || !selected || !sourceLayers) return []
 
-				const triggerComputation = computation as any as TriggerTrackerComputation
+				const triggerComputation = toTriggersComputation(computation)
 
 				const executableActions = Object.values<SomeAction>(resolvedActions).map((value) =>
 					createAction(UiTriggersContext, value, sourceLayers)

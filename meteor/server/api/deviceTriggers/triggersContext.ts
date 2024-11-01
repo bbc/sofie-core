@@ -15,7 +15,7 @@ import { IBaseFilterLink, IRundownPlaylistFilterLink } from '@sofie-automation/b
 import { PartId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DummyReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 import { ReactivePlaylistActionContext } from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
-import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
+import { FindOneOptions, FindOptions, MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import { DBRundownPlaylist, SelectedPartInstance } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import {
 	AdLibActions,
@@ -47,16 +47,16 @@ class MeteorTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString
 
 	async findFetchAsync(
 		_computation: TriggerTrackerComputation | null,
-		selector: any,
-		options?: any
+		selector: MongoQuery<DBInterface>,
+		options?: FindOptions<DBInterface>
 	): Promise<Array<DBInterface>> {
 		return this.#collection.findFetchAsync(selector, options)
 	}
 
 	async findOneAsync(
 		_computation: TriggerTrackerComputation | null,
-		selector: any,
-		options?: any
+		selector: MongoQuery<DBInterface> | DBInterface['_id'],
+		options?: FindOneOptions<DBInterface>
 	): Promise<DBInterface | undefined> {
 		return this.#collection.findOneAsync(selector, options)
 	}
