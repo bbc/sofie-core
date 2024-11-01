@@ -10,8 +10,6 @@ import { MeteorCall } from '../methods'
 import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
 import { UserAction } from '@sofie-automation/meteor-lib/dist/userAction'
 import { TFunction } from 'i18next'
-import { Tracker } from 'meteor/tracker'
-
 import { logger } from '../../logging'
 import { IBaseFilterLink, IRundownPlaylistFilterLink } from '@sofie-automation/blueprints-integration'
 import { PartId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
@@ -48,23 +46,19 @@ class MeteorTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString
 	}
 
 	async findFetchAsync(
-		computation: TriggerTrackerComputation | null,
+		_computation: TriggerTrackerComputation | null,
 		selector: any,
 		options?: any
 	): Promise<Array<DBInterface>> {
-		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
-			return this.#collection.findFetchAsync(selector, options)
-		})
+		return this.#collection.findFetchAsync(selector, options)
 	}
 
 	async findOneAsync(
-		computation: TriggerTrackerComputation | null,
+		_computation: TriggerTrackerComputation | null,
 		selector: any,
 		options?: any
 	): Promise<DBInterface | undefined> {
-		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
-			return this.#collection.findOneAsync(selector, options)
-		})
+		return this.#collection.findOneAsync(selector, options)
 	}
 }
 
@@ -102,8 +96,8 @@ export const MeteorTriggersContext: TriggersContext = {
 		)
 	},
 
-	withComputation: async (computation, func) => {
-		return Tracker.withComputation(computation as Tracker.Computation | null, func)
+	withComputation: async (_computation, func) => {
+		return func()
 	},
 
 	memoizedIsolatedAutorun: async <TArgs extends any[], TRes>(

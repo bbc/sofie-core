@@ -30,8 +30,6 @@ import { SomeAction, SomeBlueprintTrigger } from '@sofie-automation/blueprints-i
 import { DeviceActions } from '@sofie-automation/shared-lib/dist/core/model/ShowStyle'
 import { DummyReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 import { MeteorTriggersContext } from './triggersContext'
-import { Tracker } from 'meteor/tracker'
-import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 export class StudioDeviceTriggerManager {
 	#lastShowStyleBaseId: ShowStyleBaseId | null = null
@@ -45,11 +43,7 @@ export class StudioDeviceTriggerManager {
 		StudioActionManagers.set(studioId, new StudioActionManager())
 	}
 
-	async updateTriggers(
-		cache: ContentCache,
-		showStyleBaseId: ShowStyleBaseId,
-		computation: Tracker.Computation | null
-	): Promise<void> {
+	async updateTriggers(cache: ContentCache, showStyleBaseId: ShowStyleBaseId): Promise<void> {
 		const studioId = this.studioId
 		this.#lastShowStyleBaseId = showStyleBaseId
 
@@ -171,10 +165,7 @@ export class StudioDeviceTriggerManager {
 
 					addedPreviewIds.push(adLibPreviewId)
 				} else {
-					const previewedAdLibs = await thisAction.preview(
-						context,
-						computation as any as TriggerTrackerComputation | null
-					)
+					const previewedAdLibs = await thisAction.preview(context, null)
 
 					previewedAdLibs.forEach((adLib) => {
 						const adLibPreviewId = protectString<PreviewWrappedAdLibId>(
