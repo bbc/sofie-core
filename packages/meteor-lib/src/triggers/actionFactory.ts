@@ -153,7 +153,6 @@ function createAdLibAction(
 	return {
 		action: PlayoutActions.adlib,
 		preview: async (ctx, computation) => {
-			console.log('vv', ctx)
 			const innerCtx = await createRundownPlaylistContext(computation, triggersContext, ctx, filterChain)
 
 			if (innerCtx) {

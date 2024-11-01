@@ -199,14 +199,12 @@ export const TriggeredActionEntry: React.FC<IProps> = React.memo(function Trigge
 
 				const actionCtx = ctx as PlainActionContext
 
-				console.log('aa,', computation, ctx, executableActions)
-
 				return flatten(
 					await Promise.all(
-						executableActions.map(async (action): Promise<IWrappedAdLib[]> => {
-							console.log('check', action, isPreviewableAction(action))
-							return isPreviewableAction(action) ? action.preview(actionCtx, triggerComputation) : []
-						})
+						executableActions.map(
+							async (action): Promise<IWrappedAdLib[]> =>
+								isPreviewableAction(action) ? action.preview(actionCtx, triggerComputation) : []
+						)
 					)
 				)
 			} catch (e) {
