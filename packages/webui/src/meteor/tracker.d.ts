@@ -76,7 +76,7 @@ export namespace Tracker {
 		 * Returns true if the computation is a new dependent of `dependency` rather than an existing one.
 		 * @param fromComputation An optional computation declared to depend on `dependency` instead of the current computation.
 		 */
-		depend(fromComputation?: Computation): boolean
+		depend(fromComputation?: Computation | null): boolean
 		/**
 		 * True if this Dependency has one or more dependent Computations, which would be invalidated if this Dependency were to change.
 		 */

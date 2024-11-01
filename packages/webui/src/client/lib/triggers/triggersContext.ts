@@ -7,7 +7,6 @@ import { hashSingleUseToken } from '../lib'
 import { MeteorCall } from '../meteorApi'
 import { IBaseFilterLink } from '@sofie-automation/blueprints-integration'
 import { doUserAction } from '../clientUserAction'
-import { memoizedIsolatedAutorun as libMemoizedIsolatedAutorun } from '../memoizedIsolatedAutorun'
 import { Tracker } from 'meteor/tracker'
 import {
 	AdLibActions,
@@ -27,6 +26,8 @@ import { ProtectedString } from '../tempLib'
 import { ReactiveVar as MeteorReactiveVar } from 'meteor/reactive-var'
 import { TriggerReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 import { FindOptions, MongoQuery } from '@sofie-automation/corelib/dist/mongo'
+import _ from 'underscore'
+import { memoizedIsolatedAutorunAsync } from '../memoizedIsolatedAutorun'
 
 class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any> }>
 	implements TriggersAsyncCollection<DBInterface>
@@ -88,9 +89,12 @@ export const UiTriggersContext: TriggersContext = {
 		functionName: string,
 		...params: TArgs
 	): Promise<TRes> => {
-		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
-			return libMemoizedIsolatedAutorun(fnc, functionName, computation, ...params)
-		})
+		return memoizedIsolatedAutorunAsync(
+			computation as Tracker.Computation | null,
+			async (innerComputation, ...params2) => fnc(toTriggersComputation(innerComputation), ...params2),
+			functionName,
+			...params
+		)
 	},
 
 	async createContextForRundownPlaylistChain(

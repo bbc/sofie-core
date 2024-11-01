@@ -19,6 +19,10 @@ import { TFunction } from 'i18next'
 import { ProtectedString } from '@sofie-automation/corelib/dist/protectedString'
 import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 
+/**
+ * A opaque type that is used in the meteor-lib api instead of implementation specific computations.
+ * This should be treated as equivalent to the Meteor `Tracker.Computation` type.
+ */
 export type TriggerTrackerComputation = { __internal: true }
 
 export interface TriggersAsyncCollection<DBInterface extends { _id: ProtectedString<any> }> {
@@ -71,8 +75,19 @@ export interface TriggersContext {
 		_okMessage?: string
 	): void
 
+	/**
+	 * Equivalent to the Meteor `Tracker.withComputation` function, but implementation specific.
+	 * Use this to ensure that a function is run as part of the provided computation.
+	 */
 	withComputation<T>(computation: TriggerTrackerComputation | null, func: () => Promise<T>): Promise<T>
 
+	/**
+	 * Create a reactive computation that will be run independently of the outer one. If the same function (using the same
+	 * name and parameters) will be used again, this computation will only be computed once on invalidation and it's
+	 * result will be memoized and reused on every other call.
+	 *
+	 * This will be run as part of the provided computation, and passes the inner computation to the function.
+	 */
 	memoizedIsolatedAutorun<TArgs extends any[], TRes>(
 		computation: TriggerTrackerComputation | null,
 		fnc: (computation: TriggerTrackerComputation | null, ...args: TArgs) => Promise<TRes>,
