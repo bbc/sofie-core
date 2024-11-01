@@ -26,7 +26,6 @@ import { ProtectedString } from '../tempLib'
 import { ReactiveVar as MeteorReactiveVar } from 'meteor/reactive-var'
 import { TriggerReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 import { FindOptions, MongoQuery } from '@sofie-automation/corelib/dist/mongo'
-import _ from 'underscore'
 import { memoizedIsolatedAutorunAsync } from '../memoizedIsolatedAutorun'
 
 class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any> }>
