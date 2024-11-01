@@ -565,7 +565,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<RundownBaselineAdLibItem>,
-							{ ...adLibPieceTypeFilter.options, reactive: false }
+							adLibPieceTypeFilter.options
 						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.rundownBaselineAdLibItem))
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === false)
@@ -577,7 +577,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<AdLibPiece>,
-							{ ...adLibPieceTypeFilter.options, reactive: false }
+							adLibPieceTypeFilter.options
 						)
 					).map((item) => wrapAdLibPiece(item, MountedAdLibTriggerType.adLibPiece))
 			}
@@ -608,7 +608,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<RundownBaselineAdLibAction>,
-							{ ...adLibActionTypeFilter.options, reactive: false }
+							adLibActionTypeFilter.options
 						)
 					).map((item) =>
 						wrapRundownBaselineAdLibAction(item, MountedAdLibTriggerType.rundownBaselineAdLibAction)
@@ -622,7 +622,7 @@ export function compileAdLibFilter(
 								...currentNextOverride,
 								rundownId: currentRundownId,
 							} as MongoQuery<AdLibAction>,
-							{ ...adLibActionTypeFilter.options, reactive: false }
+							adLibActionTypeFilter.options
 						)
 					).map((item) => wrapAdLibAction(item, MountedAdLibTriggerType.adLibAction))
 			}
