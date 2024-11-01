@@ -505,16 +505,16 @@ export function compileAdLibFilter(
 		let adLibActions: IWrappedAdLib[] = []
 		const segmentPartIds =
 			adLibPieceTypeFilter.segment === 'current'
-				? context.currentSegmentPartIds.get()
+				? context.currentSegmentPartIds.get(computation)
 				: adLibPieceTypeFilter.segment === 'next'
-				? context.nextSegmentPartIds.get()
+				? context.nextSegmentPartIds.get(computation)
 				: undefined
 
 		const singlePartId =
 			adLibPieceTypeFilter.part === 'current'
-				? context.currentPartId.get()
+				? context.currentPartId.get(computation)
 				: adLibPieceTypeFilter.part === 'next'
-				? context.nextPartId.get()
+				? context.nextPartId.get(computation)
 				: undefined
 
 		/** Note: undefined means that all parts are to be considered */
@@ -554,7 +554,7 @@ export function compileAdLibFilter(
 				}
 			}
 
-			const currentRundownId = context.currentRundownId.get()
+			const currentRundownId = context.currentRundownId.get(computation)
 			if (!skip && currentRundownId) {
 				if (adLibPieceTypeFilter.global === undefined || adLibPieceTypeFilter.global === true)
 					rundownBaselineAdLibItems = (
@@ -597,7 +597,7 @@ export function compileAdLibFilter(
 				}
 			}
 
-			const currentRundownId = context.currentRundownId.get()
+			const currentRundownId = context.currentRundownId.get(computation)
 			if (!skip && currentRundownId) {
 				if (adLibActionTypeFilter.global === undefined || adLibActionTypeFilter.global === true)
 					rundownBaselineAdLibActions = (
@@ -636,7 +636,7 @@ export function compileAdLibFilter(
 				// Note: We need to return an array from within memoizedIsolatedAutorun,
 				// because _.isEqual (used in memoizedIsolatedAutorun) doesn't work with Maps..
 
-				const rundownPlaylistId = context.rundownPlaylistId.get()
+				const rundownPlaylistId = context.rundownPlaylistId.get(computation)
 				const rundownRanks = await triggersContext.memoizedIsolatedAutorun(
 					computation,
 					async (computation) => {

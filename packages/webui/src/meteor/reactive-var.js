@@ -61,9 +61,9 @@ export const ReactiveVar = function (initialValue, equalsFunc) {
    * @summary Returns the current value of the ReactiveVar, establishing a reactive dependency.
    * @locus Client
    */
-  ReactiveVar.prototype.get = function () {
+  ReactiveVar.prototype.get = function (computation) {
     if (Tracker.active)
-      this.dep.depend();
+      this.dep.depend(computation);
   
     return this.curValue;
   };

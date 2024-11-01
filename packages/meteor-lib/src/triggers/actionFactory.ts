@@ -26,7 +26,7 @@ import {
 import { DeviceActions } from '@sofie-automation/shared-lib/dist/core/model/ShowStyle'
 import { UserError, UserErrorMessage } from '@sofie-automation/corelib/dist/error'
 import { MountedAdLibTriggerType } from '../api/MountedTriggers'
-import { DummyReactiveVar, ReactiveVar } from './reactive-var'
+import { DummyReactiveVar, TriggerReactiveVar } from './reactive-var'
 import { TriggersContext, TriggerTrackerComputation } from './triggersContext'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
 
@@ -36,18 +36,18 @@ type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
 
 export interface ReactivePlaylistActionContext {
-	studioId: ReactiveVar<StudioId>
-	rundownPlaylistId: ReactiveVar<RundownPlaylistId>
-	rundownPlaylist: ReactiveVar<
+	studioId: TriggerReactiveVar<StudioId>
+	rundownPlaylistId: TriggerReactiveVar<RundownPlaylistId>
+	rundownPlaylist: TriggerReactiveVar<
 		Pick<DBRundownPlaylist, '_id' | 'name' | 'activationId' | 'nextPartInfo' | 'currentPartInfo'>
 	>
 
-	currentRundownId: ReactiveVar<RundownId | null>
-	currentSegmentPartIds: ReactiveVar<PartId[]>
-	nextSegmentPartIds: ReactiveVar<PartId[]>
-	currentPartInstanceId: ReactiveVar<PartInstanceId | null>
-	currentPartId: ReactiveVar<PartId | null>
-	nextPartId: ReactiveVar<PartId | null>
+	currentRundownId: TriggerReactiveVar<RundownId | null>
+	currentSegmentPartIds: TriggerReactiveVar<PartId[]>
+	nextSegmentPartIds: TriggerReactiveVar<PartId[]>
+	currentPartInstanceId: TriggerReactiveVar<PartInstanceId | null>
+	currentPartId: TriggerReactiveVar<PartId | null>
+	nextPartId: TriggerReactiveVar<PartId | null>
 }
 
 interface PlainPlaylistContext {
@@ -111,7 +111,6 @@ async function createRundownPlaylistContext(
 	if (filterChain.length < 1) {
 		return undefined
 	} else if (filterChain[0].object === 'view' && context.rundownPlaylistId) {
-		// nocommit - rewrap to track on this computation?
 		return context as ReactivePlaylistActionContext
 	} else if (filterChain[0].object === 'view' && context.rundownPlaylist) {
 		const playlistContext = context as PlainPlaylistContext
@@ -180,11 +179,11 @@ function createAdLibAction(
 				)
 				return
 			}
-			const currentPartInstanceId = innerCtx.rundownPlaylist.get().currentPartInfo?.partInstanceId
+			const currentPartInstanceId = innerCtx.rundownPlaylist.get(null).currentPartInfo?.partInstanceId
 
 			const sourceLayerIdsToClear: string[] = []
 
-			// nocommit - discard the withComputation?
+			// This withComputation is probably not needed, but is a nice safeguard
 			const wrappedAdLibs = await triggersContext.withComputation(null, async () =>
 				compiledAdLibFilter(innerCtx, null)
 			)
@@ -197,7 +196,7 @@ function createAdLibAction(
 								? triggersContext.MeteorCall.userAction.segmentAdLibPieceStart(
 										e,
 										ts,
-										innerCtx.rundownPlaylistId.get(),
+										innerCtx.rundownPlaylistId.get(null),
 										currentPartInstanceId,
 										wrappedAdLib.item._id,
 										false
@@ -211,7 +210,7 @@ function createAdLibAction(
 								? triggersContext.MeteorCall.userAction.baselineAdLibPieceStart(
 										e,
 										ts,
-										innerCtx.rundownPlaylistId.get(),
+										innerCtx.rundownPlaylistId.get(null),
 										currentPartInstanceId,
 										wrappedAdLib.item._id,
 										false
@@ -224,7 +223,7 @@ function createAdLibAction(
 							triggersContext.MeteorCall.userAction.executeAction(
 								e,
 								ts,
-								innerCtx.rundownPlaylistId.get(),
+								innerCtx.rundownPlaylistId.get(null),
 								wrappedAdLib._id,
 								wrappedAdLib.item.actionId,
 								wrappedAdLib.item.userData,
@@ -237,7 +236,7 @@ function createAdLibAction(
 							triggersContext.MeteorCall.userAction.executeAction(
 								e,
 								ts,
-								innerCtx.rundownPlaylistId.get(),
+								innerCtx.rundownPlaylistId.get(null),
 								wrappedAdLib._id,
 								wrappedAdLib.item.actionId,
 								wrappedAdLib.item.userData,
@@ -254,7 +253,7 @@ function createAdLibAction(
 							triggersContext.MeteorCall.userAction.sourceLayerStickyPieceStart(
 								e,
 								ts,
-								innerCtx.rundownPlaylistId.get(),
+								innerCtx.rundownPlaylistId.get(null),
 								wrappedAdLib.sourceLayerId //
 							)
 						)
@@ -270,7 +269,7 @@ function createAdLibAction(
 					triggersContext.MeteorCall.userAction.sourceLayerOnPartStop(
 						e,
 						ts,
-						innerCtx.rundownPlaylistId.get(),
+						innerCtx.rundownPlaylistId.get(null),
 						currentPartInstanceId,
 						sourceLayerIdsToClear
 					)
@@ -463,7 +462,7 @@ export function createAction(
 						triggersContext.MeteorCall.userAction.forceResetAndActivate(
 							e,
 							ts,
-							ctx.rundownPlaylistId.get(),
+							ctx.rundownPlaylistId.get(null),
 							!!action.rehearsal || false
 						)
 				)
@@ -482,7 +481,7 @@ export function createAction(
 							triggersContext.MeteorCall.userAction.activate(
 								e,
 								ts,
-								ctx.rundownPlaylistId.get(),
+								ctx.rundownPlaylistId.get(null),
 								!!action.rehearsal || false
 							)
 					)
@@ -497,7 +496,7 @@ export function createAction(
 				action,
 				UserAction.DEACTIVATE_RUNDOWN_PLAYLIST,
 				async (e, ts, ctx) =>
-					triggersContext.MeteorCall.userAction.deactivate(e, ts, ctx.rundownPlaylistId.get())
+					triggersContext.MeteorCall.userAction.deactivate(e, ts, ctx.rundownPlaylistId.get(null))
 			)
 		case PlayoutActions.activateAdlibTestingMode:
 			return createUserActionWithCtx(
@@ -505,12 +504,12 @@ export function createAction(
 				action,
 				UserAction.ACTIVATE_ADLIB_TESTING,
 				async (e, ts, ctx) => {
-					const rundownId = ctx.currentRundownId.get()
+					const rundownId = ctx.currentRundownId.get(null)
 					if (rundownId) {
 						return triggersContext.MeteorCall.userAction.activateAdlibTestingMode(
 							e,
 							ts,
-							ctx.rundownPlaylistId.get(),
+							ctx.rundownPlaylistId.get(null),
 							rundownId
 						)
 					} else {
@@ -526,21 +525,26 @@ export function createAction(
 					triggersContext.MeteorCall.userAction.take(
 						e,
 						ts,
-						ctx.rundownPlaylistId.get(),
-						ctx.currentPartInstanceId.get()
+						ctx.rundownPlaylistId.get(null),
+						ctx.currentPartInstanceId.get(null)
 					)
 				)
 			}
 		case PlayoutActions.hold:
 			return createUserActionWithCtx(triggersContext, action, UserAction.ACTIVATE_HOLD, async (e, ts, ctx) =>
-				triggersContext.MeteorCall.userAction.activateHold(e, ts, ctx.rundownPlaylistId.get(), !!action.undo)
+				triggersContext.MeteorCall.userAction.activateHold(
+					e,
+					ts,
+					ctx.rundownPlaylistId.get(null),
+					!!action.undo
+				)
 			)
 		case PlayoutActions.disableNextPiece:
 			return createUserActionWithCtx(triggersContext, action, UserAction.DISABLE_NEXT_PIECE, async (e, ts, ctx) =>
 				triggersContext.MeteorCall.userAction.disableNextPiece(
 					e,
 					ts,
-					ctx.rundownPlaylistId.get(),
+					ctx.rundownPlaylistId.get(null),
 					!!action.undo
 				)
 			)
@@ -559,7 +563,7 @@ export function createAction(
 								e,
 								ts,
 								triggersContext.hashSingleUseToken(tokenResult.result),
-								ctx.rundownPlaylistId.get(),
+								ctx.rundownPlaylistId.get(null),
 								`action`,
 								false
 							)
@@ -571,7 +575,7 @@ export function createAction(
 				triggersContext.MeteorCall.userAction.moveNext(
 					e,
 					ts,
-					ctx.rundownPlaylistId.get(),
+					ctx.rundownPlaylistId.get(null),
 					action.parts ?? 0,
 					action.segments ?? 0
 				)
@@ -587,7 +591,11 @@ export function createAction(
 					async (e, ts, ctx) =>
 						// TODO: Needs some handling of the response. Perhaps this should switch to
 						// an event on the RundownViewEventBus, if ran on the client?
-						triggersContext.MeteorCall.userAction.resyncRundownPlaylist(e, ts, ctx.rundownPlaylistId.get())
+						triggersContext.MeteorCall.userAction.resyncRundownPlaylist(
+							e,
+							ts,
+							ctx.rundownPlaylistId.get(null)
+						)
 				)
 			}
 		case PlayoutActions.resetRundownPlaylist:
@@ -599,7 +607,11 @@ export function createAction(
 					action,
 					UserAction.RESET_RUNDOWN_PLAYLIST,
 					async (e, ts, ctx) =>
-						triggersContext.MeteorCall.userAction.resetRundownPlaylist(e, ts, ctx.rundownPlaylistId.get())
+						triggersContext.MeteorCall.userAction.resetRundownPlaylist(
+							e,
+							ts,
+							ctx.rundownPlaylistId.get(null)
+						)
 				)
 			}
 		case PlayoutActions.resyncRundownPlaylist:
@@ -608,14 +620,14 @@ export function createAction(
 				action,
 				UserAction.RESYNC_RUNDOWN_PLAYLIST,
 				async (e, ts, ctx) =>
-					triggersContext.MeteorCall.userAction.resyncRundownPlaylist(e, ts, ctx.rundownPlaylistId.get())
+					triggersContext.MeteorCall.userAction.resyncRundownPlaylist(e, ts, ctx.rundownPlaylistId.get(null))
 			)
 		case PlayoutActions.switchRouteSet:
 			return createUserActionWithCtx(triggersContext, action, UserAction.SWITCH_ROUTE_SET, async (e, ts, ctx) =>
 				triggersContext.MeteorCall.userAction.switchRouteSet(
 					e,
 					ts,
-					ctx.studioId.get(),
+					ctx.studioId.get(null),
 					action.routeSetId,
 					action.state
 				)

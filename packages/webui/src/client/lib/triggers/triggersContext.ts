@@ -7,7 +7,7 @@ import { hashSingleUseToken } from '../lib'
 import { MeteorCall } from '../meteorApi'
 import { IBaseFilterLink } from '@sofie-automation/blueprints-integration'
 import { doUserAction } from '../clientUserAction'
-import { memoizedIsolatedAutorun } from '../memoizedIsolatedAutorun'
+import { memoizedIsolatedAutorun as libMemoizedIsolatedAutorun } from '../memoizedIsolatedAutorun'
 import { Tracker } from 'meteor/tracker'
 import {
 	AdLibActions,
@@ -24,8 +24,10 @@ import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReactivePlaylistActionContext } from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
 import { MongoReadOnlyCollection } from '../../collections/lib'
 import { ProtectedString } from '../tempLib'
+import { ReactiveVar as MeteorReactiveVar } from 'meteor/reactive-var'
+import { TriggerReactiveVar } from '@sofie-automation/meteor-lib/dist/triggers/reactive-var'
 
-class TriggersCollection2<DBInterface extends { _id: ProtectedString<any> }>
+class UiTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any> }>
 	implements TriggersAsyncCollection<DBInterface>
 {
 	readonly #collection: MongoReadOnlyCollection<DBInterface>
@@ -62,14 +64,14 @@ export const UiTriggersContext: TriggersContext = {
 
 	isClient: true,
 
-	AdLibActions: new TriggersCollection2(AdLibActions),
-	AdLibPieces: new TriggersCollection2(AdLibPieces),
-	Parts: new TriggersCollection2(Parts),
-	RundownBaselineAdLibActions: new TriggersCollection2(RundownBaselineAdLibActions),
-	RundownBaselineAdLibPieces: new TriggersCollection2(RundownBaselineAdLibPieces),
-	RundownPlaylists: new TriggersCollection2(RundownPlaylists),
-	Rundowns: new TriggersCollection2(Rundowns),
-	Segments: new TriggersCollection2(Segments),
+	AdLibActions: new UiTriggersCollectionWrapper(AdLibActions),
+	AdLibPieces: new UiTriggersCollectionWrapper(AdLibPieces),
+	Parts: new UiTriggersCollectionWrapper(Parts),
+	RundownBaselineAdLibActions: new UiTriggersCollectionWrapper(RundownBaselineAdLibActions),
+	RundownBaselineAdLibPieces: new UiTriggersCollectionWrapper(RundownBaselineAdLibPieces),
+	RundownPlaylists: new UiTriggersCollectionWrapper(RundownPlaylists),
+	Rundowns: new UiTriggersCollectionWrapper(Rundowns),
+	Segments: new UiTriggersCollectionWrapper(Segments),
 
 	hashSingleUseToken,
 
@@ -79,9 +81,14 @@ export const UiTriggersContext: TriggersContext = {
 		return Tracker.withComputation(computation as Tracker.Computation | null, func)
 	},
 
-	memoizedIsolatedAutorun: (computation, fcn, functionName, ...params) => {
-		return Tracker.withComputation(computation as Tracker.Computation | null, () => {
-			return memoizedIsolatedAutorun(fcn, functionName, ...params)
+	memoizedIsolatedAutorun: async <TArgs extends any[], TRes>(
+		computation: TriggerTrackerComputation | null,
+		fnc: (computation: TriggerTrackerComputation | null, ...args: TArgs) => Promise<TRes>,
+		functionName: string,
+		...params: TArgs
+	): Promise<TRes> => {
+		return Tracker.withComputation(computation as Tracker.Computation | null, async () => {
+			return libMemoizedIsolatedAutorun(fnc, functionName, computation, ...params)
 		})
 	},
 
@@ -93,4 +100,8 @@ export const UiTriggersContext: TriggersContext = {
 
 		throw new Error('Invalid filter combination')
 	},
+}
+
+export function toTriggersReactiveVar<T>(reactiveVar: MeteorReactiveVar<T>): TriggerReactiveVar<T> {
+	return reactiveVar as any
 }

@@ -45,7 +45,7 @@ import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylist
 import { catchError } from '../lib'
 import { logger } from '../logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
-import { UiTriggersContext } from './triggersContext'
+import { toTriggersReactiveVar, UiTriggersContext } from './triggersContext'
 import { TriggerTrackerComputation } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
 
 type HotkeyTriggerListener = (e: KeyboardEvent) => void
@@ -127,9 +127,11 @@ function createAction(
 			const ctx = collectContext()
 			if (ctx) {
 				executableActions.forEach((action) =>
-					Promise.resolve(action.execute(t, e, ctx)).catch((e) => {
-						// nocommit - log error
-					})
+					Promise.resolve()
+						.then(async () => action.execute(t, e, ctx))
+						.catch((e) => {
+							logger.error(`Execution Triggered Action "${_id}" failed: ${e}`)
+						})
 				)
 			}
 		},
@@ -337,15 +339,17 @@ export const TriggersHandler: React.FC<IProps> = function TriggersHandler(
 				let context = rundownPlaylistContext.get()
 				if (context === null) {
 					context = {
-						studioId: new ReactiveVar(props.studioId),
-						rundownPlaylistId: new ReactiveVar(playlist._id),
-						rundownPlaylist: new ReactiveVar(playlist),
-						currentRundownId: new ReactiveVar(props.currentRundownId),
-						currentPartId: new ReactiveVar(props.currentPartId),
-						nextPartId: new ReactiveVar(props.nextPartId),
-						currentSegmentPartIds: new ReactiveVar(props.currentSegmentPartIds),
-						nextSegmentPartIds: new ReactiveVar(props.nextSegmentPartIds),
-						currentPartInstanceId: new ReactiveVar(playlist.currentPartInfo?.partInstanceId ?? null),
+						studioId: toTriggersReactiveVar(new ReactiveVar(props.studioId)),
+						rundownPlaylistId: toTriggersReactiveVar(new ReactiveVar(playlist._id)),
+						rundownPlaylist: toTriggersReactiveVar(new ReactiveVar(playlist)),
+						currentRundownId: toTriggersReactiveVar(new ReactiveVar(props.currentRundownId)),
+						currentPartId: toTriggersReactiveVar(new ReactiveVar(props.currentPartId)),
+						nextPartId: toTriggersReactiveVar(new ReactiveVar(props.nextPartId)),
+						currentSegmentPartIds: toTriggersReactiveVar(new ReactiveVar(props.currentSegmentPartIds)),
+						nextSegmentPartIds: toTriggersReactiveVar(new ReactiveVar(props.nextSegmentPartIds)),
+						currentPartInstanceId: toTriggersReactiveVar(
+							new ReactiveVar(playlist.currentPartInfo?.partInstanceId ?? null)
+						),
 					}
 					rundownPlaylistContext.set(context)
 				} else {

@@ -1,18 +1,22 @@
+// https://github.com/meteor/meteor/blob/0afa7df1fa4146f1f5dd26d867b32c19b7e8d4ad/packages/tracker/tracker.js
+
 /////////////////////////////////////////////////////
 // Package docs at http://docs.meteor.com/#tracker //
 /////////////////////////////////////////////////////
+
+import { Meteor } from './meteor'
 
 /**
  * @namespace Tracker
  * @summary The namespace for Tracker-related methods.
  */
-Tracker = {}
+let Tracker = {}
 
 /**
  * @namespace Deps
  * @deprecated
  */
-Deps = Tracker
+let Deps = Tracker
 
 // http://docs.meteor.com/#tracker_active
 
@@ -78,24 +82,6 @@ function _throwOrLog(from, e) {
 
 		for (var i = 0; i < printArgs.length; i++) {
 			_debugFunc()(printArgs[i])
-		}
-	}
-}
-
-// Takes a function `f`, and wraps it in a `Meteor._noYieldsAllowed`
-// block if we are running on the server. On the client, returns the
-// original function (since `Meteor._noYieldsAllowed` is a
-// no-op). This has the benefit of not adding an unnecessary stack
-// frame on the client.
-function withNoYieldsAllowed(f) {
-	if (typeof Meteor === 'undefined' || Meteor.isClient) {
-		return f
-	} else {
-		return function () {
-			var args = arguments
-			Meteor._noYieldsAllowed(function () {
-				f.apply(null, args)
-			})
 		}
 	}
 }
@@ -242,7 +228,7 @@ Tracker.Computation = class Computation {
 
 		if (this.invalidated) {
 			Tracker.nonreactive(() => {
-				withNoYieldsAllowed(f)(this)
+				f(this)
 			})
 		} else {
 			this._onInvalidateCallbacks.push(f)
@@ -259,7 +245,7 @@ Tracker.Computation = class Computation {
 
 		if (this.stopped) {
 			Tracker.nonreactive(() => {
-				withNoYieldsAllowed(f)(this)
+				f(this)
 			})
 		} else {
 			this._onStopCallbacks.push(f)
@@ -287,7 +273,7 @@ Tracker.Computation = class Computation {
 			// this.invalidated === true.
 			for (var i = 0, f; (f = this._onInvalidateCallbacks[i]); i++) {
 				Tracker.nonreactive(() => {
-					withNoYieldsAllowed(f)(this)
+					f(this)
 				})
 			}
 			this._onInvalidateCallbacks = []
@@ -306,7 +292,7 @@ Tracker.Computation = class Computation {
 			this.invalidate()
 			for (var i = 0, f; (f = this._onStopCallbacks[i]); i++) {
 				Tracker.nonreactive(() => {
-					withNoYieldsAllowed(f)(this)
+					f(this)
 				})
 			}
 			this._onStopCallbacks = []
@@ -323,7 +309,7 @@ Tracker.Computation = class Computation {
 			// In case of async functions, the result of this function will contain the promise of the autorun function
 			// & make autoruns await-able.
 			const firstRunPromise = Tracker.withComputation(this, () => {
-				return withNoYieldsAllowed(this._func)(this)
+				return this._func(this)
 			})
 			// We'll store the firstRunPromise on the computation so it can be awaited by the callers, but only
 			// during the first run. We don't want things to get mixed up.
@@ -653,3 +639,8 @@ Tracker.afterFlush = function (f) {
 	afterFlushCallbacks.push(f)
 	requireFlush()
 }
+
+window.Tracker = Tracker
+window.Deps = Deps
+
+export { Tracker }

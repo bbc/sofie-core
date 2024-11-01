@@ -38,7 +38,7 @@ export function hashSingleUseToken(token: string): string {
 	return getHash(SINGLE_USE_TOKEN_SALT + token)
 }
 
-class TriggersCollection2<DBInterface extends { _id: ProtectedString<any> }>
+class MeteorTriggersCollectionWrapper<DBInterface extends { _id: ProtectedString<any> }>
 	implements TriggersAsyncCollection<DBInterface>
 {
 	readonly #collection: AsyncOnlyReadOnlyMongoCollection<DBInterface>
@@ -75,14 +75,14 @@ export const MeteorTriggersContext: TriggersContext = {
 
 	isClient: false,
 
-	AdLibActions: new TriggersCollection2(AdLibActions),
-	AdLibPieces: new TriggersCollection2(AdLibPieces),
-	Parts: new TriggersCollection2(Parts),
-	RundownBaselineAdLibActions: new TriggersCollection2(RundownBaselineAdLibActions),
-	RundownBaselineAdLibPieces: new TriggersCollection2(RundownBaselineAdLibPieces),
-	RundownPlaylists: new TriggersCollection2(RundownPlaylists),
-	Rundowns: new TriggersCollection2(Rundowns),
-	Segments: new TriggersCollection2(Segments),
+	AdLibActions: new MeteorTriggersCollectionWrapper(AdLibActions),
+	AdLibPieces: new MeteorTriggersCollectionWrapper(AdLibPieces),
+	Parts: new MeteorTriggersCollectionWrapper(Parts),
+	RundownBaselineAdLibActions: new MeteorTriggersCollectionWrapper(RundownBaselineAdLibActions),
+	RundownBaselineAdLibPieces: new MeteorTriggersCollectionWrapper(RundownBaselineAdLibPieces),
+	RundownPlaylists: new MeteorTriggersCollectionWrapper(RundownPlaylists),
+	Rundowns: new MeteorTriggersCollectionWrapper(Rundowns),
+	Segments: new MeteorTriggersCollectionWrapper(Segments),
 
 	hashSingleUseToken,
 
