@@ -72,7 +72,6 @@ interface IState {
 
 interface IProps extends IResolvedSegmentProps {
 	id: string
-	onSegmentSelect: (segmentId: SegmentId) => void
 }
 
 export function SegmentTimelineContainer(props: Readonly<IProps>): JSX.Element {
@@ -142,7 +141,7 @@ export function SegmentTimelineContainer(props: Readonly<IProps>): JSX.Element {
 }
 
 function SegmentTimelineContainerWithSelection(props: Readonly<IProps>): JSX.Element {
-	const { clearAndSetSelection, isSelected } = useSelection()
+	const { clearAndSetSelection, isSelected, clearSelections } = useSelection()
 
 	const handleSegmentSelect = (segmentId: SegmentId) => {
 		console.log('handleSegmentSelect', segmentId)
@@ -161,12 +160,15 @@ function SegmentTimelineContainerWithSelection(props: Readonly<IProps>): JSX.Ele
 			{...props}
 			isSelected={isElementSelected()}
 			onSegmentSelect={handleSegmentSelect}
+			clearSelections={clearSelections}
 		/>
 	)
 }
 
 interface IWithSelectionProps extends IProps {
 	isSelected: boolean
+	onSegmentSelect: (segmentId: SegmentId) => void
+	clearSelections: () => void
 }
 
 const SegmentTimelineContainerContent = withResolvedSegment(
@@ -732,6 +734,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							fixedSegmentDuration={this.props.fixedSegmentDuration}
 							showDurationSourceLayers={this.props.showDurationSourceLayers}
 							onSegmentSelect={this.handleSegmentSelect}
+							clearSelections={this.props.clearSelections}
 							isSelected={this.props.isSelected}
 						/>
 					)}

@@ -730,7 +730,7 @@ const SourceLayerItemWithSelection = withTranslation()(
 )
 
 export const SourceLayerItem = (props: ISourceLayerItemProps): React.ReactElement => {
-	const { isSelected, clearAndSetSelection } = useSelection()
+	const { isSelected, clearAndSetSelection, clearSelections } = useSelection()
 
 	const isPieceSelected = isSelected(props.piece.instance.piece._id)
 
@@ -740,7 +740,11 @@ export const SourceLayerItem = (props: ISourceLayerItemProps): React.ReactElemen
 			// As the piece currently doesn't have a unique ID, that can be used for back reference
 			// If it's not an instance
 			const partId = props.part.instance.part._id
-			clearAndSetSelection({ type: 'part', elementId: partId })
+			if (!isPieceSelected) {
+				clearAndSetSelection({ type: 'part', elementId: partId })
+			} else {
+				clearSelections()
+			}
 			props.onClick?.(piece, e)
 		},
 		[isPieceSelected]

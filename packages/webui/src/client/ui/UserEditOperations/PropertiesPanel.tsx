@@ -36,7 +36,6 @@ export function PropertiesPanel(): JSX.Element {
 	const { listSelectedElements } = useSelection()
 	const selectedElement = listSelectedElements()?.[0]
 	const { t } = useTranslation()
-	if (!selectedElement) return <></>
 
 	const [pendingChanges, setPendingChanges] = React.useState<PendingChange[]>([])
 	const hasPendingChanges = pendingChanges.length > 0
@@ -52,20 +51,18 @@ export function PropertiesPanel(): JSX.Element {
 	}, [])
 
 	const part = useTracker(() => {
-		const foundPart = UIParts.findOne({ _id: selectedElement.elementId })
 		setPendingChanges([])
-		return foundPart
-	}, [selectedElement.elementId])
+		return UIParts.findOne({ _id: selectedElement?.elementId })
+	}, [selectedElement?.elementId])
 
 	const segment: DBSegment | undefined = useTracker(
-		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement.elementId }),
-		[selectedElement.elementId]
+		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId }),
+		[selectedElement?.elementId]
 	)
 	const rundownId = part ? part.rundownId : segment?.rundownId
 
-	if (!rundownId) return <></>
-
 	const handleCommitChanges = async (e: React.MouseEvent) => {
+		if (!rundownId || !selectedElement) return
 		for (const change of pendingChanges) {
 			doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
 				MeteorCall.userAction.executeUserChangeOperation(
@@ -84,35 +81,36 @@ export function PropertiesPanel(): JSX.Element {
 				)
 			)
 		}
-		setPendingChanges([])
+		// Delay the Clear pending changes after executing to avoid async flickering:
+		setTimeout(() => setPendingChanges([]), 100)
 	}
 
 	const handleRevertChanges = (e: React.MouseEvent) => {
+		if (!rundownId || !selectedElement) return
 		setPendingChanges([])
-		rundownId &&
-			doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-				MeteorCall.userAction.executeUserChangeOperation(
-					e,
-					ts,
-					rundownId,
-					{
-						segmentExternalId: segment?.externalId,
-						partExternalId: part?.externalId,
-						pieceExternalId: undefined,
-					},
-					{
-						id:
-							selectedElement.type === 'partInstance'
-								? DefaultUserOperationsTypes.REVERT_PART
-								: DefaultUserOperationsTypes.REVERT_SEGMENT,
-					}
-				)
+		doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+			MeteorCall.userAction.executeUserChangeOperation(
+				e,
+				ts,
+				rundownId,
+				{
+					segmentExternalId: segment?.externalId,
+					partExternalId: part?.externalId,
+					pieceExternalId: undefined,
+				},
+				{
+					id:
+						selectedElement.type === 'partInstance'
+							? DefaultUserOperationsTypes.REVERT_PART
+							: DefaultUserOperationsTypes.REVERT_SEGMENT,
+				}
 			)
+		)
 	}
 
 	return (
 		<div className="propertiespanel-pop-up">
-			{selectedElement.type === 'part' && (
+			{rundownId && selectedElement?.type === 'part' && (
 				<>
 					<div className="propertiespanel-pop-up__header">
 						{part?.userEditOperations &&
@@ -168,7 +166,7 @@ export function PropertiesPanel(): JSX.Element {
 					</div>
 				</>
 			)}
-			{selectedElement.type === 'segment' && (
+			{rundownId && selectedElement?.type === 'segment' && (
 				<>
 					<div className="propertiespanel-pop-up__header">
 						{segment?.userEditOperations &&

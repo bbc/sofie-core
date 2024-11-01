@@ -102,6 +102,7 @@ interface IProps {
 	showDurationSourceLayers?: Set<ISourceLayer['_id']>
 	fixedSegmentDuration: boolean | undefined
 	onSegmentSelect: (segmentId: SegmentId) => void
+	clearSelections: () => void
 	isSelected: boolean
 }
 interface IStateHeader {
@@ -1063,7 +1064,11 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 					<div
 						onDoubleClick={() => {
 							if (this.props.studio.settings.enableUserEdits && this.props.onSegmentSelect) {
-								this.props.onSegmentSelect(this.props.segment._id)
+								if (!this.props.isSelected) {
+									this.props.onSegmentSelect(this.props.segment._id)
+								} else {
+									this.props.clearSelections()
+								}
 							}
 						}}
 					>
