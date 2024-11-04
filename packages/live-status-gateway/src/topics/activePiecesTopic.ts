@@ -8,16 +8,11 @@ import { PlaylistHandler } from '../collections/playlistHandler'
 import { ShowStyleBaseExt, ShowStyleBaseHandler } from '../collections/showStyleBaseHandler'
 import _ = require('underscore')
 import { SelectedPieceInstances, PieceInstancesHandler, PieceInstanceMin } from '../collections/pieceInstancesHandler'
-import { PieceStatus, toPieceStatus } from './helpers/pieceStatus'
+import { toPieceStatus } from './helpers/pieceStatus'
 import { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { ActivePiecesEvent } from '@sofie-automation/live-status-gateway-api'
 
 const THROTTLE_PERIOD_MS = 100
-
-export interface ActivePiecesStatus {
-	event: 'activePieces'
-	rundownPlaylistId: string | null
-	activePieces: PieceStatus[]
-}
 
 export class ActivePiecesTopic
 	extends WebSocketTopicBase
@@ -48,13 +43,13 @@ export class ActivePiecesTopic
 
 	sendStatus(subscribers: Iterable<WebSocket>): void {
 		const message = this._activePlaylistId
-			? literal<ActivePiecesStatus>({
+			? literal<ActivePiecesEvent>({
 					event: 'activePieces',
 					rundownPlaylistId: unprotectString(this._activePlaylistId),
 					activePieces:
 						this._activePieceInstances?.map((piece) => toPieceStatus(piece, this._showStyleBaseExt)) ?? [],
 			  })
-			: literal<ActivePiecesStatus>({
+			: literal<ActivePiecesEvent>({
 					event: 'activePieces',
 					rundownPlaylistId: null,
 					activePieces: [],

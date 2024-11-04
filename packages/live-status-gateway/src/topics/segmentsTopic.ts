@@ -11,24 +11,10 @@ import areElementsShallowEqual from '@sofie-automation/shared-lib/dist/lib/isSha
 import { PartsHandler } from '../collections/partsHandler'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import _ = require('underscore')
-import { SegmentTiming, calculateSegmentTiming } from './helpers/segmentTiming'
+import { calculateSegmentTiming } from './helpers/segmentTiming'
+import { SegmentsEvent } from '@sofie-automation/live-status-gateway-api'
 
 const THROTTLE_PERIOD_MS = 200
-
-interface SegmentStatus {
-	id: string
-	identifier?: string
-	rundownId: string
-	name: string
-	timing: SegmentTiming
-	publicData: unknown
-}
-
-export interface SegmentsStatus {
-	event: 'segments'
-	rundownPlaylistId: string | null
-	segments: SegmentStatus[]
-}
 
 export class SegmentsTopic
 	extends WebSocketTopicBase
@@ -59,7 +45,7 @@ export class SegmentsTopic
 	}
 
 	sendStatus(subscribers: Iterable<WebSocket>): void {
-		const segmentsStatus: SegmentsStatus = {
+		const segmentsStatus: SegmentsEvent = {
 			event: 'segments',
 			rundownPlaylistId: this._activePlaylist ? unprotectString(this._activePlaylist._id) : null,
 			segments: this._orderedSegments.map((segment) => {
