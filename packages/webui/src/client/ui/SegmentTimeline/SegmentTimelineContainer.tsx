@@ -137,45 +137,11 @@ export function SegmentTimelineContainer(props: Readonly<IProps>): JSX.Element {
 	// past infinites subscription
 	useSubscription(CorelibPubSub.piecesInfiniteStartingBefore, props.rundownId, sortedSegmentIds, sortedRundownIds)
 
-	return <SegmentTimelineContainerWithSelection {...props} />
-}
-
-function SegmentTimelineContainerWithSelection(props: Readonly<IProps>): JSX.Element {
-	const { clearAndSetSelection, isSelected, clearSelections } = useSelection()
-
-	const handleSegmentSelect = (segmentId: SegmentId) => {
-		console.log('handleSegmentSelect', segmentId)
-		clearAndSetSelection({
-			type: 'segment',
-			elementId: segmentId,
-		})
-	}
-
-	const isElementSelected = () => {
-		return isSelected(props.segmentId)
-	}
-
-	return (
-		<SegmentTimelineContainerContent
-			{...props}
-			isSelected={isElementSelected()}
-			onSegmentSelect={handleSegmentSelect}
-			clearSelections={clearSelections}
-		/>
-	)
-}
-
-interface IWithSelectionProps extends IProps {
-	isSelected: boolean
-	onSegmentSelect: (segmentId: SegmentId) => void
-	clearSelections: () => void
+	return <SegmentTimelineContainerContent {...props} />
 }
 
 const SegmentTimelineContainerContent = withResolvedSegment(
-	class SegmentTimelineContainerContent extends React.Component<
-		IWithSelectionProps & ITrackedResolvedSegmentProps,
-		IState
-	> {
+	class SegmentTimelineContainerContent extends React.Component<IProps & ITrackedResolvedSegmentProps, IState> {
 		static contextTypes = {
 			durations: PropTypes.object.isRequired,
 			syncedDurations: PropTypes.object.isRequired,
@@ -194,7 +160,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			syncedDurations: RundownTimingContext
 		}
 
-		constructor(props: IWithSelectionProps & ITrackedResolvedSegmentProps) {
+		constructor(props: IProps & ITrackedResolvedSegmentProps) {
 			super(props)
 
 			this.state = {
@@ -683,10 +649,6 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			this.onTimeScaleChange(newScale)
 		}
 
-		handleSegmentSelect = (segmentId: SegmentId) => {
-			this.props.onSegmentSelect(segmentId)
-		}
-
 		render(): JSX.Element | null {
 			return this.props.segmentui ? (
 				<React.Fragment key={unprotectString(this.props.segmentui._id)}>
@@ -733,9 +695,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							showCountdownToSegment={this.props.showCountdownToSegment}
 							fixedSegmentDuration={this.props.fixedSegmentDuration}
 							showDurationSourceLayers={this.props.showDurationSourceLayers}
-							onSegmentSelect={this.handleSegmentSelect}
-							clearSelections={this.props.clearSelections}
-							isSelected={this.props.isSelected}
+							//isSelected={this.props.isSelected}
 						/>
 					)}
 					{this.props.segmentui.showShelf && this.props.adLibSegmentUi && (

@@ -23,7 +23,7 @@ import { TransitionSourceRenderer } from './Renderers/TransitionSourceRenderer'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { ReadonlyDeep } from 'type-fest'
 import { PieceContentStatusObj } from '@sofie-automation/meteor-lib/dist/api/pieceContentStatus'
-import { useSelection } from '../RundownView/SelectedElementsContext'
+import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -104,19 +104,14 @@ interface ISourceLayerItemState {
 	highlight: boolean
 }
 
-interface WithSelectionProps {
-	handlePieceSelect: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
-	isPieceSelected: boolean
-}
-
-const SourceLayerItemWithSelection = withTranslation()(
+export const SourceLayerItem = withTranslation()(
 	class SourceLayerItem extends React.Component<
-		ISourceLayerItemProps & WithTranslation & WithSelectionProps,
+		ISourceLayerItemProps & WithTranslation & ISourceLayerItemProps,
 		ISourceLayerItemState
 	> {
 		animFrameHandle: number | undefined
 
-		constructor(props: ISourceLayerItemProps & WithTranslation & WithSelectionProps) {
+		constructor(props: ISourceLayerItemProps & WithTranslation & ISourceLayerItemProps) {
 			super(props)
 			this.state = {
 				showMiniInspector: false,
@@ -475,15 +470,11 @@ const SourceLayerItemWithSelection = withTranslation()(
 		}
 
 		itemDblClick = (e: React.MouseEvent<HTMLDivElement>) => {
-			if (this.props.studio?.settings.enableUserEdits) {
-				this.props.handlePieceSelect(this.props.piece, e)
-			} else {
-				e.preventDefault()
-				e.stopPropagation()
+			e.preventDefault()
+			e.stopPropagation()
 
-				if (typeof this.props.onDoubleClick === 'function') {
-					this.props.onDoubleClick(this.props.piece, e)
-				}
+			if (typeof this.props.onDoubleClick === 'function') {
+				this.props.onDoubleClick(this.props.piece, e)
 			}
 		}
 
@@ -677,42 +668,62 @@ const SourceLayerItemWithSelection = withTranslation()(
 				const elementWidth = this.getElementAbsoluteWidth()
 
 				return (
-					<div
-						className={pieceUiClassNames(
-							piece,
-							this.props.contentStatus,
-							'segment-timeline__piece',
-							this.props.layer.type,
-							this.props.part.partId,
-							this.state.highlight,
-							elementWidth,
-							this.state
-						)}
-						data-obj-id={piece.instance._id}
-						ref={this.setRef}
-						onClick={this.itemClick}
-						onDoubleClick={this.itemDblClick}
-						onMouseUp={this.itemMouseUp}
-						onMouseMove={this.moveMiniInspector}
-						onMouseEnter={this.toggleMiniInspectorOn}
-						onMouseLeave={this.toggleMiniInspectorOff}
-						style={this.getItemStyle()}
-					>
-						{this.renderInsideItem(typeClass)}
-						{DEBUG_MODE && this.props.studio && (
-							<div className="segment-timeline__debug-info">
-								{innerPiece.enable.start} /{' '}
-								{RundownUtils.formatTimeToTimecode(this.props.studio.settings, this.props.partDuration).substr(-5)} /{' '}
-								{piece.renderedDuration
-									? RundownUtils.formatTimeToTimecode(this.props.studio.settings, piece.renderedDuration).substr(-5)
-									: 'X'}{' '}
-								/{' '}
-								{typeof innerPiece.enable.duration === 'number'
-									? RundownUtils.formatTimeToTimecode(this.props.studio.settings, innerPiece.enable.duration).substr(-5)
-									: ''}
+					<SelectedElementsContext.Consumer>
+						{(selectElementContext) => (
+							<div
+								className={pieceUiClassNames(
+									piece,
+									this.props.contentStatus,
+									'segment-timeline__piece',
+									this.props.layer.type,
+									this.props.part.partId,
+									this.state.highlight,
+									elementWidth,
+									this.state
+								)}
+								data-obj-id={piece.instance._id}
+								ref={this.setRef}
+								onClick={this.itemClick}
+								onDoubleClick={() => {
+									if (this.props.studio?.settings.enableUserEdits) {
+										// Until a proper data structure, the only reference is a part.
+										const partId = this.props.part.instance.part._id
+										if (!selectElementContext.isSelected(partId)) {
+											selectElementContext.clearAndSetSelection({ type: 'part', elementId: partId })
+										} else {
+											selectElementContext.clearSelections()
+										}
+									} else {
+										this.itemDblClick
+									}
+								}}
+								onMouseUp={this.itemMouseUp}
+								onMouseMove={this.moveMiniInspector}
+								onMouseEnter={this.toggleMiniInspectorOn}
+								onMouseLeave={this.toggleMiniInspectorOff}
+								style={this.getItemStyle()}
+							>
+								{this.renderInsideItem(typeClass)}
+								{DEBUG_MODE && this.props.studio && (
+									<div className="segment-timeline__debug-info">
+										{innerPiece.enable.start} /{' '}
+										{RundownUtils.formatTimeToTimecode(this.props.studio.settings, this.props.partDuration).substr(-5)}{' '}
+										/{' '}
+										{piece.renderedDuration
+											? RundownUtils.formatTimeToTimecode(this.props.studio.settings, piece.renderedDuration).substr(-5)
+											: 'X'}{' '}
+										/{' '}
+										{typeof innerPiece.enable.duration === 'number'
+											? RundownUtils.formatTimeToTimecode(
+													this.props.studio.settings,
+													innerPiece.enable.duration
+											  ).substr(-5)
+											: ''}
+									</div>
+								)}
 							</div>
 						)}
-					</div>
+					</SelectedElementsContext.Consumer>
 				)
 			} else {
 				// render a placeholder
@@ -728,29 +739,3 @@ const SourceLayerItemWithSelection = withTranslation()(
 		}
 	}
 )
-
-export const SourceLayerItem = (props: ISourceLayerItemProps): React.ReactElement => {
-	const { isSelected, clearAndSetSelection, clearSelections } = useSelection()
-
-	const isPieceSelected = isSelected(props.piece.instance.piece._id)
-
-	const handlePieceSelect = React.useCallback(
-		(piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => {
-			// This is only selected the corresponding part
-			// As the piece currently doesn't have a unique ID, that can be used for back reference
-			// If it's not an instance
-			const partId = props.part.instance.part._id
-			if (!isPieceSelected) {
-				clearAndSetSelection({ type: 'part', elementId: partId })
-			} else {
-				clearSelections()
-			}
-			props.onClick?.(piece, e)
-		},
-		[isPieceSelected]
-	)
-
-	return (
-		<SourceLayerItemWithSelection {...props} handlePieceSelect={handlePieceSelect} isPieceSelected={isPieceSelected} />
-	)
-}

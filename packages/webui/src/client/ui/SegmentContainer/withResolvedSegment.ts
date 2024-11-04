@@ -90,7 +90,6 @@ export interface IResolvedSegmentProps {
 	fixedSegmentDuration: boolean | undefined
 	studioMode: boolean
 	showDurationSourceLayers?: Set<ISourceLayer['_id']>
-	isSelected: boolean
 }
 
 export interface SegmentNoteCounts {
@@ -296,7 +295,6 @@ export function withResolvedSegment<T extends IResolvedSegmentProps, IState = {}
 			if (
 				props.followLiveSegments !== nextProps.followLiveSegments ||
 				props.onContextMenu !== nextProps.onContextMenu ||
-				props.isSelected !== nextProps.isSelected ||
 				props.onSegmentScroll !== nextProps.onSegmentScroll ||
 				props.segmentId !== nextProps.segmentId ||
 				props.segmentRef !== nextProps.segmentRef ||

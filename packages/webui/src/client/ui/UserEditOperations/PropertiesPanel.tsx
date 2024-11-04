@@ -109,126 +109,132 @@ export function PropertiesPanel(): JSX.Element {
 	}
 
 	return (
-		<div className="propertiespanel-pop-up">
-			{rundownId && selectedElement?.type === 'part' && (
-				<>
-					<div className="propertiespanel-pop-up__header">
-						{part?.userEditOperations &&
-							part.userEditOperations.map((operation) => {
-								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
-								return (
-									<div
-										key={operation.id}
-										className="svg"
-										dangerouslySetInnerHTML={{
-											__html: operation.svgIcon,
-										}}
-									></div>
-								)
-							})}
-						PART : {String(part?.title)}
-					</div>
-					<div className="propertiespanel-pop-up__contents">
-						{segment &&
-							part?._id &&
-							part.userEditOperations?.map((userEditOperation, i) => {
-								switch (userEditOperation.type) {
-									case UserEditingType.ACTION:
-										return (
-											<EditingTypeAction
-												key={i}
-												userEditOperation={userEditOperation}
-												segment={segment}
-												part={part}
-												rundownId={rundownId}
-												pendingChanges={pendingChanges}
-												setPendingChanges={setPendingChanges}
-											/>
-										)
-									case UserEditingType.FORM:
-										return (
-											<EditingTypeChangeSource
-												key={i}
-												userEditOperation={userEditOperation}
-												segment={segment}
-												part={part}
-												rundownId={rundownId}
-												pendingChanges={pendingChanges}
-												setPendingChanges={setPendingChanges}
-											/>
-										)
-									default:
-										assertNever(userEditOperation)
-										return null
-								}
-							})}
-						<hr />
-					</div>
-				</>
-			)}
-			{rundownId && selectedElement?.type === 'segment' && (
-				<>
-					<div className="propertiespanel-pop-up__header">
-						{segment?.userEditOperations &&
-							segment.userEditOperations.map((operation) => {
-								if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+		<div className="properties-panel">
+			<div className="propertiespanel-pop-up">
+				{rundownId && selectedElement?.type === 'part' && (
+					<>
+						<div className="propertiespanel-pop-up__header">
+							{part?.userEditOperations &&
+								part.userEditOperations.map((operation) => {
+									if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+									return (
+										<div
+											key={operation.id}
+											className="svg"
+											dangerouslySetInnerHTML={{
+												__html: operation.svgIcon,
+											}}
+										></div>
+									)
+								})}
+							PART : {String(part?.title)}
+						</div>
+						<div className="propertiespanel-pop-up__contents">
+							{segment &&
+								part?._id &&
+								part.userEditOperations?.map((userEditOperation, i) => {
+									switch (userEditOperation.type) {
+										case UserEditingType.ACTION:
+											return (
+												<EditingTypeAction
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										case UserEditingType.FORM:
+											return (
+												<EditingTypeChangeSource
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										default:
+											assertNever(userEditOperation)
+											return null
+									}
+								})}
+							<hr />
+						</div>
+					</>
+				)}
+				{rundownId && selectedElement?.type === 'segment' && (
+					<>
+						<div className="propertiespanel-pop-up__header">
+							{segment?.userEditOperations &&
+								segment.userEditOperations.map((operation) => {
+									if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
 
-								return (
-									<div
-										key={operation.id}
-										className="svg"
-										dangerouslySetInnerHTML={{
-											__html: operation.svgIcon,
-										}}
-									></div>
-								)
-							})}
-						SEGMENT : {String(segment?.name)}
-					</div>
-					<div className="propertiespanel-pop-up__contents">
-						{/* This is only until selection of segment is implemented in UI */}
-						{segment &&
-							segment?.userEditOperations?.map((userEditOperation, i) => {
-								switch (userEditOperation.type) {
-									case UserEditingType.ACTION:
-										return (
-											<EditingTypeAction
-												key={i}
-												userEditOperation={userEditOperation}
-												segment={segment}
-												part={part}
-												rundownId={rundownId}
-												pendingChanges={pendingChanges}
-												setPendingChanges={setPendingChanges}
-											/>
-										)
-									case UserEditingType.FORM:
-										return (
-											<EditingTypeChangeSource
-												key={i}
-												userEditOperation={userEditOperation}
-												segment={segment}
-												part={part}
-												rundownId={rundownId}
-												pendingChanges={pendingChanges}
-												setPendingChanges={setPendingChanges}
-											/>
-										)
-									default:
-										assertNever(userEditOperation)
-										return null
-								}
-							})}
-					</div>
-				</>
-			)}
-			<div className="propertiespanel-pop-up__footer">
-				<button className="propertiespanel-pop-up__button" onClick={handleRevertChanges}>
-					<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
-				</button>
-				<button className="propertiespanel-pop-up__button" onClick={handleCommitChanges} disabled={!hasPendingChanges}>
-					<span className="propertiespanel-pop-up__label">COMMIT CHANGES</span>
-				</button>
+									return (
+										<div
+											key={operation.id}
+											className="svg"
+											dangerouslySetInnerHTML={{
+												__html: operation.svgIcon,
+											}}
+										></div>
+									)
+								})}
+							SEGMENT : {String(segment?.name)}
+						</div>
+						<div className="propertiespanel-pop-up__contents">
+							{/* This is only until selection of segment is implemented in UI */}
+							{segment &&
+								segment?.userEditOperations?.map((userEditOperation, i) => {
+									switch (userEditOperation.type) {
+										case UserEditingType.ACTION:
+											return (
+												<EditingTypeAction
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										case UserEditingType.FORM:
+											return (
+												<EditingTypeChangeSource
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										default:
+											assertNever(userEditOperation)
+											return null
+									}
+								})}
+						</div>
+					</>
+				)}
+				<div className="propertiespanel-pop-up__footer">
+					<button className="propertiespanel-pop-up__button" onClick={handleRevertChanges}>
+						<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
+					</button>
+					<button
+						className="propertiespanel-pop-up__button"
+						onClick={handleCommitChanges}
+						disabled={!hasPendingChanges}
+					>
+						<span className="propertiespanel-pop-up__label">COMMIT CHANGES</span>
+					</button>
+				</div>
 			</div>
 		</div>
 	)

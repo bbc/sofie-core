@@ -56,6 +56,7 @@ import { SegmentTimeAnchorTime } from '../RundownView/RundownTiming/SegmentTimeA
 import { logger } from '../../lib/logging'
 import * as RundownResolver from '../../lib/RundownResolver'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
 
 interface IProps {
 	id: string
@@ -101,9 +102,7 @@ interface IProps {
 	showCountdownToSegment: boolean
 	showDurationSourceLayers?: Set<ISourceLayer['_id']>
 	fixedSegmentDuration: boolean | undefined
-	onSegmentSelect: (segmentId: SegmentId) => void
-	clearSelections: () => void
-	isSelected: boolean
+	// isSelected: boolean
 }
 interface IStateHeader {
 	timelineWidth: number
@@ -118,7 +117,7 @@ interface IStateHeader {
 		}
 	>
 	useTimeOfDayCountdowns: boolean
-	isSelected: boolean
+	// isSelected: boolean
 }
 
 interface IZoomPropsHeader {
@@ -277,7 +276,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				`segment.${props.segment._id}.useTimeOfDayCountdowns`,
 				!!props.playlist.timeOfDayCountdowns
 			),
-			isSelected: props.isSelected,
+			// isSelected: props.isSelected,
 		}
 	}
 
@@ -1061,74 +1060,78 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 					holdToDisplay={contextMenuHoldToDisplayTime()}
 					renderTag="div"
 				>
-					<div
-						onDoubleClick={() => {
-							if (this.props.studio.settings.enableUserEdits && this.props.onSegmentSelect) {
-								if (!this.props.isSelected) {
-									this.props.onSegmentSelect(this.props.segment._id)
-								} else {
-									this.props.clearSelections()
-								}
-							}
-						}}
-					>
-						<h2
-							id={`segment-name-${this.props.segment._id}`}
-							className={
-								'segment-timeline__title__label' +
-								(this.props.segment.identifier ? ' identifier' : '') +
-								(this.state.isSelected ? ' selected' : '')
-							}
-							data-identifier={this.props.segment.identifier}
-						>
-							{/* for debugging: */ this.props.isSelected && <span>!!</span>}
-							{this.props.segment.name}
-						</h2>
-						{(criticalNotes > 0 || warningNotes > 0) && (
-							<div className="segment-timeline__title__notes">
-								{criticalNotes > 0 && (
-									<div
-										className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
-										onClick={() =>
-											this.props.onHeaderNoteClick &&
-											this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.ERROR)
+					<SelectedElementsContext.Consumer>
+						{(selectElementContext) => (
+							<div
+								onDoubleClick={() => {
+									if (this.props.studio.settings.enableUserEdits) {
+										if (!selectElementContext.isSelected(this.props.segment._id)) {
+											selectElementContext.clearAndSetSelection({ type: 'segment', elementId: this.props.segment._id })
+										} else {
+											selectElementContext.clearSelections()
 										}
-										aria-label={t('Critical problems')}
-									>
-										<CriticalIconSmall />
-										<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
+									}
+								}}
+							>
+								<h2
+									id={`segment-name-${this.props.segment._id}`}
+									className={
+										'segment-timeline__title__label' +
+										(this.props.segment.identifier ? ' identifier' : '') +
+										(selectElementContext.isSelected(this.props.segment._id) ? ' selected' : '')
+									}
+									data-identifier={this.props.segment.identifier}
+								>
+									{/* for debugging: */ selectElementContext.isSelected(this.props.segment._id) && <span>!!</span>}
+									{this.props.segment.name}
+								</h2>
+								{(criticalNotes > 0 || warningNotes > 0) && (
+									<div className="segment-timeline__title__notes">
+										{criticalNotes > 0 && (
+											<div
+												className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
+												onClick={() =>
+													this.props.onHeaderNoteClick &&
+													this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.ERROR)
+												}
+												aria-label={t('Critical problems')}
+											>
+												<CriticalIconSmall />
+												<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
+											</div>
+										)}
+										{warningNotes > 0 && (
+											<div
+												className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
+												onClick={() =>
+													this.props.onHeaderNoteClick &&
+													this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.WARNING)
+												}
+												aria-label={t('Warnings')}
+											>
+												<WarningIconSmall />
+												<div className="segment-timeline__title__notes__count">{warningNotes}</div>
+											</div>
+										)}
 									</div>
 								)}
-								{warningNotes > 0 && (
-									<div
-										className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
-										onClick={() =>
-											this.props.onHeaderNoteClick &&
-											this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.WARNING)
-										}
-										aria-label={t('Warnings')}
-									>
-										<WarningIconSmall />
-										<div className="segment-timeline__title__notes__count">{warningNotes}</div>
+								{identifiers.length > 0 && (
+									<div className="segment-timeline__part-identifiers">
+										{identifiers.map((ident) => (
+											<div
+												className="segment-timeline__part-identifiers__identifier"
+												key={ident.partId + ''}
+												onClick={() => this.onClickPartIdent(ident.partId)}
+											>
+												{ident.ident}
+											</div>
+										))}
 									</div>
 								)}
+								<HeaderEditStates userEditOperations={this.props.segment.userEditOperations} />
 							</div>
 						)}
-						{identifiers.length > 0 && (
-							<div className="segment-timeline__part-identifiers">
-								{identifiers.map((ident) => (
-									<div
-										className="segment-timeline__part-identifiers__identifier"
-										key={ident.partId + ''}
-										onClick={() => this.onClickPartIdent(ident.partId)}
-									>
-										{ident.ident}
-									</div>
-								))}
-							</div>
-						)}
-						<HeaderEditStates userEditOperations={this.props.segment.userEditOperations} />
-					</div>
+					</SelectedElementsContext.Consumer>
 				</ContextMenuTrigger>
 				<div className="segment-timeline__duration" tabIndex={0}>
 					{this.props.playlist &&
