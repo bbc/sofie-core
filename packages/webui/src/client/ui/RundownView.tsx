@@ -167,7 +167,8 @@ import { useRundownAndShowStyleIdsForPlaylist } from './util/useRundownAndShowSt
 import { RundownPlaylistClientUtil } from '../lib/rundownPlaylistUtil'
 
 import { MAGIC_TIME_SCALE_FACTOR } from './SegmentTimeline/Constants'
-import { SelectedElementProvider } from './RundownView/SelectedElementsContext'
+import { SelectedElementProvider, SelectedElementsContext } from './RundownView/SelectedElementsContext'
+import { PropertiesPanel } from './UserEditOperations/PropertiesPanel'
 
 const REHEARSAL_MARGIN = 1 * 60 * 1000
 const HIDE_NOTIFICATIONS_AFTER_MOUNT: number | undefined = 5000
@@ -3044,6 +3045,35 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 									>
 										{this.state.isNotificationsCenterOpen && (
 											<NotificationCenterPanel filter={this.state.isNotificationsCenterOpen} />
+										)}
+									</VelocityReact.VelocityTransitionGroup>
+									<VelocityReact.VelocityTransitionGroup
+										enter={{
+											animation: {
+												translateX: ['0%', '100%'],
+											},
+											easing: 'ease-out',
+											duration: 300,
+										}}
+										leave={{
+											animation: {
+												translateX: ['100%', '0%'],
+											},
+											easing: 'ease-in',
+											duration: 500,
+										}}
+									>
+										{!this.state.isNotificationsCenterOpen && (
+											<SelectedElementsContext.Consumer>
+												{(selectionContext) => {
+													if (selectionContext.listSelectedElements().length === 0) return null
+													return (
+														<div>
+															<PropertiesPanel />
+														</div>
+													)
+												}}
+											</SelectedElementsContext.Consumer>
 										)}
 									</VelocityReact.VelocityTransitionGroup>
 									<VelocityReact.VelocityTransitionGroup

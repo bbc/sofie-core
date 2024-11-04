@@ -24,6 +24,9 @@ import { SegmentViewMode } from '../../lib/ui/icons/listView'
 import { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { MediaStatusPopUp } from './MediaStatusPopUp'
 import { MediaStatusIcon } from '../../lib/ui/icons/mediaStatus'
+import { SelectedElementsContext } from './SelectedElementsContext'
+import { UserEditsIcon } from '../../lib/ui/icons/useredits'
+import { CollapseChevrons } from '../../lib/ui/icons/notifications'
 
 interface IProps {
 	playlistId: RundownPlaylistId
@@ -153,13 +156,13 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 					className="type-notification"
 					title={t('Notes')}
 				/>
-				<NotificationCenterPanelToggle
-					onClick={(e) => props.onToggleNotifications?.(e, NoticeLevel.PROPERTIES_PANEL)}
-					isOpen={props.isNotificationCenterOpen === NoticeLevel.PROPERTIES_PANEL}
-					filter={NoticeLevel.PROPERTIES_PANEL}
-					className="type-notification"
-					title={t('Notes')}
-				/>
+				<SelectedElementsContext.Consumer>
+					{(context) => (
+						<button onClick={() => context.clearSelections()} className="status-bar__controls__button">
+							{context.listSelectedElements().length === 0 ? <UserEditsIcon /> : <CollapseChevrons />}
+						</button>
+					)}
+				</SelectedElementsContext.Consumer>
 				<button
 					className="status-bar__controls__button"
 					role="button"

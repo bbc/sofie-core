@@ -47,8 +47,6 @@ export enum NoticeLevel {
 	NOTIFICATION = 0b0100, // 4
 	/** Tips to the user */
 	TIP = 0b1000, // 8
-	/** User editing */
-	PROPERTIES_PANEL = 0b100000000, // 256
 }
 
 /**

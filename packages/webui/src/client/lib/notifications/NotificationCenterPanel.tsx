@@ -12,8 +12,6 @@ import update from 'immutability-helper'
 import { i18nTranslator } from '../../ui/i18n'
 import { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
-import { PropertiesPanel } from '../../ui/UserEditOperations/PropertiesPanel'
-import { UserEditsIcon } from '../ui/icons/useredits'
 
 interface IPopUpProps {
 	id?: string
@@ -392,12 +390,7 @@ export const NotificationCenterPopUps = translateWithTracker<IProps, IState, ITr
 		}
 
 		render(): JSX.Element | null {
-			const { t, highlightedSource, highlightedLevel, filter } = this.props
-
-			// For PropertiesPanel ignore the filter:
-			if (Number(filter) >= NoticeLevel.PROPERTIES_PANEL) {
-				return <PropertiesPanel />
-			}
+			const { t, highlightedSource, highlightedLevel } = this.props
 
 			const notifications = this.getNotificationsToDisplay()
 
@@ -547,8 +540,6 @@ export function NotificationCenterPanelToggle({
 							<WarningIcon />
 						) : ((filter || 0) & (NoticeLevel.NOTIFICATION | NoticeLevel.TIP)) !== 0 ? (
 							<InformationIcon />
-						) : ((filter || 0) & NoticeLevel.PROPERTIES_PANEL) !== 0 ? (
-							<UserEditsIcon />
 						) : (
 							<WarningIcon />
 						)}

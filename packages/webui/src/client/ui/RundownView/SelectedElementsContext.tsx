@@ -107,7 +107,18 @@ const selectionReducer = (
 	}
 }
 
-export const SelectedElementsContext = React.createContext<SelectionContextType | null>(null)
+const defaultSelectionContext: SelectionContextType = {
+	isSelected: () => false,
+	listSelectedElements: () => [],
+	clearAndSetSelection: () => {},
+	toggleSelection: () => {},
+	addSelection: () => {},
+	removeSelection: () => {},
+	clearSelections: () => {},
+	getSelectedCount: () => 0,
+}
+
+export const SelectedElementsContext = React.createContext<SelectionContextType>(defaultSelectionContext)
 
 export const SelectedElementProvider: React.FC<{
 	children: React.ReactNode
