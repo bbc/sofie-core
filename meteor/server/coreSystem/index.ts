@@ -145,7 +145,6 @@ async function startupMessage() {
 		logger.info(`Core starting up`)
 		logger.info(`Core system version: "${CURRENT_SYSTEM_VERSION}"`)
 
-		// @ts-expect-error Its not always defined
 		if (global.gc) {
 			logger.info(`Manual garbage-collection is enabled`)
 		} else {
