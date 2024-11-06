@@ -6,15 +6,18 @@ import { MeteorCall } from '../../lib/meteorApi'
 import {
 	DefaultUserOperationsTypes,
 	JSONBlobParse,
+	SourceLayerType,
 	UserEditingButtonType,
-	UserEditingGroupingType,
+	UserEditingSourceLayer,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import {
+	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
+	CoreUserEditingDefinitionSourceLayerForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
@@ -24,6 +27,7 @@ import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 
 interface PendingChange {
 	operationId: string
@@ -116,7 +120,8 @@ export function PropertiesPanel(): JSX.Element {
 						<div className="propertiespanel-pop-up__header">
 							{part?.userEditOperations &&
 								part.userEditOperations.map((operation) => {
-									if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+									if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive)
+										return null
 									return (
 										<div
 											key={operation.id}
@@ -148,7 +153,19 @@ export function PropertiesPanel(): JSX.Element {
 											)
 										case UserEditingType.FORM:
 											return (
-												<EditingTypeChangeSource
+												<EditingTypeChangeForm
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										case UserEditingType.SOURCE_LAYER_FORM:
+											return (
+												<EditingTypeChangeSourceLayerSource
 													key={i}
 													userEditOperation={userEditOperation}
 													segment={segment}
@@ -172,7 +189,8 @@ export function PropertiesPanel(): JSX.Element {
 						<div className="propertiespanel-pop-up__header">
 							{segment?.userEditOperations &&
 								segment.userEditOperations.map((operation) => {
-									if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+									if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive)
+										return null
 
 									return (
 										<div
@@ -205,7 +223,19 @@ export function PropertiesPanel(): JSX.Element {
 											)
 										case UserEditingType.FORM:
 											return (
-												<EditingTypeChangeSource
+												<EditingTypeChangeForm
+													key={i}
+													userEditOperation={userEditOperation}
+													segment={segment}
+													part={part}
+													rundownId={rundownId}
+													pendingChanges={pendingChanges}
+													setPendingChanges={setPendingChanges}
+												/>
+											)
+										case UserEditingType.SOURCE_LAYER_FORM:
+											return (
+												<EditingTypeChangeSourceLayerSource
 													key={i}
 													userEditOperation={userEditOperation}
 													segment={segment}
@@ -328,7 +358,7 @@ function EditingTypeAction(props: {
 	}
 }
 
-function EditingTypeChangeSource(props: {
+function EditingTypeChangeForm(props: {
 	userEditOperation: CoreUserEditingDefinitionForm
 	segment: DBSegment | undefined
 	part: DBPart | undefined
@@ -337,27 +367,58 @@ function EditingTypeChangeSource(props: {
 	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
 	const { t } = useTranslation()
-	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
-		clone(props.userEditOperation.currentValues)
-	)
-	const [selectedGroup, setSelectedGroup] = React.useState<string | undefined>(Object.keys(selectedSource)[0])
 
-	const jsonSchema = props.userEditOperation.schemas[selectedGroup || '']
+	const jsonSchema = props.userEditOperation.schema
 	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
-	const sourceList = (schema?.properties ? schema?.properties[selectedGroup ?? ''] : []) as {
-		enum: string[]
-		tsEnumNames: string[]
-	}
-	const groups: UserEditingGroupingType[] = clone(props.userEditOperation.grouping) || []
-	const numberOfEmptySlots = 14 - groups.length
-	for (let i = 0; i < numberOfEmptySlots; i++) {
-		groups.push({})
-	}
+	const values = clone(props.userEditOperation.currentValues)
+
+	return (
+		<>
+			{schema && (
+				<>
+					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
+					<SchemaFormInPlace
+						schema={schema}
+						object={values}
+						translationNamespaces={props.userEditOperation.translationNamespaces}
+					/>
+					<br />
+					<hr />
+				</>
+			)}
+		</>
+	)
+}
+
+function EditingTypeChangeSourceLayerSource(props: {
+	userEditOperation: CoreUserEditingDefinitionSourceLayerForm
+	segment: DBSegment | undefined
+	part: DBPart | undefined
+	rundownId: RundownId
+	pendingChanges: PendingChange[]
+	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
+}) {
+	const { t } = useTranslation()
+	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
+		clone(props.userEditOperation.currentValues.value)
+	)
+	const [selectedSourceGroup, setSelectedSourceGroup] = React.useState<SourceLayerType>(
+		props.userEditOperation.currentValues.type
+	)
+
+	const sourceLayer = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
+		(layer) => layer.sourceLayerType === selectedSourceGroup
+	)
+	const jsonSchema = sourceLayer?.schema
+	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
+	const values = clone(props.userEditOperation.currentValues)
+
+	const groups = clone(props.userEditOperation.schemas) || {}
 
 	const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const newValue = e.target.value
-		if (selectedGroup) {
-			const newSelectedSource = { [selectedGroup]: newValue }
+		if (selectedSourceGroup) {
+			const newSelectedSource = { [selectedSourceGroup]: newValue }
 			setSelectedSource(newSelectedSource)
 
 			// Add to pending changes instead of executing immediately
@@ -380,58 +441,35 @@ function EditingTypeChangeSource(props: {
 	return (
 		<>
 			<div className="propertiespanel-pop-up__groupselector">
-				{props.userEditOperation.grouping &&
-					groups.map((group, index) => {
-						return !group.svgIcon ? (
-							<button
-								className={
-									selectedGroup !== group.filter
-										? `propertiespanel-pop-up__groupselector__button`
-										: `propertiespanel-pop-up__groupselector__button-active`
-								}
-								style={{ backgroundColor: group.color }}
-								key={index}
-								onClick={() => {
-									setSelectedGroup(group.filter)
-								}}
-								disabled={!group.filter}
-							>
-								<div
-									className="svg"
-									dangerouslySetInnerHTML={{
-										__html: group.svgIcon || '',
-									}}
-								></div>
-								{!group.svgIcon && group.label}
-							</button>
-						) : (
-							<button
-								className={
-									selectedGroup !== group.filter
-										? `propertiespanel-pop-up__groupselector__button-svg`
-										: `propertiespanel-pop-up__groupselector__button-svg-active`
-								}
-								key={index}
-								onClick={() => {
-									setSelectedGroup(group.filter)
-								}}
-								disabled={!group.filter}
-							>
-								<div
-									className="svg-icon"
-									dangerouslySetInnerHTML={{
-										__html: group.svgIcon,
-									}}
-								></div>
-							</button>
-						)
-					})}
+				{Object.values<UserEditingSourceLayer>(groups).map((group, index) => {
+					return (
+						<button
+							className={
+								selectedSourceGroup !== group.sourceLayerType
+									? `propertiespanel-pop-up__groupselector__button`
+									: `propertiespanel-pop-up__groupselector__button-active`
+							}
+							style={{ backgroundColor: 'blue' }}
+							key={index}
+							onClick={() => {
+								setSelectedSourceGroup(group.sourceLayerType)
+							}}
+						>
+							{group.sourceLayerLabel}
+						</button>
+					)
+				})}
 			</div>
-			{selectedGroup && schema && (
+			{schema && (
 				<>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
+					<SchemaFormInPlace
+						schema={schema}
+						object={values}
+						translationNamespaces={props.userEditOperation.translationNamespaces}
+					/>
 					<br />
-					<select
+					{/* <select
 						title="Sources in the selected group"
 						className="propertiespanel-pop-up__select"
 						value={selectedSource[selectedGroup] || ''}
@@ -442,7 +480,7 @@ function EditingTypeChangeSource(props: {
 								{sourceList.tsEnumNames[index]}
 							</option>
 						))}
-					</select>
+					</select> */}
 					<hr />
 				</>
 			)}

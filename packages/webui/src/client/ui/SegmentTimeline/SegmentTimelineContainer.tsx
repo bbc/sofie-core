@@ -39,7 +39,6 @@ import {
 	TIMELINE_RIGHT_PADDING,
 } from './Constants'
 import { UIPartInstances, UIParts } from '../Collections'
-import { useSelection } from '../RundownView/SelectedElementsContext'
 
 // Kept for backwards compatibility
 export type {
