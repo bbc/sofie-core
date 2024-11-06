@@ -27,6 +27,7 @@ import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
+import { RundownUtils } from '../../lib/rundown'
 
 interface PendingChange {
 	operationId: string
@@ -34,6 +35,7 @@ interface PendingChange {
 	sourceLayerType?: SourceLayerType
 	value?: Record<string, any>
 	switchState?: boolean
+	cssTypeClass?: string
 }
 
 export function PropertiesPanel(): JSX.Element {
@@ -449,12 +451,12 @@ function EditingTypeChangeSourceLayerSource(props: {
 				{Object.values<UserEditingSourceLayer>(groups).map((group, index) => {
 					return (
 						<button
-							className={
+							className={classNames(
+								RundownUtils.getSourceLayerClassName(group.sourceLayerType),
 								selectedSourceGroup !== group.sourceLayerType
 									? `propertiespanel-pop-up__groupselector__button`
 									: `propertiespanel-pop-up__groupselector__button-active`
-							}
-							style={{ backgroundColor: 'blue' }}
+							)}
 							key={index}
 							onClick={() => {
 								setSelectedSourceButton(group.sourceLayerType)
@@ -474,18 +476,6 @@ function EditingTypeChangeSourceLayerSource(props: {
 						translationNamespaces={props.userEditOperation.translationNamespaces}
 					/>
 					<br />
-					{/* <select
-						title="Sources in the selected group"
-						className="propertiespanel-pop-up__select"
-						value={selectedSource[selectedGroup] || ''}
-						onChange={handleSourceChange}
-					>
-						{sourceList.enum.map((source, index) => (
-							<option key={index} value={source}>
-								{sourceList.tsEnumNames[index]}
-							</option>
-						))}
-					</select> */}
 					<hr />
 				</div>
 			)}
