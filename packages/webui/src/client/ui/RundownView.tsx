@@ -1050,7 +1050,7 @@ const RundownHeader = withTranslation()(
 									{this.props.playlist.activationId ? (
 										<MenuItem onClick={(e) => this.take(e)}>{t('Take')}</MenuItem>
 									) : null}
-									{this.props.playlist.activationId ? (
+									{this.props.studio.settings.allowHold && this.props.playlist.activationId ? (
 										<MenuItem onClick={(e) => this.hold(e)}>{t('Hold')}</MenuItem>
 									) : null}
 									{this.props.playlist.activationId && canClearQuickLoop ? (
