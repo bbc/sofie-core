@@ -14,7 +14,6 @@ import {
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import {
-	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 	CoreUserEditingDefinitionSourceLayerForm,
@@ -31,8 +30,9 @@ import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 
 interface PendingChange {
 	operationId: string
-	type: 'action' | 'form'
-	values?: any
+	userEditingType: UserEditingType
+	sourceLayerType?: SourceLayerType
+	value?: Record<string, any>
 	switchState?: boolean
 }
 
@@ -80,7 +80,7 @@ export function PropertiesPanel(): JSX.Element {
 					},
 					{
 						id: change.operationId,
-						values: change.values,
+						values: change.value,
 					}
 				)
 			)
@@ -205,7 +205,6 @@ export function PropertiesPanel(): JSX.Element {
 							SEGMENT : {String(segment?.name)}
 						</div>
 						<div className="propertiespanel-pop-up__contents">
-							{/* This is only until selection of segment is implemented in UI */}
 							{segment &&
 								segment?.userEditOperations?.map((userEditOperation, i) => {
 									switch (userEditOperation.type) {
@@ -305,7 +304,7 @@ function EditingTypeAction(props: {
 				...prev,
 				{
 					operationId: props.userEditOperation.id,
-					type: 'action',
+					userEditingType: UserEditingType.ACTION,
 					switchState: !props.userEditOperation.isActive,
 				},
 			]
@@ -399,43 +398,49 @@ function EditingTypeChangeSourceLayerSource(props: {
 	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
 	const { t } = useTranslation()
-	const [selectedSource, setSelectedSource] = React.useState<Record<string, string>>(
-		clone(props.userEditOperation.currentValues.value)
+	const [selectedSourceGroup, setSelectedSourceButton] = React.useState<SourceLayerType>(
+		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.sourceLayerType ||
+			props.userEditOperation.currentValues.type
 	)
-	const [selectedSourceGroup, setSelectedSourceGroup] = React.useState<SourceLayerType>(
-		props.userEditOperation.currentValues.type
-	)
+	const [schemaValues, setSchemaValues] = React.useState({
+		type: selectedSourceGroup,
+		value:
+			props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.value ||
+			props.userEditOperation.currentValues.value,
+	})
 
-	const sourceLayer = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
+	const selectedSourceObject = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
 		(layer) => layer.sourceLayerType === selectedSourceGroup
 	)
-	const jsonSchema = sourceLayer?.schema
+	const jsonSchema = selectedSourceObject?.schema
 	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
-	const values = clone(props.userEditOperation.currentValues)
 
 	const groups = clone(props.userEditOperation.schemas) || {}
 
-	const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = e.target.value
-		if (selectedSourceGroup) {
-			const newSelectedSource = { [selectedSourceGroup]: newValue }
-			setSelectedSource(newSelectedSource)
-
-			// Add to pending changes instead of executing immediately
-			props.setPendingChanges((prev) => {
-				const filtered = prev.filter(
-					(change) => !(change.operationId === props.userEditOperation.id && change.type === 'form')
-				)
-				return [
-					...filtered,
-					{
-						operationId: props.userEditOperation.id,
-						type: 'form',
-						values: newValue,
-					},
-				]
-			})
-		}
+	const handleSourceChange = () => {
+		setSchemaValues({
+			type: selectedSourceGroup,
+			value: schemaValues.value,
+		})
+		// Add to pending changes instead of executing immediately
+		props.setPendingChanges((prev) => {
+			const filtered = prev.filter(
+				(change) =>
+					!(
+						change.operationId === props.userEditOperation.id &&
+						change.userEditingType === UserEditingType.SOURCE_LAYER_FORM
+					)
+			)
+			return [
+				...filtered,
+				{
+					operationId: props.userEditOperation.id,
+					userEditingType: UserEditingType.SOURCE_LAYER_FORM,
+					sourceLayerType: selectedSourceGroup,
+					values: schemaValues.value,
+				},
+			]
+		})
 	}
 
 	return (
@@ -452,7 +457,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 							style={{ backgroundColor: 'blue' }}
 							key={index}
 							onClick={() => {
-								setSelectedSourceGroup(group.sourceLayerType)
+								setSelectedSourceButton(group.sourceLayerType)
 							}}
 						>
 							{group.sourceLayerLabel}
@@ -461,11 +466,11 @@ function EditingTypeChangeSourceLayerSource(props: {
 				})}
 			</div>
 			{schema && (
-				<>
+				<div onClick={handleSourceChange}>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
 					<SchemaFormInPlace
 						schema={schema}
-						object={values}
+						object={schemaValues.value}
 						translationNamespaces={props.userEditOperation.translationNamespaces}
 					/>
 					<br />
@@ -482,7 +487,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 						))}
 					</select> */}
 					<hr />
-				</>
+				</div>
 			)}
 		</>
 	)
