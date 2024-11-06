@@ -1,11 +1,15 @@
 import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import type { ITranslatableMessage } from './translations'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
+import { SourceLayerType } from './content'
 
 /**
  * Description of a user performed editing operation allowed on an document
  */
-export type UserEditingDefinition = UserEditingDefinitionAction | UserEditingDefinitionForm
+export type UserEditingDefinition =
+	| UserEditingDefinitionAction
+	| UserEditingDefinitionForm
+	| UserEditingDefinitionSourceLayerForm
 
 /**
  * A simple 'action' that can be performed
@@ -19,7 +23,7 @@ export interface UserEditingDefinitionAction {
 	/** Icon to show when this action is 'active' */
 	svgIcon?: string
 	/** Icon to show when this action is 'disabled' */
-	svgIconDisabled?: string
+	svgIconInactive?: string
 	/** Whether this action should be indicated as being active */
 	isActive?: boolean
 	/** Button Type */
@@ -35,29 +39,44 @@ export interface UserEditingDefinitionForm {
 	id: string
 	/** Label to show to the user for this operation */
 	label: ITranslatableMessage
-	/** Used to group the schemas and filter them */
-	grouping?: UserEditingGroupingType[]
-	/** The json schemas describing the form to display */
-	schemas: Record<string, JSONBlob<JSONSchema>>
+	/** The json schema describing the form to display */
+	schema: JSONBlob<JSONSchema>
 	/** Current values to populate the form with */
 	currentValues: Record<string, any>
+}
+
+/**
+ * A form based operation where the user first selects the type
+ * of form they want to use (i.e. Camera form vs VT form)
+ */
+export interface UserEditingDefinitionSourceLayerForm {
+	type: UserEditingType.SOURCE_LAYER_FORM
+	/** Id of this operation */
+	id: string
+	/** Label to show to the user for this operation */
+	label: ITranslatableMessage
+	/** The json schemas describing the form to display */
+	schemas: Record<string, UserEditingSourceLayer>
+	/** Current values to populate the form with */
+	currentValues: {
+		type: SourceLayerType
+		value: Record<string, any>
+	}
 }
 
 export enum UserEditingType {
 	/** Action */
 	ACTION = 'action',
-	/** Form of selections */
+	/** Form */
 	FORM = 'form',
+	/** Forms that the user has to select a sourceLayerType first */
+	SOURCE_LAYER_FORM = 'sourceLayerForm',
 }
 
-/**
- * Grouping of schemas
- */
-export interface UserEditingGroupingType {
-	filter?: string
-	label?: string
-	color?: string
-	svgIcon?: string
+export interface UserEditingSourceLayer {
+	sourceLayerLabel: string
+	sourceLayerType: SourceLayerType
+	schema: JSONBlob<JSONSchema>
 }
 
 export enum UserEditingButtonType {

@@ -13,6 +13,7 @@ import {
 	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
+	CoreUserEditingDefinitionSourceLayerForm,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { assertNever, clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
@@ -56,7 +57,7 @@ import {
 	UserEditingDefinition,
 	UserEditingDefinitionAction,
 	UserEditingDefinitionForm,
-	UserEditingGroupingType,
+	UserEditingDefinitionSourceLayerForm,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
 import type { PlayoutMutatablePart } from '../../playout/model/PlayoutPartInstanceModel'
@@ -511,7 +512,7 @@ function translateUserEditsToBlueprint(
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
 						svgIcon: userEdit.svgIcon,
-						svgIconDisabled: userEdit.svgIconDisabled,
+						svgIconInactive: userEdit.svgIconInactive,
 						isActive: userEdit.isActive,
 						buttonType: userEdit.buttonType,
 					} satisfies Complete<UserEditingDefinitionAction>
@@ -520,10 +521,17 @@ function translateUserEditsToBlueprint(
 						type: UserEditingType.FORM,
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
-						grouping: clone(userEdit.grouping) as UserEditingGroupingType[] | undefined,
-						schemas: clone(userEdit.schemas),
+						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
 					} satisfies Complete<UserEditingDefinitionForm>
+				case UserEditingType.SOURCE_LAYER_FORM:
+					return {
+						type: UserEditingType.SOURCE_LAYER_FORM,
+						id: userEdit.id,
+						label: omit(userEdit.label, 'namespaces'),
+						schemas: clone(userEdit.schemas),
+						currentValues: clone(userEdit.currentValues),
+					} satisfies Complete<UserEditingDefinitionSourceLayerForm>
 				default:
 					assertNever(userEdit)
 					return undefined
@@ -547,7 +555,7 @@ export function translateUserEditsFromBlueprint(
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						svgIcon: userEdit.svgIcon,
-						svgIconDisabled: userEdit.svgIconDisabled,
+						svgIconInactive: userEdit.svgIconInactive,
 						isActive: userEdit.isActive,
 						buttonType: userEdit.buttonType,
 					} satisfies Complete<CoreUserEditingDefinitionAction>
@@ -556,11 +564,19 @@ export function translateUserEditsFromBlueprint(
 						type: UserEditingType.FORM,
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
-						grouping: clone(userEdit.grouping),
-						schemas: clone(userEdit.schemas),
+						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
 						translationNamespaces: unprotectStringArray(blueprintIds),
 					} satisfies Complete<CoreUserEditingDefinitionForm>
+				case UserEditingType.SOURCE_LAYER_FORM:
+					return {
+						type: UserEditingType.SOURCE_LAYER_FORM,
+						id: userEdit.id,
+						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
+						schemas: clone(userEdit.schemas),
+						currentValues: clone(userEdit.currentValues),
+						translationNamespaces: unprotectStringArray(blueprintIds),
+					} satisfies Complete<CoreUserEditingDefinitionSourceLayerForm>
 				default:
 					assertNever(userEdit)
 					return undefined
