@@ -414,6 +414,14 @@ function EditingTypeChangeSourceLayerSource(props: {
 	)?.schema
 	const selectedGroupSchema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
 
+	React.useEffect(() => {
+		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
+
+		setSelectedSourceButton(pendingChange?.sourceLayerType || props.userEditOperation.currentValues.type)
+
+		setSelectedValues(pendingChange?.value || props.userEditOperation.currentValues.value)
+	}, [props.userEditOperation.id, props.pendingChanges])
+
 	const handleSourceChange = () => {
 		setSelectedValues(selectedValues)
 		// Add to pending changes instead of executing immediately
