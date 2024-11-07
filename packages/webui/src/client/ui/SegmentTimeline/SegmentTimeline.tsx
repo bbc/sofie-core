@@ -1075,14 +1075,12 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							>
 								<h2
 									id={`segment-name-${this.props.segment._id}`}
-									className={
-										'segment-timeline__title__label' +
-										(this.props.segment.identifier ? ' identifier' : '') +
-										(selectElementContext.isSelected(this.props.segment._id) ? ' selected' : '')
-									}
+									className={ClassNames(
+										'segment-timeline__title__label' + (this.props.segment.identifier ? ' identifier' : ''),
+										selectElementContext.isSelected(this.props.segment._id) ? 'element-selected' : ''
+									)}
 									data-identifier={this.props.segment.identifier}
 								>
-									{/* for debugging: */ selectElementContext.isSelected(this.props.segment._id) && <span>!!</span>}
 									{this.props.segment.name}
 								</h2>
 								{(criticalNotes > 0 || warningNotes > 0) && (

@@ -24,6 +24,7 @@ import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { ReadonlyDeep } from 'type-fest'
 import { PieceContentStatusObj } from '@sofie-automation/meteor-lib/dist/api/pieceContentStatus'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
+import classNames from 'classnames'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -671,15 +672,18 @@ export const SourceLayerItem = withTranslation()(
 					<SelectedElementsContext.Consumer>
 						{(selectElementContext) => (
 							<div
-								className={pieceUiClassNames(
-									piece,
-									this.props.contentStatus,
-									'segment-timeline__piece',
-									this.props.layer.type,
-									this.props.part.partId,
-									this.state.highlight,
-									elementWidth,
-									this.state
+								className={classNames(
+									pieceUiClassNames(
+										piece,
+										this.props.contentStatus,
+										'segment-timeline__piece',
+										this.props.layer.type,
+										this.props.part.partId,
+										this.state.highlight,
+										elementWidth,
+										this.state
+									),
+									selectElementContext.isSelected(this.props.part.instance.part._id) ? 'element-selected' : ''
 								)}
 								data-obj-id={piece.instance._id}
 								ref={this.setRef}

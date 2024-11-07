@@ -1,0 +1,16 @@
+@import '_variables';
+
+.element-selected {
+	border-radius: 0.1px;
+	border-width: 1px;
+	border-color: #171717;
+	border-style: solid;
+	animation: blinker 1s linear infinite;
+
+	@keyframes blinker {
+		30% {
+			opacity: 0.8;
+			background-color: rgb(13, 13, 13);
+		}
+	}
+}

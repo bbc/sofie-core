@@ -474,16 +474,18 @@ function EditingTypeChangeSourceLayerSource(props: {
 				})}
 			</div>
 			{selectedGroupSchema && (
-				<div onChange={handleSourceChange}>
+				<>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
-					<SchemaFormInPlace
-						schema={selectedGroupSchema}
-						object={selectedValues}
-						translationNamespaces={props.userEditOperation.translationNamespaces}
-					/>
-					<br />
-					<hr />
-				</div>
+					<div onChange={handleSourceChange}>
+						<SchemaFormInPlace
+							schema={selectedGroupSchema}
+							object={selectedValues}
+							translationNamespaces={props.userEditOperation.translationNamespaces}
+						/>
+						<br />
+						<hr />
+					</div>
+				</>
 			)}
 		</>
 	)
