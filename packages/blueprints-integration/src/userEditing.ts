@@ -58,7 +58,10 @@ export interface UserEditingDefinitionSourceLayerForm {
 	/** The json schemas describing the form to display */
 	schemas: Record<string, UserEditingSourceLayer>
 	/** Current values to populate the form with */
-	currentValues: Record<string, any>
+	currentValues: {
+		type: SourceLayerType
+		value: Record<string, any>
+	}
 }
 
 export enum UserEditingType {

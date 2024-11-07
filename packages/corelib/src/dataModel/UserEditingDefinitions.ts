@@ -4,6 +4,7 @@ import type {
 	JSONSchema,
 	UserEditingSourceLayer,
 	UserEditingButtonType,
+	SourceLayerType,
 } from '@sofie-automation/blueprints-integration'
 import type { ITranslatableMessage } from '../TranslatableMessage'
 
@@ -60,5 +61,8 @@ export interface CoreUserEditingDefinitionSourceLayerForm {
 	/** Translation namespaces to use when rendering this form */
 	translationNamespaces: string[]
 	/** Current values to populate the form with */
-	currentValues: Record<string, any>
+	currentValues: {
+		type: SourceLayerType
+		value: Record<string, any>
+	}
 }
