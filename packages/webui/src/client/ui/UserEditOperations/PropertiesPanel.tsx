@@ -404,26 +404,18 @@ function EditingTypeChangeSourceLayerSource(props: {
 		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.sourceLayerType ||
 			props.userEditOperation.currentValues.type
 	)
-	const [schemaValues, setSchemaValues] = React.useState({
-		type: selectedSourceGroup,
-		values:
-			props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.value ||
-			props.userEditOperation.currentValues.value,
-	})
-
-	const selectedSourceObject = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
-		(layer) => layer.sourceLayerType === selectedSourceGroup
+	const [selectedValues, setSelectedValues] = React.useState<Record<string, string>>(
+		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.value ||
+			props.userEditOperation.currentValues.value
 	)
-	const jsonSchema = selectedSourceObject?.schema
-	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
 
-	const groups = clone(props.userEditOperation.schemas) || {}
+	const jsonSchema = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
+		(layer) => layer.sourceLayerType === selectedSourceGroup
+	)?.schema
+	const selectedGroupSchema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
 
 	const handleSourceChange = () => {
-		setSchemaValues({
-			type: selectedSourceGroup,
-			values: schemaValues.values,
-		})
+		setSelectedValues(selectedValues)
 		// Add to pending changes instead of executing immediately
 		props.setPendingChanges((prev) => {
 			const filtered = prev.filter(
@@ -434,12 +426,11 @@ function EditingTypeChangeSourceLayerSource(props: {
 					)
 			)
 			// Only use the key,value pair from the selected source group:
-			const newKey = Object.keys(schemaValues.values).find((key) => {
+			const newKey = Object.keys(props.userEditOperation.schemas).find((key) => {
 				return props.userEditOperation.schemas[key].sourceLayerType === selectedSourceGroup
 			})
 			if (!newKey) return filtered
-			const newValue = props.userEditOperation.currentValues.value[newKey]
-
+			const newValue = selectedValues[newKey]
 			return [
 				...filtered,
 				{
@@ -455,7 +446,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 	return (
 		<>
 			<div className="propertiespanel-pop-up__groupselector">
-				{Object.values<UserEditingSourceLayer>(groups).map((group, index) => {
+				{Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).map((group, index) => {
 					return (
 						<button
 							className={classNames(
@@ -474,12 +465,12 @@ function EditingTypeChangeSourceLayerSource(props: {
 					)
 				})}
 			</div>
-			{schema && (
-				<div onClick={handleSourceChange}>
+			{selectedGroupSchema && (
+				<div onChange={handleSourceChange}>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
 					<SchemaFormInPlace
-						schema={schema}
-						object={schemaValues.values}
+						schema={selectedGroupSchema}
+						object={selectedValues}
 						translationNamespaces={props.userEditOperation.translationNamespaces}
 					/>
 					<br />
