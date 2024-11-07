@@ -406,7 +406,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 	)
 	const [schemaValues, setSchemaValues] = React.useState({
 		type: selectedSourceGroup,
-		value:
+		values:
 			props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.value ||
 			props.userEditOperation.currentValues.value,
 	})
@@ -422,7 +422,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 	const handleSourceChange = () => {
 		setSchemaValues({
 			type: selectedSourceGroup,
-			value: schemaValues.value,
+			values: schemaValues.values,
 		})
 		// Add to pending changes instead of executing immediately
 		props.setPendingChanges((prev) => {
@@ -433,13 +433,20 @@ function EditingTypeChangeSourceLayerSource(props: {
 						change.userEditingType === UserEditingType.SOURCE_LAYER_FORM
 					)
 			)
+			// Only use the key,value pair from the selected source group:
+			const newKey = Object.keys(schemaValues.values).find((key) => {
+				return props.userEditOperation.schemas[key].sourceLayerType === selectedSourceGroup
+			})
+			if (!newKey) return filtered
+			const newValue = props.userEditOperation.currentValues.value[newKey]
+
 			return [
 				...filtered,
 				{
 					operationId: props.userEditOperation.id,
 					userEditingType: UserEditingType.SOURCE_LAYER_FORM,
 					sourceLayerType: selectedSourceGroup,
-					values: schemaValues.value,
+					value: { [newKey]: newValue },
 				},
 			]
 		})
@@ -472,7 +479,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
 					<SchemaFormInPlace
 						schema={schema}
-						object={schemaValues.value}
+						object={schemaValues.values}
 						translationNamespaces={props.userEditOperation.translationNamespaces}
 					/>
 					<br />

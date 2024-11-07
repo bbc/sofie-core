@@ -71,7 +71,7 @@ export function RenderUserEditOperations(
 								disabled={!isFormEditable}
 								key={`${userEditOperation.id}_${i}`}
 								onClick={(e) => {
-									const schema = JSONBlobParse(userEditOperation.schemas['camera'])
+									const schema = JSONBlobParse(userEditOperation.schema)
 									const values = clone(userEditOperation.currentValues)
 
 									// TODO:
@@ -101,6 +101,8 @@ export function RenderUserEditOperations(
 								<span>Open Properties</span>
 							</MenuItem>
 						)
+					case UserEditingType.SOURCE_LAYER_FORM:
+						return <></>
 					default:
 						assertNever(userEditOperation)
 						return null
