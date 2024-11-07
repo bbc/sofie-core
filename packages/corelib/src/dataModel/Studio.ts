@@ -95,6 +95,12 @@ export interface IStudioSettings {
 	 * This should only block entering hold, to ensure Sofie doesn't get stuck if it somehow gets into hold
 	 */
 	allowHold?: boolean
+
+	/**
+	 * Whether to allow direct playing of a piece in the rundown
+	 * This behaviour is usally triggered by double-clicking on a piece in the GUI
+	 */
+	allowPieceDirectPlay?: boolean
 }
 
 export type StudioLight = Omit<DBStudio, 'mappingsWithOverrides' | 'blueprintConfigWithOverrides'>

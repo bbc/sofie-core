@@ -2252,7 +2252,8 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 				item &&
 				item.instance &&
 				this.props.playlist &&
-				this.props.playlist.currentPartInfo
+				this.props.playlist.currentPartInfo &&
+				this.props.studio?.settings.allowPieceDirectPlay
 			) {
 				const idToCopy = item.instance.isTemporary ? item.instance.piece._id : item.instance._id
 				const playlistId = this.props.playlist._id
