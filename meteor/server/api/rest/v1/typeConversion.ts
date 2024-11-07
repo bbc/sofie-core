@@ -10,7 +10,7 @@ import { PeripheralDevice, PeripheralDeviceType } from '@sofie-automation/coreli
 import { Blueprint } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
 import { BucketId, ShowStyleBaseId, ShowStyleVariantId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBStudio, IStudioSettings } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { assertNever, getRandomId, literal } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, Complete, getRandomId, literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import {
 	applyAndValidateOverrides,
@@ -292,7 +292,7 @@ export async function studioFrom(apiStudio: APIStudio, existingId?: StudioId): P
 	}
 }
 
-export function APIStudioFrom(studio: DBStudio): APIStudio {
+export function APIStudioFrom(studio: DBStudio): Complete<APIStudio> {
 	const studioSettings = APIStudioSettingsFrom(studio.settings)
 
 	return {
@@ -305,7 +305,7 @@ export function APIStudioFrom(studio: DBStudio): APIStudio {
 	}
 }
 
-export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): IStudioSettings {
+export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): Complete<IStudioSettings> {
 	return {
 		frameRate: apiStudioSettings.frameRate,
 		mediaPreviewsUrl: apiStudioSettings.mediaPreviewsUrl,
@@ -321,10 +321,13 @@ export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): IStudi
 		enableQuickLoop: apiStudioSettings.enableQuickLoop,
 		forceQuickLoopAutoNext: forceQuickLoopAutoNextFrom(apiStudioSettings.forceQuickLoopAutoNext),
 		fallbackPartDuration: apiStudioSettings.fallbackPartDuration ?? DEFAULT_FALLBACK_PART_DURATION,
+		allowAdlibTestingSegment: apiStudioSettings.allowAdlibTestingSegment,
+		allowHold: apiStudioSettings.allowHold ?? true, // Backwards compatible
+		allowPieceDirectPlay: apiStudioSettings.allowPieceDirectPlay ?? true, // Backwards compatible
 	}
 }
 
-export function APIStudioSettingsFrom(settings: IStudioSettings): APIStudioSettings {
+export function APIStudioSettingsFrom(settings: IStudioSettings): Complete<APIStudioSettings> {
 	return {
 		frameRate: settings.frameRate,
 		mediaPreviewsUrl: settings.mediaPreviewsUrl,
@@ -340,6 +343,9 @@ export function APIStudioSettingsFrom(settings: IStudioSettings): APIStudioSetti
 		enableQuickLoop: settings.enableQuickLoop,
 		forceQuickLoopAutoNext: APIForceQuickLoopAutoNextFrom(settings.forceQuickLoopAutoNext),
 		fallbackPartDuration: settings.fallbackPartDuration,
+		allowAdlibTestingSegment: settings.allowAdlibTestingSegment,
+		allowHold: settings.allowHold,
+		allowPieceDirectPlay: settings.allowPieceDirectPlay,
 	}
 }
 
