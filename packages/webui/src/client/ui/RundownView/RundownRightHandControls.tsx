@@ -25,7 +25,7 @@ import { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { MediaStatusPopUp } from './MediaStatusPopUp'
 import { MediaStatusIcon } from '../../lib/ui/icons/mediaStatus'
 import { SelectedElementsContext } from './SelectedElementsContext'
-import { UserEditsIcon } from '../../lib/ui/icons/useredits'
+import { UserEditsCloseIcon, UserEditsIcon } from '../../lib/ui/icons/useredits'
 import { CollapseChevrons } from '../../lib/ui/icons/notifications'
 
 interface IProps {
@@ -159,7 +159,7 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 				<SelectedElementsContext.Consumer>
 					{(context) => (
 						<button onClick={() => context.clearSelections()} className="status-bar__controls__button">
-							{context.listSelectedElements().length === 0 ? <UserEditsIcon /> : <CollapseChevrons />}
+							{context.listSelectedElements().length === 0 ? <UserEditsIcon /> : <UserEditsCloseIcon />}
 						</button>
 					)}
 				</SelectedElementsContext.Consumer>
