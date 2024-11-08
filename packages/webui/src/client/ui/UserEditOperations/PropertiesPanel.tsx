@@ -47,6 +47,14 @@ export function PropertiesPanel(): JSX.Element {
 	const [pendingChanges, setPendingChanges] = React.useState<PendingChange[]>([])
 	const hasPendingChanges = pendingChanges.length > 0
 
+	const [isAnimatedIn, setIsAnimatedIn] = React.useState(false)
+	React.useEffect(() => {
+		const timer = setTimeout(() => {
+			setIsAnimatedIn(true)
+		}, 10)
+		return () => clearTimeout(timer)
+	}, [])
+
 	React.useEffect(() => {
 		return () => {
 			Array.from(document.querySelectorAll('.propertiespanel-pop-up.is-highlighted')).forEach((element: Element) => {
@@ -116,7 +124,7 @@ export function PropertiesPanel(): JSX.Element {
 	}
 
 	return (
-		<div className="properties-panel">
+		<div className={classNames('properties-panel', isAnimatedIn && 'is-mounted')}>
 			<div className="propertiespanel-pop-up">
 				<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
 					<CoreIcon.NrkClose />

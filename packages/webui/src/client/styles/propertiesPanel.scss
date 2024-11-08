@@ -14,6 +14,14 @@
 	width: calc(#{$notification-center-width} + 4.6875rem);
 	z-index: 292;
 
+    transform: translateX(100%);
+    transition: transform 0.2s ease-out;
+    
+    // Add a class that will be applied when the component mounts
+    &.is-mounted {
+        transform: translateX(0%);
+    }
+
 	&::before {
 		content: ' ';
 		display: block;
