@@ -158,7 +158,12 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 				/>
 				<SelectedElementsContext.Consumer>
 					{(context) => (
-						<button onClick={() => context.clearSelections()} className="status-bar__controls__button">
+						<button
+							onClick={() => context.clearSelections()}
+							className={classNames('status-bar__controls__button', {
+								'status-bar__controls__button--open': context.listSelectedElements().length > 0,
+							})}
+						>
 							{context.listSelectedElements().length === 0 ? <UserEditsIcon /> : <UserEditsCloseIcon />}
 						</button>
 					)}
