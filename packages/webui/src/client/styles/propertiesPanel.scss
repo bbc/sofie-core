@@ -85,6 +85,11 @@
 				display: block;
 				margin: 10px auto;
 
+				&:active {
+					transform: scale(0.95);
+					top: 2px;
+				}
+
 				> svg {
 					margin-top: -0.1em;
 					vertical-align: middle;
@@ -121,9 +126,7 @@
 				flex-wrap: wrap;
 				margin-top: 0.5em;
 				margin-bottom: 0.5em;
-
-				
-				
+	
 				> .propertiespanel-pop-up__groupselector__button {
 					@include item-type-colors();
 
@@ -153,7 +156,21 @@
 			> .propertiespanel-pop-up__action {
 				margin-top: 15px;
 				color: #ddd;
+				padding: 4px;
 			}
+
+			> .properties-panel-pop-up__form {
+				margin-top: 15px;
+				color: #ddd;
+				padding: 4px;
+			}
+
+			> .properties-panel-pop-up__has-been-edited {
+				background-color: #8a2929c0;
+				border-radius: 8px;
+				padding: 4px
+			}
+
 
 			> .propertiespanel-pop-up__label {
 				color: #ddd;
@@ -177,6 +194,11 @@
 				border: 1px;
 				border: 1px solid #7F7F7F;
 				color: #ddd;
+
+				&:active {
+					transform: scale(0.95);
+					top: 2px;
+				}
 
 				> svg {
 					margin-top: -0.1em;

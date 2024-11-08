@@ -279,14 +279,22 @@ function EditingTypeAction(props: {
 	pendingChanges: PendingChange[]
 	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
-	if (!props.userEditOperation.buttonType) return null
-
-	const getPendingState = (operationId: string) => {
-		const pendingChange = props.pendingChanges.find((change) => change.operationId === operationId)
+	const getPendingState = () => {
+		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
 		return pendingChange?.switchState
 	}
 
+	const [hasBeenEdited, setHasBeenEdited] = React.useState<boolean>(
+		getPendingState() !== undefined && getPendingState() !== props.userEditOperation.isActive
+	)
+
+	React.useEffect(() => {
+		setHasBeenEdited(getPendingState() !== undefined && getPendingState() !== props.userEditOperation.isActive)
+	}, [props.userEditOperation.id, props.pendingChanges])
+
+	if (!props.userEditOperation.buttonType) return null
 	const addPendingChange = () => {
+		setHasBeenEdited(!hasBeenEdited)
 		props.setPendingChanges((prev) => {
 			// Find if there's an existing pending change for this operation
 			const existingChangeIndex = prev.findIndex((change) => change.operationId === props.userEditOperation.id)
@@ -328,10 +336,15 @@ function EditingTypeAction(props: {
 			)
 		case UserEditingButtonType.SWITCH:
 			return (
-				<div className="propertiespanel-pop-up__action">
+				<div
+					className={classNames(
+						'propertiespanel-pop-up__action',
+						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
+					)}
+				>
 					<a
 						className={classNames('propertiespanel-pop-up__switchbutton', 'switch-button', {
-							'sb-on': getPendingState(props.userEditOperation.id) ?? (props.userEditOperation.isActive || false),
+							'sb-on': getPendingState() ?? (props.userEditOperation.isActive || false),
 						})}
 						role="button"
 						onClick={addPendingChange}
@@ -409,6 +422,21 @@ function EditingTypeChangeSourceLayerSource(props: {
 			props.userEditOperation.currentValues.value
 	)
 
+	const getPendingState = () => {
+		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
+		return pendingChange?.value
+	}
+
+	const [hasBeenEdited, setHasBeenEdited] = React.useState<boolean>(
+		getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
+	)
+
+	React.useEffect(() => {
+		setHasBeenEdited(
+			getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
+		)
+	}, [props.userEditOperation.id, props.pendingChanges])
+
 	const jsonSchema = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
 		(layer) => layer.sourceLayerType === selectedSourceGroup
 	)?.schema
@@ -424,6 +452,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 
 	const handleSourceChange = () => {
 		setSelectedValues(selectedValues)
+		setHasBeenEdited(true)
 		// Add to pending changes instead of executing immediately
 		props.setPendingChanges((prev) => {
 			const filtered = prev.filter(
@@ -474,19 +503,24 @@ function EditingTypeChangeSourceLayerSource(props: {
 				})}
 			</div>
 			{selectedGroupSchema && (
-				<>
+				<div
+					className={classNames(
+						'properties-panel-pop-up__form',
+						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
+					)}
+				>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
+					<br />
 					<div onChange={handleSourceChange}>
 						<SchemaFormInPlace
 							schema={selectedGroupSchema}
 							object={selectedValues}
 							translationNamespaces={props.userEditOperation.translationNamespaces}
 						/>
-						<br />
-						<hr />
 					</div>
-				</>
+				</div>
 			)}
+			<hr />
 		</>
 	)
 }
