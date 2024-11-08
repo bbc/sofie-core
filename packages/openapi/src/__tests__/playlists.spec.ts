@@ -62,6 +62,14 @@ describe('Network client', () => {
 		expect(active.status).toBe(200)
 	})
 
+	test('can activate adlib testing mode', async () => {
+		const active = await playlistsApi.activateAdlibTesting({
+			playlistId: playlistIds[0],
+			rundownId: 'rundownId',
+		})
+		expect(active.status).toBe(200)
+	})
+
 	let partId = ''
 	test('can move next part in a playlist', async () => {
 		const move = await playlistsApi.moveNextPart({

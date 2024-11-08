@@ -45,6 +45,8 @@ paths:
     $ref: 'definitions/playlists.yaml#/resources/activate'
   /playlists/{playlistId}/deactivate:
     $ref: 'definitions/playlists.yaml#/resources/deactivate'
+  /playlists/{playlistId}/rundowns/{rundownId}/activate-adlib-testing:
+    $ref: 'definitions/playlists.yaml#/resources/activateAdlibTesting'
   /playlists/{playlistId}/execute-adlib:
     $ref: 'definitions/playlists.yaml#/resources/executeAdLib'
   /playlists/{playlistId}/execute-bucket-adlib:
