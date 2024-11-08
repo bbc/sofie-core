@@ -3047,35 +3047,19 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 											<NotificationCenterPanel filter={this.state.isNotificationsCenterOpen} />
 										)}
 									</VelocityReact.VelocityTransitionGroup>
-									<VelocityReact.VelocityTransitionGroup
-										enter={{
-											animation: {
-												translateX: ['0%', '100%'],
-											},
-											easing: 'ease-out',
-											duration: 300,
-										}}
-										leave={{
-											animation: {
-												translateX: ['100%', '0%'],
-											},
-											easing: 'ease-in',
-											duration: 500,
-										}}
-									>
-										{!this.state.isNotificationsCenterOpen && (
-											<SelectedElementsContext.Consumer>
-												{(selectionContext) => {
-													if (selectionContext.listSelectedElements().length === 0) return null
-													return (
-														<div>
-															<PropertiesPanel />
-														</div>
-													)
-												}}
-											</SelectedElementsContext.Consumer>
-										)}
-									</VelocityReact.VelocityTransitionGroup>
+
+									{!this.state.isNotificationsCenterOpen && (
+										<SelectedElementsContext.Consumer>
+											{(selectionContext) => {
+												if (selectionContext.listSelectedElements().length === 0) return null
+												return (
+													<div>
+														<PropertiesPanel />
+													</div>
+												)
+											}}
+										</SelectedElementsContext.Consumer>
+									)}
 									<VelocityReact.VelocityTransitionGroup
 										enter={{
 											animation: {
