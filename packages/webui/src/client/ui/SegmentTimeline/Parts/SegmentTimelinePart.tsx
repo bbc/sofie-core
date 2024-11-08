@@ -36,7 +36,6 @@ import { ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { LIVE_LINE_TIME_PADDING } from '../Constants'
 import * as RundownResolver from '../../../lib/RundownResolver'
-import { SelectedElementsContext } from '../../RundownView/SelectedElementsContext'
 
 export const SegmentTimelineLineElementId = 'rundown__segment__line__'
 export const SegmentTimelinePartElementId = 'rundown__segment__part__'
@@ -52,7 +51,6 @@ interface IProps {
 	playlist: DBRundownPlaylist
 	studio: UIStudio
 	part: PartUi
-	onPartClick?: (part: PartUi, e: React.MouseEvent<HTMLDivElement>) => void
 	timeToPixelRatio: number
 	onCollapseOutputToggle?: (layer: IOutputLayerUi, event: any) => void
 	collapsedOutputs: {
@@ -103,9 +101,6 @@ interface IState {
 	highlight: boolean
 }
 export class SegmentTimelinePartClass extends React.Component<Translated<WithTiming<IProps>>, IState> {
-	static contextType = SelectedElementsContext
-	declare context: React.ContextType<typeof SelectedElementsContext>
-
 	constructor(props: Readonly<Translated<WithTiming<IProps>>>) {
 		super(props)
 
@@ -247,19 +242,6 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			}
 		} else {
 			return 0
-		}
-	}
-
-	private handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-		this.props.onPartClick?.(this.props.part, e)
-
-		// Only toggle selection if Alt/Option is pressed
-		if (e.altKey && this.context) {
-			e.preventDefault()
-			this.context.clearAndSetSelection({
-				type: 'partInstance',
-				elementId: this.props.part.instance._id,
-			})
 		}
 	}
 
@@ -708,7 +690,6 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 					role="region"
 					aria-roledescription={t('part')}
 					aria-label={this.props.part.instance.part.title}
-					onClick={(e) => this.handleClick(e)}
 				>
 					{DEBUG_MODE && (
 						<div className="segment-timeline__debug-info">
@@ -781,7 +762,6 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 									'segment-timeline__part__nextline__label--thin':
 										(this.props.autoNextPart || this.props.part.willProbablyAutoNext) && !this.state.isNext,
 								})}
-								onClick={(e) => this.handleClick(e)}
 							>
 								{innerPart.invalid && !innerPart.gap ? null : (
 									<React.Fragment>
