@@ -90,6 +90,16 @@
 					top: 2px;
 				}
 
+				&:disabled {
+					cursor: not-allowed;
+					opacity: 0.3;
+			
+					&:active {
+						transform: none;
+						top: 0;
+					}
+				}
+
 				> svg {
 					margin-top: -0.1em;
 					vertical-align: middle;
@@ -156,19 +166,25 @@
 			> .propertiespanel-pop-up__action {
 				margin-top: 15px;
 				color: #ddd;
-				padding: 4px;
+				padding: 4px 4px;
 			}
 
 			> .properties-panel-pop-up__form {
 				margin-top: 15px;
 				color: #ddd;
-				padding: 4px;
+				padding: 4px 4px;
+
+				> .properties-panel-pop-up__form__schema {
+					border-color: pink;
+					border-width: 0px;
+
+				}
 			}
 
 			> .properties-panel-pop-up__has-been-edited {
-				background-color: #8a2929c0;
+				background-color: #ba0b9d24;
 				border-radius: 8px;
-				padding: 4px
+				padding: 4px 4px;
 			}
 
 

@@ -255,7 +255,11 @@ export function PropertiesPanel(): JSX.Element {
 					</>
 				)}
 				<div className="propertiespanel-pop-up__footer">
-					<button className="propertiespanel-pop-up__button" onClick={handleRevertChanges}>
+					<button
+						className="propertiespanel-pop-up__button"
+						onClick={handleRevertChanges}
+						disabled={!hasPendingChanges}
+					>
 						<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
 					</button>
 					<button
@@ -501,6 +505,8 @@ function EditingTypeChangeSourceLayerSource(props: {
 						</button>
 					)
 				})}
+				<br />
+				<br />
 			</div>
 			{selectedGroupSchema && (
 				<div
@@ -509,9 +515,13 @@ function EditingTypeChangeSourceLayerSource(props: {
 						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
 					)}
 				>
-					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
-					<br />
-					<div onChange={handleSourceChange}>
+					<div
+						className={classNames(
+							'properties-panel-pop-up__form__schema',
+							hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
+						)}
+						onChange={handleSourceChange}
+					>
 						<SchemaFormInPlace
 							schema={selectedGroupSchema}
 							object={selectedValues}
