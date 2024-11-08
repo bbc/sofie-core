@@ -28,6 +28,7 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { RundownUtils } from '../../lib/rundown'
+import * as CoreIcon from '@nrk/core-icons/jsx'
 
 interface PendingChange {
 	operationId: string
@@ -39,7 +40,7 @@ interface PendingChange {
 }
 
 export function PropertiesPanel(): JSX.Element {
-	const { listSelectedElements } = useSelection()
+	const { listSelectedElements, clearSelections } = useSelection()
 	const selectedElement = listSelectedElements()?.[0]
 	const { t } = useTranslation()
 
@@ -117,6 +118,10 @@ export function PropertiesPanel(): JSX.Element {
 	return (
 		<div className="properties-panel">
 			<div className="propertiespanel-pop-up">
+				<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
+					<CoreIcon.NrkClose />
+				</div>
+
 				{rundownId && selectedElement?.type === 'part' && (
 					<>
 						<div className="propertiespanel-pop-up__header">

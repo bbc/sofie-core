@@ -6,11 +6,11 @@
 
 .properties-panel {
 	position: fixed;
-	background: #fff;
+	background: #7b7b7b;
 	color: #000;
-	top: 45px;
+	top: 50px;
 	right: 0;
-	bottom: 20px;
+	bottom: 10px;
 	width: calc(#{$notification-center-width} + 4.6875rem);
 	z-index: 292;
 
@@ -26,11 +26,11 @@
 	}
 
 	.propertiespanel-pop-up {
-		background: #303030;
+		background: #252525;
 		border-radius: 1px;
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 		margin: 1px;
-		height: 100%;
+		height: 98.2%;
 		width: 87%;
 
 		&:first-child {
@@ -41,8 +41,15 @@
 			margin-bottom: 0.9375rem;
 		}
 
+		> .propertiespanel-pop-up_close {
+			position: absolute;
+			top: 25px;
+			right: 70px;
+			color: white;
+		}
+
 		> .propertiespanel-pop-up__header {
-			background: #484848;
+			background: #3d3d3d;
 			color: #ddd;
 
 			min-width: 2.5rem;
