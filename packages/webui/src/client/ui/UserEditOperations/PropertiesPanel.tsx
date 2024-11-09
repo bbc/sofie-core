@@ -72,7 +72,7 @@ export function PropertiesPanel(): JSX.Element {
 
 	const segment: DBSegment | undefined = useTracker(
 		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId }),
-		[selectedElement?.elementId, part]
+		[selectedElement?.elementId, part?.segmentId]
 	)
 	const rundownId = part ? part.rundownId : segment?.rundownId
 
@@ -429,7 +429,6 @@ function EditingTypeChangeSourceLayerSource(props: {
 	pendingChanges: PendingChange[]
 	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
-	const { t } = useTranslation()
 	const [selectedSourceGroup, setSelectedSourceButton] = React.useState<SourceLayerType>(
 		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.sourceLayerType ||
 			props.userEditOperation.currentValues.type
