@@ -29,7 +29,7 @@ export async function runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promi
 			lastBlueprintConfig: {
 				blueprintHash: blueprint.blueprintHash,
 				blueprintId: blueprint._id,
-				blueprintConfigPresetId: '',
+				blueprintConfigPresetId: undefined,
 				config: {},
 			},
 		},
