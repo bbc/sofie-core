@@ -1,11 +1,18 @@
 @import '_variables';
 
 .element-selected {
-	animation: blinker 1.5s linear infinite;
+    // Base glow
+    box-shadow: inset 0 0 15px var(--primary-color, #ffffff7a);
+    // Changed animation name from 'blinker' to 'glow' to better reflect its purpose
+    animation: glow 1s ease-in-out infinite;
 
-	@keyframes blinker {
-		20% {
-			opacity: 0.2;
-		}
-	}
+    @keyframes glow {
+        0%, 100% {
+            box-shadow: inset 0 0 15px var(--primary-color, #ffffff7b);
+        }
+        50% {
+            box-shadow: inset 0 0 20px var(--primary-color, #ffffff84),
+                        inset 0 0 30px var(--primary-light-color, #ffffff86);
+        }
+    }
 }
