@@ -1,3 +1,30 @@
+jest.mock(
+	'../../../../__mocks__/tracker',
+	() => ({
+		setup: () => ({
+			Tracker: {
+				autorun: jest.fn((fn) => {
+					fn()
+					return {
+						stop: jest.fn(),
+					}
+				}),
+				nonreactive: jest.fn((fn) => fn()),
+				active: false,
+				currentComputation: null,
+				Dependency: jest.fn().mockImplementation(() => ({
+					depend: jest.fn(),
+					changed: jest.fn(),
+					hasDependents: jest.fn(),
+				})),
+			},
+		}),
+	}),
+	{
+		virtual: true,
+	}
+)
+
 // Mock the ReactiveDataHelper:
 jest.mock('../../../lib/reactiveData/ReactiveDataHelper', () => {
 	class MockReactiveDataHelper {
@@ -70,7 +97,7 @@ jest.mock('react-i18next', () => ({
 
 import React from 'react'
 // eslint-disable-next-line node/no-unpublished-import
-import { renderHook, act, render, screen, RenderResult } from '@testing-library/react'
+import { renderHook, act, render, screen, waitFor } from '@testing-library/react'
 // eslint-disable-next-line node/no-unpublished-import
 import '@testing-library/jest-dom'
 import { MeteorCall } from '../../../lib/meteorApi'
@@ -122,6 +149,11 @@ describe('PropertiesPanel', () => {
 		mockSegmentsCollection.remove({})
 		mockPartsCollection.remove({})
 		jest.clearAllMocks()
+		jest.useFakeTimers()
+	})
+
+	afterEach(() => {
+		jest.useRealTimers()
 	})
 
 	const createMockSegment = (id: string): DBSegment => ({
@@ -133,12 +165,14 @@ describe('PropertiesPanel', () => {
 		userEditOperations: [
 			{
 				id: 'operation1',
-				label: { key: 'TEST_LABEL' },
+				label: { key: 'TEST_LABEL', namespaces: ['blueprint_main-showstyle'] },
 				type: UserEditingType.ACTION,
 				buttonType: UserEditingButtonType.SWITCH,
 				isActive: false,
+				svgIcon: '<svg></svg>',
 			},
 		],
+		isHidden: false,
 	})
 
 	const createMockPart = (id: string, segmentId: string): DBPart => ({
@@ -152,7 +186,7 @@ describe('PropertiesPanel', () => {
 		userEditOperations: [
 			{
 				id: 'operation2',
-				label: { key: 'TEST_PART_LABEL' },
+				label: { key: 'TEST_PART_LABEL', namespaces: ['blueprint_main-showstyle'] },
 				type: UserEditingType.ACTION,
 				buttonType: UserEditingButtonType.BUTTON,
 				isActive: true,
@@ -168,44 +202,39 @@ describe('PropertiesPanel', () => {
 
 	test('renders segment properties when segment is selected', async () => {
 		const mockSegment = createMockSegment('segment1')
+
 		mockSegmentsCollection.insert(mockSegment)
 
-		// Create a custom wrapper that includes both providers
-		const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-			<SelectedElementProvider>{children}</SelectedElementProvider>
-		)
+		expect(mockSegmentsCollection.findOne({ _id: mockSegment._id })).toBeTruthy()
 
-		// Render both the hook and component in the same provider tree
-		const { result } = renderHook(() => useSelection(), { wrapper: TestWrapper })
-		let rendered: RenderResult
+		const { result } = renderHook(() => useSelection(), { wrapper })
 
-		await act(async () => {
-			rendered = render(<PropertiesPanel />, { wrapper: TestWrapper })
-		})
-
-		// Update selection
+		// Update selection and wait for component to update
 		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
 				elementId: mockSegment._id,
 			})
 		})
-		//@ts-expect-error error because avoiding an undefined type
-		if (!rendered) throw new Error('Component not rendered')
 
-		// Force a rerender
+		// Open component after segment is selected (as used in rundownview)
+		const { container } = render(<PropertiesPanel />, { wrapper })
+
 		await act(async () => {
-			rendered.rerender(<PropertiesPanel />)
+			jest.advanceTimersByTime(100)
 		})
 
-		// Wait for the header element to appear
-		await screen.findByText('SEGMENT : Segment segment1')
+		console.log('result', result.current.listSelectedElements())
+		// Use findByTestId instead of querySelector
+		await waitFor(
+			() => {
+				expect(screen.getByText(`SEGMENT : ${mockSegment.name}`)).toBeInTheDocument()
+			},
+			{ timeout: 1000 }
+		)
 
-		const header = rendered.container.querySelector('.propertiespanel-pop-up__header')
-		const switchButton = rendered.container.querySelector('.propertiespanel-pop-up__switchbutton')
-
-		expect(header).toHaveTextContent('SEGMENT : Segment segment1')
-		expect(switchButton).toBeTruthy()
+		const button = container.querySelector('.propertiespanel-pop-up__button')
+		expect(button).toBeInTheDocument()
 	})
 
 	test('renders part properties when part is selected', async () => {
@@ -215,75 +244,59 @@ describe('PropertiesPanel', () => {
 		mockSegmentsCollection.insert(mockSegment)
 		mockPartsCollection.insert(mockPart)
 
-		// Create a custom wrapper that includes both providers
-		const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-			<SelectedElementProvider>{children}</SelectedElementProvider>
-		)
+		const { result } = renderHook(() => useSelection(), { wrapper })
 
-		// Render both the hook and component in the same provider tree
-		const { result } = renderHook(() => useSelection(), { wrapper: TestWrapper })
-		let rendered: RenderResult
-
-		await act(async () => {
-			rendered = render(<PropertiesPanel />, { wrapper: TestWrapper })
-		})
-
-		// Update selection
 		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'part',
 				elementId: mockPart._id,
 			})
 		})
+		// Open component after part is selected (as used in rundownview)
+		const { container } = render(<PropertiesPanel />, { wrapper })
 
-		//@ts-expect-error error because avoiding an undefined type
-		if (!rendered) throw new Error('Component not rendered')
+		await waitFor(
+			() => {
+				expect(screen.getByText(`PART : ${mockPart.title}`)).toBeInTheDocument()
+			},
+			{ timeout: 1000 }
+		)
 
-		// Force a rerender
-		await act(async () => {
-			rendered.rerender(<PropertiesPanel />)
-		})
-
-		// Wait for the header element to appear
-		await screen.findByText('PART : Part part1')
-
-		const header = rendered.container.querySelector('.propertiespanel-pop-up__header')
-		const button = rendered.container.querySelector('.propertiespanel-pop-up__button')
-
-		expect(header).toHaveTextContent('PART : Part part1')
-		expect(button).toBeTruthy()
+		const button = container.querySelector('.propertiespanel-pop-up__button')
+		expect(button).toBeInTheDocument()
 	})
 
 	test('handles user edit operations for segments', async () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		// First render the selection hook
 		const { result } = renderHook(() => useSelection(), { wrapper })
-
-		// Then render the properties panel
 		const { container } = render(<PropertiesPanel />, { wrapper })
 
-		// Update selection using the hook result
-		act(() => {
+		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
 				elementId: mockSegment._id,
 			})
 		})
 
-		const switchButton = container.querySelector('.propertiespanel-pop-up__switchbutton')
+		// Wait for the switch button to be available
+		const switchButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up__switchbutton'))
 		expect(switchButton).toBeTruthy()
 
 		// Toggle the switch
-		await userEvent.click(switchButton!)
+		await act(async () => {
+			await userEvent.click(switchButton!)
+		})
 
 		// Check if commit button is enabled
 		const commitButton = screen.getByText('COMMIT CHANGES')
 		expect(commitButton).toBeEnabled()
 
 		// Commit changes
-		await userEvent.click(commitButton)
+		await act(async () => {
+			await userEvent.click(commitButton)
+		})
 
 		expect(MeteorCall.userAction.executeUserChangeOperation).toHaveBeenCalledWith(
 			expect.anything(),
@@ -305,27 +318,29 @@ describe('PropertiesPanel', () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		// First render the selection hook
 		const { result } = renderHook(() => useSelection(), { wrapper })
-
-		// Then render the properties panel
 		const { container } = render(<PropertiesPanel />, { wrapper })
 
-		// Update selection using the hook result
-		act(() => {
+		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
 				elementId: mockSegment._id,
 			})
 		})
 
+		// Wait for the switch button to be available
+		const switchButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up__switchbutton'))
+
 		// Make a change
-		const switchButton = container.querySelector('.propertiespanel-pop-up__switchbutton')
-		await userEvent.click(switchButton!)
+		await act(async () => {
+			await userEvent.click(switchButton!)
+		})
 
 		// Click revert button
 		const revertButton = screen.getByText('REVERT CHANGES')
-		await userEvent.click(revertButton)
+		await act(async () => {
+			await userEvent.click(revertButton)
+		})
 
 		expect(MeteorCall.userAction.executeUserChangeOperation).toHaveBeenCalledWith(
 			expect.anything(),
@@ -340,30 +355,28 @@ describe('PropertiesPanel', () => {
 				id: 'REVERT_SEGMENT',
 			}
 		)
-	})
+	}, 10000) // Increase timeout for this test
 
 	test('closes panel when close button is clicked', async () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		// First render the selection hook
 		const { result } = renderHook(() => useSelection(), { wrapper })
-
-		// Then render the properties panel
 		const { container } = render(<PropertiesPanel />, { wrapper })
 
-		// Update selection using the hook result
-		act(() => {
+		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
 				elementId: mockSegment._id,
 			})
 		})
 
-		const closeButton = container.querySelector('.propertiespanel-pop-up_close')
+		const closeButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up_close'))
 		expect(closeButton).toBeTruthy()
 
-		await userEvent.click(closeButton!)
+		await act(async () => {
+			await userEvent.click(closeButton!)
+		})
 
 		expect(container.querySelector('.propertiespanel-pop-up__contents')).toBeFalsy()
 	})

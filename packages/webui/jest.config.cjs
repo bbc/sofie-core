@@ -1,5 +1,9 @@
 module.exports = {
-	setupFilesAfterEnv: ['./src/__mocks__/_setupMocks.ts', '<rootDir>/src/client/__tests__/jest-setup.cjs'],
+	setupFilesAfterEnv: [
+		'./src/__mocks__/_setupMocks.ts',
+		'<rootDir>/src/client/__tests__/jest-setup.cjs',
+		'@testing-library/jest-dom',
+	],
 	globals: {},
 	moduleFileExtensions: ['js', 'ts', 'tsx'],
 	moduleNameMapper: {
