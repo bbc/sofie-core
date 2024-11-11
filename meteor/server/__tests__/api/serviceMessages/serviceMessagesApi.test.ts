@@ -42,6 +42,7 @@ const fakeCoreSystem: ICoreSystem = {
 	version: '3',
 	previousVersion: null,
 	serviceMessages: {},
+	lastBlueprintConfig: undefined,
 }
 
 describe('Service messages internal API', () => {

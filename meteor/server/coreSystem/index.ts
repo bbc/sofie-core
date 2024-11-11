@@ -64,6 +64,7 @@ async function initializeCoreSystem() {
 					enabled: true,
 				},
 			},
+			lastBlueprintConfig: undefined,
 		})
 
 		if (!isRunningInJest()) {

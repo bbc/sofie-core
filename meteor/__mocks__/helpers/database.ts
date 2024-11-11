@@ -171,6 +171,7 @@ export async function setupMockCore(doc?: Partial<ICoreSystem>): Promise<ICoreSy
 		version: '0.0.0',
 		previousVersion: '0.0.0',
 		serviceMessages: {},
+		lastBlueprintConfig: undefined,
 	}
 	const coreSystem = _.extend(defaultCore, doc)
 	await CoreSystem.removeAsync(SYSTEM_ID)

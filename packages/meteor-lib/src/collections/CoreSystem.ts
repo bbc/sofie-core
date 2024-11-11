@@ -1,3 +1,4 @@
+import { LastBlueprintConfig } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
 import { LogLevel } from '../lib'
 import { CoreSystemId, BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
@@ -107,6 +108,12 @@ export interface ICoreSystem {
 	}
 
 	logo?: SofieLogo
+
+	/** Details on the last blueprint used to generate the defaults values for this
+	 * Note: This doesn't currently have any 'config' which it relates to.
+	 * The name is to be consistent with studio/showstyle, and in preparation for their being config/configpresets used here
+	 */
+	lastBlueprintConfig: Omit<LastBlueprintConfig, 'blueprintConfigPresetId' | 'config'> | undefined
 }
 
 /** In the beginning, there was the database, and the database was with Sofie, and the database was Sofie.
