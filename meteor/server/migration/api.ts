@@ -20,7 +20,7 @@ import {
 	validateConfigForShowStyleBase,
 	validateConfigForStudio,
 } from './upgrades'
-import { ShowStyleBaseId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { CoreSystemId, ShowStyleBaseId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { BlueprintValidateConfigForStudioResult } from '@sofie-automation/corelib/dist/worker/studio'
 import { runUpgradeForCoreSystem } from './upgrades/system'
 
@@ -125,10 +125,10 @@ class ServerMigrationAPI extends MethodContextAPI implements NewMigrationAPI {
 		return runUpgradeForShowStyleBase(showStyleBaseId)
 	}
 
-	async runUpgradeForCoreSystem(): Promise<void> {
+	async runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promise<void> {
 		await SystemWriteAccess.migrations(this)
 
-		return runUpgradeForCoreSystem()
+		return runUpgradeForCoreSystem(coreSystemId)
 	}
 }
 registerClassToMeteorMethods(MigrationAPIMethods, ServerMigrationAPI, false)

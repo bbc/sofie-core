@@ -32,7 +32,11 @@ export interface BlueprintMapEntry {
 
 export function checkDocUpgradeStatus(
 	blueprintMap: Map<BlueprintId, BlueprintMapEntry>,
-	doc: Pick<ICoreSystem, CoreSystemFields> | Pick<DBStudio, StudioFields> | Pick<DBShowStyleBase, ShowStyleBaseFields>
+	doc:
+		| Pick<ICoreSystem, CoreSystemFields>
+		| Pick<DBStudio, StudioFields>
+		| Pick<DBShowStyleBase, ShowStyleBaseFields>,
+	blueprintUsesConfig: boolean
 ): Pick<UIBlueprintUpgradeStatusBase, 'invalidReason' | 'changes' | 'pendingRunOfFixupFunction'> {
 	// Check the blueprintId is valid
 	const blueprint = doc.blueprintId ? blueprintMap.get(doc.blueprintId) : null
@@ -40,26 +44,30 @@ export function checkDocUpgradeStatus(
 		// Studio blueprint is missing/invalid
 		return {
 			invalidReason: generateTranslation('Invalid blueprint: "{{blueprintId}}"', {
-				blueprintId: doc.blueprintId,
+				blueprintId: doc.blueprintId ?? 'undefined',
 			}),
 			pendingRunOfFixupFunction: false,
 			changes: [],
 		}
 	}
 
-	// Check the blueprintConfigPresetId is valid
-	const configPreset = doc.blueprintConfigPresetId ? blueprint.configPresets[doc.blueprintConfigPresetId] : undefined
-	if (!configPreset) {
-		return {
-			invalidReason: generateTranslation(
-				'Invalid config preset for blueprint: "{{configPresetId}}" ({{blueprintId}})',
-				{
-					configPresetId: doc.blueprintConfigPresetId ?? '',
-					blueprintId: doc.blueprintId,
-				}
-			),
-			pendingRunOfFixupFunction: false, // TODO - verify
-			changes: [],
+	if (blueprintUsesConfig) {
+		// Check the blueprintConfigPresetId is valid
+		const configPreset = doc.blueprintConfigPresetId
+			? blueprint.configPresets[doc.blueprintConfigPresetId]
+			: undefined
+		if (!configPreset) {
+			return {
+				invalidReason: generateTranslation(
+					'Invalid config preset for blueprint: "{{configPresetId}}" ({{blueprintId}})',
+					{
+						configPresetId: doc.blueprintConfigPresetId ?? '',
+						blueprintId: doc.blueprintId,
+					}
+				),
+				pendingRunOfFixupFunction: false, // TODO - verify
+				changes: [],
+			}
 		}
 	}
 

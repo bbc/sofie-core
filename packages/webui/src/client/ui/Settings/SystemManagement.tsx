@@ -14,6 +14,7 @@ import { CoreSystem } from '../../collections'
 import { CollectionCleanupResult } from '@sofie-automation/meteor-lib/dist/api/system'
 import { LabelActual } from '../../lib/Components/LabelAndOverrides'
 import { catchError } from '../../lib/lib'
+import { SystemManagementBlueprint } from './SystemManagement/Blueprint'
 
 interface WithCoreSystemProps {
 	coreSystem: ICoreSystem | undefined
@@ -29,6 +30,8 @@ export default function SystemManagement(): JSX.Element | null {
 	return (
 		<div className="studio-edit mod mhl mvn">
 			<SystemManagementGeneral coreSystem={coreSystem} />
+
+			<SystemManagementBlueprint coreSystem={coreSystem} />
 
 			<SystemManagementNotificationMessage coreSystem={coreSystem} />
 

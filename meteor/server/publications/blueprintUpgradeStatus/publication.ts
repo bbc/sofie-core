@@ -225,7 +225,7 @@ function updateCoreSystemUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	coreSystem: Pick<ICoreSystem, CoreSystemFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, coreSystem)
+	const status = checkDocUpgradeStatus(blueprintsMap, coreSystem, false)
 
 	collection.replace({
 		...status,
@@ -241,7 +241,7 @@ function updateStudioUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	studio: Pick<DBStudio, StudioFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, studio)
+	const status = checkDocUpgradeStatus(blueprintsMap, studio, true)
 
 	collection.replace({
 		...status,
@@ -257,7 +257,7 @@ function updateShowStyleUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	showStyleBase: Pick<DBShowStyleBase, ShowStyleBaseFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, showStyleBase)
+	const status = checkDocUpgradeStatus(blueprintsMap, showStyleBase, true)
 
 	collection.replace({
 		...status,

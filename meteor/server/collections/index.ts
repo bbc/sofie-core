@@ -75,6 +75,7 @@ export const CoreSystem = createAsyncOnlyMongoCollection<ICoreSystem>(Collection
 			'cron',
 			'logo',
 			'evaluations',
+			'blueprintId',
 		])
 	},
 })
