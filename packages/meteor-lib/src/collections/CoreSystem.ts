@@ -113,7 +113,12 @@ export interface ICoreSystem {
 	 * Note: This doesn't currently have any 'config' which it relates to.
 	 * The name is to be consistent with studio/showstyle, and in preparation for their being config/configpresets used here
 	 */
-	lastBlueprintConfig: Omit<LastBlueprintConfig, 'blueprintConfigPresetId' | 'config'> | undefined
+	lastBlueprintConfig: LastBlueprintConfig | undefined
+
+	/** These fields are to have type consistency with the full config driven upgrades flow, but we don't use them yet */
+	blueprintConfigPresetId?: undefined
+	lastBlueprintFixUpHash?: undefined
+	blueprintConfigWithOverrides?: undefined
 }
 
 /** In the beginning, there was the database, and the database was with Sofie, and the database was Sofie.

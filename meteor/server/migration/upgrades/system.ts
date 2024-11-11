@@ -1,17 +1,16 @@
 import { Meteor } from 'meteor/meteor'
-import { getCoreSystemAsync } from '../../coreSystem/collection'
 import { logger } from '../../logging'
 import { Blueprints, CoreSystem } from '../../collections'
 import { BlueprintManifestType, SystemBlueprintManifest } from '@sofie-automation/blueprints-integration'
 import { evalBlueprint } from '../../api/blueprints/cache'
 import { CommonContext } from './context'
 import { updateTriggeredActionsForShowStyleBaseId } from './lib'
-import { SYSTEM_ID } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
+import { CoreSystemId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
-export async function runUpgradeForCoreSystem(): Promise<void> {
+export async function runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promise<void> {
 	logger.info(`Running upgrade for CoreSystem`)
 
-	const { coreSystem, blueprint, blueprintManifest } = await loadCoreSystemAndBlueprint()
+	const { coreSystem, blueprint, blueprintManifest } = await loadCoreSystemAndBlueprint(coreSystemId)
 
 	if (typeof blueprintManifest.applyConfig !== 'function')
 		throw new Meteor.Error(500, 'Blueprint does not support this config flow')
@@ -23,13 +22,15 @@ export async function runUpgradeForCoreSystem(): Promise<void> {
 
 	const result = blueprintManifest.applyConfig(blueprintContext)
 
-	await CoreSystem.updateAsync(SYSTEM_ID, {
+	await CoreSystem.updateAsync(coreSystemId, {
 		$set: {
 			// 'sourceLayersWithOverrides.defaults': normalizeArray(result.sourceLayers, '_id'),
 			// 'outputLayersWithOverrides.defaults': normalizeArray(result.outputLayers, '_id'),
 			lastBlueprintConfig: {
 				blueprintHash: blueprint.blueprintHash,
 				blueprintId: blueprint._id,
+				blueprintConfigPresetId: '',
+				config: {},
 			},
 		},
 	})
@@ -37,9 +38,9 @@ export async function runUpgradeForCoreSystem(): Promise<void> {
 	await updateTriggeredActionsForShowStyleBaseId(null, result.triggeredActions)
 }
 
-async function loadCoreSystemAndBlueprint() {
-	const coreSystem = await getCoreSystemAsync()
-	if (!coreSystem) throw new Meteor.Error(404, `CoreSystem not found!`)
+async function loadCoreSystemAndBlueprint(coreSystemId: CoreSystemId) {
+	const coreSystem = await CoreSystem.findOneAsync(coreSystemId)
+	if (!coreSystem) throw new Meteor.Error(404, `CoreSystem "${coreSystemId}" not found!`)
 
 	// if (!showStyleBase.blueprintConfigPresetId) throw new Meteor.Error(500, 'ShowStyleBase is missing config preset')
 

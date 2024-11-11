@@ -16,10 +16,11 @@ import { joinObjectPathFragments, objectPathGet } from '@sofie-automation/coreli
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { generateTranslation } from '../../lib/tempLib'
 import { logger } from '../../logging'
-import { ShowStyleBaseFields, StudioFields } from './reactiveContentCache'
+import { CoreSystemFields, ShowStyleBaseFields, StudioFields } from './reactiveContentCache'
 import _ from 'underscore'
 import { UIBlueprintUpgradeStatusBase } from '@sofie-automation/meteor-lib/dist/api/upgradeStatus'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { ICoreSystem } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
 
 export interface BlueprintMapEntry {
 	_id: BlueprintId
@@ -31,7 +32,7 @@ export interface BlueprintMapEntry {
 
 export function checkDocUpgradeStatus(
 	blueprintMap: Map<BlueprintId, BlueprintMapEntry>,
-	doc: Pick<DBStudio, StudioFields> | Pick<DBShowStyleBase, ShowStyleBaseFields>
+	doc: Pick<ICoreSystem, CoreSystemFields> | Pick<DBStudio, StudioFields> | Pick<DBShowStyleBase, ShowStyleBaseFields>
 ): Pick<UIBlueprintUpgradeStatusBase, 'invalidReason' | 'changes' | 'pendingRunOfFixupFunction'> {
 	// Check the blueprintId is valid
 	const blueprint = doc.blueprintId ? blueprintMap.get(doc.blueprintId) : null
@@ -101,7 +102,7 @@ export function checkDocUpgradeStatus(
 		changes.push(generateTranslation('Blueprint has a new version'))
 	}
 
-	if (doc.lastBlueprintConfig) {
+	if (doc.lastBlueprintConfig && doc.blueprintConfigWithOverrides) {
 		// Check if the config blob has changed since last run
 		const newConfig = applyAndValidateOverrides(doc.blueprintConfigWithOverrides).obj
 		const oldConfig = doc.lastBlueprintConfig.config
