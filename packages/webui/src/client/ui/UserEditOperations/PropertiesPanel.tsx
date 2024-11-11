@@ -29,6 +29,7 @@ import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface PendingChange {
 	operationId: string
@@ -376,7 +377,12 @@ function EditingTypeAction(props: {
 						</div>
 					</a>
 					<span className="propertiespanel-pop-up__label">
-						{' '}
+						{hasBeenEdited && (
+							<>
+								{' '}
+								<FontAwesomeIcon icon="pencil-alt" />
+							</>
+						)}{' '}
 						{translateMessage(props.userEditOperation.label, i18nTranslator)}
 					</span>
 				</div>
@@ -534,6 +540,7 @@ function EditingTypeChangeSourceLayerSource(props: {
 						)}
 						onChange={handleSourceChange}
 					>
+						{hasBeenEdited && <FontAwesomeIcon icon="pencil-alt" />}
 						<SchemaFormInPlace
 							schema={selectedGroupSchema}
 							object={selectedValues}
