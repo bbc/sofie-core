@@ -29,11 +29,11 @@ export const addSteps = addMigrationSteps('0.1.0', [
 				name: 'Default studio',
 				organizationId: null,
 				supportedShowStyleBase: [],
-				settings: {
+				settingsWithOverrides: wrapDefaultObject({
 					frameRate: 25,
 					mediaPreviewsUrl: '',
 					minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
-				},
+				}),
 				mappingsWithOverrides: wrapDefaultObject({}),
 				blueprintConfigWithOverrides: wrapDefaultObject({}),
 				_rundownVersionHash: '',

@@ -41,7 +41,7 @@ export async function handleBlueprintUpgradeForStudio(context: JobContext, _data
 		name: 'applyConfig',
 		identifier: `studio:${context.studioId},blueprint:${blueprint.blueprintId}`,
 	})
-	const rawBlueprintConfig = applyAndValidateOverrides(context.studio.blueprintConfigWithOverrides).obj
+	const rawBlueprintConfig = context.studio.blueprintConfig
 
 	const result = blueprint.blueprint.applyConfig(
 		blueprintContext,
@@ -158,7 +158,7 @@ export async function handleBlueprintValidateConfigForStudio(
 		name: 'validateConfig',
 		identifier: `studio:${context.studioId},blueprint:${blueprint.blueprintId}`,
 	})
-	const rawBlueprintConfig = applyAndValidateOverrides(context.studio.blueprintConfigWithOverrides).obj
+	const rawBlueprintConfig = applyAndValidateOverrides(context.rawStudio.blueprintConfigWithOverrides).obj
 
 	// This clone seems excessive, but without it a DataCloneError is generated when posting the result to the parent
 	const messages = clone(blueprint.blueprint.validateConfig(blueprintContext, rawBlueprintConfig))
@@ -200,7 +200,7 @@ export async function handleBlueprintFixUpConfigForStudio(
 	const blueprintContext = new FixUpBlueprintConfigContext(
 		commonContext,
 		JSONBlobParse(blueprint.blueprint.studioConfigSchema),
-		context.studio.blueprintConfigWithOverrides
+		context.rawStudio.blueprintConfigWithOverrides
 	)
 
 	blueprint.blueprint.fixUpConfig(blueprintContext)

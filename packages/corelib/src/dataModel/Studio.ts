@@ -122,7 +122,8 @@ export interface DBStudio {
 	/** Config values are used by the Blueprints */
 	blueprintConfigWithOverrides: ObjectWithOverrides<IBlueprintConfig>
 
-	settings: IStudioSettings
+	settingsWithOverrides: ObjectWithOverrides<IStudioSettings>
+	// settings: IStudioSettings
 
 	_rundownVersionHash: string
 

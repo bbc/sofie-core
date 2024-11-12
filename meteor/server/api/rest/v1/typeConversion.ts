@@ -266,13 +266,17 @@ export async function studioFrom(apiStudio: APIStudio, existingId?: StudioId): P
 		? updateOverrides(studio.blueprintConfigWithOverrides, apiStudio.config as IBlueprintConfig)
 		: wrapDefaultObject({})
 
+	const studioSettings = studioSettingsFrom(apiStudio.settings)
+
 	return {
 		_id: existingId ?? getRandomId(),
 		name: apiStudio.name,
 		blueprintId: blueprint?._id,
 		blueprintConfigPresetId: apiStudio.blueprintConfigPresetId,
 		blueprintConfigWithOverrides: blueprintConfig,
-		settings: studioSettingsFrom(apiStudio.settings),
+		settingsWithOverrides: studio
+			? updateOverrides(studio.settingsWithOverrides, studioSettings)
+			: wrapDefaultObject(studioSettings),
 		supportedShowStyleBase: apiStudio.supportedShowStyleBase?.map((id) => protectString<ShowStyleBaseId>(id)) ?? [],
 		organizationId: null,
 		mappingsWithOverrides: wrapDefaultObject({}),
@@ -293,7 +297,7 @@ export async function studioFrom(apiStudio: APIStudio, existingId?: StudioId): P
 }
 
 export function APIStudioFrom(studio: DBStudio): APIStudio {
-	const studioSettings = APIStudioSettingsFrom(studio.settings)
+	const studioSettings = APIStudioSettingsFrom(applyAndValidateOverrides(studio.settingsWithOverrides).obj)
 
 	return {
 		name: studio.name,

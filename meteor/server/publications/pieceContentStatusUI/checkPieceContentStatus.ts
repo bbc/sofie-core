@@ -185,7 +185,7 @@ export type PieceContentStatusPiece = Pick<PieceGeneric, '_id' | 'content' | 'ex
 	pieceInstanceId?: PieceInstanceId
 }
 export interface PieceContentStatusStudio
-	extends Pick<DBStudio, '_id' | 'settings' | 'previewContainerIds' | 'thumbnailContainerIds'> {
+	extends Pick<DBStudio, '_id' | 'previewContainerIds' | 'thumbnailContainerIds'> {
 	/** Mappings between the physical devices / outputs and logical ones */
 	mappings: MappingsExt
 	/** Route sets with overrides */
@@ -194,6 +194,8 @@ export interface PieceContentStatusStudio
 	 * (These are used by the Package Manager and the Expected Packages)
 	 */
 	packageContainers: Record<string, StudioPackageContainer>
+
+	settings: IStudioSettings
 }
 
 export async function checkPieceContentStatusAndDependencies(

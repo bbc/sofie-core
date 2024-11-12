@@ -1,11 +1,15 @@
 import { addMigrationSteps } from './databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from './currentSystemVersion'
 import { Studios, TriggeredActions } from '../collections'
-import { convertObjectIntoOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import {
+	convertObjectIntoOverrides,
+	wrapDefaultObject,
+} from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import {
 	StudioRouteSet,
 	StudioRouteSetExclusivityGroup,
 	StudioPackageContainer,
+	IStudioSettings,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { DEFAULT_CORE_TRIGGER_IDS } from './upgrades/defaultSystemActionTriggers'
 
@@ -210,6 +214,48 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 				blueprintUniqueId: null,
 				_id: { $in: DEFAULT_CORE_TRIGGER_IDS },
 			})
+		},
+	},
+
+	{
+		id: `convert studio.settings to ObjectWithOverrides`,
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const studios = await Studios.findFetchAsync({
+				settings: { $exists: true },
+				settingsWithOverrides: { $exists: false },
+			})
+
+			for (const studio of studios) {
+				//@ts-expect-error settings is not typed as ObjectWithOverrides
+				if (studio.settings) {
+					return 'settings must be converted to an ObjectWithOverrides'
+				}
+			}
+
+			return false
+		},
+		migrate: async () => {
+			const studios = await Studios.findFetchAsync({
+				settings: { $exists: true },
+				settingsWithOverrides: { $exists: false },
+			})
+
+			for (const studio of studios) {
+				//@ts-expect-error settings is typed as Record<string, StudioRouteSet>
+				const oldSettings = studio.settings
+
+				const newSettings = wrapDefaultObject<IStudioSettings>(oldSettings || {})
+
+				await Studios.updateAsync(studio._id, {
+					$set: {
+						settingsWithOverrides: newSettings,
+					},
+					$unset: {
+						// settings: 1,
+					},
+				})
+			}
 		},
 	},
 ])
