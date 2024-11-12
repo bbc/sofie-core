@@ -14,7 +14,7 @@ import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowSt
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { joinObjectPathFragments, objectPathGet } from '@sofie-automation/corelib/dist/lib'
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
-import { generateTranslation } from '../../lib/tempLib'
+import { generateTranslation, protectString } from '../../lib/tempLib'
 import { logger } from '../../logging'
 import { CoreSystemFields, ShowStyleBaseFields, StudioFields } from './reactiveContentCache'
 import _ from 'underscore'
@@ -32,11 +32,7 @@ export interface BlueprintMapEntry {
 
 export function checkDocUpgradeStatus(
 	blueprintMap: Map<BlueprintId, BlueprintMapEntry>,
-	doc:
-		| Pick<ICoreSystem, CoreSystemFields>
-		| Pick<DBStudio, StudioFields>
-		| Pick<DBShowStyleBase, ShowStyleBaseFields>,
-	blueprintUsesConfig: boolean
+	doc: Pick<DBStudio, StudioFields> | Pick<DBShowStyleBase, ShowStyleBaseFields>
 ): Pick<UIBlueprintUpgradeStatusBase, 'invalidReason' | 'changes' | 'pendingRunOfFixupFunction'> {
 	// Check the blueprintId is valid
 	const blueprint = doc.blueprintId ? blueprintMap.get(doc.blueprintId) : null
@@ -51,23 +47,19 @@ export function checkDocUpgradeStatus(
 		}
 	}
 
-	if (blueprintUsesConfig) {
-		// Check the blueprintConfigPresetId is valid
-		const configPreset = doc.blueprintConfigPresetId
-			? blueprint.configPresets[doc.blueprintConfigPresetId]
-			: undefined
-		if (!configPreset) {
-			return {
-				invalidReason: generateTranslation(
-					'Invalid config preset for blueprint: "{{configPresetId}}" ({{blueprintId}})',
-					{
-						configPresetId: doc.blueprintConfigPresetId ?? '',
-						blueprintId: doc.blueprintId,
-					}
-				),
-				pendingRunOfFixupFunction: false, // TODO - verify
-				changes: [],
-			}
+	// Check the blueprintConfigPresetId is valid
+	const configPreset = doc.blueprintConfigPresetId ? blueprint.configPresets[doc.blueprintConfigPresetId] : undefined
+	if (!configPreset) {
+		return {
+			invalidReason: generateTranslation(
+				'Invalid config preset for blueprint: "{{configPresetId}}" ({{blueprintId}})',
+				{
+					configPresetId: doc.blueprintConfigPresetId ?? '',
+					blueprintId: doc.blueprintId,
+				}
+			),
+			pendingRunOfFixupFunction: false, // TODO - verify
+			changes: [],
 		}
 	}
 
@@ -135,6 +127,65 @@ export function checkDocUpgradeStatus(
 					logger.error(`Faield to compare configs: ${stringifyError(e)}`)
 				}
 			}
+		}
+	}
+
+	return {
+		changes,
+		pendingRunOfFixupFunction: false,
+	}
+}
+
+export function checkSystemUpgradeStatus(
+	blueprintMap: Map<BlueprintId, BlueprintMapEntry>,
+	doc: Pick<ICoreSystem, CoreSystemFields>
+): Pick<UIBlueprintUpgradeStatusBase, 'invalidReason' | 'changes' | 'pendingRunOfFixupFunction'> {
+	const changes: ITranslatableMessage[] = []
+
+	// Check the blueprintId is valid
+	if (doc.blueprintId) {
+		const blueprint = blueprintMap.get(doc.blueprintId)
+		if (!blueprint || !blueprint.configPresets) {
+			// Studio blueprint is missing/invalid
+			return {
+				invalidReason: generateTranslation('Invalid blueprint: "{{blueprintId}}"', {
+					blueprintId: doc.blueprintId ?? 'undefined',
+				}),
+				pendingRunOfFixupFunction: false,
+				changes: [],
+			}
+		}
+
+		// Some basic property checks
+		if (!doc.lastBlueprintConfig) {
+			changes.push(generateTranslation('Config has not been applied before'))
+		} else if (doc.lastBlueprintConfig.blueprintId !== doc.blueprintId) {
+			changes.push(
+				generateTranslation('Blueprint has been changed. From "{{ oldValue }}", to "{{ newValue }}"', {
+					oldValue: doc.lastBlueprintConfig.blueprintId || '',
+					newValue: doc.blueprintId || '',
+				})
+			)
+		} else if (doc.lastBlueprintConfig.blueprintHash !== blueprint.blueprintHash) {
+			changes.push(generateTranslation('Blueprint has a new version'))
+		}
+	} else {
+		// No blueprint assigned
+
+		const defaultId = protectString('default')
+
+		// Some basic property checks
+		if (!doc.lastBlueprintConfig) {
+			changes.push(generateTranslation('Config has not been applied before'))
+		} else if (doc.lastBlueprintConfig.blueprintId !== defaultId) {
+			changes.push(
+				generateTranslation('Blueprint has been changed. From "{{ oldValue }}", to "{{ newValue }}"', {
+					oldValue: doc.lastBlueprintConfig.blueprintId || '',
+					newValue: defaultId,
+				})
+			)
+		} else if (doc.lastBlueprintConfig.blueprintHash !== defaultId) {
+			changes.push(generateTranslation('Blueprint has a new version'))
 		}
 	}
 

@@ -1,12 +1,13 @@
 import { addMigrationSteps } from './databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from './currentSystemVersion'
-import { Studios } from '../collections'
+import { Studios, TriggeredActions } from '../collections'
 import { convertObjectIntoOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import {
 	StudioRouteSet,
 	StudioRouteSetExclusivityGroup,
 	StudioPackageContainer,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { DEFAULT_CORE_TRIGGER_IDS } from './upgrades/defaultSystemActionTriggers'
 
 /*
  * **************************************************************************************
@@ -185,6 +186,30 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 					},
 				})
 			}
+		},
+	},
+	{
+		id: 'TriggeredActions.remove old systemwide',
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const coreTriggeredActionsCount = await TriggeredActions.countDocuments({
+				showStyleBaseId: null,
+				blueprintUniqueId: null,
+				_id: { $in: DEFAULT_CORE_TRIGGER_IDS },
+			})
+
+			if (coreTriggeredActionsCount > 0) {
+				return `System-wide triggered actions needing removal.`
+			}
+
+			return false
+		},
+		migrate: async () => {
+			await TriggeredActions.removeAsync({
+				showStyleBaseId: null,
+				blueprintUniqueId: null,
+				_id: { $in: DEFAULT_CORE_TRIGGER_IDS },
+			})
 		},
 	},
 ])

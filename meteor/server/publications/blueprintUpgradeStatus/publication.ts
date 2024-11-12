@@ -21,7 +21,7 @@ import {
 	StudioFields,
 } from './reactiveContentCache'
 import { UpgradesContentObserver } from './upgradesContentObserver'
-import { BlueprintMapEntry, checkDocUpgradeStatus } from './checkStatus'
+import { BlueprintMapEntry, checkDocUpgradeStatus, checkSystemUpgradeStatus } from './checkStatus'
 import { BlueprintManifestType } from '@sofie-automation/blueprints-integration'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
@@ -225,7 +225,7 @@ function updateCoreSystemUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	coreSystem: Pick<ICoreSystem, CoreSystemFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, coreSystem, false)
+	const status = checkSystemUpgradeStatus(blueprintsMap, coreSystem)
 
 	collection.replace({
 		...status,
@@ -241,7 +241,7 @@ function updateStudioUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	studio: Pick<DBStudio, StudioFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, studio, true)
+	const status = checkDocUpgradeStatus(blueprintsMap, studio)
 
 	collection.replace({
 		...status,
@@ -257,7 +257,7 @@ function updateShowStyleUpgradeStatus(
 	blueprintsMap: Map<BlueprintId, BlueprintMapEntry>,
 	showStyleBase: Pick<DBShowStyleBase, ShowStyleBaseFields>
 ) {
-	const status = checkDocUpgradeStatus(blueprintsMap, showStyleBase, true)
+	const status = checkDocUpgradeStatus(blueprintsMap, showStyleBase)
 
 	collection.replace({
 		...status,
