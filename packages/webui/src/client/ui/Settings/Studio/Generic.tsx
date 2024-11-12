@@ -217,7 +217,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Frame Rate')}
 				item={wrappedItem}
 				itemKey={'frameRate'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -234,7 +233,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Minimum Take Span')}
 				item={wrappedItem}
 				itemKey={'minimumTakeSpan'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -251,7 +249,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Enable "Play from Anywhere"')}
 				item={wrappedItem}
 				itemKey={'enablePlayFromAnywhere'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -261,7 +258,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Media Preview URL')}
 				item={wrappedItem}
 				itemKey={'mediaPreviewsUrl'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -278,7 +274,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Slack Webhook URLs')}
 				item={wrappedItem}
 				itemKey={'slackEvaluationUrls'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -295,7 +290,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Supported Media Formats')}
 				item={wrappedItem}
 				itemKey={'supportedMediaFormats'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -312,7 +306,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Supported Audio Formats')}
 				item={wrappedItem}
 				itemKey={'supportedAudioStreams'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -329,7 +322,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Force the Multi-gateway-mode')}
 				item={wrappedItem}
 				itemKey={'forceMultiGatewayMode'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -339,7 +331,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Multi-gateway-mode delay time')}
 				item={wrappedItem}
 				itemKey={'multiGatewayNowSafeLatency'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
@@ -356,7 +347,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Allow Rundowns to be reset while on-air')}
 				item={wrappedItem}
 				itemKey={'allowRundownResetOnAir'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -366,7 +356,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Preserve position of segments when unsynced relative to other segments')}
 				item={wrappedItem}
 				itemKey={'preserveOrphanedSegmentPositionInRundown'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 				hint={t('This has only been tested for the iNews gateway')}
 			>
@@ -377,7 +366,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Allow AdlibTesting (rehearsal) mode, for testing adlibs before taking the first Part')}
 				item={wrappedItem}
 				itemKey={'allowAdlibTestingSegment'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -387,7 +375,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Enable QuickLoop')}
 				item={wrappedItem}
 				itemKey={'enableQuickLoop'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -397,7 +384,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('Source Type')}
 				item={wrappedItem}
 				itemKey={'forceQuickLoopAutoNext'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 				options={autoNextOptions}
 			>
@@ -415,7 +401,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 				label={t('QuickLoop Fallback Part Duration')}
 				item={wrappedItem}
 				itemKey={'fallbackPartDuration'}
-				opPrefix={wrappedItem.id}
 				overrideHelper={overrideHelper}
 			>
 				{(value, handleUpdate) => (
