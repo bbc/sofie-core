@@ -5,11 +5,34 @@ import {
 	PlayoutActions,
 } from '@sofie-automation/blueprints-integration'
 import { getHash, protectString, generateTranslation as t } from '../../lib/tempLib'
+import { TriggeredActionId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 let j = 0
 
-export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
-	{
+export enum IBlueprintDefaultCoreTriggersType {
+	toggleShelf = 'toggleShelf',
+	activateRundownPlaylist = 'activateRundownPlaylist',
+	activateRundownPlaylistRehearsal = 'activateRundownPlaylistRehearsal',
+	deactivateRundownPlaylist = 'deactivateRundownPlaylist',
+	take = 'take',
+	hold = 'hold',
+	holdUndo = 'holdUndo',
+	resetRundownPlaylist = 'resetRundownPlaylist',
+	disableNextPiece = 'disableNextPiece',
+	disableNextPieceUndo = 'disableNextPieceUndo',
+	createSnapshotForDebug = 'createSnapshotForDebug',
+	moveNextPart = 'moveNextPart',
+	moveNextSegment = 'moveNextSegment',
+	movePreviousPart = 'movePreviousPart',
+	movePreviousSegment = 'movePreviousSegment',
+	goToOnAirLine = 'goToOnAirLine',
+	rewindSegments = 'rewindSegments',
+}
+
+export type IBlueprintDefaultCoreTriggers = { [key in IBlueprintDefaultCoreTriggersType]: IBlueprintTriggeredActions }
+
+export const DEFAULT_CORE_TRIGGERS: IBlueprintDefaultCoreTriggers = {
+	[IBlueprintDefaultCoreTriggersType.toggleShelf]: {
 		_id: 'core_toggleShelf',
 		actions: {
 			'0': {
@@ -32,7 +55,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Toggle Shelf'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.activateRundownPlaylist]: {
 		_id: 'core_activateRundownPlaylist',
 		actions: {
 			'0': {
@@ -55,7 +78,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Activate (On-Air)'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.activateRundownPlaylistRehearsal]: {
 		_id: 'core_activateRundownPlaylist_rehearsal',
 		actions: {
 			'0': {
@@ -78,7 +101,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Activate (Rehearsal)'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.deactivateRundownPlaylist]: {
 		_id: 'core_deactivateRundownPlaylist',
 		actions: {
 			'0': {
@@ -100,7 +123,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Deactivate'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.take]: {
 		_id: 'core_take',
 		actions: {
 			'0': {
@@ -127,7 +150,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Take'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.hold]: {
 		_id: 'core_hold',
 		actions: {
 			'0': {
@@ -149,7 +172,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Hold'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.holdUndo]: {
 		_id: 'core_hold_undo',
 		actions: {
 			'0': {
@@ -172,7 +195,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Undo Hold'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.resetRundownPlaylist]: {
 		_id: 'core_reset_rundown_playlist',
 		actions: {
 			'0': {
@@ -199,7 +222,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Reset Rundown'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.disableNextPiece]: {
 		_id: 'core_disable_next_piece',
 		actions: {
 			'0': {
@@ -221,7 +244,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Disable the next element'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.disableNextPieceUndo]: {
 		_id: 'core_disable_next_piece_undo',
 		actions: {
 			'0': {
@@ -244,7 +267,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Undo Disable the next element'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.createSnapshotForDebug]: {
 		_id: 'core_create_snapshot_for_debug',
 		actions: {
 			'0': {
@@ -266,7 +289,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Store Snapshot'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.moveNextPart]: {
 		_id: 'core_move_next_part',
 		actions: {
 			'0': {
@@ -290,7 +313,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Move Next forwards'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.moveNextSegment]: {
 		_id: 'core_move_next_segment',
 		actions: {
 			'0': {
@@ -314,7 +337,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Move Next to the following segment'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.movePreviousPart]: {
 		_id: 'core_move_previous_part',
 		actions: {
 			'0': {
@@ -338,7 +361,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Move Next backwards'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.movePreviousSegment]: {
 		_id: 'core_move_previous_segment',
 		actions: {
 			'0': {
@@ -362,7 +385,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Move Next to the previous segment'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.goToOnAirLine]: {
 		_id: 'core_go_to_onAir_line',
 		actions: {
 			'0': {
@@ -384,7 +407,7 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Go to On Air line'),
 	},
-	{
+	[IBlueprintDefaultCoreTriggersType.rewindSegments]: {
 		_id: 'core_rewind_segments',
 		actions: {
 			'0': {
@@ -406,8 +429,8 @@ export const DEFAULT_CORE_TRIGGERS: IBlueprintTriggeredActions[] = [
 		_rank: ++j * 1000,
 		name: t('Rewind segments to start'),
 	},
-]
+}
 
-export const DEFAULT_CORE_TRIGGER_IDS = DEFAULT_CORE_TRIGGERS.map((triggeredAction) =>
-	protectString(getHash(triggeredAction._id))
+export const DEFAULT_CORE_TRIGGER_IDS = Object.values<IBlueprintTriggeredActions>(DEFAULT_CORE_TRIGGERS).map(
+	(triggeredAction) => protectString<TriggeredActionId>(getHash(triggeredAction._id))
 )

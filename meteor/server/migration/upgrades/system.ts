@@ -4,10 +4,11 @@ import { Blueprints, CoreSystem } from '../../collections'
 import {
 	BlueprintManifestType,
 	BlueprintResultApplySystemConfig,
+	IBlueprintTriggeredActions,
 	SystemBlueprintManifest,
 } from '@sofie-automation/blueprints-integration'
 import { evalBlueprint } from '../../api/blueprints/cache'
-import { CommonContext } from './context'
+import { CoreSystemApplyConfigContext } from './context'
 import { updateTriggeredActionsForShowStyleBaseId } from './lib'
 import { CoreSystemId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DEFAULT_CORE_TRIGGERS } from './defaultSystemActionTriggers'
@@ -21,7 +22,7 @@ export async function runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promi
 	let result: BlueprintResultApplySystemConfig
 
 	if (blueprintManifest && typeof blueprintManifest.applyConfig === 'function') {
-		const blueprintContext = new CommonContext(
+		const blueprintContext = new CoreSystemApplyConfigContext(
 			'applyConfig',
 			`coreSystem:${coreSystem._id},blueprint:${blueprint.blueprintId}`
 		)
@@ -82,6 +83,6 @@ async function loadCoreSystemAndBlueprint(coreSystemId: CoreSystemId) {
 
 function generateDefaultSystemConfig(): BlueprintResultApplySystemConfig {
 	return {
-		triggeredActions: DEFAULT_CORE_TRIGGERS,
+		triggeredActions: Object.values<IBlueprintTriggeredActions>(DEFAULT_CORE_TRIGGERS),
 	}
 }

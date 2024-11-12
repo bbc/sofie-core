@@ -1,11 +1,10 @@
 import { addMigrationSteps } from './databaseMigration'
 import { logger } from '../logging'
-import { getRandomId, protectString, getHash } from '../lib/tempLib'
+import { getRandomId, protectString } from '../lib/tempLib'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { ShowStyleVariantId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { ShowStyleBases, ShowStyleVariants, Studios, TriggeredActions } from '../collections'
+import { ShowStyleBases, ShowStyleVariants, Studios } from '../collections'
 import { DEFAULT_MINIMUM_TAKE_SPAN } from '@sofie-automation/shared-lib/dist/core/constants'
-import { DEFAULT_CORE_TRIGGERS } from './upgrades/defaultSystemActionTriggers'
 
 /**
  * This file contains system specific migration steps.
@@ -127,34 +126,6 @@ export const addSteps = addMigrationSteps('0.1.0', [
 					blueprintConfigWithOverrides: wrapDefaultObject({}),
 					_rundownVersionHash: '',
 					_rank: 0,
-				})
-			}
-		},
-	},
-	{
-		id: 'TriggeredActions.core',
-		canBeRunAutomatically: true,
-		validate: async () => {
-			const coreTriggeredActionsCount = await TriggeredActions.countDocuments({
-				showStyleBaseId: null,
-			})
-
-			if (coreTriggeredActionsCount === 0) {
-				return `No system-wide triggered actions set up.`
-			}
-
-			return false
-		},
-		migrate: async () => {
-			for (const triggeredAction of DEFAULT_CORE_TRIGGERS) {
-				await TriggeredActions.insertAsync({
-					_id: protectString(getHash(triggeredAction._id)),
-					_rank: triggeredAction._rank,
-					name: triggeredAction.name,
-					blueprintUniqueId: null,
-					showStyleBaseId: null,
-					actionsWithOverrides: wrapDefaultObject(triggeredAction.actions),
-					triggersWithOverrides: wrapDefaultObject(triggeredAction.triggers),
 				})
 			}
 		},

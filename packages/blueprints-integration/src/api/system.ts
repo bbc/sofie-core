@@ -1,7 +1,7 @@
 import type { IBlueprintTriggeredActions } from '../triggers'
-import type { ICommonContext } from '../context'
 import type { MigrationStepSystem } from '../migrations'
 import type { BlueprintManifestBase, BlueprintManifestType } from './base'
+import type { ICoreSystemApplyConfigContext } from '../context/systemApplyConfigContext'
 
 export interface SystemBlueprintManifest extends BlueprintManifestBase {
 	blueprintType: BlueprintManifestType.SYSTEM
@@ -32,7 +32,7 @@ export interface SystemBlueprintManifest extends BlueprintManifestBase {
 	 * This should be written to give a predictable and stable result, it can be called with the same config multiple times
 	 */
 	applyConfig?: (
-		context: ICommonContext
+		context: ICoreSystemApplyConfigContext
 		// config: TRawConfig,
 	) => BlueprintResultApplySystemConfig
 }
