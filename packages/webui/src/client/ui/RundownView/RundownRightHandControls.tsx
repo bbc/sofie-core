@@ -26,7 +26,6 @@ import { MediaStatusPopUp } from './MediaStatusPopUp'
 import { MediaStatusIcon } from '../../lib/ui/icons/mediaStatus'
 import { SelectedElementsContext } from './SelectedElementsContext'
 import { UserEditsCloseIcon, UserEditsIcon } from '../../lib/ui/icons/useredits'
-import { CollapseChevrons } from '../../lib/ui/icons/notifications'
 
 interface IProps {
 	playlistId: RundownPlaylistId
@@ -157,16 +156,19 @@ export function RundownRightHandControls(props: Readonly<IProps>): JSX.Element {
 					title={t('Notes')}
 				/>
 				<SelectedElementsContext.Consumer>
-					{(context) => (
-						<button
-							onClick={() => context.clearSelections()}
-							className={classNames('status-bar__controls__button', {
-								'status-bar__controls__button--open': context.listSelectedElements().length > 0,
-							})}
-						>
-							{context.listSelectedElements().length === 0 ? <UserEditsIcon /> : <UserEditsCloseIcon />}
-						</button>
-					)}
+					{(context) => {
+						const isOpen = context.listSelectedElements().length > 0 && !props.isNotificationCenterOpen
+						return (
+							<button
+								onClick={() => context.clearSelections()}
+								className={classNames('status-bar__controls__button', {
+									'status-bar__controls__button--open': isOpen,
+								})}
+							>
+								{isOpen ? <UserEditsIcon /> : <UserEditsCloseIcon />}
+							</button>
+						)
+					}}
 				</SelectedElementsContext.Consumer>
 				<button
 					className="status-bar__controls__button"
