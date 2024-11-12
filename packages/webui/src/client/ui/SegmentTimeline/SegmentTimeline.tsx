@@ -57,6 +57,7 @@ import { logger } from '../../lib/logging'
 import * as RundownResolver from '../../lib/RundownResolver'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
+import classNames from 'classnames'
 
 interface IProps {
 	id: string
@@ -1051,17 +1052,20 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				aria-roledescription={t('segment')}
 				aria-labelledby={`segment-name-${this.props.segment._id}`}
 			>
-				<ContextMenuTrigger
-					id="segment-timeline-context-menu"
-					collect={this.getSegmentContext}
-					attributes={{
-						className: 'segment-timeline__title',
-					}}
-					holdToDisplay={contextMenuHoldToDisplayTime()}
-					renderTag="div"
-				>
-					<SelectedElementsContext.Consumer>
-						{(selectElementContext) => (
+				<SelectedElementsContext.Consumer>
+					{(selectElementContext) => (
+						<ContextMenuTrigger
+							id="segment-timeline-context-menu"
+							collect={this.getSegmentContext}
+							attributes={{
+								className: classNames(
+									'segment-timeline__title',
+									selectElementContext.isSelected(this.props.segment._id) ? 'element-selected' : ''
+								),
+							}}
+							holdToDisplay={contextMenuHoldToDisplayTime()}
+							renderTag="div"
+						>
 							<div
 								onDoubleClick={() => {
 									if (this.props.studio.settings.enableUserEdits) {
@@ -1076,8 +1080,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 								<h2
 									id={`segment-name-${this.props.segment._id}`}
 									className={ClassNames(
-										'segment-timeline__title__label' + (this.props.segment.identifier ? ' identifier' : ''),
-										selectElementContext.isSelected(this.props.segment._id) ? 'element-selected' : ''
+										'segment-timeline__title__label' + (this.props.segment.identifier ? ' identifier' : '')
 									)}
 									data-identifier={this.props.segment.identifier}
 								>
@@ -1128,9 +1131,9 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 								)}
 								<HeaderEditStates userEditOperations={this.props.segment.userEditOperations} />
 							</div>
-						)}
-					</SelectedElementsContext.Consumer>
-				</ContextMenuTrigger>
+						</ContextMenuTrigger>
+					)}
+				</SelectedElementsContext.Consumer>
 				<div className="segment-timeline__duration" tabIndex={0}>
 					{this.props.playlist &&
 						this.props.parts &&

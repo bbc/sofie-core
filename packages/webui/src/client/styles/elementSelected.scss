@@ -1,18 +1,18 @@
 @import '_variables';
 
-.element-selected {
-    // Base glow
-    box-shadow: inset 0 0 15px var(--primary-color, #ffffff7a);
-    // Changed animation name from 'blinker' to 'glow' to better reflect its purpose
-    animation: glow 1s ease-in-out infinite;
+$glow-color: rgba(255, 255, 255, 0.58);
 
-    @keyframes glow {
+.element-selected {
+    box-shadow: inset 0 0 15px $glow-color;
+    animation: subtle-glow 1s ease-in-out infinite;
+
+    @keyframes subtle-glow {
         0%, 100% {
-            box-shadow: inset 0 0 15px var(--primary-color, #ffffff7b);
+            box-shadow: inset 0 0 15px $glow-color;
         }
         50% {
-            box-shadow: inset 0 0 20px var(--primary-color, #ffffff84),
-                        inset 0 0 30px var(--primary-light-color, #ffffff86);
+            box-shadow: inset 0 0 25px $glow-color,
+                        inset 0 0 35px $glow-color;
         }
     }
 }
