@@ -414,10 +414,11 @@ function EditingTypeChangeForm(props: {
 			{schema && (
 				<>
 					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
-					<SchemaFormInPlace
+					<StyledSchemaFormInPlace
 						schema={schema}
 						object={values}
 						translationNamespaces={props.userEditOperation.translationNamespaces}
+						width="100%"
 					/>
 					<br />
 					<hr />
@@ -543,8 +544,6 @@ function EditingTypeChangeSourceLayerSource(props: {
 							schema={selectedGroupSchema}
 							object={selectedValues}
 							translationNamespaces={props.userEditOperation.translationNamespaces}
-							compact={false}
-							className="custom-class"
 							width="100%"
 						/>
 					</div>
