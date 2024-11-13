@@ -26,7 +26,7 @@ import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
+import { StyledSchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -453,12 +453,6 @@ function EditingTypeChangeSourceLayerSource(props: {
 		getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
 	)
 
-	React.useEffect(() => {
-		setHasBeenEdited(
-			getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
-		)
-	}, [props.userEditOperation.id, props.pendingChanges])
-
 	const jsonSchema = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
 		(layer) => layer.sourceLayerType === selectedSourceGroup
 	)?.schema
@@ -470,6 +464,10 @@ function EditingTypeChangeSourceLayerSource(props: {
 		setSelectedSourceButton(pendingChange?.sourceLayerType || props.userEditOperation.currentValues.type)
 
 		setSelectedValues(pendingChange?.value || props.userEditOperation.currentValues.value)
+
+		setHasBeenEdited(
+			getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
+		)
 	}, [props.userEditOperation.id, props.pendingChanges])
 
 	const handleSourceChange = () => {
@@ -541,10 +539,13 @@ function EditingTypeChangeSourceLayerSource(props: {
 						onChange={handleSourceChange}
 					>
 						{hasBeenEdited && <FontAwesomeIcon icon="pencil-alt" />}
-						<SchemaFormInPlace
+						<StyledSchemaFormInPlace
 							schema={selectedGroupSchema}
 							object={selectedValues}
 							translationNamespaces={props.userEditOperation.translationNamespaces}
+							compact={false}
+							className="custom-class"
+							width="100%"
 						/>
 					</div>
 				</div>

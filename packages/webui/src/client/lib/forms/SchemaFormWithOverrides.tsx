@@ -57,7 +57,8 @@ interface FormComponentProps {
 
 function useChildPropsForFormComponent(props: Readonly<SchemaFormWithOverridesProps>): FormComponentProps {
 	return useMemo(() => {
-		const title = getSchemaUIField(props.schema, SchemaFormUIField.Title) || props.attr
+		// If a tittle is added to the Schema use that if not use the props.attr instead
+		const title = props.schema.title || getSchemaUIField(props.schema, SchemaFormUIField.Title) || props.attr
 		const description = getSchemaUIField(props.schema, SchemaFormUIField.Description)
 
 		return {
