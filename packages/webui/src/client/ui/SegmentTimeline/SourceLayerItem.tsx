@@ -158,12 +158,15 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 			// this.props.onFollowLiveLine?.(false, e)
 			e.preventDefault()
 			e.stopPropagation()
-			onClick?.(piece, e)
+			onClick && onClick(piece, e)
 		},
 		[piece]
 	)
 	const itemDblClick = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			e.preventDefault()
+			e.stopPropagation()
+
 			if (studio?.settings.enableUserEdits && !studio?.settings.allowPieceDirectPlay) {
 				const pieceId = piece.instance.piece._id
 				if (!selectElementContext.isSelected(pieceId)) {
@@ -171,13 +174,6 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 				} else {
 					selectElementContext.clearSelections()
 				}
-				// Until a proper data structure, the only reference is a part.
-				// const partId = this.props.part.instance.part._id
-				// if (!selectElementContext.isSelected(partId)) {
-				// 	selectElementContext.clearAndSetSelection({ type: 'part', elementId: partId })
-				// } else {
-				// 	selectElementContext.clearSelections()
-				// }
 			} else if (typeof onDoubleClick === 'function') {
 				onDoubleClick(piece, e)
 			}
@@ -276,6 +272,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 			clientY: e.clientY,
 		}
 	}, [])
+	const selectElementContext = useSelectedElementsContext()
 
 	const convertTimeToPixels = (time: number) => {
 		return Math.round(timeScale * time)
@@ -522,6 +519,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 
 	const renderInsideItem = (typeClass: string) => {
 		const elProps = {
+			key: unprotectString(piece.instance._id),
 			typeClass: typeClass,
 			getItemDuration: getItemDuration,
 			getItemLabelOffsetLeft: getItemLabelOffsetLeft,
@@ -535,25 +533,25 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 		switch (layer.type) {
 			case SourceLayerType.SCRIPT:
 				// case SourceLayerType.MIC:
-				return <MicSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <MicSourceRenderer {...elProps} />
 			case SourceLayerType.VT:
 			case SourceLayerType.LIVE_SPEAK:
-				return <VTSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <VTSourceRenderer {...elProps} />
 			case SourceLayerType.GRAPHICS:
 			case SourceLayerType.LOWER_THIRD:
 			case SourceLayerType.STUDIO_SCREEN:
-				return <L3rdSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <L3rdSourceRenderer {...elProps} />
 			case SourceLayerType.SPLITS:
-				return <SplitsSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <SplitsSourceRenderer {...elProps} />
 
 			case SourceLayerType.TRANSITION:
 				// TODOSYNC: TV2 uses other renderers, to be discussed.
 
-				return <TransitionSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <TransitionSourceRenderer {...elProps} />
 			case SourceLayerType.LOCAL:
-				return <LocalLayerItemRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <LocalLayerItemRenderer {...elProps} />
 			default:
-				return <DefaultLayerItemRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <DefaultLayerItemRenderer {...elProps} />
 		}
 	}
 
