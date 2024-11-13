@@ -360,6 +360,12 @@ function EditingTypeAction(props: {
 						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
 					)}
 				>
+					{hasBeenEdited && (
+						<>
+							{' '}
+							<FontAwesomeIcon icon="pencil-alt" />
+						</>
+					)}{' '}
 					<a
 						className={classNames('propertiespanel-pop-up__switchbutton', 'switch-button', {
 							'sb-on': getPendingState() ?? (props.userEditOperation.isActive || false),
@@ -377,12 +383,6 @@ function EditingTypeAction(props: {
 						</div>
 					</a>
 					<span className="propertiespanel-pop-up__label">
-						{hasBeenEdited && (
-							<>
-								{' '}
-								<FontAwesomeIcon icon="pencil-alt" />
-							</>
-						)}{' '}
 						{translateMessage(props.userEditOperation.label, i18nTranslator)}
 					</span>
 				</div>
@@ -532,14 +532,8 @@ function EditingTypeChangeSourceLayerSource(props: {
 						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
 					)}
 				>
-					<div
-						className={classNames(
-							'properties-panel-pop-up__form__schema',
-							hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
-						)}
-						onChange={handleSourceChange}
-					>
-						{hasBeenEdited && <FontAwesomeIcon icon="pencil-alt" />}
+					{hasBeenEdited && <FontAwesomeIcon icon="pencil-alt" />}
+					<div className="properties-panel-pop-up__form__schema" onChange={handleSourceChange}>
 						<StyledSchemaFormInPlace
 							schema={selectedGroupSchema}
 							object={selectedValues}

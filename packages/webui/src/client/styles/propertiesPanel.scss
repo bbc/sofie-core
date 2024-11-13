@@ -188,14 +188,24 @@
 				margin-top: 15px;
 				color: #ddd;
 				padding: 4px 4px;
-
+				position: relative;
+				display: flex;
+				align-items: flex-start;
+				gap: 8px;
+		
+				// Add positioning for the pencil icon
+				> svg {
+				  margin-top: 4px;
+				  flex-shrink: 0;
+				}
+		
 				> .properties-panel-pop-up__form__schema {
-					border-color: pink;
-					border-width: 0px;
-
+				  border-color: pink;
+				  border-width: 0px;
+				  flex-grow: 1;
 				}
 			}
-
+		
 			> .properties-panel-pop-up__has-been-edited {
 				background-color: #ffffff16;
 				border-radius: 8px;
