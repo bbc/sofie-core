@@ -2,6 +2,7 @@ import type { IBlueprintTriggeredActions } from '../triggers'
 import type { MigrationStepSystem } from '../migrations'
 import type { BlueprintManifestBase, BlueprintManifestType } from './base'
 import type { ICoreSystemApplyConfigContext } from '../context/systemApplyConfigContext'
+import type { ICoreSystemSettings } from '@sofie-automation/shared-lib/dist/core/model/CoreSystemSettings'
 
 export interface SystemBlueprintManifest extends BlueprintManifestBase {
 	blueprintType: BlueprintManifestType.SYSTEM
@@ -38,8 +39,7 @@ export interface SystemBlueprintManifest extends BlueprintManifestBase {
 }
 
 export interface BlueprintResultApplySystemConfig {
-	// sourceLayers: ISourceLayer[]
-	// outputLayers: IOutputLayer[]
+	settings: ICoreSystemSettings
 
 	triggeredActions: IBlueprintTriggeredActions[]
 }

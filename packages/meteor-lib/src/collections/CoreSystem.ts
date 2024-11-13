@@ -2,6 +2,8 @@ import { LastBlueprintConfig } from '@sofie-automation/corelib/dist/dataModel/Bl
 import { LogLevel } from '../lib'
 import { CoreSystemId, BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { ObjectWithOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import { ICoreSystemSettings } from '@sofie-automation/shared-lib/dist/core/model/CoreSystemSettings'
 
 export const SYSTEM_ID: CoreSystemId = protectString('core')
 
@@ -55,20 +57,9 @@ export interface ICoreSystem {
 	/** Id of the blueprint used by this system */
 	blueprintId?: BlueprintId
 
-	/** Support info */
-	support?: {
-		message: string
-	}
-
 	systemInfo?: {
 		message: string
 		enabled: boolean
-	}
-
-	evaluations?: {
-		enabled: boolean
-		heading: string
-		message: string
 	}
 
 	/** A user-defined name for the installation */
@@ -96,16 +87,7 @@ export interface ICoreSystem {
 	}
 	enableMonitorBlockedThread?: boolean
 
-	/** Cron jobs running nightly */
-	cron?: {
-		casparCGRestart?: {
-			enabled: boolean
-		}
-		storeRundownSnapshots?: {
-			enabled: boolean
-			rundownNames?: string[]
-		}
-	}
+	settingsWithOverrides: ObjectWithOverrides<ICoreSystemSettings>
 
 	logo?: SofieLogo
 

@@ -1,6 +1,6 @@
 import { addMigrationSteps } from './databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from './currentSystemVersion'
-import { Studios, TriggeredActions } from '../collections'
+import { CoreSystem, Studios, TriggeredActions } from '../collections'
 import {
 	convertObjectIntoOverrides,
 	wrapDefaultObject,
@@ -12,6 +12,8 @@ import {
 	IStudioSettings,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { DEFAULT_CORE_TRIGGER_IDS } from './upgrades/defaultSystemActionTriggers'
+import { ICoreSystem } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
+import { ICoreSystemSettings } from '@sofie-automation/shared-lib/dist/core/model/CoreSystemSettings'
 
 /*
  * **************************************************************************************
@@ -258,4 +260,78 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 			}
 		},
 	},
+
+	{
+		id: `convert CoreSystem.settingsWithOverrides`,
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const systems = await CoreSystem.findFetchAsync({
+				settingsWithOverrides: { $exists: false },
+			})
+
+			if (systems.length > 0) {
+				return 'settings must be converted to an ObjectWithOverrides'
+			}
+
+			return false
+		},
+		migrate: async () => {
+			const systems = await CoreSystem.findFetchAsync({
+				settingsWithOverrides: { $exists: false },
+			})
+
+			for (const system of systems) {
+				const oldSystem = system as ICoreSystem as PartialOldICoreSystem
+
+				const newSettings = wrapDefaultObject<ICoreSystemSettings>({
+					cron: {
+						casparCGRestart: {
+							enabled: false,
+						},
+						storeRundownSnapshots: {
+							enabled: false,
+						},
+						...oldSystem.cron,
+					},
+					support: oldSystem.support ?? { message: '' },
+					evaluationsMessage: oldSystem.evaluations ?? { enabled: false, heading: '', message: '' },
+				})
+
+				await CoreSystem.updateAsync(system._id, {
+					$set: {
+						settingsWithOverrides: newSettings,
+					},
+					$unset: {
+						cron: 1,
+						support: 1,
+						evaluations: 1,
+					},
+				})
+			}
+		},
+	},
 ])
+
+interface PartialOldICoreSystem {
+	/** Support info */
+	support?: {
+		message: string
+	}
+
+	evaluations?: {
+		enabled: boolean
+		heading: string
+		message: string
+	}
+
+	/** Cron jobs running nightly */
+	cron?: {
+		casparCGRestart?: {
+			enabled: boolean
+		}
+		storeRundownSnapshots?: {
+			enabled: boolean
+			rundownNames?: string[]
+		}
+	}
+}

@@ -13,6 +13,7 @@ import { updateTriggeredActionsForShowStyleBaseId } from './lib'
 import { CoreSystemId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DEFAULT_CORE_TRIGGERS } from './defaultSystemActionTriggers'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { ICoreSystemSettings } from '@sofie-automation/shared-lib/dist/core/model/CoreSystemSettings'
 
 export async function runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promise<void> {
 	logger.info(`Running upgrade for CoreSystem`)
@@ -33,10 +34,11 @@ export async function runUpgradeForCoreSystem(coreSystemId: CoreSystemId): Promi
 		result = generateDefaultSystemConfig()
 	}
 
+	const coreSystemSettings: ICoreSystemSettings = result.settings
+
 	await CoreSystem.updateAsync(coreSystemId, {
 		$set: {
-			// 'sourceLayersWithOverrides.defaults': normalizeArray(result.sourceLayers, '_id'),
-			// 'outputLayersWithOverrides.defaults': normalizeArray(result.outputLayers, '_id'),
+			'settingsWithOverrides.defaults': coreSystemSettings,
 			lastBlueprintConfig: {
 				blueprintHash: blueprint?.blueprintHash ?? protectString('default'),
 				blueprintId: blueprint?._id ?? protectString('default'),
@@ -83,6 +85,24 @@ async function loadCoreSystemAndBlueprint(coreSystemId: CoreSystemId) {
 
 function generateDefaultSystemConfig(): BlueprintResultApplySystemConfig {
 	return {
+		settings: {
+			cron: {
+				casparCGRestart: {
+					enabled: true,
+				},
+				storeRundownSnapshots: {
+					enabled: false,
+				},
+			},
+			support: {
+				message: '',
+			},
+			evaluationsMessage: {
+				enabled: false,
+				heading: '',
+				message: '',
+			},
+		},
 		triggeredActions: Object.values<IBlueprintTriggeredActions>(DEFAULT_CORE_TRIGGERS),
 	}
 }
