@@ -37,7 +37,7 @@ describe('getOrderedPartsAfterPlayhead', () => {
 			}
 		}
 		context.setStudio({
-			...context.studio,
+			...context.rawStudio,
 			mappingsWithOverrides: wrapDefaultObject(mappings),
 		})
 
