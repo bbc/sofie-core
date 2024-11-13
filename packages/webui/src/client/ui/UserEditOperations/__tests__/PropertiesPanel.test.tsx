@@ -1,55 +1,106 @@
-jest.mock(
-	'../../../../__mocks__/tracker',
-	() => ({
+jest.mock('../../../../__mocks__/tracker', () => {
+	interface TrackerComputation {
+		stop: () => void
+		_recompute: () => void
+		invalidate: () => void
+		onInvalidate: () => void
+	}
+	const computations = new Set<TrackerComputation>()
+
+	return {
 		setup: () => ({
 			Tracker: {
 				autorun: jest.fn((fn) => {
-					fn()
-					return {
+					const computation = {
 						stop: jest.fn(),
+						_recompute: () => fn(computation),
+						invalidate: function () {
+							this._recompute()
+						},
+						onInvalidate: jest.fn(),
 					}
+					computations.add(computation)
+					fn(computation)
+					return computation
 				}),
 				nonreactive: jest.fn((fn) => fn()),
 				active: false,
 				currentComputation: null,
-				Dependency: jest.fn().mockImplementation(() => ({
-					depend: jest.fn(),
-					changed: jest.fn(),
-					hasDependents: jest.fn(),
-				})),
+				afterFlush: (fn: () => void) => {
+					setTimeout(fn, 0)
+				},
+				flush: () => {
+					computations.forEach((comp) => comp._recompute())
+				},
+				Dependency: jest.fn().mockImplementation(() => {
+					const dependents = new Set<TrackerComputation>()
+					return {
+						depend: jest.fn(() => {
+							if (Tracker.currentComputation) {
+								dependents.add(Tracker.currentComputation as any as TrackerComputation)
+							}
+						}),
+						changed: jest.fn(() => {
+							dependents.forEach((comp) => comp.invalidate())
+						}),
+						hasDependents: jest.fn(() => dependents.size > 0),
+					}
+				}),
 			},
 		}),
-	}),
-	{
-		virtual: true,
 	}
-)
+})
 
 // Mock the ReactiveDataHelper:
 jest.mock('../../../lib/reactiveData/ReactiveDataHelper', () => {
-	class MockReactiveDataHelper {
-		protected _subs: Array<{ stop: () => void }> = []
+	interface MockSubscription {
+		stop: () => void
+		ready: () => boolean
+	}
 
-		protected subscribe() {
-			const sub = { stop: jest.fn() }
+	class MockReactiveDataHelper {
+		protected _subs: MockSubscription[] = []
+		protected _computations: any[] = []
+
+		protected subscribe(_name: string, ..._args: any[]): MockSubscription {
+			const sub: MockSubscription = {
+				stop: jest.fn(),
+				ready: jest.fn().mockReturnValue(true),
+			}
 			this._subs.push(sub)
 			return sub
 		}
 
 		protected autorun(f: () => void) {
+			// Execute the function immediately
 			f()
-			return { stop: jest.fn() }
+			const computation = {
+				stop: jest.fn(),
+				_recompute: () => f(),
+				invalidate: function () {
+					this._recompute()
+				},
+				onInvalidate: jest.fn(),
+			}
+			this._computations.push(computation)
+			return computation
 		}
 
 		destroy() {
 			this._subs.forEach((sub) => sub.stop())
+			this._computations.forEach((comp) => comp.stop())
 			this._subs = []
+			this._computations = []
 		}
 	}
 
 	class MockWithManagedTracker extends MockReactiveDataHelper {
 		constructor() {
 			super()
+		}
+
+		triggerUpdate() {
+			this._computations.forEach((comp) => comp.invalidate())
 		}
 	}
 
@@ -58,6 +109,7 @@ jest.mock('../../../lib/reactiveData/ReactiveDataHelper', () => {
 		WithManagedTracker: MockWithManagedTracker,
 		meteorSubscribe: jest.fn().mockReturnValue({
 			stop: jest.fn(),
+			ready: jest.fn().mockReturnValue(true),
 		}),
 	}
 })
@@ -114,6 +166,8 @@ import { SelectedElementProvider, useSelection } from '../../RundownView/Selecte
 import { MongoMock } from '../../../../__mocks__/mongo'
 import { PropertiesPanel } from '../PropertiesPanel'
 import { UserAction } from '../../../lib/clientUserAction'
+import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { Tracker } from 'meteor/tracker'
 
 const mockSegmentsCollection = MongoMock.getInnerMockCollection(Segments)
 const mockPartsCollection = MongoMock.getInnerMockCollection(UIParts)
@@ -203,9 +257,13 @@ describe('PropertiesPanel', () => {
 	test('renders segment properties when segment is selected', async () => {
 		const mockSegment = createMockSegment('segment1')
 
-		mockSegmentsCollection.insert(mockSegment)
+		const mockId = mockSegmentsCollection.insert(mockSegment) as any as SegmentId
 
-		expect(mockSegmentsCollection.findOne({ _id: mockSegment._id })).toBeTruthy()
+		const verifySegment = mockSegmentsCollection.findOne({ _id: mockId })
+		expect(verifySegment).toBeTruthy()
+		console.log('Verify segment :', verifySegment?._id)
+
+		expect(mockSegmentsCollection.findOne({ _id: mockId })).toBeTruthy()
 
 		const { result } = renderHook(() => useSelection(), { wrapper })
 
@@ -213,8 +271,12 @@ describe('PropertiesPanel', () => {
 		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
-				elementId: mockSegment._id,
+				elementId: mockId,
 			})
+		})
+
+		await act(async () => {
+			jest.advanceTimersByTime(100)
 		})
 
 		// Open component after segment is selected (as used in rundownview)
