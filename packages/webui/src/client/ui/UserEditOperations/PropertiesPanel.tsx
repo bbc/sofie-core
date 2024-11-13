@@ -148,7 +148,7 @@ export function PropertiesPanel(): JSX.Element {
 										></div>
 									)
 								})}
-							PART : {String(part?.title)}
+							{part?.title.slice(0, 30)}
 						</div>
 						<div className="propertiespanel-pop-up__contents">
 							{segment &&
@@ -218,7 +218,7 @@ export function PropertiesPanel(): JSX.Element {
 										></div>
 									)
 								})}
-							SEGMENT : {String(segment?.name)}
+							{segment?.name.slice(0, 30)}
 						</div>
 						<div className="propertiespanel-pop-up__contents">
 							{segment &&
