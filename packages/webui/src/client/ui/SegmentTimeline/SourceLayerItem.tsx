@@ -164,6 +164,9 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 	)
 	const itemDblClick = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			e.preventDefault()
+			e.stopPropagation()
+
 			if (studio?.settings.enableUserEdits && !studio?.settings.allowPieceDirectPlay) {
 				const pieceId = piece.instance.piece._id
 				if (!selectElementContext.isSelected(pieceId)) {
@@ -171,13 +174,6 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 				} else {
 					selectElementContext.clearSelections()
 				}
-				// Until a proper data structure, the only reference is a part.
-				// const partId = this.props.part.instance.part._id
-				// if (!selectElementContext.isSelected(partId)) {
-				// 	selectElementContext.clearAndSetSelection({ type: 'part', elementId: partId })
-				// } else {
-				// 	selectElementContext.clearSelections()
-				// }
 			} else if (typeof onDoubleClick === 'function') {
 				onDoubleClick(piece, e)
 			}
@@ -531,29 +527,31 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 			...props,
 			...state,
 		}
+		// Key cannot be part of a spread operator, therefore needs to be kept out of elProps
+		const elKey = unprotectString(piece.instance._id)
 
 		switch (layer.type) {
 			case SourceLayerType.SCRIPT:
 				// case SourceLayerType.MIC:
-				return <MicSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <MicSourceRenderer key={elKey} {...elProps} />
 			case SourceLayerType.VT:
 			case SourceLayerType.LIVE_SPEAK:
-				return <VTSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <VTSourceRenderer key={elKey} {...elProps} />
 			case SourceLayerType.GRAPHICS:
 			case SourceLayerType.LOWER_THIRD:
 			case SourceLayerType.STUDIO_SCREEN:
-				return <L3rdSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <L3rdSourceRenderer key={elKey} {...elProps} />
 			case SourceLayerType.SPLITS:
-				return <SplitsSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <SplitsSourceRenderer key={elKey} {...elProps} />
 
 			case SourceLayerType.TRANSITION:
 				// TODOSYNC: TV2 uses other renderers, to be discussed.
 
-				return <TransitionSourceRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <TransitionSourceRenderer key={elKey} {...elProps} />
 			case SourceLayerType.LOCAL:
-				return <LocalLayerItemRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <LocalLayerItemRenderer key={elKey} {...elProps} />
 			default:
-				return <DefaultLayerItemRenderer key={unprotectString(piece.instance._id)} {...elProps} />
+				return <DefaultLayerItemRenderer key={elKey} {...elProps} />
 		}
 	}
 
