@@ -1,6 +1,7 @@
 import {
 	BlueprintMapping,
 	BlueprintMappings,
+	IStudioSettings,
 	JSONBlobParse,
 	StudioRouteBehavior,
 	TSR,
@@ -26,6 +27,7 @@ import { compileCoreConfigValues } from '../blueprints/config'
 import { CommonContext } from '../blueprints/context'
 import { JobContext } from '../jobs'
 import { FixUpBlueprintConfigContext } from '@sofie-automation/corelib/dist/fixUpBlueprintConfig/context'
+import { DEFAULT_MINIMUM_TAKE_SPAN } from '@sofie-automation/shared-lib/dist/core/constants'
 
 /**
  * Run the Blueprint applyConfig for the studio
@@ -109,8 +111,15 @@ export async function handleBlueprintUpgradeForStudio(context: JobContext, _data
 		])
 	)
 
+	const studioSettings: IStudioSettings = result.studioSettings ?? {
+		frameRate: 25,
+		mediaPreviewsUrl: '',
+		minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
+	}
+
 	await context.directCollections.Studios.update(context.studioId, {
 		$set: {
+			'settingsWithOverrides.defaults': studioSettings,
 			'mappingsWithOverrides.defaults': translateMappings(result.mappings),
 			'peripheralDeviceSettings.playoutDevices.defaults': playoutDevices,
 			'peripheralDeviceSettings.ingestDevices.defaults': ingestDevices,
