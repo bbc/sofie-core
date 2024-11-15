@@ -130,6 +130,7 @@ export enum DefaultUserOperationsTypes {
 	REVERT_RUNDOWN = '__sofie-revert-rundown',
 	UPDATE_PROPS = '__sofie-update-props',
 	IMPORT_MOS_ITEM = '__sofie-import-mos',
+	RETIME_PIECE = '__sofie-retime-piece',
 }
 
 export interface DefaultUserOperationRevertRundown {
@@ -159,6 +160,17 @@ export type DefaultUserOperationImportMOSItem = {
 
 	payloadType: string
 	payload: any
+}
+
+export type DefaultUserOperationRetimePiece = {
+	id: DefaultUserOperationsTypes.RETIME_PIECE
+	payload: {
+		segmentExternalId: string
+		partExternalId: string
+
+		inPoint: number
+		// note - at some point this could also include an updated duration
+	}
 }
 
 export type DefaultUserOperations =
