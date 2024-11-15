@@ -1,6 +1,7 @@
 import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import type { ITranslatableMessage } from './translations'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
+import { SofieUserOperations } from './ingest'
 
 /**
  * Description of a user performed editing operation allowed on an document
@@ -37,9 +38,20 @@ export interface UserEditingDefinitionForm {
 	currentValues: Record<string, any>
 }
 
+/**
+ * A Sofie based Rich UX user operation
+ */
+export interface UserEditingDefinitionSofieDefault {
+	type: UserEditingType.SOFIE
+	/** Id of this operation */
+	id: SofieUserOperations
+}
+
 export enum UserEditingType {
 	/** Action */
 	ACTION = 'action',
 	/** Form of selections */
 	FORM = 'form',
+	/** Operation for the Built-in Sofie Rich Editing UI */
+	SOFIE = 'sofie',
 }
