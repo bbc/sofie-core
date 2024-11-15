@@ -6,7 +6,6 @@ import { sortPartsInSortedSegments } from '@sofie-automation/corelib/dist/playou
 import { logger } from '../logging'
 import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { ReadonlyDeep } from 'type-fest'
-import { QuickLoopService } from './model/services/QuickLoopService'
 
 export function selectNewPartWithOffsets(
 	_context: JobContext,
@@ -29,9 +28,8 @@ export function selectNewPartWithOffsets(
 	let rawParts = playoutModel.getAllOrderedParts()
 	let allowWrap = false // whether we should wrap to the first part if the curIndex + delta exceeds the total number of parts
 
-	const quickLoopService = new QuickLoopService(_context, playoutModel)
 	if (!ignoreQuickLoop && playlist.quickLoop?.start && playlist.quickLoop.end) {
-		const partsInQuickloop = quickLoopService.getPartsBetweenMarkers(
+		const partsInQuickloop = playoutModel.getPartsBetweenQuickLoopMarker(
 			playlist.quickLoop.start,
 			playlist.quickLoop.end
 		)

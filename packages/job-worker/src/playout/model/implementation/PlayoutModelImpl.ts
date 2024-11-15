@@ -243,6 +243,12 @@ export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	getSegmentsBetweenQuickLoopMarker(start: QuickLoopMarker, end: QuickLoopMarker): SegmentId[] {
 		return this.quickLoopService.getSegmentsBetweenMarkers(start, end)
 	}
+	getPartsBetweenQuickLoopMarker(
+		start: QuickLoopMarker,
+		end: QuickLoopMarker
+	): { parts: PartId[]; segments: SegmentId[] } {
+		return this.quickLoopService.getPartsBetweenMarkers(start, end)
+	}
 
 	#isMultiGatewayMode: boolean | undefined = undefined
 	public get isMultiGatewayMode(): boolean {

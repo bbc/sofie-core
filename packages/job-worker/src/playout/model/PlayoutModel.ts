@@ -176,6 +176,17 @@ export interface PlayoutModelReadonly extends StudioPlayoutModelBaseReadonly {
 	getSegmentsBetweenQuickLoopMarker(start: QuickLoopMarker, end: QuickLoopMarker): SegmentId[]
 
 	/**
+	 * Returns any segmentId's that are found between 2 quickloop markers, none will be returned if
+	 * the end is before the start.
+	 * @param start A quickloop marker
+	 * @param end A quickloop marker
+	 */
+	getPartsBetweenQuickLoopMarker(
+		start: QuickLoopMarker,
+		end: QuickLoopMarker
+	): { parts: PartId[]; segments: SegmentId[] }
+
+	/**
 	 * Search for a PieceInstance in the RundownPlaylist
 	 * @param id Id of the PieceInstance
 	 * @returns The found PieceInstance and its parent PartInstance
