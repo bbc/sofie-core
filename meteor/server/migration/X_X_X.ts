@@ -187,4 +187,33 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 			}
 		},
 	},
+	{
+		id: `add an EnableBuckets option in Studio->Settings`,
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const studios = await Studios.findFetchAsync({
+				$or: [{ 'settings.enableBuckets': { $exists: false } }],
+			})
+
+			if (studios.length > 0) {
+				return 'studios needs to have settings.enableBuckets defined'
+			}
+
+			return false
+		},
+		migrate: async () => {
+			const studios = await Studios.findFetchAsync({
+				$or: [{ 'settings.enableBuckets': { $exists: false } }],
+			})
+
+			for (const studio of studios) {
+				// In earlier versions buckets was enabled by default:
+				await Studios.updateAsync(studio._id, {
+					$set: {
+						'settings.enableBuckets': true,
+					},
+				})
+			}
+		},
+	},
 ])
