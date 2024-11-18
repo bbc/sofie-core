@@ -249,6 +249,17 @@ export const StudioGenericProperties = withTranslation()(
 					</label>
 
 					<label className="field">
+						<LabelActual label={t('Enable Buckets')} />
+						<EditAttribute
+							modifiedClassName="bghl"
+							attribute="settings.enableBuckets"
+							obj={this.props.studio}
+							type="checkbox"
+							collection={Studios}
+						/>
+					</label>
+
+					<label className="field">
 						<LabelActual label={t('Enable QuickLoop')} />
 						<EditAttribute
 							modifiedClassName="bghl"

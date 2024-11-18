@@ -88,6 +88,11 @@ export interface IStudioSettings {
 	 * Default: 3000
 	 */
 	fallbackPartDuration?: number
+
+	/**
+	 * Enable buckets - the default behavior is to have buckets.
+	 */
+	enableBuckets?: boolean
 }
 
 export type StudioLight = Omit<DBStudio, 'mappingsWithOverrides' | 'blueprintConfigWithOverrides'>

@@ -321,6 +321,7 @@ export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): IStudi
 		enableQuickLoop: apiStudioSettings.enableQuickLoop,
 		forceQuickLoopAutoNext: forceQuickLoopAutoNextFrom(apiStudioSettings.forceQuickLoopAutoNext),
 		fallbackPartDuration: apiStudioSettings.fallbackPartDuration ?? DEFAULT_FALLBACK_PART_DURATION,
+		enableBuckets: apiStudioSettings.enableBuckets,
 	}
 }
 
@@ -340,6 +341,7 @@ export function APIStudioSettingsFrom(settings: IStudioSettings): APIStudioSetti
 		enableQuickLoop: settings.enableQuickLoop,
 		forceQuickLoopAutoNext: APIForceQuickLoopAutoNextFrom(settings.forceQuickLoopAutoNext),
 		fallbackPartDuration: settings.fallbackPartDuration,
+		enableBuckets: settings.enableBuckets,
 	}
 }
 
