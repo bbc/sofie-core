@@ -257,6 +257,9 @@ export const StudioGenericProperties = withTranslation()(
 							type="checkbox"
 							collection={Studios}
 						/>
+						<span className="text-s dimmed field-hint">
+							{t('This enables or disables buckets in the UI - enabled is the default behavior')}
+						</span>
 					</label>
 
 					<label className="field">
