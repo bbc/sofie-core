@@ -597,7 +597,6 @@ function SystemManagementHeapSnapshot() {
 function useCoreSystemSettingsWithOverrides(coreSystem: ICoreSystem) {
 	const saveOverrides = useCallback(
 		(newOps: SomeObjectOverrideOp[]) => {
-			console.log('save', newOps)
 			CoreSystem.update(coreSystem._id, {
 				$set: {
 					'settingsWithOverrides.overrides': newOps.map((op) => ({

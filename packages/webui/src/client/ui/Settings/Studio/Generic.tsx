@@ -150,7 +150,6 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 
 	const saveOverrides = React.useCallback(
 		(newOps: SomeObjectOverrideOp[]) => {
-			console.log('save', newOps)
 			Studios.update(studio._id, {
 				$set: {
 					'settingsWithOverrides.overrides': newOps.map((op) => ({
