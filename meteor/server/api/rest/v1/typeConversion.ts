@@ -328,7 +328,7 @@ export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): Comple
 		allowAdlibTestingSegment: apiStudioSettings.allowAdlibTestingSegment,
 		allowHold: apiStudioSettings.allowHold ?? true, // Backwards compatible
 		allowPieceDirectPlay: apiStudioSettings.allowPieceDirectPlay ?? true, // Backwards compatible
-		enableBuckets: apiStudioSettings.enableBuckets,
+		enableBuckets: apiStudioSettings.enableBuckets ?? true, // Backwards compatible
 	}
 }
 

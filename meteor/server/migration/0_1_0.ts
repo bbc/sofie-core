@@ -35,6 +35,7 @@ export const addSteps = addMigrationSteps('0.1.0', [
 					minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 					allowHold: false,
 					allowPieceDirectPlay: false,
+					enableBuckets: true,
 				}),
 				mappingsWithOverrides: wrapDefaultObject({}),
 				blueprintConfigWithOverrides: wrapDefaultObject({}),
