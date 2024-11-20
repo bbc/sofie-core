@@ -3,9 +3,10 @@ import { ReactiveCacheCollection } from '../lib/ReactiveCacheCollection'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { MongoFieldSpecifierOnesStrict, MongoFieldSpecifierZeroes } from '@sofie-automation/corelib/dist/mongo'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { DBStudio, IStudioSettings } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 export type RundownPlaylistCompact = Pick<DBRundownPlaylist, '_id' | 'activationId' | 'quickLoop' | 'rundownIdsInOrder'>
 export const rundownPlaylistFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<RundownPlaylistCompact>>({
@@ -36,14 +37,19 @@ export const partInstanceFieldSpecifier = literal<MongoFieldSpecifierZeroes<DBPa
 	'part.privateData': 0,
 })
 
-export type StudioFields = '_id' | 'settings'
+export type StudioFields = '_id' | 'settingsWithOverrides'
 export const studioFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBStudio, StudioFields>>>({
 	_id: 1,
-	settings: 1,
+	settingsWithOverrides: 1,
 })
 
+export interface StudioSettingsDoc {
+	_id: StudioId
+	settings: IStudioSettings
+}
+
 export interface ContentCache {
-	Studios: ReactiveCacheCollection<Pick<DBStudio, StudioFields>>
+	StudioSettings: ReactiveCacheCollection<StudioSettingsDoc>
 	Segments: ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>
 	Parts: ReactiveCacheCollection<Pick<DBPart, PartFields>>
 	PartInstances: ReactiveCacheCollection<Omit<DBPartInstance, PartInstanceOmitedFields>>
@@ -52,7 +58,7 @@ export interface ContentCache {
 
 export function createReactiveContentCache(): ContentCache {
 	const cache: ContentCache = {
-		Studios: new ReactiveCacheCollection<Pick<DBStudio, StudioFields>>('studios'),
+		StudioSettings: new ReactiveCacheCollection<StudioSettingsDoc>('studioSettings'),
 		Segments: new ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>('segments'),
 		Parts: new ReactiveCacheCollection<Pick<DBPart, PartFields>>('parts'),
 		PartInstances: new ReactiveCacheCollection<Omit<DBPartInstance, PartInstanceOmitedFields>>('partInstances'),
