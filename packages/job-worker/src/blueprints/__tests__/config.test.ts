@@ -10,14 +10,14 @@ describe('Test blueprint config', () => {
 	test('compileStudioConfig', () => {
 		const jobContext = setupDefaultJobEnvironment()
 		jobContext.setStudio({
-			...jobContext.studio,
-			settings: {
+			...jobContext.rawStudio,
+			settingsWithOverrides: wrapDefaultObject({
 				mediaPreviewsUrl: '',
 				frameRate: 25,
 				minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 				allowHold: true,
 				allowPieceDirectPlay: true,
-			},
+			}),
 			blueprintConfigWithOverrides: wrapDefaultObject({ sdfsdf: 'one', another: 5 }),
 		})
 		jobContext.updateStudioBlueprint({
@@ -35,14 +35,14 @@ describe('Test blueprint config', () => {
 	test('compileStudioConfig with function', () => {
 		const jobContext = setupDefaultJobEnvironment()
 		jobContext.setStudio({
-			...jobContext.studio,
-			settings: {
+			...jobContext.rawStudio,
+			settingsWithOverrides: wrapDefaultObject({
 				mediaPreviewsUrl: '',
 				frameRate: 25,
 				minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 				allowHold: true,
 				allowPieceDirectPlay: true,
-			},
+			}),
 			blueprintConfigWithOverrides: wrapDefaultObject({ sdfsdf: 'one', another: 5 }),
 		})
 		jobContext.updateStudioBlueprint({
@@ -140,7 +140,7 @@ describe('Test blueprint config', () => {
 
 			const studioId = jobContext.studioId
 			jobContext.setStudio({
-				...jobContext.studio,
+				...jobContext.rawStudio,
 				blueprintConfigWithOverrides: wrapDefaultObject({
 					two: 'abc',
 					number: 99,
@@ -187,7 +187,7 @@ describe('Test blueprint config', () => {
 				},
 			})
 			jobContext.setStudio({
-				...jobContext.studio,
+				...jobContext.rawStudio,
 				supportedShowStyleBase: [showStyle._id],
 			})
 			jobContext.updateShowStyleBlueprint({

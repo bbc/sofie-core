@@ -121,13 +121,13 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 							allowHold: true,
 							allowPieceDirectPlay: true,
-						},
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',
@@ -161,13 +161,13 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 							allowHold: true,
 							allowPieceDirectPlay: true,
-						},
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',
@@ -201,13 +201,13 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
 							allowHold: true,
 							allowPieceDirectPlay: true,
-						},
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',
