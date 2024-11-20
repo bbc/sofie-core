@@ -115,6 +115,8 @@ export async function handleBlueprintUpgradeForStudio(context: JobContext, _data
 		frameRate: 25,
 		mediaPreviewsUrl: '',
 		minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
+		allowHold: true,
+		allowPieceDirectPlay: true,
 	}
 
 	await context.directCollections.Studios.update(context.studioId, {
