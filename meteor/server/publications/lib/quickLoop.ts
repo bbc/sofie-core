@@ -1,10 +1,10 @@
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import {
 	DBRundownPlaylist,
-	ForceQuickLoopAutoNext,
 	QuickLoopMarker,
 	QuickLoopMarkerType,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import { MarkerPosition, compareMarkerPositions } from '@sofie-automation/corelib/dist/playout/playlist'
 import { ProtectedString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { DEFAULT_FALLBACK_PART_DURATION } from '@sofie-automation/shared-lib/dist/core/constants'

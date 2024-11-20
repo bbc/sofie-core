@@ -38,7 +38,7 @@ import {
 	DEFAULT_FALLBACK_PART_DURATION,
 } from '@sofie-automation/shared-lib/dist/core/constants'
 import { Bucket } from '@sofie-automation/meteor-lib/dist/collections/Buckets'
-import { ForceQuickLoopAutoNext } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
 /*
 This file contains functions that convert between the internal Sofie-Core types and types exposed to the external API.

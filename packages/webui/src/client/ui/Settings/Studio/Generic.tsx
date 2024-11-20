@@ -18,7 +18,7 @@ import {
 	LabelAndOverridesForInt,
 } from '../../../lib/Components/LabelAndOverrides'
 import { catchError } from '../../../lib/lib'
-import { ForceQuickLoopAutoNext } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import {
 	applyAndValidateOverrides,
 	ObjectWithOverrides,

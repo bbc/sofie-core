@@ -11,7 +11,8 @@ import { defaultRundownPlaylist } from '../../../__mocks__/defaultCollectionObje
 import _ = require('underscore')
 import { wrapPartToTemporaryInstance } from '../../../__mocks__/partinstance'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
-import { ForceQuickLoopAutoNext, QuickLoopMarkerType } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { QuickLoopMarkerType } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
 describe('getOrderedPartsAfterPlayhead', () => {
 	let context!: MockJobContext

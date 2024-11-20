@@ -13,8 +13,6 @@ import {
 import { RundownPlaylistNote } from './Notes'
 import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
-export { ForceQuickLoopAutoNext }
-
 /** Details of an ab-session requested by the blueprints in onTimelineGenerate */
 export interface ABSessionInfo {
 	/** The unique id of the session. */
