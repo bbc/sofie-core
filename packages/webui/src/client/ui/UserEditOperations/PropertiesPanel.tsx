@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { i18nTranslator } from '../i18n'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
@@ -30,6 +29,7 @@ import { StyledSchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPencilAlt } from '@fortawesome/free-solid-svg-icons'
 
 interface PendingChange {
 	operationId: string
@@ -297,6 +297,8 @@ function EditingTypeAction(props: {
 	pendingChanges: PendingChange[]
 	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
 }) {
+	const { t } = useTranslation()
+
 	const getPendingState = () => {
 		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
 		return pendingChange?.switchState
@@ -347,9 +349,7 @@ function EditingTypeAction(props: {
 					className="propertiespanel-pop-up__button"
 					onClick={addPendingChange}
 				>
-					<span className="propertiespanel-pop-up__label">
-						{translateMessage(props.userEditOperation.label, i18nTranslator)}
-					</span>
+					<span className="propertiespanel-pop-up__label">{translateMessage(props.userEditOperation.label, t)}</span>
 				</button>
 			)
 		case UserEditingButtonType.SWITCH:
@@ -363,7 +363,7 @@ function EditingTypeAction(props: {
 					{hasBeenEdited && (
 						<>
 							{' '}
-							<FontAwesomeIcon icon="pencil-alt" />
+							<FontAwesomeIcon icon={faPencilAlt} />
 						</>
 					)}{' '}
 					<a
@@ -382,9 +382,7 @@ function EditingTypeAction(props: {
 							<div className="sb-switch"></div>
 						</div>
 					</a>
-					<span className="propertiespanel-pop-up__label">
-						{translateMessage(props.userEditOperation.label, i18nTranslator)}
-					</span>
+					<span className="propertiespanel-pop-up__label">{translateMessage(props.userEditOperation.label, t)}</span>
 				</div>
 			)
 		case UserEditingButtonType.HIDDEN || undefined:

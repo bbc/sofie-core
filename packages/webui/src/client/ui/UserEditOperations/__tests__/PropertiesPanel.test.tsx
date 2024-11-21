@@ -1,58 +1,48 @@
-jest.mock('../../../../__mocks__/tracker', () => {
-	interface TrackerComputation {
-		stop: () => void
-		_recompute: () => void
-		invalidate: () => void
-		onInvalidate: () => void
-	}
-	const computations = new Set<TrackerComputation>()
+import React from 'react'
+// eslint-disable-next-line node/no-unpublished-import
+import { renderHook, act, render, screen, waitFor, RenderOptions } from '@testing-library/react'
+// eslint-disable-next-line node/no-unpublished-import
+import '@testing-library/jest-dom'
+import { MeteorCall } from '../../../lib/meteorApi'
+import { TFunction } from 'i18next'
 
-	return {
-		setup: () => ({
-			Tracker: {
-				autorun: jest.fn((fn) => {
-					const computation = {
-						stop: jest.fn(),
-						_recompute: () => fn(computation),
-						invalidate: function () {
-							this._recompute()
-						},
-						onInvalidate: jest.fn(),
-					}
-					computations.add(computation)
-					fn(computation)
-					return computation
-				}),
-				nonreactive: jest.fn((fn) => fn()),
-				active: false,
-				currentComputation: null,
-				afterFlush: (fn: () => void) => {
-					setTimeout(fn, 0)
-				},
-				flush: () => {
-					computations.forEach((comp) => comp._recompute())
-				},
-				Dependency: jest.fn().mockImplementation(() => {
-					const dependents = new Set<TrackerComputation>()
-					return {
-						depend: jest.fn(() => {
-							if (Tracker.currentComputation) {
-								dependents.add(Tracker.currentComputation as any as TrackerComputation)
-							}
-						}),
-						changed: jest.fn(() => {
-							dependents.forEach((comp) => comp.invalidate())
-						}),
-						hasDependents: jest.fn(() => dependents.size > 0),
-					}
-				}),
+import userEvent from '@testing-library/user-event'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { UIParts } from '../../Collections'
+import { Segments } from '../../../../client/collections'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { UserEditingType, UserEditingButtonType } from '@sofie-automation/blueprints-integration'
+import {
+	SelectedElementProvider,
+	SelectedElementsContext,
+	SelectionContextType,
+	useSelection,
+} from '../../RundownView/SelectedElementsContext'
+import { MongoMock } from '../../../../__mocks__/mongo'
+import { PropertiesPanel } from '../PropertiesPanel'
+import { UserAction } from '../../../lib/clientUserAction'
+
+jest.mock('meteor/tracker', (...args) => require('../../../../__mocks__/tracker').setup(args), { virtual: true })
+
+jest.mock('react-i18next', () => ({
+	// this mock makes sure any components using the translate hook can use it without a warning being shown
+	useTranslation: () => {
+		return {
+			t: (str: string) => str,
+			i18n: {
+				changeLanguage: () => new Promise(() => {}),
 			},
-		}),
-	}
-})
+		}
+	},
+	initReactI18next: {
+		type: '3rdParty',
+		init: () => {},
+	},
+}))
 
 // Mock the ReactiveDataHelper:
-jest.mock('../../../lib/reactiveData/ReactiveDataHelper', () => {
+jest.mock('../../../lib/reactiveData/reactiveDataHelper', () => {
 	interface MockSubscription {
 		stop: () => void
 		ready: () => boolean
@@ -147,28 +137,6 @@ jest.mock('react-i18next', () => ({
 	},
 }))
 
-import React from 'react'
-// eslint-disable-next-line node/no-unpublished-import
-import { renderHook, act, render, screen, waitFor } from '@testing-library/react'
-// eslint-disable-next-line node/no-unpublished-import
-import '@testing-library/jest-dom'
-import { MeteorCall } from '../../../lib/meteorApi'
-import { TFunction } from 'i18next'
-
-import userEvent from '@testing-library/user-event'
-import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { UIParts } from '../../Collections'
-import { Segments } from '../../../../client/collections'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { UserEditingType, UserEditingButtonType } from '@sofie-automation/blueprints-integration'
-import { SelectedElementProvider, useSelection } from '../../RundownView/SelectedElementsContext'
-import { MongoMock } from '../../../../__mocks__/mongo'
-import { PropertiesPanel } from '../PropertiesPanel'
-import { UserAction } from '../../../lib/clientUserAction'
-import { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { Tracker } from 'meteor/tracker'
-
 const mockSegmentsCollection = MongoMock.getInnerMockCollection(Segments)
 const mockPartsCollection = MongoMock.getInnerMockCollection(UIParts)
 
@@ -177,6 +145,9 @@ jest.mock('../../../lib/clientUserAction', () => ({
 	doUserAction: jest.fn((_t: TFunction, e: unknown, _action: UserAction, callback: Function) =>
 		callback(e, Date.now())
 	),
+	UserAction: {
+		EXECUTE_USER_OPERATION: 51,
+	},
 }))
 
 // Mock Userchange Operation:
@@ -199,11 +170,21 @@ describe('PropertiesPanel', () => {
 		<SelectedElementProvider>{children}</SelectedElementProvider>
 	)
 
+	const renderWithContext = (
+		ui: React.ReactNode,
+		{ ctxValue, ...renderOptions }: RenderOptions & { ctxValue: SelectionContextType }
+	) => {
+		return render(
+			<SelectedElementsContext.Provider value={ctxValue}>{ui}</SelectedElementsContext.Provider>,
+			renderOptions
+		)
+	}
+
 	beforeEach(() => {
 		mockSegmentsCollection.remove({})
 		mockPartsCollection.remove({})
 		jest.clearAllMocks()
-		jest.useFakeTimers()
+		// jest.useFakeTimers()
 	})
 
 	afterEach(() => {
@@ -257,13 +238,12 @@ describe('PropertiesPanel', () => {
 	test('renders segment properties when segment is selected', async () => {
 		const mockSegment = createMockSegment('segment1')
 
-		const mockId = mockSegmentsCollection.insert(mockSegment) as any as SegmentId
+		const mockId = mockSegmentsCollection.insert(mockSegment)
+		const protectedMockId = protectString(mockId)
 
-		const verifySegment = mockSegmentsCollection.findOne({ _id: mockId })
+		const verifySegment = mockSegmentsCollection.findOne({ _id: protectedMockId })
 		expect(verifySegment).toBeTruthy()
-		console.log('Verify segment :', verifySegment?._id)
-
-		expect(mockSegmentsCollection.findOne({ _id: mockId })).toBeTruthy()
+		expect(mockSegmentsCollection.findOne({ _id: protectedMockId })).toBeTruthy()
 
 		const { result } = renderHook(() => useSelection(), { wrapper })
 
@@ -271,29 +251,17 @@ describe('PropertiesPanel', () => {
 		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'segment',
-				elementId: mockId,
+				elementId: protectedMockId,
 			})
 		})
 
-		await act(async () => {
-			jest.advanceTimersByTime(100)
-		})
+		expect(result.current.listSelectedElements()).toHaveLength(1)
+		expect(result.current.listSelectedElements()).toEqual([{ type: 'segment', elementId: mockId }])
 
 		// Open component after segment is selected (as used in rundownview)
-		const { container } = render(<PropertiesPanel />, { wrapper })
+		const { container } = renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
 
-		await act(async () => {
-			jest.advanceTimersByTime(100)
-		})
-
-		console.log('result', result.current.listSelectedElements())
-		// Use findByTestId instead of querySelector
-		await waitFor(
-			() => {
-				expect(screen.getByText(`SEGMENT : ${mockSegment.name}`)).toBeInTheDocument()
-			},
-			{ timeout: 1000 }
-		)
+		expect(screen.getByText(`${mockSegment.name.slice(0, 30)}`)).toBeInTheDocument()
 
 		const button = container.querySelector('.propertiespanel-pop-up__button')
 		expect(button).toBeInTheDocument()
@@ -304,22 +272,22 @@ describe('PropertiesPanel', () => {
 		const mockPart = createMockPart('part1', String(mockSegment._id))
 
 		mockSegmentsCollection.insert(mockSegment)
-		mockPartsCollection.insert(mockPart)
+		const mockId = mockPartsCollection.insert(mockPart)
 
 		const { result } = renderHook(() => useSelection(), { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
 				type: 'part',
-				elementId: mockPart._id,
+				elementId: protectString(mockId),
 			})
 		})
 		// Open component after part is selected (as used in rundownview)
-		const { container } = render(<PropertiesPanel />, { wrapper })
+		const { container } = renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
 
 		await waitFor(
 			() => {
-				expect(screen.getByText(`PART : ${mockPart.title}`)).toBeInTheDocument()
+				expect(screen.getByText(mockPart.title.slice(0, 30))).toBeInTheDocument()
 			},
 			{ timeout: 1000 }
 		)
@@ -333,7 +301,6 @@ describe('PropertiesPanel', () => {
 		mockSegmentsCollection.insert(mockSegment)
 
 		const { result } = renderHook(() => useSelection(), { wrapper })
-		const { container } = render(<PropertiesPanel />, { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
@@ -343,13 +310,14 @@ describe('PropertiesPanel', () => {
 		})
 
 		// Wait for the switch button to be available
+		const { container } = renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
 		const switchButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up__switchbutton'))
 		expect(switchButton).toBeTruthy()
 
+		if (!switchButton) return // above would have thrown - this is a type guard
+
 		// Toggle the switch
-		await act(async () => {
-			await userEvent.click(switchButton!)
-		})
+		await userEvent.click(switchButton)
 
 		// Check if commit button is enabled
 		const commitButton = screen.getByText('COMMIT CHANGES')
@@ -381,7 +349,6 @@ describe('PropertiesPanel', () => {
 		mockSegmentsCollection.insert(mockSegment)
 
 		const { result } = renderHook(() => useSelection(), { wrapper })
-		const { container } = render(<PropertiesPanel />, { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
@@ -389,6 +356,8 @@ describe('PropertiesPanel', () => {
 				elementId: mockSegment._id,
 			})
 		})
+
+		const { container } = renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
 
 		// Wait for the switch button to be available
 		const switchButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up__switchbutton'))
@@ -414,10 +383,10 @@ describe('PropertiesPanel', () => {
 				pieceExternalId: undefined,
 			},
 			{
-				id: 'REVERT_SEGMENT',
+				id: 'revert-segment',
 			}
 		)
-	}, 10000) // Increase timeout for this test
+	})
 
 	test('closes panel when close button is clicked', async () => {
 		const mockSegment = createMockSegment('segment1')
