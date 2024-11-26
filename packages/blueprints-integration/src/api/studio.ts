@@ -149,6 +149,8 @@ export interface BlueprintResultApplyStudioConfig {
 	/** Playout Mappings */
 	mappings: BlueprintMappings
 
+	/** Parent device settings */
+	parentDevices: Record<string, BlueprintParentDeviceSettings>
 	/** Playout-gateway subdevices */
 	playoutDevices: Record<string, TSR.DeviceOptionsAny>
 	/** Ingest-gateway subdevices, the types here depend on the gateway you use */
@@ -163,6 +165,14 @@ export interface BlueprintResultApplyStudioConfig {
 	packageContainers?: Record<string, StudioPackageContainer>
 
 	studioSettings?: IStudioSettings
+}
+export interface BlueprintParentDeviceSettings {
+	/**
+	 * User friendly name for the device
+	 */
+	name: string
+
+	options: Record<string, any>
 }
 
 export interface IStudioConfigPreset<TConfig = IBlueprintConfig> {
