@@ -160,8 +160,6 @@ export async function updateRundownFromIngestDataInner(
 		return null
 	}
 
-	// TODO - store notes from rundownNotesContext
-
 	let regenerateAllContents = true
 	if (generateMode == GenerateRundownMode.MetadataChange) {
 		regenerateAllContents =

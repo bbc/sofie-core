@@ -2,19 +2,16 @@ import { PartId, RundownPlaylistId, SegmentId } from '@sofie-automation/corelib/
 import { check } from 'meteor/check'
 import {
 	CustomPublishCollection,
+	SetupObserversResult,
 	TriggerUpdate,
 	meteorCustomPublish,
 	setUpCollectionOptimizedObserver,
 } from '../../lib/customPublication'
 import { logger } from '../../logging'
 import { CustomCollectionName, MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
-import { RundownPlaylistReadAccess } from '../../security/rundownPlaylist'
-import { resolveCredentials } from '../../security/lib/credentials'
-import { NoSecurityReadAccess } from '../../security/noSecurity'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { ContentCache, PartOmitedFields, createReactiveContentCache } from './reactiveContentCache'
 import { ReadonlyDeep } from 'type-fest'
-import { LiveQueryHandle } from '../../lib/lib'
 import { RundownPlaylists } from '../../collections'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -23,6 +20,7 @@ import { RundownsObserver } from '../lib/rundownsObserver'
 import { RundownContentObserver } from './rundownContentObserver'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { extractRanks, findMarkerPosition, modifyPartForQuickLoop, stringsToIndexLookup } from '../lib/quickLoop'
+import { triggerWriteAccessBecauseNoCheckNecessary } from '../../security/securityVerify'
 
 interface UIPartsArgs {
 	readonly playlistId: RundownPlaylistId
@@ -53,13 +51,13 @@ const rundownPlaylistFieldSpecifier = literal<
 async function setupUIPartsPublicationObservers(
 	args: ReadonlyDeep<UIPartsArgs>,
 	triggerUpdate: TriggerUpdate<UIPartsUpdateProps>
-): Promise<LiveQueryHandle[]> {
+): Promise<SetupObserversResult> {
 	const playlist = (await RundownPlaylists.findOneAsync(args.playlistId, {
 		projection: rundownPlaylistFieldSpecifier,
 	})) as Pick<DBRundownPlaylist, RundownPlaylistFields> | undefined
 	if (!playlist) throw new Error(`RundownPlaylist "${args.playlistId}" not found!`)
 
-	const rundownsObserver = new RundownsObserver(playlist.studioId, playlist._id, (rundownIds) => {
+	const rundownsObserver = await RundownsObserver.create(playlist.studioId, playlist._id, async (rundownIds) => {
 		logger.silly(`Creating new RundownContentObserver`)
 
 		const cache = createReactiveContentCache()
@@ -67,7 +65,7 @@ async function setupUIPartsPublicationObservers(
 		// Push update
 		triggerUpdate({ newCache: cache })
 
-		const obs1 = new RundownContentObserver(playlist.studioId, playlist._id, rundownIds, cache)
+		const obs1 = await RundownContentObserver.create(playlist.studioId, playlist._id, rundownIds, cache)
 
 		const innerQueries = [
 			cache.Segments.find({}).observeChanges({
@@ -93,7 +91,7 @@ async function setupUIPartsPublicationObservers(
 				changed: () => triggerUpdate({ invalidateQuickLoop: true }),
 				removed: () => triggerUpdate({ invalidateQuickLoop: true }),
 			}),
-			cache.Studios.find({}).observeChanges({
+			cache.StudioSettings.find({}).observeChanges({
 				added: () => triggerUpdate({ invalidateQuickLoop: true }),
 				changed: () => triggerUpdate({ invalidateQuickLoop: true }),
 				removed: () => triggerUpdate({ invalidateQuickLoop: true }),
@@ -135,8 +133,8 @@ export async function manipulateUIPartsPublicationData(
 	const playlist = state.contentCache.RundownPlaylists.findOne({})
 	if (!playlist) return
 
-	const studio = state.contentCache.Studios.findOne({})
-	if (!studio) return
+	const studioSettings = state.contentCache.StudioSettings.findOne({})
+	if (!studioSettings) return
 
 	const rundownRanks = stringsToIndexLookup(playlist.rundownIdsInOrder as unknown as string[])
 	const segmentRanks = extractRanks(state.contentCache.Segments.find({}).fetch())
@@ -178,7 +176,7 @@ export async function manipulateUIPartsPublicationData(
 				segmentRanks,
 				rundownRanks,
 				playlist,
-				studio,
+				studioSettings.settings,
 				quickLoopStartPosition,
 				quickLoopEndPosition
 			)
@@ -190,30 +188,27 @@ export async function manipulateUIPartsPublicationData(
 meteorCustomPublish(
 	MeteorPubSub.uiParts,
 	CustomCollectionName.UIParts,
-	async function (pub, playlistId: RundownPlaylistId) {
+	async function (pub, playlistId: RundownPlaylistId | null) {
 		check(playlistId, String)
 
-		const credentials = await resolveCredentials({ userId: this.userId, token: undefined })
+		triggerWriteAccessBecauseNoCheckNecessary()
 
-		if (
-			!credentials ||
-			NoSecurityReadAccess.any() ||
-			(await RundownPlaylistReadAccess.rundownPlaylistContent(playlistId, credentials))
-		) {
-			await setUpCollectionOptimizedObserver<
-				Omit<DBPart, PartOmitedFields>,
-				UIPartsArgs,
-				UIPartsState,
-				UIPartsUpdateProps
-			>(
-				`pub_${MeteorPubSub.uiParts}_${playlistId}`,
-				{ playlistId },
-				setupUIPartsPublicationObservers,
-				manipulateUIPartsPublicationData,
-				pub
-			)
-		} else {
+		if (!playlistId) {
 			logger.warn(`Pub.uiParts: Not allowed: "${playlistId}"`)
+			return
 		}
+
+		await setUpCollectionOptimizedObserver<
+			Omit<DBPart, PartOmitedFields>,
+			UIPartsArgs,
+			UIPartsState,
+			UIPartsUpdateProps
+		>(
+			`pub_${MeteorPubSub.uiParts}_${playlistId}`,
+			{ playlistId },
+			setupUIPartsPublicationObservers,
+			manipulateUIPartsPublicationData,
+			pub
+		)
 	}
 )

@@ -597,7 +597,7 @@ function Prompter(props: Readonly<PropsWithChildren<IPrompterProps>>): JSX.Eleme
 	const rundownIDs = playlist ? RundownPlaylistCollectionUtil.getRundownUnorderedIDs(playlist) : []
 	useSubscription(CorelibPubSub.segments, rundownIDs, {})
 	useSubscription(MeteorPubSub.uiParts, props.rundownPlaylistId)
-	useSubscription(MeteorPubSub.uiPartInstances, rundownIDs, playlist?.activationId ?? null)
+	useSubscription(MeteorPubSub.uiPartInstances, playlist?.activationId ?? null)
 	useSubscription(CorelibPubSub.pieces, rundownIDs, null)
 	useSubscription(CorelibPubSub.pieceInstancesSimple, rundownIDs, null)
 
@@ -636,7 +636,7 @@ const PrompterContent = withTranslation()(
 		Translated<PropsWithChildren<IPrompterProps> & IPrompterTrackedProps>,
 		{}
 	> {
-		private _debounceUpdate: NodeJS.Timer | undefined
+		private _debounceUpdate: NodeJS.Timeout | undefined
 
 		constructor(props: Translated<PropsWithChildren<IPrompterProps> & IPrompterTrackedProps>) {
 			super(props)

@@ -13,6 +13,7 @@ import {
 	Time,
 	TSR,
 	IBlueprintPlayoutDevice,
+	StudioRouteSet,
 } from '@sofie-automation/blueprints-integration'
 import { PartInstanceId, PeripheralDeviceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
@@ -196,6 +197,11 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		}
 
 		partInstance.blockTakeUntil(time)
+	}
+
+	async listRouteSets(): Promise<Record<string, StudioRouteSet>> {
+		// Discard ReadonlyDeep wrapper
+		return this._context.studio.routeSets as Record<string, StudioRouteSet>
 	}
 
 	async switchRouteSet(routeSetId: string, state: boolean | 'toggle'): Promise<void> {

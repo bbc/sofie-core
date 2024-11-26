@@ -147,7 +147,9 @@ export function acceptFormat(format: string, formats: Array<Array<string>>): boo
  * 	[undefined, undefined, i, 5000, tff]
  * ]
  */
-export function getAcceptedFormats(settings: IStudioSettings | undefined): Array<Array<string>> {
+export function getAcceptedFormats(
+	settings: Pick<IStudioSettings, 'supportedMediaFormats' | 'frameRate'> | undefined
+): Array<Array<string>> {
 	const formatsConfigField = settings ? settings.supportedMediaFormats : ''
 	const formatsString: string =
 		(formatsConfigField && formatsConfigField !== '' ? formatsConfigField : '1920x1080i5000') + ''
@@ -185,7 +187,7 @@ export type PieceContentStatusPiece = Pick<PieceGeneric, '_id' | 'content' | 'ex
 	pieceInstanceId?: PieceInstanceId
 }
 export interface PieceContentStatusStudio
-	extends Pick<DBStudio, '_id' | 'settings' | 'previewContainerIds' | 'thumbnailContainerIds'> {
+	extends Pick<DBStudio, '_id' | 'previewContainerIds' | 'thumbnailContainerIds'> {
 	/** Mappings between the physical devices / outputs and logical ones */
 	mappings: MappingsExt
 	/** Route sets with overrides */
@@ -194,6 +196,8 @@ export interface PieceContentStatusStudio
 	 * (These are used by the Package Manager and the Expected Packages)
 	 */
 	packageContainers: Record<string, StudioPackageContainer>
+
+	settings: IStudioSettings
 }
 
 export async function checkPieceContentStatusAndDependencies(

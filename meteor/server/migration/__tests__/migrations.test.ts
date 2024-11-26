@@ -1,6 +1,5 @@
 import * as _ from 'underscore'
 import { setupEmptyEnvironment } from '../../../__mocks__/helpers/database'
-import { testInFiber } from '../../../__mocks__/helpers/jest'
 import { ICoreSystem, GENESIS_SYSTEM_VERSION } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
 import { clearMigrationSteps, addMigrationSteps, prepareMigration, PreparedMigration } from '../databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from '../currentSystemVersion'
@@ -63,7 +62,7 @@ describe('Migrations', () => {
 			})
 		)
 	}
-	testInFiber('System migrations, initial setup', async () => {
+	test('System migrations, initial setup', async () => {
 		expect((await getSystem()).version).toEqual(GENESIS_SYSTEM_VERSION)
 
 		const migrationStatus0: GetMigrationStatusResult = await MeteorCall.migration.getMigrationStatus()
@@ -101,7 +100,7 @@ describe('Migrations', () => {
 		expect((await getSystem()).version).toEqual(CURRENT_SYSTEM_VERSION)
 	})
 
-	testInFiber('Ensure migrations run in correct order', async () => {
+	test('Ensure migrations run in correct order', async () => {
 		await MeteorCall.migration.resetDatabaseVersions()
 
 		expect((await getSystem()).version).toEqual(GENESIS_SYSTEM_VERSION)
@@ -122,11 +121,14 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
-						},
+							allowHold: true,
+							allowPieceDirectPlay: true,
+							enableBuckets: true,
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',
@@ -160,11 +162,14 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
-						},
+							allowHold: true,
+							allowPieceDirectPlay: true,
+							enableBuckets: true,
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',
@@ -198,11 +203,14 @@ describe('Migrations', () => {
 						name: 'Default studio',
 						organizationId: null,
 						supportedShowStyleBase: [],
-						settings: {
+						settingsWithOverrides: wrapDefaultObject({
 							mediaPreviewsUrl: '',
 							frameRate: 25,
 							minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
-						},
+							allowHold: true,
+							allowPieceDirectPlay: true,
+							enableBuckets: true,
+						}),
 						mappingsWithOverrides: wrapDefaultObject({}),
 						blueprintConfigWithOverrides: wrapDefaultObject({}),
 						_rundownVersionHash: '',

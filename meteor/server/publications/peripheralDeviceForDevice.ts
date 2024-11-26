@@ -1,9 +1,12 @@
-import { Meteor } from 'meteor/meteor'
-import { PeripheralDeviceReadAccess } from '../security/peripheralDevice'
 import { PeripheralDevice, PeripheralDeviceCategory } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { PeripheralDeviceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { PeripheralDevices, Studios } from '../collections'
-import { TriggerUpdate, meteorCustomPublish, setUpOptimizedObserverArray } from '../lib/customPublication'
+import {
+	SetupObserversResult,
+	TriggerUpdate,
+	meteorCustomPublish,
+	setUpOptimizedObserverArray,
+} from '../lib/customPublication'
 import { PeripheralDeviceForDevice } from '@sofie-automation/shared-lib/dist/core/model/peripheralDevice'
 import { ReadonlyDeep } from 'type-fest'
 import { ReactiveMongoObserverGroup } from './lib/observerGroup'
@@ -21,6 +24,7 @@ import {
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
 } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
+import { checkAccessAndGetPeripheralDevice } from '../security/check'
 
 interface PeripheralDeviceForDeviceArgs {
 	readonly deviceId: PeripheralDeviceId
@@ -120,7 +124,7 @@ export function convertPeripheralDeviceForGateway(
 async function setupPeripheralDevicePublicationObservers(
 	args: ReadonlyDeep<PeripheralDeviceForDeviceArgs>,
 	triggerUpdate: TriggerUpdate<PeripheralDeviceForDeviceUpdateProps>
-): Promise<Meteor.LiveQueryHandle[]> {
+): Promise<SetupObserversResult> {
 	const studioObserver = await ReactiveMongoObserverGroup(async () => {
 		const peripheralDeviceCompact = (await PeripheralDevices.findOneAsync(args.deviceId, {
 			fields: { studioId: 1 },
@@ -202,26 +206,22 @@ meteorCustomPublish(
 	async function (pub, deviceId: PeripheralDeviceId, token: string | undefined) {
 		check(deviceId, String)
 
-		if (await PeripheralDeviceReadAccess.peripheralDeviceContent(deviceId, { userId: this.userId, token })) {
-			const peripheralDevice = await PeripheralDevices.findOneAsync(deviceId)
+		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, this)
 
-			if (!peripheralDevice) throw new Meteor.Error('PeripheralDevice "' + deviceId + '" not found')
+		const studioId = peripheralDevice.studioId
+		if (!studioId) return
 
-			const studioId = peripheralDevice.studioId
-			if (!studioId) return
-
-			await setUpOptimizedObserverArray<
-				PeripheralDeviceForDevice,
-				PeripheralDeviceForDeviceArgs,
-				PeripheralDeviceForDeviceState,
-				PeripheralDeviceForDeviceUpdateProps
-			>(
-				`${PeripheralDevicePubSubCollectionsNames.peripheralDeviceForDevice}_${deviceId}`,
-				{ deviceId },
-				setupPeripheralDevicePublicationObservers,
-				manipulatePeripheralDevicePublicationData,
-				pub
-			)
-		}
+		await setUpOptimizedObserverArray<
+			PeripheralDeviceForDevice,
+			PeripheralDeviceForDeviceArgs,
+			PeripheralDeviceForDeviceState,
+			PeripheralDeviceForDeviceUpdateProps
+		>(
+			`${PeripheralDevicePubSubCollectionsNames.peripheralDeviceForDevice}_${deviceId}`,
+			{ deviceId },
+			setupPeripheralDevicePublicationObservers,
+			manipulatePeripheralDevicePublicationData,
+			pub
+		)
 	}
 )

@@ -43,11 +43,7 @@ import { GENESIS_SYSTEM_VERSION } from '@sofie-automation/meteor-lib/dist/collec
 import { clone, getHash, omit, protectString, unprotectString } from '../lib/tempLib'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { evalBlueprint } from '../api/blueprints/cache'
-import {
-	MigrationContextShowStyle,
-	MigrationContextStudio,
-	MigrationContextSystem,
-} from '../api/blueprints/migrationContext'
+import { MigrationContextSystem } from '../api/blueprints/migrationContext'
 import { CURRENT_SYSTEM_VERSION } from './currentSystemVersion'
 import { SnapshotId, ShowStyleBaseId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Blueprints, CoreSystem, ShowStyleBases, Studios } from '../collections'
@@ -258,6 +254,10 @@ export async function prepareMigration(returnAllChunks?: boolean): Promise<Prepa
 				})
 			} else if (blueprint.blueprintType === BlueprintManifestType.SYSTEM) {
 				const bp = blueprintManifest as SystemBlueprintManifest
+
+				// If blueprint uses the new flow, don't attempt migrations
+				if (typeof bp.applyConfig === 'function') continue
+
 				// Check if the coreSystem uses this blueprint
 				const coreSystems = await CoreSystem.findFetchAsync({
 					blueprintId: blueprint._id,
@@ -387,7 +387,7 @@ export async function prepareMigration(returnAllChunks?: boolean): Promise<Prepa
 					step._validateResult = await validate(false)
 				} else if (step.chunk.sourceType === MigrationStepType.SYSTEM) {
 					const validate = step.validate as ValidateFunctionSystem
-					step._validateResult = validate(getMigrationSystemContext(step.chunk), false)
+					step._validateResult = await validate(getMigrationSystemContext(step.chunk), false)
 				} else if (step.chunk.sourceType === MigrationStepType.STUDIO) {
 					const validate = step.validate as ValidateFunctionStudio
 					step._validateResult = validate(await getMigrationStudioContext(step.chunk), false)
@@ -601,7 +601,7 @@ export async function runMigration(
 					await migration(stepInput)
 				} else if (step.chunk.sourceType === MigrationStepType.SYSTEM) {
 					const migration = step.migrate as MigrateFunctionSystem
-					migration(getMigrationSystemContext(step.chunk), stepInput)
+					await migration(getMigrationSystemContext(step.chunk), stepInput)
 				} else if (step.chunk.sourceType === MigrationStepType.STUDIO) {
 					const migration = step.migrate as MigrateFunctionStudio
 					migration(await getMigrationStudioContext(step.chunk), stepInput)
@@ -621,7 +621,7 @@ export async function runMigration(
 				validateMessage = await validate(true)
 			} else if (step.chunk.sourceType === MigrationStepType.SYSTEM) {
 				const validate = step.validate as ValidateFunctionSystem
-				validateMessage = validate(getMigrationSystemContext(step.chunk), true)
+				validateMessage = await validate(getMigrationSystemContext(step.chunk), true)
 			} else if (step.chunk.sourceType === MigrationStepType.STUDIO) {
 				const validate = step.validate as ValidateFunctionStudio
 				validateMessage = validate(await getMigrationStudioContext(step.chunk), true)
@@ -808,7 +808,8 @@ async function getMigrationStudioContext(chunk: MigrationChunk): Promise<IMigrat
 	const studio = await Studios.findOneAsync(chunk.sourceId as StudioId)
 	if (!studio) throw new Meteor.Error(404, `Studio "${chunk.sourceId}" not found`)
 
-	return new MigrationContextStudio(studio)
+	// return new MigrationContextStudio(studio)
+	throw new Meteor.Error(500, 'Studio migrations not supported!')
 }
 async function getMigrationShowStyleContext(chunk: MigrationChunk): Promise<IMigrationContextShowStyle> {
 	if (chunk.sourceType !== MigrationStepType.SHOWSTYLE)
@@ -820,5 +821,6 @@ async function getMigrationShowStyleContext(chunk: MigrationChunk): Promise<IMig
 	const showStyleBase = await ShowStyleBases.findOneAsync(chunk.sourceId as ShowStyleBaseId)
 	if (!showStyleBase) throw new Meteor.Error(404, `ShowStyleBase "${chunk.sourceId}" not found`)
 
-	return new MigrationContextShowStyle(showStyleBase)
+	// return new MigrationContextShowStyle(showStyleBase)
+	throw new Meteor.Error(500, 'ShowStyle migrations not supported!')
 }

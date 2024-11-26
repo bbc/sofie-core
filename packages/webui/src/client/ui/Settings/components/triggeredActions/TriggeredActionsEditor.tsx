@@ -191,8 +191,8 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 		null
 	)
 
-	useSubscription(MeteorPubSub.uiPartInstances, rundown ? [rundown._id] : [], rundownPlaylist?.activationId ?? null)
-	useSubscription(CorelibPubSub.parts, rundown ? [rundown._id] : [], null)
+	useSubscription(MeteorPubSub.uiPartInstances, rundownPlaylist?.activationId ?? null)
+	useSubscription(MeteorPubSub.uiParts, rundownPlaylist?._id ?? null)
 
 	const previewContext = useTracker(
 		() => {
@@ -437,7 +437,7 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 			{showStyleBaseId !== null ? (
 				<>
 					<div className={classNames('mod mhn', parsedTriggerFilter ? 'mtn' : undefined)}>
-						{(systemTriggeredActionIds?.length ?? 0) > 0 && !parsedTriggerFilter ? (
+						{!parsedTriggerFilter ? (
 							<h3
 								className="mhn mvs clickable disable-select"
 								onClick={() => setSystemWideCollapsed(!systemWideCollapsed)}
@@ -470,13 +470,19 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 									/>
 							  ))
 							: null}
+
+						{!systemWideCollapsed && !parsedTriggerFilter && systemTriggeredActionIds?.length === 0 && (
+							<p className="mod mhn subtle">{t('No Action Triggers set up.')}</p>
+						)}
 					</div>
 				</>
 			) : null}
 			<div className="mod mhs">
-				<button className="btn btn-primary" onClick={onNewTriggeredAction}>
-					<FontAwesomeIcon icon={faPlus} />
-				</button>
+				<Tooltip overlay={t('Add Action Trigger')} placement="top">
+					<button className="btn btn-primary" onClick={onNewTriggeredAction}>
+						<FontAwesomeIcon icon={faPlus} />
+					</button>
+				</Tooltip>
 				<Tooltip overlay={t('Upload stored Action Triggers')} placement="top">
 					<span className="inline-block">
 						<UploadButton
