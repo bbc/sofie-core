@@ -1,4 +1,4 @@
-import { PeripheralDeviceId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PeripheralDeviceId, RundownId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	CustomPublishCollection,
@@ -18,6 +18,8 @@ import {
 import { checkAccessAndGetPeripheralDevice } from '../../security/check'
 import { check } from '../../lib/check'
 import { IngestPartPlaybackStatus, IngestRundownStatus } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 
 interface IngestRundownStatusArgs {
 	readonly deviceId: PeripheralDeviceId
@@ -31,6 +33,7 @@ interface IngestRundownStatusUpdateProps {
 	newCache: ContentCache
 
 	invalidateRundownIds: RundownId[]
+	invalidatePlaylistIds: RundownPlaylistId[]
 }
 
 async function setupIngestRundownStatusPublicationObservers(
@@ -46,13 +49,27 @@ async function setupIngestRundownStatusPublicationObservers(
 		// Push update
 		triggerUpdate({ newCache: cache })
 
-		const obs1 = await RundownContentObserver.create(rundownIds, cache)
+		const contentObserver = await RundownContentObserver.create(rundownIds, cache)
 
 		const innerQueries = [
+			cache.Playlists.find({}).observeChanges({
+				added: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
+				changed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
+				removed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
+			}),
 			cache.Rundowns.find({}).observe({
-				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
-				changed: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
-				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
+				added: (doc) => {
+					triggerUpdate({ invalidateRundownIds: [doc._id] })
+					contentObserver.checkPlaylistIds()
+				},
+				changed: (doc) => {
+					triggerUpdate({ invalidateRundownIds: [doc._id] })
+					contentObserver.checkPlaylistIds()
+				},
+				removed: (doc) => {
+					triggerUpdate({ invalidateRundownIds: [doc._id] })
+					contentObserver.checkPlaylistIds()
+				},
 			}),
 			cache.Parts.find({}).observe({
 				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
@@ -69,15 +86,15 @@ async function setupIngestRundownStatusPublicationObservers(
 				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
 				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
-			// cache.NrcsIngestData.find({}).observe({
-			// 	added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-			// 	changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
-			// 	removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-			// }),
+			cache.NrcsIngestData.find({}).observe({
+				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+			}),
 		]
 
 		return () => {
-			obs1.dispose()
+			contentObserver.dispose()
 
 			for (const query of innerQueries) {
 				query.stop()
@@ -125,6 +142,24 @@ async function manipulateIngestRundownStatusPublicationData(
 	} else {
 		const regenerateForRundownIds = new Set(updateProps.invalidateRundownIds)
 
+		// Include anything where the playlist has changed
+		if (updateProps.invalidatePlaylistIds && updateProps.invalidatePlaylistIds.length > 0) {
+			const rundownsToUpdate = state.contentCache.Rundowns.find(
+				{
+					playlistId: { $in: updateProps.invalidatePlaylistIds },
+				},
+				{
+					projection: {
+						_id: 1,
+					},
+				}
+			).fetch() as Pick<DBRundown, '_id'>[]
+
+			for (const rundown of rundownsToUpdate) {
+				regenerateForRundownIds.add(rundown._id)
+			}
+		}
+
 		for (const rundownId of regenerateForRundownIds) {
 			const newDoc = regenerateForRundown(state.contentCache, rundownId)
 			if (newDoc) {
@@ -151,6 +186,12 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 	for (const segment of segments) {
 		const parts = cache.Parts.find({ rundownId, segmentId: segment._id }).fetch()
 
+		// nocommit TODO
+		/*
+		 * This should probably be structured like the nrcs expects the data to be.
+		 * That probably means using the NRCSIngestData, as that is supposed to exactly match the NRCS.
+		 *
+		 */
 		newDoc.segments.push({
 			id: segment.externalId,
 			parts: parts.map((part) => {
@@ -160,7 +201,7 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 					'part._id': part._id,
 				})
 
-				const reportPartPlayback = partInstance
+				const reportPartAsPlaying = partInstance
 					? partInstance.part.shouldNotifyCurrentPlayingPart
 					: part.shouldNotifyCurrentPlayingPart
 
@@ -170,7 +211,7 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 					isReady:
 						(partInstance ? partInstance.part.ingestNotifyPartReady : part.ingestNotifyPartReady) ?? null,
 
-					playbackStatus: reportPartPlayback
+					playbackStatus: reportPartAsPlaying
 						? IngestPartPlaybackStatus.PLAYING
 						: IngestPartPlaybackStatus.UNKNOWN, // TODO - this is missing some states and logic!
 				}

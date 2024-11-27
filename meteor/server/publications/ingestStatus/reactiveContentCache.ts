@@ -3,15 +3,23 @@ import { ReactiveCacheCollection } from '../lib/ReactiveCacheCollection'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import type { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import type { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
-// import type { NrcsIngestDataCacheObj } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
+import type { NrcsIngestDataCacheObj } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
 import type { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import type { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
-export type RundownFields = '_id' | 'externalId'
+export type PlaylistFields = '_id' | 'currentPartInfo'
+export const playlistFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBRundownPlaylist, PlaylistFields>>>({
+	_id: 1,
+	currentPartInfo: 1,
+})
+
+export type RundownFields = '_id' | 'externalId' | 'playlistId'
 export const rundownFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBRundown, RundownFields>>>({
 	_id: 1,
 	externalId: 1,
+	playlistId: 1,
 })
 
 export type PartFields =
@@ -50,8 +58,9 @@ export const partInstanceFieldSpecifier = literal<
 export interface ContentCache {
 	RundownIds: RundownId[]
 
+	Playlists: ReactiveCacheCollection<Pick<DBRundownPlaylist, PlaylistFields>>
 	Rundowns: ReactiveCacheCollection<Pick<DBRundown, RundownFields>>
-	// NrcsIngestData: ReactiveCacheCollection<NrcsIngestDataCacheObj>
+	NrcsIngestData: ReactiveCacheCollection<NrcsIngestDataCacheObj>
 	Parts: ReactiveCacheCollection<Pick<DBPart, PartFields>>
 	Segments: ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>
 	PartInstances: ReactiveCacheCollection<Pick<PartInstance, PartInstanceFields>>
@@ -61,8 +70,9 @@ export function createReactiveContentCache(rundownIds: RundownId[]): ContentCach
 	const cache: ContentCache = {
 		RundownIds: rundownIds,
 
+		Playlists: new ReactiveCacheCollection<Pick<DBRundownPlaylist, PlaylistFields>>('playlists'),
 		Rundowns: new ReactiveCacheCollection<Pick<DBRundown, RundownFields>>('rundowns'),
-		// NrcsIngestData: new ReactiveCacheCollection<NrcsIngestDataCacheObj>('nrcsIngestData'), // TODO - is this needed?
+		NrcsIngestData: new ReactiveCacheCollection<NrcsIngestDataCacheObj>('nrcsIngestData'), // TODO - is this needed?
 		Parts: new ReactiveCacheCollection<Pick<DBPart, PartFields>>('parts'),
 		Segments: new ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>('segments'),
 		PartInstances: new ReactiveCacheCollection<Pick<PartInstance, PartInstanceFields>>('partInstances'),
