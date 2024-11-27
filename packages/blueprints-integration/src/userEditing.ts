@@ -74,7 +74,7 @@ export enum UserEditingType {
 }
 
 export interface UserEditingSourceLayer {
-	sourceLayerLabel: string
+	sourceLayerLabel: string // translate? take from type?
 	sourceLayerType: SourceLayerType
 	schema: JSONBlob<JSONSchema>
 }
@@ -86,4 +86,46 @@ export enum UserEditingButtonType {
 	SWITCH = 'switch',
 	/** Hidden */
 	HIDDEN = 'hidden',
+}
+
+export interface UserEditingProperties {
+	/**
+	 * These properties are dependent on the (primary) piece type, the user will get the option
+	 * to select the type of piece (from the SourceLayerTypes i.e. Camera or Split etc.) and then
+	 * be presented the corresponding form
+	 *
+	 * example:
+	 * {
+	 * 	 schema: {
+	 * 	   camera: '{ "type": "object", "properties": { "input": { "type": "number" } } }',
+	 * 	   split: '{ "type": "object", ... }',
+	 * 	 },
+	 *   currentValue: {
+	 *     type: 'camera',
+	 *     value: {
+	 *       input: 3
+	 *     },
+	 *   }
+	 * }
+	 */
+	pieceTypeProperties?: {
+		schema: Record<string, UserEditingSourceLayer>
+		currentValue: { type: string; value: Record<string, any> }
+	}
+
+	/**
+	 * These are properties that are available to edit regardless of the piece type, examples
+	 * could be whether it an element is locked from NRCS updates
+	 *
+	 * if you do not want the piece type to be changed, then use only this field.
+	 */
+	globalProperties?: { schema: JSONBlob<JSONSchema>; currentValue: Record<string, any> }
+
+	/**
+	 * A list of id's of operations to be exposed on the properties panel as buttons. These operations
+	 * must be available on the element
+	 *
+	 * note - perhaps these should have their own full definitions?
+	 */
+	operations?: string[]
 }

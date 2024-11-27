@@ -14,6 +14,7 @@ import {
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 	CoreUserEditingDefinitionSourceLayerForm,
+	UserEditingProperties,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { assertNever, clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
@@ -121,6 +122,7 @@ export const IBlueprintMutatablePartSampleKeys = allKeysOfObject<IBlueprintMutat
 	identifier: true,
 	hackListenToMediaObjectUpdates: true,
 	userEditOperations: true,
+	userEditProperties: true,
 })
 
 /*
@@ -281,6 +283,7 @@ export function convertPartToBlueprints(part: ReadonlyDeep<DBPart>): IBlueprintP
 			part.hackListenToMediaObjectUpdates
 		),
 		userEditOperations: translateUserEditsToBlueprint(part.userEditOperations),
+		userEditProperties: clone<UserEditingProperties | undefined>(part.userEditProperties),
 	}
 
 	return obj
@@ -349,6 +352,7 @@ export function convertSegmentToBlueprints(segment: ReadonlyDeep<DBSegment>): IB
 		showShelf: segment.showShelf,
 		segmentTiming: segment.segmentTiming,
 		userEditOperations: translateUserEditsToBlueprint(segment.userEditOperations),
+		userEditProperties: clone<UserEditingProperties | undefined>(segment.userEditProperties),
 	}
 
 	return obj
