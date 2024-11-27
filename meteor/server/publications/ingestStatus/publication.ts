@@ -20,6 +20,8 @@ import { check } from '../../lib/check'
 import { IngestPartPlaybackStatus, IngestRundownStatus } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import { NrcsIngestCacheType } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
+import _ from 'underscore'
 
 interface IngestRundownStatusArgs {
 	readonly deviceId: PeripheralDeviceId
@@ -76,11 +78,11 @@ async function setupIngestRundownStatusPublicationObservers(
 				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
 				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
-			cache.Segments.find({}).observe({
-				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
-				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-			}),
+			// cache.Segments.find({}).observe({
+			// 	added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+			// 	changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+			// 	removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+			// }),
 			cache.PartInstances.find({}).observe({
 				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
@@ -177,45 +179,64 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 
 	const newDoc: IngestRundownStatus = {
 		_id: rundownId,
-		id: rundown.externalId,
+		externalId: rundown.externalId,
 
 		segments: [],
 	}
 
-	const segments = cache.Segments.find({ rundownId }).fetch()
-	for (const segment of segments) {
-		const parts = cache.Parts.find({ rundownId, segmentId: segment._id }).fetch()
+	const playlist = cache.Playlists.findOne(rundown.playlistId)
 
-		// nocommit TODO
-		/*
-		 * This should probably be structured like the nrcs expects the data to be.
-		 * That probably means using the NRCSIngestData, as that is supposed to exactly match the NRCS.
-		 *
-		 */
+	const nrcsSegments = cache.NrcsIngestData.find({ rundownId, type: NrcsIngestCacheType.SEGMENT }).fetch()
+	for (const nrcsSegment of nrcsSegments) {
+		const nrcsParts = cache.NrcsIngestData.find({
+			rundownId,
+			segmentId: nrcsSegment.segmentId,
+			type: NrcsIngestCacheType.PART,
+		}).fetch()
+
 		newDoc.segments.push({
-			id: segment.externalId,
-			parts: parts.map((part) => {
-				const partInstance = cache.PartInstances.findOne({
-					rundownId,
-					segmentId: segment._id,
-					'part._id': part._id,
+			externalId: nrcsSegment.data.externalId,
+			parts: _.compact(
+				nrcsParts.map((nrcsPart) => {
+					if (!nrcsPart.partId || !nrcsPart.segmentId) return null
+
+					const part = cache.Parts.findOne({ rundownId, _id: nrcsPart.partId })
+					const partInstance = cache.PartInstances.findOne({
+						rundownId,
+						segmentId: nrcsPart.segmentId,
+						'part._id': nrcsPart.partId,
+						// nocommit TODO - prefer the currentPartInstance
+						_id: {
+							$not: playlist?.nextPartInfo?.partInstanceId ?? protectString(''),
+						},
+					})
+
+					// Determine the playback status from the PartInstance
+					let playbackStatus = IngestPartPlaybackStatus.UNKNOWN
+					if (playlist && partInstance && partInstance.part.shouldNotifyCurrentPlayingPart) {
+						const isCurrentPartInstance = playlist.currentPartInfo?.partInstanceId === partInstance._id
+
+						if (isCurrentPartInstance) {
+							// If the current, it is playing
+							playbackStatus = IngestPartPlaybackStatus.PLAYING
+						} else {
+							// If not the current, but has been played, it is stopped
+							playbackStatus = IngestPartPlaybackStatus.STOPPED
+						}
+					}
+
+					// Determine the ready status from the PartInstance or Part
+					const isReady = partInstance ? partInstance.part.ingestNotifyPartReady : part?.ingestNotifyPartReady
+
+					return {
+						externalId: nrcsPart.data.externalId,
+
+						isReady: isReady ?? null,
+
+						playbackStatus,
+					}
 				})
-
-				const reportPartAsPlaying = partInstance
-					? partInstance.part.shouldNotifyCurrentPlayingPart
-					: part.shouldNotifyCurrentPlayingPart
-
-				return {
-					id: part.externalId,
-
-					isReady:
-						(partInstance ? partInstance.part.ingestNotifyPartReady : part.ingestNotifyPartReady) ?? null,
-
-					playbackStatus: reportPartAsPlaying
-						? IngestPartPlaybackStatus.PLAYING
-						: IngestPartPlaybackStatus.UNKNOWN, // TODO - this is missing some states and logic!
-				}
-			}),
+			),
 		})
 	}
 

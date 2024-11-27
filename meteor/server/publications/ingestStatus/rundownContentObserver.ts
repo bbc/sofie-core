@@ -7,9 +7,9 @@ import {
 	partInstanceFieldSpecifier,
 	playlistFieldSpecifier,
 	rundownFieldSpecifier,
-	segmentFieldSpecifier,
+	// segmentFieldSpecifier,
 } from './reactiveContentCache'
-import { PartInstances, Parts, RundownPlaylists, Rundowns, Segments } from '../../collections'
+import { PartInstances, Parts, RundownPlaylists, Rundowns } from '../../collections'
 import { waitForAllObserversReady } from '../lib/lib'
 import _ from 'underscore'
 import { ReactiveMongoObserverGroup, ReactiveMongoObserverGroupHandle } from '../lib/observerGroup'
@@ -75,17 +75,17 @@ export class RundownContentObserver {
 					projection: rundownFieldSpecifier,
 				}
 			),
-			Segments.observeChanges(
-				{
-					rundownId: {
-						$in: rundownIds,
-					},
-				},
-				cache.Segments.link(),
-				{
-					projection: segmentFieldSpecifier,
-				}
-			),
+			// Segments.observeChanges(
+			// 	{
+			// 		rundownId: {
+			// 			$in: rundownIds,
+			// 		},
+			// 	},
+			// 	cache.Segments.link(),
+			// 	{
+			// 		projection: segmentFieldSpecifier,
+			// 	}
+			// ),
 			Parts.observeChanges(
 				{
 					rundownId: {

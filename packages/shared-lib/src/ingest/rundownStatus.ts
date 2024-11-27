@@ -4,7 +4,7 @@ export interface IngestRundownStatus {
 	_id: RundownId
 
 	/** Rundown external id */
-	id: string
+	externalId: string
 
 	segments: IngestSegmentStatus[]
 
@@ -13,14 +13,14 @@ export interface IngestRundownStatus {
 
 export interface IngestSegmentStatus {
 	/** Segment external id */
-	id: string
+	externalId: string
 
 	parts: IngestPartStatus[]
 }
 
 export interface IngestPartStatus {
 	/** Part external id */
-	id: string
+	externalId: string
 
 	isReady: boolean | null
 
