@@ -58,8 +58,8 @@ export class RundownContentObserver {
 				}
 			),
 			PartInstances.observeChanges(
-				{ rundownId: { $in: rundownIds }, reset: { $ne: true }, orphaned: 'deleted' },
-				cache.DeletedPartInstances.link(),
+				{ rundownId: { $in: rundownIds }, reset: { $ne: true }, orphaned: { $exists: false } },
+				cache.PartInstances.link(),
 				{ fields: partInstanceFieldSpecifier }
 			),
 		])

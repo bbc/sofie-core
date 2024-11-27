@@ -1,8 +1,8 @@
-import { RundownId } from "@sofie-automation/shared-lib/src/core/model/Ids"
+import type { RundownId } from '../core/model/Ids'
 
 export interface IngestRundownStatus {
 	_id: RundownId
-	
+
 	/** Rundown external id */
 	id: string
 
@@ -22,5 +22,13 @@ export interface IngestPartStatus {
 	/** Part external id */
 	id: string
 
-	// TODO - something status
+	isReady: boolean | null
+
+	playbackStatus: IngestPartPlaybackStatus
+}
+
+export enum IngestPartPlaybackStatus {
+	UNKNOWN = 'unknown',
+	PLAYING = 'playing',
+	STOPPED = 'stopped',
 }

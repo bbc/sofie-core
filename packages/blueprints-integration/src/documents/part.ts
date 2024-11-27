@@ -62,7 +62,7 @@ export interface IBlueprintMutatablePart<TPrivateData = unknown, TPublicData = u
 	shouldNotifyCurrentPlayingPart?: boolean
 
 	/** Whether part should be reported as ready to the ingest-device. Set to undefined/null to disable this reporting */
-	shouldNotifyPartReady?: boolean | null
+	ingestNotifyPartReady?: boolean | null
 
 	/** Classes to set on the TimelineGroupObj for this part */
 	classes?: string[]

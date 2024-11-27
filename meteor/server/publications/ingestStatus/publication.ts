@@ -1,11 +1,5 @@
-import { PeripheralDeviceId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PeripheralDeviceId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
-import { UISegmentPartNote } from '@sofie-automation/meteor-lib/dist/api/rundownNotifications'
-import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { Rundown, getRundownNrcsName } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { groupByToMap, normalizeArrayToMap, protectString } from '../../lib/tempLib'
 import {
 	CustomPublishCollection,
 	meteorCustomPublish,
@@ -14,24 +8,16 @@ import {
 	TriggerUpdate,
 } from '../../lib/customPublication'
 import { logger } from '../../logging'
-import {
-	ContentCache,
-	createReactiveContentCache,
-	PartFields,
-	PartInstanceFields,
-	RundownFields,
-	SegmentFields,
-} from './reactiveContentCache'
+import { ContentCache, createReactiveContentCache } from './reactiveContentCache'
 import { RundownsObserver } from '../lib/rundownsObserver'
 import { RundownContentObserver } from './rundownContentObserver'
-import { generateNotesForSegment } from './generateNotesForSegment'
 import {
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
 } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
 import { checkAccessAndGetPeripheralDevice } from '../../security/check'
 import { check } from '../../lib/check'
-import { IngestRundownStatus } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
+import { IngestPartPlaybackStatus, IngestRundownStatus } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
 
 interface IngestRundownStatusArgs {
 	readonly deviceId: PeripheralDeviceId
@@ -45,7 +31,6 @@ interface IngestRundownStatusUpdateProps {
 	newCache: ContentCache
 
 	invalidateRundownIds: RundownId[]
-	invalidateSegmentIds: SegmentId[]
 }
 
 async function setupIngestRundownStatusPublicationObservers(
@@ -56,7 +41,7 @@ async function setupIngestRundownStatusPublicationObservers(
 		logger.silly(`Creating new RundownContentObserver`)
 
 		// TODO - can this be done cheaper?
-		const cache = createReactiveContentCache()
+		const cache = createReactiveContentCache(rundownIds)
 
 		// Push update
 		triggerUpdate({ newCache: cache })
@@ -64,26 +49,31 @@ async function setupIngestRundownStatusPublicationObservers(
 		const obs1 = await RundownContentObserver.create(rundownIds, cache)
 
 		const innerQueries = [
-			cache.Segments.find({}).observeChanges({
-				added: (id) => triggerUpdate({ invalidateSegmentIds: [protectString(id)] }),
-				changed: (id) => triggerUpdate({ invalidateSegmentIds: [protectString(id)] }),
-				removed: (id) => triggerUpdate({ invalidateSegmentIds: [protectString(id)] }),
+			cache.Rundowns.find({}).observe({
+				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
+				changed: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
+				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc._id] }),
 			}),
 			cache.Parts.find({}).observe({
-				added: (doc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId] }),
-				changed: (doc, oldDoc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId, oldDoc.segmentId] }),
-				removed: (doc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId] }),
+				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
-			cache.DeletedPartInstances.find({}).observe({
-				added: (doc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId] }),
-				changed: (doc, oldDoc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId, oldDoc.segmentId] }),
-				removed: (doc) => triggerUpdate({ invalidateSegmentIds: [doc.segmentId] }),
+			cache.Segments.find({}).observe({
+				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
-			cache.Rundowns.find({}).observeChanges({
-				added: (id) => triggerUpdate({ invalidateRundownIds: [protectString(id)] }),
-				changed: (id) => triggerUpdate({ invalidateRundownIds: [protectString(id)] }),
-				removed: (id) => triggerUpdate({ invalidateRundownIds: [protectString(id)] }),
+			cache.PartInstances.find({}).observe({
+				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
+			// cache.NrcsIngestData.find({}).observe({
+			// 	added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+			// 	changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
+			// 	removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
+			// }),
 		]
 
 		return () => {
@@ -99,8 +89,8 @@ async function setupIngestRundownStatusPublicationObservers(
 	return [rundownsObserver]
 }
 
-export async function manipulateIngestRundownStatusPublicationData(
-	args: IngestRundownStatusArgs,
+async function manipulateIngestRundownStatusPublicationData(
+	_args: IngestRundownStatusArgs,
 	state: Partial<IngestRundownStatusState>,
 	collection: CustomPublishCollection<IngestRundownStatus>,
 	updateProps: Partial<ReadonlyDeep<IngestRundownStatusUpdateProps>> | undefined
@@ -121,78 +111,74 @@ export async function manipulateIngestRundownStatusPublicationData(
 		return
 	}
 
-	const updateContext = compileUpdateNotesData(state.contentCache)
-
 	const updateAll = !updateProps || !!updateProps?.newCache
 	if (updateAll) {
 		// Remove all the notes
 		collection.remove(null)
 
-		state.contentCache.Segments.find({}).forEach((segment) => {
-			updateNotesForSegment(args, updateContext, collection, segment)
-		})
-	} else {
-		const regenerateForSegmentIds = new Set(updateProps.invalidateSegmentIds)
+		const knownRundownIds = new Set(state.contentCache.RundownIds)
 
-		// Figure out the Rundowns which have changed, but may not have updated the segments/parts
-		const changedRundownIdsSet = new Set(updateProps.invalidateRundownIds)
-		if (changedRundownIdsSet.size > 0) {
-			state.contentCache.Segments.find({}).forEach((segment) => {
-				if (changedRundownIdsSet.has(segment.rundownId)) {
-					regenerateForSegmentIds.add(segment._id)
-				}
-			})
+		for (const rundownId of knownRundownIds) {
+			const newDoc = regenerateForRundown(state.contentCache, rundownId)
+			if (newDoc) collection.replace(newDoc)
 		}
+	} else {
+		const regenerateForRundownIds = new Set(updateProps.invalidateRundownIds)
 
-		// Remove ones from segments being regenerated
-		if (regenerateForSegmentIds.size > 0) {
-			collection.remove((doc) => regenerateForSegmentIds.has(doc.segmentId))
-
-			// Generate notes for each segment
-			for (const segmentId of regenerateForSegmentIds) {
-				const segment = state.contentCache.Segments.findOne(segmentId)
-
-				if (segment) {
-					updateNotesForSegment(args, updateContext, collection, segment)
-				} else {
-					// Notes have already been removed
-				}
+		for (const rundownId of regenerateForRundownIds) {
+			const newDoc = regenerateForRundown(state.contentCache, rundownId)
+			if (newDoc) {
+				collection.replace(newDoc)
+			} else {
+				collection.remove(rundownId)
 			}
 		}
 	}
 }
 
-interface UpdateNotesData {
-	rundownsCache: Map<RundownId, Pick<Rundown, RundownFields>>
-	parts: Map<SegmentId, Pick<DBPart, PartFields>[]>
-	deletedPartInstances: Map<SegmentId, Pick<DBPartInstance, PartInstanceFields>[]>
-}
-function compileUpdateNotesData(cache: ReadonlyDeep<ContentCache>): UpdateNotesData {
-	return {
-		rundownsCache: normalizeArrayToMap(cache.Rundowns.find({}).fetch(), '_id'),
-		parts: groupByToMap(cache.Parts.find({}).fetch(), 'segmentId'),
-		deletedPartInstances: groupByToMap(cache.DeletedPartInstances.find({}).fetch(), 'segmentId'),
-	}
-}
+function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: RundownId): IngestRundownStatus | null {
+	const rundown = cache.Rundowns.findOne(rundownId)
+	if (!rundown) return null
 
-function updateNotesForSegment(
-	args: IngestRundownStatusArgs,
-	state: UpdateNotesData,
-	collection: CustomPublishCollection<UISegmentPartNote>,
-	segment: Pick<DBSegment, SegmentFields>
-) {
-	const notesForSegment = generateNotesForSegment(
-		args.playlistId,
-		segment,
-		getRundownNrcsName(state.rundownsCache.get(segment.rundownId)),
-		state.parts.get(segment._id) ?? [],
-		state.deletedPartInstances.get(segment._id) ?? []
-	)
+	const newDoc: IngestRundownStatus = {
+		_id: rundownId,
+		id: rundown.externalId,
 
-	// Insert generated notes
-	for (const note of notesForSegment) {
-		collection.replace(note)
+		segments: [],
 	}
+
+	const segments = cache.Segments.find({ rundownId }).fetch()
+	for (const segment of segments) {
+		const parts = cache.Parts.find({ rundownId, segmentId: segment._id }).fetch()
+
+		newDoc.segments.push({
+			id: segment.externalId,
+			parts: parts.map((part) => {
+				const partInstance = cache.PartInstances.findOne({
+					rundownId,
+					segmentId: segment._id,
+					'part._id': part._id,
+				})
+
+				const reportPartPlayback = partInstance
+					? partInstance.part.shouldNotifyCurrentPlayingPart
+					: part.shouldNotifyCurrentPlayingPart
+
+				return {
+					id: part.externalId,
+
+					isReady:
+						(partInstance ? partInstance.part.ingestNotifyPartReady : part.ingestNotifyPartReady) ?? null,
+
+					playbackStatus: reportPartPlayback
+						? IngestPartPlaybackStatus.PLAYING
+						: IngestPartPlaybackStatus.UNKNOWN, // TODO - this is missing some states and logic!
+				}
+			}),
+		})
+	}
+
+	return newDoc
 }
 
 meteorCustomPublish(
