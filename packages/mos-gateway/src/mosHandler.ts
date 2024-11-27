@@ -27,7 +27,11 @@ import {
 import * as Winston from 'winston'
 import { CoreHandler } from './coreHandler'
 import { CoreMosDeviceHandler } from './CoreMosDeviceHandler'
-import { Observer, PeripheralDevicePubSubCollectionsNames } from '@sofie-automation/server-core-integration'
+import {
+	Observer,
+	PeripheralDevicePubSubCollectionsNames,
+	stringifyError,
+} from '@sofie-automation/server-core-integration'
 import {
 	DEFAULT_MOS_TIMEOUT_TIME,
 	DEFAULT_MOS_HEARTBEAT_INTERVAL,
@@ -193,7 +197,7 @@ export class MosHandler {
 		}
 		this._triggerupdateDevicesTimeout = setTimeout(() => {
 			this._updateDevices().catch((e) => {
-				this._logger.error(e)
+				this._logger.error(stringifyError(e))
 			})
 		}, 20)
 	}
@@ -228,10 +232,10 @@ export class MosHandler {
 			this._logger.info(message)
 		})
 		this.mos.on('error', (error: any) => {
-			this._logger.error(error)
+			this._logger.error(stringifyError(error))
 		})
 		this.mos.on('warning', (warning: any) => {
-			this._logger.error(warning)
+			this._logger.error(stringifyError(warning))
 		})
 
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -376,7 +380,7 @@ export class MosHandler {
 					return this._getROAck(story.RunningOrderId, coreMosHandler.mosRoFullStory(story))
 				})
 			} catch (e) {
-				this._logger.error('Error:', e)
+				this._logger.error(stringifyError(e))
 			}
 		})
 
@@ -540,7 +544,7 @@ export class MosHandler {
 			}
 
 			this.mos.disposeMosDevice(mosDevice).catch((e2) => {
-				this._logger.error(e2)
+				this._logger.error(stringifyError(e2))
 			})
 			throw e
 		}
@@ -585,7 +589,7 @@ export class MosHandler {
 				return roAck
 			})
 			.catch((err) => {
-				this._logger.error('ROAck error:', err)
+				this._logger.error(`ROAck error: ${stringifyError(err)}`)
 				const roAck: IMOSROAck = {
 					ID: roId,
 					Status: this.mosTypes.mosString128.create('Error: ' + err.toString()),

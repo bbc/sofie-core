@@ -5,6 +5,7 @@ import {
 	PeripheralDeviceId,
 	loadCertificatesFromDisk,
 	CertificatesConfig,
+	stringifyError,
 } from '@sofie-automation/server-core-integration'
 
 export interface Config {
@@ -43,11 +44,11 @@ export class Connector {
 
 			this._logger.info('Initialization done')
 		} catch (e: any) {
-			this._logger.error('Error during initialization:', e, e.stack)
+			this._logger.error(`Error during initialization: ${stringifyError(e)}`, e.stack)
 
 			this._logger.info('Shutting down in 10 seconds!')
 
-			this.dispose().catch((e2) => this._logger.error(e2))
+			this.dispose().catch((e2) => this._logger.error(stringifyError(e2)))
 
 			setTimeout(() => {
 				// eslint-disable-next-line no-process-exit

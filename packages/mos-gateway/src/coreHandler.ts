@@ -224,7 +224,7 @@ export class CoreHandler {
 						// console.log('cb done')
 					})
 					.catch((e) => {
-						this.logger.error(e)
+						this.logger.error(stringifyError(e))
 					})
 			}
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment

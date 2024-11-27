@@ -4,6 +4,7 @@ import {
 	protectString,
 	Observer,
 	PeripheralDevicePubSub,
+	stringifyError,
 } from '@sofie-automation/server-core-integration'
 import {
 	IMOSConnectionStatus,
@@ -103,9 +104,7 @@ export class CoreMosDeviceHandler {
 			deviceName: this._mosDevice.idPrimary,
 		})
 		this.core.on('error', (err) => {
-			this._coreParentHandler.logger.error(
-				'Core Error: ' + (typeof err === 'string' ? err : err.message || err.toString())
-			)
+			this._coreParentHandler.logger.error(`Core Error: ${stringifyError(err)}`)
 		})
 
 		this.setupSubscriptionsAndObservers()
@@ -129,7 +128,7 @@ export class CoreMosDeviceHandler {
 		Promise.all([
 			this.core.autoSubscribe(PeripheralDevicePubSub.peripheralDeviceCommands, this.core.deviceId),
 		]).catch((e) => {
-			this._coreParentHandler.logger.error(e)
+			this._coreParentHandler.logger.error(stringifyError(e))
 		})
 
 		this._coreParentHandler.logger.info('CoreMos: Setting up observers..')
