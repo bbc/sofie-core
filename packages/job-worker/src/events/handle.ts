@@ -272,21 +272,22 @@ export async function handleNotifyCurrentlyPlayingPart(
 	// Lock the rundown so that we are allowed to write to it
 	// This is technically a bit of a race condition, but is really low risk and low impact if it does
 	await runWithRundownLock(context, rundown._id, async (rundown0) => {
-		if (rundown0) {
-			if (currentPlayingPartExternalId) {
-				await context.directCollections.Rundowns.update(rundown._id, {
-					$set: {
-						notifiedCurrentPlayingPartExternalId: currentPlayingPartExternalId,
-					},
-				})
-			} else {
-				await context.directCollections.Rundowns.update(rundown._id, {
-					$unset: {
-						notifiedCurrentPlayingPartExternalId: 1,
-					},
-				})
-			}
-		}
+		if (!rundown0) return
+
+		await context.directCollections.Rundowns.update(
+			rundown._id,
+			currentPlayingPartExternalId
+				? {
+						$set: {
+							notifiedCurrentPlayingPartExternalId: currentPlayingPartExternalId,
+						},
+				  }
+				: {
+						$unset: {
+							notifiedCurrentPlayingPartExternalId: 1,
+						},
+				  }
+		)
 	})
 
 	// TODO: refactor this to be non-mos centric
