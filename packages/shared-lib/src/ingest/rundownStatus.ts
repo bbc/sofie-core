@@ -29,6 +29,6 @@ export interface IngestPartStatus {
 
 export enum IngestPartPlaybackStatus {
 	UNKNOWN = 'unknown',
-	PLAYING = 'playing',
-	STOPPED = 'stopped',
+	PLAY = 'play',
+	STOP = 'stop',
 }

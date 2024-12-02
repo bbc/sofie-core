@@ -1,4 +1,4 @@
-import { getMosTypes, IMOSObjectStatus, type IMOSDevice } from '@mos-connection/connector'
+import { getMosTypes, IMOSObjectStatus, MosTypes, type IMOSDevice } from '@mos-connection/connector'
 import type { MosDeviceStatusesConfig } from './generated/devices'
 import type { CoreMosDeviceHandler } from './CoreMosDeviceHandler'
 import {
@@ -8,19 +8,22 @@ import {
 	stringifyError,
 	SubscriptionId,
 } from '@sofie-automation/server-core-integration'
-import type { IngestPartStatus, IngestRundownStatus } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
+import {
+	IngestPartPlaybackStatus,
+	type IngestPartStatus,
+	type IngestRundownStatus,
+} from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
 import type { RundownId } from '@sofie-automation/shared-lib/dist/core/model/Ids'
 import type winston = require('winston')
 import { Queue } from '@sofie-automation/server-core-integration/dist/lib/queue'
 
 const MOS_STATUS_UNKNOWN = '' as IMOSObjectStatus // nocommit - check this
 
-const mosTypes = getMosTypes(false)
-
 export class MosStatusHandler {
 	readonly #logger: winston.Logger
 	readonly #mosDevice: IMOSDevice
 	readonly #coreMosHandler: CoreMosDeviceHandler
+	readonly #mosTypes: MosTypes
 
 	readonly #messageQueue = new Queue()
 
@@ -35,13 +38,15 @@ export class MosStatusHandler {
 		logger: winston.Logger,
 		mosDevice: IMOSDevice,
 		coreMosHandler: CoreMosDeviceHandler,
-		config: MosDeviceStatusesConfig
+		config: MosDeviceStatusesConfig,
+		strictMosTypes: boolean
 	) {
 		if (!config.enabled) throw new Error('MosStatusHandler is not enabled')
 
 		this.#logger = logger
 		this.#mosDevice = mosDevice
 		this.#coreMosHandler = coreMosHandler
+		this.#mosTypes = getMosTypes(strictMosTypes)
 
 		coreMosHandler.core
 			.autoSubscribe(PeripheralDevicePubSub.ingestDeviceRundownStatus, coreMosHandler.core.deviceId, undefined) // nocommit - does this need a token?
@@ -79,7 +84,7 @@ export class MosStatusHandler {
 		const statusDiff = diffStatuses(previousStatuses, newStatuses)
 		if (statusDiff.length === 0) return
 
-		const diffTime = mosTypes.mosTime.create(Date.now())
+		const diffTime = this.#mosTypes.mosTime.create(Date.now())
 
 		// nocommit - should this be done with some concurrency?
 		for (const status of statusDiff) {
@@ -87,8 +92,8 @@ export class MosStatusHandler {
 				.putOnQueue(async () => {
 					// Send status
 					await this.#mosDevice.sendStoryStatus({
-						RunningOrderId: mosTypes.mosString128.create(status.rundownExternalId),
-						ID: mosTypes.mosString128.create(status.storyId),
+						RunningOrderId: this.#mosTypes.mosString128.create(status.rundownExternalId),
+						ID: this.#mosTypes.mosString128.create(status.storyId),
 						Status: status.mosStatus,
 						Time: diffTime,
 					})
@@ -126,6 +131,8 @@ function diffStatuses(
 	const rundownExternalId = previousStatuses?.externalId ?? newStatuses?.externalId
 
 	if ((!previousStatuses && !newStatuses) || !rundownExternalId) return []
+
+	// nocommit - option/always skip for rehearsal
 
 	const statuses: StoryStatusItem[] = []
 
@@ -176,10 +183,17 @@ function buildStoriesMap(state: IngestRundownStatus | undefined): Map<string, In
 }
 
 function buildMosStatus(story: IngestPartStatus): IMOSObjectStatus {
+	// nocommit - implement this rule.
+	// nocommit - implement options to control behaviour of this
+	// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
+	// Reason 1: NRK ENPS "sendt tid" (elapsed time) stopped working in ENPS 8/9 when doing STOP prior to PLAY
+	// Reason 2: there's a delay between the STOP (yellow line disappears) and PLAY (yellow line re-appears), which annoys the users
+	// nocommit TLDR: nrk only wants to send PLAY messages
+
 	switch (story.playbackStatus) {
-		case 'playing':
+		case IngestPartPlaybackStatus.PLAY:
 			return IMOSObjectStatus.PLAY
-		case 'stopped':
+		case IngestPartPlaybackStatus.STOP:
 			return IMOSObjectStatus.STOP
 		default:
 			switch (story.isReady) {

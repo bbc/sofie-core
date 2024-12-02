@@ -303,7 +303,8 @@ export class MosHandler {
 						this._logger,
 						mosDevice,
 						coreMosHandler,
-						deviceEntry.deviceOptions.statuses
+						deviceEntry.deviceOptions.statuses,
+						this.strict
 					)
 				}
 

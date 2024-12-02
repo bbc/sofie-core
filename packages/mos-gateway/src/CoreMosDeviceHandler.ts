@@ -22,7 +22,6 @@ import {
 	IMOSItem,
 	IMOSROReadyToAir,
 	IMOSROFullStory,
-	IMOSObjectStatus,
 	IMOSROAck,
 	getMosTypes,
 	MosTypes,
@@ -338,42 +337,6 @@ export class CoreMosDeviceHandler {
 
 		// console.log('GOT REPLY', results)
 		return this.fixMosData(ro)
-	}
-	async setROStatus(roId: string, status: IMOSObjectStatus): Promise<any> {
-		// console.log('setStoryStatus')
-		const result = await this._mosDevice.sendRunningOrderStatus({
-			ID: this.mosTypes.mosString128.create(roId),
-			Status: status,
-			Time: this.mosTypes.mosTime.create(new Date()),
-		})
-
-		// console.log('got result', result)
-		return this.fixMosData(result)
-	}
-	async setStoryStatus(roId: string, storyId: string, status: IMOSObjectStatus): Promise<any> {
-		// console.log('setStoryStatus')
-		const result = await this._mosDevice.sendStoryStatus({
-			RunningOrderId: this.mosTypes.mosString128.create(roId),
-			ID: this.mosTypes.mosString128.create(storyId),
-			Status: status,
-			Time: this.mosTypes.mosTime.create(new Date()),
-		})
-
-		// console.log('got result', result)
-		return this.fixMosData(result)
-	}
-	async setItemStatus(roId: string, storyId: string, itemId: string, status: IMOSObjectStatus): Promise<any> {
-		// console.log('setStoryStatus')
-		const result = await this._mosDevice.sendItemStatus({
-			RunningOrderId: this.mosTypes.mosString128.create(roId),
-			StoryId: this.mosTypes.mosString128.create(storyId),
-			ID: this.mosTypes.mosString128.create(itemId),
-			Status: status,
-			Time: this.mosTypes.mosTime.create(new Date()),
-		})
-
-		// console.log('got result', result)
-		return this.fixMosData(result)
 	}
 	async replaceStoryItem(
 		roID: string,
