@@ -7,6 +7,7 @@ import {
 	JSONBlob,
 	JSONBlobParse,
 	JSONSchema,
+	UserEditingDefinitionAction,
 	UserEditingProperties,
 	UserEditingSourceLayer,
 	UserEditingType,
@@ -23,6 +24,8 @@ import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
 import { useCallback } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState'
+import { t } from 'i18next'
+import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 
@@ -117,6 +120,25 @@ export function PropertiesPanel(): JSX.Element {
 		clearSelections()
 	}
 
+	const executeAction = (e: React.MouseEvent, id: string) => {
+		if (!rundownId || !selectedElement) return
+		doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+			MeteorCall.userAction.executeUserChangeOperation(
+				e,
+				ts,
+				rundownId,
+				{
+					segmentExternalId: segment?.externalId,
+					partExternalId: part?.externalId,
+					pieceExternalId: undefined,
+				},
+				{
+					id,
+				}
+			)
+		)
+	}
+
 	const userEditOperations =
 		selectedElement?.type === 'part'
 			? part?.userEditOperations
@@ -176,6 +198,9 @@ export function PropertiesPanel(): JSX.Element {
 							setChange={setPendingChange}
 						/>
 					)}
+					{userEditProperties?.operations && (
+						<ActionList actions={userEditProperties?.operations} executeAction={executeAction} />
+					)}
 				</div>
 
 				<div className="propertiespanel-pop-up__footer">
@@ -184,6 +209,14 @@ export function PropertiesPanel(): JSX.Element {
 						onClick={handleRevertChanges}
 						// disabled={!hasPendingChanges}
 					>
+						<span className="svg">
+							<svg viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									d="M2 14.5251H15C16.3261 14.5251 17.5979 13.9984 18.5355 13.0607C19.4732 12.123 20 10.8512 20 9.52515C20 8.19906 19.4732 6.92729 18.5355 5.98961C17.5979 5.05193 16.3261 4.52515 15 4.52515H10V0.475147L5 5.47515L10 10.4751V6.52515H15C15.7956 6.52515 16.5587 6.84122 17.1213 7.40383C17.6839 7.96643 18 8.7295 18 9.52515C18 10.3208 17.6839 11.0839 17.1213 11.6465C16.5587 12.2091 15.7956 12.5251 15 12.5251H2V14.5251Z"
+									fill="#979797"
+								/>
+							</svg>
+						</span>
 						<span className="propertiespanel-pop-up__label">{t('Restore from NRCS')}</span>
 					</button>
 					<div className="propertiespanel-pop-up__button-group">
@@ -233,7 +266,6 @@ function PropertiesEditor({
 	)
 	const onUpdate = useCallback(
 		(update: Record<string, any>) => {
-			console.log(change.pieceTypeProperties.type, update)
 			setChange({
 				...change,
 				pieceTypeProperties: {
@@ -269,7 +301,7 @@ function PropertiesEditor({
 			</div>
 			<hr />
 			{parsedSchema && (
-				<div className="properties-grid form-dark">
+				<div className="properties-panel-pop-up__form styled-schema-form">
 					<SchemaFormWithState
 						key={(selectedGroupSchema as any as string) ?? 'key'}
 						schema={parsedSchema}
@@ -301,7 +333,6 @@ function GlobalPropertiesEditor({
 
 	const onUpdate = useCallback(
 		(update: Record<string, any>) => {
-			console.log('glob', update)
 			setChange({
 				...change,
 				globalProperties: update,
@@ -323,6 +354,39 @@ function GlobalPropertiesEditor({
 			) : (
 				<></>
 			)}
+		</div>
+	)
+}
+
+function ActionList({
+	actions,
+	executeAction,
+}: {
+	actions: UserEditingDefinitionAction[]
+	executeAction: (e: any, id: string) => void
+}) {
+	const { t } = useTranslation()
+
+	return (
+		<div>
+			{actions.map((action) => (
+				<button
+					title={'User Action : ' + action.label.key}
+					className="propertiespanel-pop-up__button"
+					onClick={(e) => executeAction(e, action.id)}
+					key={action.id}
+				>
+					{action.svgIcon && (
+						<span
+							className="svg"
+							dangerouslySetInnerHTML={{
+								__html: action.svgIcon,
+							}}
+						></span>
+					)}
+					<span className="propertiespanel-pop-up__label">{translateMessage(action.label, t)}</span>
+				</button>
+			))}
 		</div>
 	)
 }

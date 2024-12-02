@@ -125,7 +125,6 @@ export interface UserEditingProperties {
 	 * A list of id's of operations to be exposed on the properties panel as buttons. These operations
 	 * must be available on the element
 	 *
-	 * note - perhaps these should have their own full definitions?
 	 */
-	operations?: string[]
+	operations?: UserEditingDefinitionAction[]
 }
