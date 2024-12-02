@@ -300,6 +300,7 @@ export class MosHandler {
 						deviceEntry.statusHandler.dispose()
 					}
 					deviceEntry.statusHandler = new MosStatusHandler(
+						this._logger,
 						mosDevice,
 						coreMosHandler,
 						deviceEntry.deviceOptions.statuses
