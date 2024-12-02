@@ -112,6 +112,11 @@ export function PropertiesPanel(): JSX.Element {
 		)
 	}
 
+	const handleCancel = () => {
+		setPendingChange(undefined)
+		clearSelections()
+	}
+
 	const userEditOperations =
 		selectedElement?.type === 'part'
 			? part?.userEditOperations
@@ -135,59 +140,64 @@ export function PropertiesPanel(): JSX.Element {
 	return (
 		<div className={classNames('properties-panel', isAnimatedIn && 'is-mounted')}>
 			<div className="propertiespanel-pop-up">
-				<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
-					<CoreIcon.NrkClose />
+				<div className="propertiespanel-pop-up__header">
+					{userEditOperations &&
+						userEditOperations.map((operation) => {
+							if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive) return null
+							return (
+								<div
+									key={operation.id}
+									className="svg"
+									dangerouslySetInnerHTML={{
+										__html: operation.svgIcon,
+									}}
+								></div>
+							)
+						})}
+					<div className="title">{title}</div>
+					<span className="properties">{t('Properties')}</span>
+					<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
+						<CoreIcon.NrkClose width="1em" height="1em" />
+					</div>
 				</div>
 
-				<>
-					<div className="propertiespanel-pop-up__header">
-						{userEditOperations &&
-							userEditOperations.map((operation) => {
-								if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive) return null
-								return (
-									<div
-										key={operation.id}
-										className="svg"
-										dangerouslySetInnerHTML={{
-											__html: operation.svgIcon,
-										}}
-									></div>
-								)
-							})}
-						{title}
-					</div>
-					<div className="propertiespanel-pop-up__contents">
-						{userEditProperties?.pieceTypeProperties && (
-							<PropertiesEditor
-								properties={userEditProperties.pieceTypeProperties}
-								change={change}
-								setChange={setPendingChange}
-							/>
-						)}
-						{userEditProperties?.globalProperties && (
-							<GlobalPropertiesEditor
-								schema={userEditProperties.globalProperties.schema}
-								change={change}
-								setChange={setPendingChange}
-							/>
-						)}
-					</div>
-				</>
+				<div className="propertiespanel-pop-up__contents">
+					{userEditProperties?.pieceTypeProperties && (
+						<PropertiesEditor
+							properties={userEditProperties.pieceTypeProperties}
+							change={change}
+							setChange={setPendingChange}
+						/>
+					)}
+					{userEditProperties?.globalProperties && (
+						<GlobalPropertiesEditor
+							schema={userEditProperties.globalProperties.schema}
+							change={change}
+							setChange={setPendingChange}
+						/>
+					)}
+				</div>
+
 				<div className="propertiespanel-pop-up__footer">
 					<button
-						className="propertiespanel-pop-up__button"
+						className="propertiespanel-pop-up__button start"
 						onClick={handleRevertChanges}
-						disabled={!hasPendingChanges}
+						// disabled={!hasPendingChanges}
 					>
-						<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
+						<span className="propertiespanel-pop-up__label">{t('Restore from NRCS')}</span>
 					</button>
-					<button
-						className="propertiespanel-pop-up__button"
-						onClick={handleCommitChanges}
-						disabled={!hasPendingChanges}
-					>
-						<span className="propertiespanel-pop-up__label">COMMIT CHANGES</span>
-					</button>
+					<div className="propertiespanel-pop-up__button-group">
+						<button className="propertiespanel-pop-up__button end" onClick={handleCancel} disabled={!hasPendingChanges}>
+							<span className="propertiespanel-pop-up__label">{t('Cancel')}</span>
+						</button>
+						<button
+							className="propertiespanel-pop-up__button end"
+							onClick={handleCommitChanges}
+							disabled={!hasPendingChanges}
+						>
+							<span className="propertiespanel-pop-up__label">{t('Save')}</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -243,10 +253,9 @@ function PropertiesEditor({
 					return (
 						<button
 							className={classNames(
+								'propertiespanel-pop-up__groupselector__button',
 								RundownUtils.getSourceLayerClassName(group.sourceLayerType),
-								selectedGroupId !== key
-									? `propertiespanel-pop-up__groupselector__button`
-									: `propertiespanel-pop-up__groupselector__button-active`
+								selectedGroupId === key && 'active'
 							)}
 							key={key}
 							onClick={() => {
@@ -260,7 +269,7 @@ function PropertiesEditor({
 			</div>
 			<hr />
 			{parsedSchema && (
-				<div className="properties-grid" style={{ color: 'white' }}>
+				<div className="properties-grid form-dark">
 					<SchemaFormWithState
 						key={(selectedGroupSchema as any as string) ?? 'key'}
 						schema={parsedSchema}
@@ -312,7 +321,7 @@ function GlobalPropertiesEditor({
 					translationNamespaces={[]}
 				/>
 			) : (
-				<p>No schema found</p>
+				<></>
 			)}
 		</div>
 	)

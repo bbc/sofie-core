@@ -2969,10 +2969,9 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 										return (
 											<div
 												className={ClassNames('rundown-view', {
-													'notification-center-open':
-														this.state.isNotificationsCenterOpen !== undefined ||
-														selectionContext.listSelectedElements().length > 0,
+													'notification-center-open': this.state.isNotificationsCenterOpen !== undefined,
 													'rundown-view--studio-mode': this.state.studioMode,
+													'properties-panel-open': selectionContext.listSelectedElements().length > 0,
 												})}
 												style={this.getStyle()}
 												onWheelCapture={this.onWheel}
