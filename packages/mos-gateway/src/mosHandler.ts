@@ -39,6 +39,7 @@ import {
 import { MosGatewayConfig } from './generated/options'
 import { MosDeviceConfig } from './generated/devices'
 import { PeripheralDeviceForDevice } from '@sofie-automation/server-core-integration'
+import _ = require('underscore')
 
 export interface MosConfig {
 	self: IConnectionConfig
@@ -474,18 +475,13 @@ export class MosHandler {
 							delete device.options.secondary
 					}
 
-					const oldDevice: MosDevice | undefined = this._allMosDevices.get(deviceId)?.mosDevice
+					const oldDevice = this._allMosDevices.get(deviceId)
 
 					if (!oldDevice) {
 						this._logger.info('Initializing new device: ' + deviceId)
 						devicesToAdd[deviceId] = device
 					} else {
-						if (
-							(oldDevice.primaryId || '') !== device.options.primary?.id ||
-							(oldDevice.primaryHost || '') !== device.options.primary?.host ||
-							(oldDevice.secondaryId || '') !== (device.options.secondary?.id || '') ||
-							(oldDevice.secondaryHost || '') !== (device.options.secondary?.host || '')
-						) {
+						if (!_.isEqual(oldDevice.deviceOptions, device.options)) {
 							this._logger.info('Re-initializing device: ' + deviceId)
 							devicesToRemove[deviceId] = true
 							devicesToAdd[deviceId] = device
@@ -582,11 +578,11 @@ export class MosHandler {
 	}
 	private async _removeDevice(deviceId: string): Promise<void> {
 		const mosDevice = this._allMosDevices.get(deviceId)?.mosDevice
-
 		this._allMosDevices.delete(deviceId)
+
 		if (mosDevice) {
-			if (!this._coreHandler) throw Error('_coreHandler is undefined!')
-			await this._coreHandler.unRegisterMosDevice(mosDevice)
+			// Cleanup the coreMosHandler from the device
+			if (this._coreHandler) await this._coreHandler.unRegisterMosDevice(mosDevice)
 
 			if (!this.mos) {
 				throw Error('mos is undefined!')
