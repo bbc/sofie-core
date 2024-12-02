@@ -16,7 +16,6 @@ import {
 	IMOSROReadyToAir,
 	IMOSROFullStory,
 	IConnectionConfig,
-	IMOSDeviceConnectionOptions,
 	MosDevice,
 	IMOSListMachInfo,
 	IMOSString128,
@@ -40,12 +39,13 @@ import { MosGatewayConfig } from './generated/options'
 import { MosDeviceConfig } from './generated/devices'
 import { PeripheralDeviceForDevice } from '@sofie-automation/server-core-integration'
 import _ = require('underscore')
+import { MosStatusHandler } from './mosStatusHandler'
 
-export interface MosConfig {
+interface MosConfig {
 	self: IConnectionConfig
 	// devices: Array<IMOSDeviceConnectionOptions>
 }
-export type MosSubDeviceSettings = Record<
+type MosSubDeviceSettings = Record<
 	string,
 	{
 		type: ''
@@ -59,10 +59,13 @@ export type MosSubDeviceSettings = Record<
 interface MosDeviceHandle {
 	readonly deviceId: string
 	readonly mosDevice: MosDevice
-	readonly deviceOptions: Readonly<IMOSDeviceConnectionOptions>
+	readonly deviceOptions: Readonly<MosDeviceConfig>
 
 	// Once connected, a core handler is setup
 	coreMosHandler?: CoreMosDeviceHandler
+
+	// If writing back story/item status is enabled, the setup handler
+	statusHandler?: MosStatusHandler
 }
 
 export class MosHandler {
@@ -147,11 +150,9 @@ export class MosHandler {
 			return Promise.resolve()
 		}
 	}
-	setupObservers(): void {
+	private setupObservers(): void {
 		if (this._observers.length) {
-			this._observers.forEach((obs) => {
-				obs.stop()
-			})
+			this._observers.forEach((obs) => obs.stop())
 			this._observers = []
 		}
 		this._logger.info('Renewing observers')
@@ -167,15 +168,9 @@ export class MosHandler {
 		const deviceObserver = this._coreHandler.core.observe(
 			PeripheralDevicePubSubCollectionsNames.peripheralDeviceForDevice
 		)
-		deviceObserver.added = () => {
-			this._deviceOptionsChanged()
-		}
-		deviceObserver.changed = () => {
-			this._deviceOptionsChanged()
-		}
-		deviceObserver.removed = () => {
-			this._deviceOptionsChanged()
-		}
+		deviceObserver.added = () => this._deviceOptionsChanged()
+		deviceObserver.changed = () => this._deviceOptionsChanged()
+		deviceObserver.removed = () => this._deviceOptionsChanged()
 		this._observers.push(deviceObserver)
 
 		this._deviceOptionsChanged()
@@ -288,7 +283,6 @@ export class MosHandler {
 
 				if (!this._coreHandler) throw Error('_coreHandler is undefined!')
 
-				//@ts-expect-error  this is not yet added to the official mos-connection
 				const openMediaHotStandby = deviceEntry.deviceOptions.secondary?.openMediaHotStandby || false
 
 				const coreMosHandler = await this._coreHandler.registerMosDevice(
@@ -301,9 +295,18 @@ export class MosHandler {
 
 				deviceEntry.coreMosHandler = coreMosHandler
 
+				if (deviceEntry.deviceOptions.statuses?.enabled) {
+					if (deviceEntry.statusHandler) {
+						deviceEntry.statusHandler.dispose()
+					}
+					deviceEntry.statusHandler = new MosStatusHandler(
+						mosDevice,
+						coreMosHandler,
+						deviceEntry.deviceOptions.statuses
+					)
+				}
+
 				// Initial Status check:
-				const connectionStatus = mosDevice.getConnectionStatus()
-				coreMosHandler.onMosConnectionChanged(connectionStatus) // initial check
 				// Profile 0: -------------------------------------------------
 				mosDevice.onConnectionChange((newStatus: IMOSConnectionStatus) => {
 					//  MOSDevice >>>> Core
@@ -518,7 +521,7 @@ export class MosHandler {
 
 		if (!this.mos) throw Error('mos is undefined, call _initMosConnection first!')
 
-		const deviceOptions: IMOSDeviceConnectionOptions = JSON.parse(JSON.stringify(deviceOptions0)) // deep clone
+		const deviceOptions: MosDeviceConfig = JSON.parse(JSON.stringify(deviceOptions0)) // deep clone
 		deviceOptions.primary.timeout ||= DEFAULT_MOS_TIMEOUT_TIME
 		deviceOptions.primary.heartbeatInterval ||= DEFAULT_MOS_HEARTBEAT_INTERVAL
 
@@ -577,12 +580,20 @@ export class MosHandler {
 		}
 	}
 	private async _removeDevice(deviceId: string): Promise<void> {
-		const mosDevice = this._allMosDevices.get(deviceId)?.mosDevice
+		const deviceEntry = this._allMosDevices.get(deviceId)
 		this._allMosDevices.delete(deviceId)
 
-		if (mosDevice) {
+		if (deviceEntry) {
+			const mosDevice = deviceEntry.mosDevice
+
 			// Cleanup the coreMosHandler from the device
 			if (this._coreHandler) await this._coreHandler.unRegisterMosDevice(mosDevice)
+
+			// Stop the status handler, if enabled
+			if (deviceEntry.statusHandler) {
+				deviceEntry.statusHandler.dispose()
+				delete deviceEntry.statusHandler
+			}
 
 			if (!this.mos) {
 				throw Error('mos is undefined!')
