@@ -69,12 +69,22 @@ export class MosHandler {
 	private _triggerupdateDevicesTimeout: any = null
 	private mosTypes: MosTypes
 
-	constructor(logger: Winston.Logger) {
+	public static async create(
+		logger: Winston.Logger,
+		config: MosConfig,
+		coreHandler: CoreHandler
+	): Promise<MosHandler> {
+		const handler = new MosHandler(logger)
+		await handler.init(config, coreHandler)
+		return handler
+	}
+
+	private constructor(logger: Winston.Logger) {
 		this._logger = logger
 		this._openMediaHotStandby = {}
 		this.mosTypes = getMosTypes(this.strict) // temporary, another will be set upon init()
 	}
-	async init(config: MosConfig, coreHandler: CoreHandler): Promise<void> {
+	private async init(config: MosConfig, coreHandler: CoreHandler): Promise<void> {
 		this.mosOptions = config
 		this._coreHandler = coreHandler
 		/*{
