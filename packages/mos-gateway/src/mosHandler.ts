@@ -52,18 +52,30 @@ export type MosSubDeviceSettings = Record<
 	}
 >
 
+/**
+ * Represents a connection in mos-connection, paired with some additional data
+ */
+interface MosDeviceHandle {
+	readonly deviceId: string
+	readonly mosDevice: MosDevice
+	readonly deviceOptions: Readonly<IMOSDeviceConnectionOptions>
+
+	// Once connected, a core handler is setup
+	coreMosHandler?: CoreMosDeviceHandler
+}
+
 export class MosHandler {
 	public mos: MosConnection | undefined
 
 	public mosOptions: MosConfig | undefined
 	public debugLogging = false
 
-	private allMosDevices: { [id: string]: { mosDevice: IMOSDevice; coreMosHandler?: CoreMosDeviceHandler } } = {}
-	private _ownMosDevices: { [deviceId: string]: MosDevice } = {}
+	/** Map of mos devices that have been created */
+	private readonly _allMosDevices = new Map<string, MosDeviceHandle>()
+
 	private _logger: Winston.Logger
 	private _disposed = false
 	private _settings?: MosGatewayConfig
-	private _openMediaHotStandby: Record<string, boolean>
 	private _coreHandler: CoreHandler | undefined
 	private _observers: Array<Observer<any>> = []
 	private _triggerupdateDevicesTimeout: any = null
@@ -81,7 +93,6 @@ export class MosHandler {
 
 	private constructor(logger: Winston.Logger) {
 		this._logger = logger
-		this._openMediaHotStandby = {}
 		this.mosTypes = getMosTypes(this.strict) // temporary, another will be set upon init()
 	}
 	private async init(config: MosConfig, coreHandler: CoreHandler): Promise<void> {
@@ -238,13 +249,13 @@ export class MosHandler {
 			}
 			this.debugLog('rawMessage', source, type, message)
 		})
-		this.mos.on('info', (message: any) => {
-			this._logger.info(message)
+		this.mos.on('info', (message, data) => {
+			this._logger.info(message, data)
 		})
-		this.mos.on('error', (error: any) => {
+		this.mos.on('error', (error) => {
 			this._logger.error(stringifyError(error))
 		})
-		this.mos.on('warning', (warning: any) => {
+		this.mos.on('warning', (warning) => {
 			this._logger.error(stringifyError(warning))
 		})
 
@@ -253,19 +264,41 @@ export class MosHandler {
 			// a new connection to a device has been made
 			this._logger.info('new mosConnection established: ' + mosDevice.idPrimary + ', ' + mosDevice.idSecondary)
 			try {
-				this.allMosDevices[mosDevice.idPrimary] = { mosDevice: mosDevice }
+				const deviceEntry = this._allMosDevices.get(mosDevice.idPrimary)
+				if (!deviceEntry) {
+					// We got a connection for a connection which shouldn't exist..
+					this._logger.error(`Got connection for mosDevice "${mosDevice.idPrimary}" which doesn't exist!`)
+					return
+				}
+
+				if (deviceEntry.mosDevice !== mosDevice) {
+					// Our state doesn't match, don't try to use the connection it could be from a previous connection attempt
+					this._logger.error(
+						`Got connection for mosDevice "${mosDevice.idPrimary}" which differs to the one setup!`
+					)
+					return
+				}
+
+				if (deviceEntry.coreMosHandler) {
+					this._logger.error(`Got connection for mosDevice "${mosDevice.idPrimary}" which is already setup!`)
+					// nocommit - do anything else?
+					return
+				}
 
 				if (!this._coreHandler) throw Error('_coreHandler is undefined!')
+
+				//@ts-expect-error  this is not yet added to the official mos-connection
+				const openMediaHotStandby = deviceEntry.deviceOptions.secondary?.openMediaHotStandby || false
 
 				const coreMosHandler = await this._coreHandler.registerMosDevice(
 					mosDevice,
 					this,
-					mosDevice.idSecondary ? this._openMediaHotStandby[mosDevice.idSecondary] : false
+					mosDevice.idSecondary ? openMediaHotStandby : false
 				)
 				// this._logger.info('mosDevice registered -------------')
 				// Setup message flow between the devices:
 
-				this.allMosDevices[mosDevice.idPrimary].coreMosHandler = coreMosHandler
+				deviceEntry.coreMosHandler = coreMosHandler
 
 				// Initial Status check:
 				const connectionStatus = mosDevice.getConnectionStatus()
@@ -399,9 +432,7 @@ export class MosHandler {
 	}
 	private sendStatusOfAllMosDevices() {
 		// Send an update to Core of the status of all mos devices
-		for (const handler of Object.values<{ mosDevice: IMOSDevice; coreMosHandler?: CoreMosDeviceHandler }>(
-			this.allMosDevices
-		)) {
+		for (const handler of this._allMosDevices.values()) {
 			if (handler.coreMosHandler) {
 				handler.coreMosHandler.onMosConnectionChanged(handler.mosDevice.getConnectionStatus())
 			}
@@ -438,14 +469,12 @@ export class MosHandler {
 			for (const [deviceId, device] of Object.entries<{ options: MosDeviceConfig }>(devices)) {
 				if (device) {
 					if (device.options.secondary) {
-						this._openMediaHotStandby[device.options.secondary.id] =
-							device.options.secondary?.openMediaHotStandby || false
 						// If the host isn't set, don't use secondary:
 						if (!device.options.secondary.host || !device.options.secondary.id)
 							delete device.options.secondary
 					}
 
-					const oldDevice: MosDevice | null = this._getDevice(deviceId)
+					const oldDevice: MosDevice | undefined = this._allMosDevices.get(deviceId)?.mosDevice
 
 					if (!oldDevice) {
 						this._logger.info('Initializing new device: ' + deviceId)
@@ -465,7 +494,7 @@ export class MosHandler {
 				}
 			}
 
-			for (const [deviceId, oldDevice] of Object.entries<MosDevice>(this._ownMosDevices)) {
+			for (const [deviceId, oldDevice] of this._allMosDevices.entries()) {
 				if (oldDevice && !devices[deviceId]) {
 					this._logger.info('Un-initializing device: ' + deviceId)
 					devicesToRemove[deviceId] = true
@@ -485,30 +514,24 @@ export class MosHandler {
 			)
 		}
 	}
-	private async _addDevice(deviceId: string, deviceOptions: IMOSDeviceConnectionOptions): Promise<MosDevice> {
-		if (this._getDevice(deviceId)) {
+	private async _addDevice(deviceId: string, deviceOptions0: MosDeviceConfig): Promise<MosDevice> {
+		if (this._allMosDevices.has(deviceId)) {
 			// the device is already there
 			throw new Error('Unable to add device "' + deviceId + '", because it already exists!')
 		}
 
-		if (!this.mos) {
-			throw Error('mos is undefined, call _initMosConnection first!')
-		}
+		if (!this.mos) throw Error('mos is undefined, call _initMosConnection first!')
 
-		deviceOptions = JSON.parse(JSON.stringify(deviceOptions)) // deep clone
-
-		deviceOptions.primary.timeout = deviceOptions.primary.timeout || DEFAULT_MOS_TIMEOUT_TIME
-
-		deviceOptions.primary.heartbeatInterval =
-			deviceOptions.primary.heartbeatInterval || DEFAULT_MOS_HEARTBEAT_INTERVAL
-
-		if (deviceOptions.secondary?.id && this._openMediaHotStandby[deviceOptions.secondary.id]) {
-			//@ts-expect-error  this is not yet added to the official mos-connection
-			deviceOptions.secondary.openMediaHotStandby = true
-		}
+		const deviceOptions: IMOSDeviceConnectionOptions = JSON.parse(JSON.stringify(deviceOptions0)) // deep clone
+		deviceOptions.primary.timeout ||= DEFAULT_MOS_TIMEOUT_TIME
+		deviceOptions.primary.heartbeatInterval ||= DEFAULT_MOS_HEARTBEAT_INTERVAL
 
 		const mosDevice: MosDevice = await this.mos.connect(deviceOptions)
-		this._ownMosDevices[deviceId] = mosDevice
+		this._allMosDevices.set(deviceId, {
+			deviceId: deviceId,
+			mosDevice: mosDevice,
+			deviceOptions,
+		})
 
 		try {
 			const getMachineInfoUntilConnected = async (): Promise<IMOSListMachInfo> =>
@@ -549,9 +572,7 @@ export class MosHandler {
 			return mosDevice
 		} catch (e) {
 			// something went wrong during init:
-			if (!this.mos) {
-				throw Error('mos is undefined!')
-			}
+			if (!this.mos) throw Error('mos is undefined!')
 
 			this.mos.disposeMosDevice(mosDevice).catch((e2) => {
 				this._logger.error(stringifyError(e2))
@@ -560,9 +581,9 @@ export class MosHandler {
 		}
 	}
 	private async _removeDevice(deviceId: string): Promise<void> {
-		const mosDevice = this._getDevice(deviceId) as MosDevice
+		const mosDevice = this._allMosDevices.get(deviceId)?.mosDevice
 
-		delete this._ownMosDevices[deviceId]
+		this._allMosDevices.delete(deviceId)
 		if (mosDevice) {
 			if (!this._coreHandler) throw Error('_coreHandler is undefined!')
 			await this._coreHandler.unRegisterMosDevice(mosDevice)
@@ -584,9 +605,6 @@ export class MosHandler {
 			// no device found
 		}
 		return Promise.resolve()
-	}
-	private _getDevice(deviceId: string): MosDevice | null {
-		return this._ownMosDevices[deviceId] || null
 	}
 	private async _getROAck(roId: IMOSString128, p: Promise<any>): Promise<IMOSROAck> {
 		return p
