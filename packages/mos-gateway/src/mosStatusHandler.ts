@@ -1,4 +1,4 @@
-import { getMosTypes, IMOSObjectStatus, MosTypes, type IMOSDevice } from '@mos-connection/connector'
+import { getMosTypes, IMOSObjectStatus, IMOSStoryStatus, MosTypes, type IMOSDevice } from '@mos-connection/connector'
 import type { MosDeviceStatusesConfig } from './generated/devices'
 import type { CoreMosDeviceHandler } from './CoreMosDeviceHandler'
 import {
@@ -17,7 +17,7 @@ import type { RundownId } from '@sofie-automation/shared-lib/dist/core/model/Ids
 import type winston = require('winston')
 import { Queue } from '@sofie-automation/server-core-integration/dist/lib/queue'
 
-const MOS_STATUS_UNKNOWN = '' as IMOSObjectStatus // nocommit - check this
+const MOS_STATUS_UNKNOWN = '' as IMOSObjectStatus // Force the status to be empty, which isn't a valid state in the enum
 
 export class MosStatusHandler {
 	readonly #logger: winston.Logger
@@ -49,7 +49,7 @@ export class MosStatusHandler {
 		this.#mosTypes = getMosTypes(strictMosTypes)
 
 		coreMosHandler.core
-			.autoSubscribe(PeripheralDevicePubSub.ingestDeviceRundownStatus, coreMosHandler.core.deviceId, undefined) // nocommit - does this need a token?
+			.autoSubscribe(PeripheralDevicePubSub.ingestDeviceRundownStatus, coreMosHandler.core.deviceId)
 			.then((subId) => {
 				this.#subId = subId
 
@@ -64,6 +64,8 @@ export class MosStatusHandler {
 		this.#observer.added = (id) => this.#rundownChanged(id)
 		this.#observer.changed = (id) => this.#rundownChanged(id)
 		this.#observer.removed = (id) => this.#rundownChanged(id)
+
+		this.#logger.info(`MosStatusHandler initialized for ${coreMosHandler.core.deviceId}`)
 	}
 
 	#rundownChanged(id: RundownId): void {
@@ -90,13 +92,15 @@ export class MosStatusHandler {
 		for (const status of statusDiff) {
 			this.#messageQueue
 				.putOnQueue(async () => {
-					// Send status
-					await this.#mosDevice.sendStoryStatus({
+					const newStatus: IMOSStoryStatus = {
 						RunningOrderId: this.#mosTypes.mosString128.create(status.rundownExternalId),
 						ID: this.#mosTypes.mosString128.create(status.storyId),
 						Status: status.mosStatus,
 						Time: diffTime,
-					})
+					}
+					this.#logger.info(`Sending Story status: `, newStatus)
+					// Send status
+					await this.#mosDevice.sendStoryStatus(newStatus)
 				})
 				.catch((e) => {
 					this.#logger.error(
@@ -106,8 +110,6 @@ export class MosStatusHandler {
 					)
 				})
 		}
-
-		throw new Error('Method not implemented.')
 	}
 
 	dispose(): void {
@@ -132,8 +134,6 @@ function diffStatuses(
 
 	if ((!previousStatuses && !newStatuses) || !rundownExternalId) return []
 
-	// nocommit - option/always skip for rehearsal
-
 	const statuses: StoryStatusItem[] = []
 
 	const previousStories = buildStoriesMap(previousStatuses)
@@ -155,8 +155,8 @@ function diffStatuses(
 	for (const [storyId, status] of newStories) {
 		const previousStatus = previousStories.get(storyId)
 
-		const newMosStatus = buildMosStatus(status)
-		if (!previousStatus || buildMosStatus(previousStatus) !== newMosStatus) {
+		const newMosStatus = buildMosStatus(status, newStatuses?.active)
+		if (!previousStatus || buildMosStatus(previousStatus, previousStatuses?.active) !== newMosStatus) {
 			statuses.push({
 				rundownExternalId,
 				storyId,
@@ -182,13 +182,15 @@ function buildStoriesMap(state: IngestRundownStatus | undefined): Map<string, In
 	return stories
 }
 
-function buildMosStatus(story: IngestPartStatus): IMOSObjectStatus {
+function buildMosStatus(story: IngestPartStatus, active: IngestRundownStatus['active'] | undefined): IMOSObjectStatus {
 	// nocommit - implement this rule.
 	// nocommit - implement options to control behaviour of this
 	// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
 	// Reason 1: NRK ENPS "sendt tid" (elapsed time) stopped working in ENPS 8/9 when doing STOP prior to PLAY
 	// Reason 2: there's a delay between the STOP (yellow line disappears) and PLAY (yellow line re-appears), which annoys the users
 	// nocommit TLDR: nrk only wants to send PLAY messages
+
+	if (active === 'inactive') return MOS_STATUS_UNKNOWN
 
 	switch (story.playbackStatus) {
 		case IngestPartPlaybackStatus.PLAY:

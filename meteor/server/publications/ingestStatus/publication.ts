@@ -43,7 +43,7 @@ async function setupIngestRundownStatusPublicationObservers(
 	triggerUpdate: TriggerUpdate<IngestRundownStatusUpdateProps>
 ): Promise<SetupObserversResult> {
 	const rundownsObserver = await RundownsObserver.createForPeripheralDevice(args.deviceId, async (rundownIds) => {
-		logger.silly(`Creating new RundownContentObserver`)
+		logger.silly(`Creating new RundownContentObserver`, rundownIds)
 
 		// TODO - can this be done cheaper?
 		const cache = createReactiveContentCache(rundownIds)
@@ -181,10 +181,19 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 		_id: rundownId,
 		externalId: rundown.externalId,
 
+		active: 'inactive',
+
 		segments: [],
 	}
 
-	const playlist = cache.Playlists.findOne(rundown.playlistId)
+	const playlist = cache.Playlists.findOne({
+		_id: rundown.playlistId,
+		activationId: { $exists: true },
+	})
+
+	if (playlist) {
+		newDoc.active = playlist.rehearsal ? 'rehearsal' : 'active'
+	}
 
 	const nrcsSegments = cache.NrcsIngestData.find({ rundownId, type: NrcsIngestCacheType.SEGMENT }).fetch()
 	for (const nrcsSegment of nrcsSegments) {
@@ -203,7 +212,7 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 					const part = cache.Parts.findOne({ rundownId, _id: nrcsPart.partId })
 					const partInstance = cache.PartInstances.findOne({
 						rundownId,
-						segmentId: nrcsPart.segmentId,
+						// segmentId: nrcsPart.segmentId, // nocommit - these don't match for some reason
 						'part._id': nrcsPart.partId,
 						// nocommit TODO - prefer the currentPartInstance
 						_id: {
@@ -218,10 +227,10 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 
 						if (isCurrentPartInstance) {
 							// If the current, it is playing
-							playbackStatus = IngestPartPlaybackStatus.PLAYING
+							playbackStatus = IngestPartPlaybackStatus.PLAY
 						} else {
 							// If not the current, but has been played, it is stopped
-							playbackStatus = IngestPartPlaybackStatus.STOPPED
+							playbackStatus = IngestPartPlaybackStatus.STOP
 						}
 					}
 
@@ -249,13 +258,7 @@ meteorCustomPublish(
 	async function (pub, deviceId: PeripheralDeviceId, token: string | undefined) {
 		check(deviceId, String)
 
-		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, this)
-
-		const studioId = peripheralDevice.studioId
-		if (!studioId) {
-			logger.warn(`Pub.packageManagerPackageContainers: device "${peripheralDevice._id}" has no studioId`)
-			return this.ready()
-		}
+		await checkAccessAndGetPeripheralDevice(deviceId, token, this)
 
 		await setUpCollectionOptimizedObserver<
 			IngestRundownStatus,

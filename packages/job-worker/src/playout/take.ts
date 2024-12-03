@@ -547,8 +547,6 @@ export async function afterTake(
 
 	await updateTimeline(context, playoutModel)
 
-	playoutModel.queueNotifyCurrentlyPlayingPartEvent(takePartInstance.partInstance.rundownId, takePartInstance)
-
 	if (span) span.end()
 }
 

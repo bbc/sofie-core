@@ -9,7 +9,7 @@ import {
 	rundownFieldSpecifier,
 	// segmentFieldSpecifier,
 } from './reactiveContentCache'
-import { PartInstances, Parts, RundownPlaylists, Rundowns } from '../../collections'
+import { NrcsIngestDataCache, PartInstances, Parts, RundownPlaylists, Rundowns } from '../../collections'
 import { waitForAllObserversReady } from '../lib/lib'
 import _ from 'underscore'
 import { ReactiveMongoObserverGroup, ReactiveMongoObserverGroupHandle } from '../lib/observerGroup'
@@ -47,10 +47,10 @@ export class RundownContentObserver {
 					},
 					{
 						added: (doc) => {
-							cache.Playlists.upsert(doc._id, { $set: doc as Partial<Document> })
+							cache.Playlists.upsert(doc._id, doc)
 						},
 						changed: (doc) => {
-							cache.Playlists.upsert(doc._id, { $set: doc as Partial<Document> })
+							cache.Playlists.upsert(doc._id, doc)
 						},
 						removed: (doc) => {
 							cache.Playlists.remove(doc._id)
@@ -98,9 +98,21 @@ export class RundownContentObserver {
 				}
 			),
 			PartInstances.observeChanges(
-				{ rundownId: { $in: rundownIds }, reset: { $ne: true }, orphaned: { $exists: false } },
+				{
+					rundownId: { $in: rundownIds },
+					reset: { $ne: true },
+					orphaned: { $exists: false },
+				},
 				cache.PartInstances.link(),
 				{ fields: partInstanceFieldSpecifier }
+			),
+			NrcsIngestDataCache.observeChanges(
+				{
+					rundownId: {
+						$in: rundownIds,
+					},
+				},
+				cache.NrcsIngestData.link()
 			),
 
 			observer.#playlistIdObserver,

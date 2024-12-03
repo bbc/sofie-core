@@ -6,6 +6,8 @@ export interface IngestRundownStatus {
 	/** Rundown external id */
 	externalId: string
 
+	active: 'active' | 'rehearsal'| 'inactive'
+
 	segments: IngestSegmentStatus[]
 
 	// Future: the rundown could have a status that we report?

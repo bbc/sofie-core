@@ -9,9 +9,11 @@ import type { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
-export type PlaylistFields = '_id' | 'currentPartInfo' | 'nextPartInfo'
+export type PlaylistFields = '_id' | 'activationId' | 'rehearsal' | 'currentPartInfo' | 'nextPartInfo'
 export const playlistFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBRundownPlaylist, PlaylistFields>>>({
 	_id: 1,
+	activationId: 1,
+	rehearsal: 1,
 	currentPartInfo: 1,
 	nextPartInfo: 1,
 })
