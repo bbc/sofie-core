@@ -23,6 +23,7 @@ export class MosStatusHandler {
 	readonly #logger: winston.Logger
 	readonly #mosDevice: IMOSDevice
 	readonly #coreMosHandler: CoreMosDeviceHandler
+	readonly #config: MosDeviceStatusesConfig
 	readonly #mosTypes: MosTypes
 
 	readonly #messageQueue = new Queue()
@@ -46,6 +47,7 @@ export class MosStatusHandler {
 		this.#logger = logger
 		this.#mosDevice = mosDevice
 		this.#coreMosHandler = coreMosHandler
+		this.#config = config
 		this.#mosTypes = getMosTypes(strictMosTypes)
 
 		coreMosHandler.core
@@ -83,13 +85,18 @@ export class MosStatusHandler {
 			this.#lastStatuses.delete(id)
 		}
 
-		const statusDiff = diffStatuses(previousStatuses, newStatuses)
+		const statusDiff = diffStatuses(this.#config, previousStatuses, newStatuses)
 		if (statusDiff.length === 0) return
 
 		const diffTime = this.#mosTypes.mosTime.create(Date.now())
 
 		// nocommit - should this be done with some concurrency?
 		for (const status of statusDiff) {
+			// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
+			// Reason 1: NRK ENPS "sendt tid" (elapsed time) stopped working in ENPS 8/9 when doing STOP prior to PLAY
+			// Reason 2: there's a delay between the STOP (yellow line disappears) and PLAY (yellow line re-appears), which annoys the users
+			if (this.#config.onlySendPlay && status.mosStatus !== IMOSObjectStatus.PLAY) continue
+
 			this.#messageQueue
 				.putOnQueue(async () => {
 					const newStatus: IMOSStoryStatus = {
@@ -140,6 +147,7 @@ interface StoryStatusItem {
 }
 
 function diffStatuses(
+	config: MosDeviceStatusesConfig,
 	previousStatuses: IngestRundownStatus | undefined,
 	newStatuses: IngestRundownStatus | undefined
 ): StoryStatusItem[] {
@@ -168,10 +176,10 @@ function diffStatuses(
 	for (const [storyId, status] of newStories) {
 		const previousStatus = previousStories.get(storyId)
 
-		const newMosStatus = buildMosStatus(status, newStatuses?.active)
+		const newMosStatus = buildMosStatus(config, status, newStatuses?.active)
 		if (
 			newMosStatus !== null &&
-			(!previousStatus || buildMosStatus(previousStatus, previousStatuses?.active) !== newMosStatus)
+			(!previousStatus || buildMosStatus(config, previousStatus, previousStatuses?.active) !== newMosStatus)
 		) {
 			statuses.push({
 				rundownExternalId,
@@ -199,17 +207,12 @@ function buildStoriesMap(state: IngestRundownStatus | undefined): Map<string, In
 }
 
 function buildMosStatus(
+	config: MosDeviceStatusesConfig,
 	story: IngestPartStatus,
 	active: IngestRundownStatus['active'] | undefined
 ): IMOSObjectStatus | null {
-	// nocommit - implement this rule.
-	// nocommit - implement options to control behaviour of this
-	// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
-	// Reason 1: NRK ENPS "sendt tid" (elapsed time) stopped working in ENPS 8/9 when doing STOP prior to PLAY
-	// Reason 2: there's a delay between the STOP (yellow line disappears) and PLAY (yellow line re-appears), which annoys the users
-	// nocommit TLDR: nrk only wants to send PLAY messages
-
 	if (active === 'inactive') return MOS_STATUS_UNKNOWN
+	if (active === 'rehearsal' && !config.sendInRehearsal) return null
 
 	switch (story.playbackStatus) {
 		case IngestPartPlaybackStatus.PLAY:

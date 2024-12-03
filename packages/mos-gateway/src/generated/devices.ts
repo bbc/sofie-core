@@ -35,4 +35,6 @@ export interface MosDeviceConfig {
 }
 export interface MosDeviceStatusesConfig {
 	enabled: boolean
+	sendInRehearsal?: boolean
+	onlySendPlay?: boolean
 }
