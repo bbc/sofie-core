@@ -98,9 +98,15 @@ export class MosStatusHandler {
 						Status: status.mosStatus,
 						Time: diffTime,
 					}
-					this.#logger.info(`Sending Story status: `, newStatus)
-					// Send status
-					await this.#mosDevice.sendStoryStatus(newStatus)
+					this.#logger.info(`Sending Story status: ${JSON.stringify(newStatus)}`)
+
+					if (this.#isDeviceConnected()) {
+						// Send status
+						await this.#mosDevice.sendStoryStatus(newStatus)
+					} else {
+						// nocommit
+						this.#logger.info(`Not connected`)
+					}
 				})
 				.catch((e) => {
 					this.#logger.error(
@@ -110,6 +116,13 @@ export class MosStatusHandler {
 					)
 				})
 		}
+	}
+
+	#isDeviceConnected(): boolean {
+		return (
+			this.#mosDevice.getConnectionStatus().PrimaryConnected ||
+			this.#mosDevice.getConnectionStatus().SecondaryConnected
+		)
 	}
 
 	dispose(): void {
@@ -156,7 +169,10 @@ function diffStatuses(
 		const previousStatus = previousStories.get(storyId)
 
 		const newMosStatus = buildMosStatus(status, newStatuses?.active)
-		if (!previousStatus || buildMosStatus(previousStatus, previousStatuses?.active) !== newMosStatus) {
+		if (
+			newMosStatus !== null &&
+			(!previousStatus || buildMosStatus(previousStatus, previousStatuses?.active) !== newMosStatus)
+		) {
 			statuses.push({
 				rundownExternalId,
 				storyId,
@@ -182,7 +198,10 @@ function buildStoriesMap(state: IngestRundownStatus | undefined): Map<string, In
 	return stories
 }
 
-function buildMosStatus(story: IngestPartStatus, active: IngestRundownStatus['active'] | undefined): IMOSObjectStatus {
+function buildMosStatus(
+	story: IngestPartStatus,
+	active: IngestRundownStatus['active'] | undefined
+): IMOSObjectStatus | null {
 	// nocommit - implement this rule.
 	// nocommit - implement options to control behaviour of this
 	// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
