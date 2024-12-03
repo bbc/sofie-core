@@ -73,19 +73,11 @@ export class RundownContentObserver {
 				cache.Rundowns.link(),
 				{
 					projection: rundownFieldSpecifier,
+				},
+				{
+					nonMutatingCallbacks: true,
 				}
 			),
-			// Segments.observeChanges(
-			// 	{
-			// 		rundownId: {
-			// 			$in: rundownIds,
-			// 		},
-			// 	},
-			// 	cache.Segments.link(),
-			// 	{
-			// 		projection: segmentFieldSpecifier,
-			// 	}
-			// ),
 			Parts.observeChanges(
 				{
 					rundownId: {
@@ -95,6 +87,9 @@ export class RundownContentObserver {
 				cache.Parts.link(),
 				{
 					projection: partFieldSpecifier,
+				},
+				{
+					nonMutatingCallbacks: true,
 				}
 			),
 			PartInstances.observeChanges(
@@ -104,7 +99,10 @@ export class RundownContentObserver {
 					orphaned: { $exists: false },
 				},
 				cache.PartInstances.link(),
-				{ fields: partInstanceFieldSpecifier }
+				{ fields: partInstanceFieldSpecifier },
+				{
+					nonMutatingCallbacks: true,
+				}
 			),
 			NrcsIngestDataCache.observeChanges(
 				{
@@ -112,7 +110,11 @@ export class RundownContentObserver {
 						$in: rundownIds,
 					},
 				},
-				cache.NrcsIngestData.link()
+				cache.NrcsIngestData.link(),
+				{},
+				{
+					nonMutatingCallbacks: true,
+				}
 			),
 
 			observer.#playlistIdObserver,

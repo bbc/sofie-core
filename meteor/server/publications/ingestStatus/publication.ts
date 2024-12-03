@@ -54,35 +54,36 @@ async function setupIngestRundownStatusPublicationObservers(
 		const contentObserver = await RundownContentObserver.create(rundownIds, cache)
 
 		const innerQueries = [
-			cache.Playlists.find({}).observeChanges({
-				added: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
-				changed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
-				removed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
-			}),
-			cache.Rundowns.find({}).observe({
-				added: (doc) => {
-					triggerUpdate({ invalidateRundownIds: [doc._id] })
-					contentObserver.checkPlaylistIds()
+			cache.Playlists.find({}).observeChanges(
+				{
+					added: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
+					changed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
+					removed: (docId) => triggerUpdate({ invalidatePlaylistIds: [protectString(docId)] }),
 				},
-				changed: (doc) => {
-					triggerUpdate({ invalidateRundownIds: [doc._id] })
-					contentObserver.checkPlaylistIds()
+				{ nonMutatingCallbacks: true }
+			),
+			cache.Rundowns.find({}).observeChanges(
+				{
+					added: (docId) => {
+						triggerUpdate({ invalidateRundownIds: [protectString(docId)] })
+						contentObserver.checkPlaylistIds()
+					},
+					changed: (docId) => {
+						triggerUpdate({ invalidateRundownIds: [protectString(docId)] })
+						contentObserver.checkPlaylistIds()
+					},
+					removed: (docId) => {
+						triggerUpdate({ invalidateRundownIds: [protectString(docId)] })
+						contentObserver.checkPlaylistIds()
+					},
 				},
-				removed: (doc) => {
-					triggerUpdate({ invalidateRundownIds: [doc._id] })
-					contentObserver.checkPlaylistIds()
-				},
-			}),
+				{ nonMutatingCallbacks: true }
+			),
 			cache.Parts.find({}).observe({
 				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
 				removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 			}),
-			// cache.Segments.find({}).observe({
-			// 	added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-			// 	changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
-			// 	removed: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
-			// }),
 			cache.PartInstances.find({}).observe({
 				added: (doc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId] }),
 				changed: (doc, oldDoc) => triggerUpdate({ invalidateRundownIds: [doc.rundownId, oldDoc.rundownId] }),
@@ -115,9 +116,6 @@ async function manipulateIngestRundownStatusPublicationData(
 	updateProps: Partial<ReadonlyDeep<IngestRundownStatusUpdateProps>> | undefined
 ): Promise<void> {
 	// Prepare data for publication:
-
-	// We know that `collection` does diffing when 'commiting' all of the changes we have made
-	// meaning that for anything we will call `replace()` on, we can `remove()` it first for no extra cost
 
 	if (updateProps?.newCache !== undefined) {
 		state.contentCache = updateProps.newCache ?? undefined

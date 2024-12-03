@@ -5,7 +5,6 @@ import type { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/di
 import type { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import type { NrcsIngestDataCacheObj } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
 import type { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-// import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import type { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
@@ -41,13 +40,6 @@ export const partFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBP
 	ingestNotifyPartReady: 1,
 })
 
-// export type SegmentFields = '_id' | 'rundownId' | 'externalId'
-// export const segmentFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBSegment, SegmentFields>>>({
-// 	_id: 1,
-// 	rundownId: 1,
-// 	externalId: 1,
-// })
-
 export type PartInstanceFields = '_id' | 'rundownId' | 'segmentId' | 'part'
 export const partInstanceFieldSpecifier = literal<
 	MongoFieldSpecifierOnesStrict<Pick<PartInstance, PartInstanceFields>>
@@ -65,7 +57,6 @@ export interface ContentCache {
 	Rundowns: ReactiveCacheCollection<Pick<DBRundown, RundownFields>>
 	NrcsIngestData: ReactiveCacheCollection<NrcsIngestDataCacheObj>
 	Parts: ReactiveCacheCollection<Pick<DBPart, PartFields>>
-	// Segments: ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>
 	PartInstances: ReactiveCacheCollection<Pick<PartInstance, PartInstanceFields>>
 }
 
@@ -77,7 +68,6 @@ export function createReactiveContentCache(rundownIds: RundownId[]): ContentCach
 		Rundowns: new ReactiveCacheCollection<Pick<DBRundown, RundownFields>>('rundowns'),
 		NrcsIngestData: new ReactiveCacheCollection<NrcsIngestDataCacheObj>('nrcsIngestData'), // TODO - is this needed?
 		Parts: new ReactiveCacheCollection<Pick<DBPart, PartFields>>('parts'),
-		// Segments: new ReactiveCacheCollection<Pick<DBSegment, SegmentFields>>('segments'),
 		PartInstances: new ReactiveCacheCollection<Pick<PartInstance, PartInstanceFields>>('partInstances'),
 	}
 
