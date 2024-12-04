@@ -25,7 +25,7 @@ describe('RundownsObserver', () => {
 		// should not be any observers yet
 		expect(RundownsMock.observers).toHaveLength(0)
 
-		const observer = await RundownsObserver.create(studioId, playlistId, onChanged)
+		const observer = await RundownsObserver.createForPlaylist(studioId, playlistId, onChanged)
 		try {
 			// should now be an observer
 			expect(RundownsMock.observers).toHaveLength(1)
@@ -78,7 +78,7 @@ describe('RundownsObserver', () => {
 		// should not be any observers yet
 		expect(RundownsMock.observers).toHaveLength(0)
 
-		const observer = await RundownsObserver.create(studioId, playlistId, onChanged)
+		const observer = await RundownsObserver.createForPlaylist(studioId, playlistId, onChanged)
 		try {
 			// ensure starts correct
 			await waitUntil(async () => {
@@ -132,7 +132,7 @@ describe('RundownsObserver', () => {
 		// should not be any observers yet
 		expect(RundownsMock.observers).toHaveLength(0)
 
-		const observer = await RundownsObserver.create(studioId, playlistId, onChanged)
+		const observer = await RundownsObserver.createForPlaylist(studioId, playlistId, onChanged)
 		try {
 			// ensure starts correct
 			// ensure starts correct
@@ -186,7 +186,7 @@ describe('RundownsObserver', () => {
 		// should not be any observers yet
 		expect(RundownsMock.observers).toHaveLength(0)
 
-		const observer = await RundownsObserver.create(studioId, playlistId, onChanged)
+		const observer = await RundownsObserver.createForPlaylist(studioId, playlistId, onChanged)
 		try {
 			// ensure starts correct
 			// ensure starts correct

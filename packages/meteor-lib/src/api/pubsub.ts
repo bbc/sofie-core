@@ -176,6 +176,7 @@ export enum MeteorPubSub {
 	 * Fetch all PartInstances with UI overrides
 	 */
 	uiPartInstances = 'uiPartInstances',
+	
 }
 
 /**
