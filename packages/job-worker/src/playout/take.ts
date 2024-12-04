@@ -539,7 +539,7 @@ export function updatePartInstanceOnTake(
 export async function afterTake(
 	context: JobContext,
 	playoutModel: PlayoutModel,
-	takePartInstance: PlayoutPartInstanceModel
+	_takePartInstance: PlayoutPartInstanceModel
 ): Promise<void> {
 	const span = context.startSpan('afterTake')
 	// This function should be called at the end of a "take" event (when the Parts have been updated)

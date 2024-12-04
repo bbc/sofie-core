@@ -56,11 +56,9 @@ import { DatabasePersistedModel } from '../../../modelBase'
 import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { StudioBaselineHelper } from '../../../studio/model/StudioBaselineHelper'
-import { EventsJobs } from '@sofie-automation/corelib/dist/worker/events'
 import { QuickLoopService } from '../services/QuickLoopService'
 import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
-import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
@@ -519,7 +517,6 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		this.#pendingPartInstanceTimingEvents.add(partInstanceId)
 	}
 
-
 	removeAllRehearsalPartInstances(): void {
 		const partInstancesToRemove: PartInstanceId[] = []
 
@@ -680,8 +677,6 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			queuePartInstanceTimingEvent(this.context, this.playlistId, partInstanceId)
 		}
 		this.#pendingPartInstanceTimingEvents.clear()
-
-
 
 		if (span) span.end()
 	}

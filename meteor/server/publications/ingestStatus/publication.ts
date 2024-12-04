@@ -1,4 +1,4 @@
-import { PeripheralDeviceId, RundownId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PartId, PeripheralDeviceId, RundownId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	CustomPublishCollection,
@@ -8,7 +8,7 @@ import {
 	TriggerUpdate,
 } from '../../lib/customPublication'
 import { logger } from '../../logging'
-import { ContentCache, createReactiveContentCache } from './reactiveContentCache'
+import { ContentCache, createReactiveContentCache, PartInstanceFields } from './reactiveContentCache'
 import { RundownsObserver } from '../lib/rundownsObserver'
 import { RundownContentObserver } from './rundownContentObserver'
 import {
@@ -22,6 +22,7 @@ import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { NrcsIngestCacheType } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
 import _ from 'underscore'
+import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 
 interface IngestRundownStatusArgs {
 	readonly deviceId: PeripheralDeviceId
@@ -193,6 +194,28 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 		newDoc.active = playlist.rehearsal ? 'rehearsal' : 'active'
 	}
 
+	// Find the most important part instance for each part
+	const partInstanceMap = new Map<PartId, Pick<DBPartInstance, PartInstanceFields>>()
+	if (playlist) {
+		for (const partInstance of cache.PartInstances.find({}).fetch()) {
+			if (partInstance.rundownId !== rundownId) continue
+			// Ignore the next partinstance
+			if (partInstance._id === playlist.nextPartInfo?.partInstanceId) continue
+
+			// The current part instance is the most important
+			if (partInstance._id === playlist.currentPartInfo?.partInstanceId) {
+				partInstanceMap.set(partInstance.part._id, partInstance)
+				continue
+			}
+
+			// Take the part with the highest takeCount
+			const existingEntry = partInstanceMap.get(partInstance.part._id)
+			if (!existingEntry || existingEntry.takeCount < partInstance.takeCount) {
+				partInstanceMap.set(partInstance.part._id, partInstance)
+			}
+		}
+	}
+
 	const nrcsSegments = cache.NrcsIngestData.find({ rundownId, type: NrcsIngestCacheType.SEGMENT }).fetch()
 	for (const nrcsSegment of nrcsSegments) {
 		const nrcsParts = cache.NrcsIngestData.find({
@@ -207,16 +230,8 @@ function regenerateForRundown(cache: ReadonlyDeep<ContentCache>, rundownId: Rund
 				nrcsParts.map((nrcsPart) => {
 					if (!nrcsPart.partId || !nrcsPart.segmentId) return null
 
-					const part = cache.Parts.findOne({ rundownId, _id: nrcsPart.partId })
-					const partInstance = cache.PartInstances.findOne({
-						rundownId,
-						// segmentId: nrcsPart.segmentId, // nocommit - these don't match for some reason
-						'part._id': nrcsPart.partId,
-						// nocommit TODO - prefer the currentPartInstance
-						_id: {
-							$not: playlist?.nextPartInfo?.partInstanceId ?? protectString(''),
-						},
-					})
+					const part = cache.Parts.findOne({ _id: nrcsPart.partId, rundownId })
+					const partInstance = partInstanceMap.get(nrcsPart.partId)
 
 					// Determine the playback status from the PartInstance
 					let playbackStatus = IngestPartPlaybackStatus.UNKNOWN

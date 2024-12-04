@@ -40,7 +40,7 @@ export const partFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBP
 	ingestNotifyPartReady: 1,
 })
 
-export type PartInstanceFields = '_id' | 'rundownId' | 'segmentId' | 'part'
+export type PartInstanceFields = '_id' | 'rundownId' | 'segmentId' | 'part' | 'takeCount'
 export const partInstanceFieldSpecifier = literal<
 	MongoFieldSpecifierOnesStrict<Pick<PartInstance, PartInstanceFields>>
 >({
@@ -48,6 +48,7 @@ export const partInstanceFieldSpecifier = literal<
 	rundownId: 1,
 	segmentId: 1,
 	part: 1, // This could be more granular, but it should be pretty stable
+	takeCount: 1,
 })
 
 export interface ContentCache {

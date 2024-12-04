@@ -1,6 +1,5 @@
 import {
 	MosConnection,
-	IMOSDevice,
 	IMOSConnectionStatus,
 	IMOSRunningOrder,
 	IMOSROAck,
@@ -41,7 +40,7 @@ import { PeripheralDeviceForDevice } from '@sofie-automation/server-core-integra
 import _ = require('underscore')
 import { MosStatusHandler } from './mosStatusHandler'
 
-interface MosConfig {
+export interface MosConfig {
 	self: IConnectionConfig
 	// devices: Array<IMOSDeviceConnectionOptions>
 }
