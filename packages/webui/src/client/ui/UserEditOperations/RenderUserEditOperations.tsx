@@ -80,6 +80,8 @@ export function RenderUserEditOperations(
 								<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
 							</MenuItem>
 						)
+					case UserEditingType.SOFIE:
+						return null
 					default:
 						assertNever(userEditOperation)
 						return null
