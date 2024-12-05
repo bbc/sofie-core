@@ -14,7 +14,7 @@ import {
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 	CoreUserEditingDefinitionSourceLayerForm,
-	UserEditingProperties,
+	CoreUserEditingProperties,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { assertNever, clone, Complete, literal, omit } from '@sofie-automation/corelib/dist/lib'
@@ -59,6 +59,7 @@ import {
 	UserEditingDefinitionAction,
 	UserEditingDefinitionForm,
 	UserEditingDefinitionSourceLayerForm,
+	UserEditingProperties,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
 import type { PlayoutMutatablePart } from '../../playout/model/PlayoutPartInstanceModel'
@@ -283,7 +284,7 @@ export function convertPartToBlueprints(part: ReadonlyDeep<DBPart>): IBlueprintP
 			part.hackListenToMediaObjectUpdates
 		),
 		userEditOperations: translateUserEditsToBlueprint(part.userEditOperations),
-		userEditProperties: clone<UserEditingProperties | undefined>(part.userEditProperties),
+		userEditProperties: translateUserEditPropertiesToBlueprint(part.userEditProperties),
 	}
 
 	return obj
@@ -352,7 +353,7 @@ export function convertSegmentToBlueprints(segment: ReadonlyDeep<DBSegment>): IB
 		showShelf: segment.showShelf,
 		segmentTiming: segment.segmentTiming,
 		userEditOperations: translateUserEditsToBlueprint(segment.userEditOperations),
-		userEditProperties: clone<UserEditingProperties | undefined>(segment.userEditProperties),
+		userEditProperties: translateUserEditPropertiesToBlueprint(segment.userEditProperties),
 	}
 
 	return obj
@@ -544,6 +545,30 @@ function translateUserEditsToBlueprint(
 	)
 }
 
+function translateUserEditPropertiesToBlueprint(
+	props: ReadonlyDeep<CoreUserEditingProperties> | undefined
+): UserEditingProperties | undefined {
+	if (!props) return undefined
+
+	return {
+		globalProperties: props.globalProperties,
+		pieceTypeProperties: props.pieceTypeProperties,
+
+		operations: props.operations?.map(
+			(userEdit) =>
+				({
+					type: UserEditingType.ACTION,
+					id: userEdit.id,
+					label: omit(userEdit.label, 'namespaces'),
+					svgIcon: userEdit.svgIcon,
+					svgIconInactive: userEdit.svgIconInactive,
+					isActive: userEdit.isActive,
+					buttonType: userEdit.buttonType,
+				} satisfies Complete<UserEditingDefinitionAction>)
+		),
+	}
+}
+
 export function translateUserEditsFromBlueprint(
 	userEdits: UserEditingDefinition[] | undefined,
 	blueprintIds: BlueprintId[]
@@ -589,6 +614,33 @@ export function translateUserEditsFromBlueprint(
 	)
 }
 
+export function translateUserEditPropertiesFromBlueprint(
+	props: UserEditingProperties | undefined,
+	blueprintIds: BlueprintId[]
+): CoreUserEditingProperties | undefined {
+	if (!props) return undefined
+
+	return {
+		globalProperties: clone(props.globalProperties),
+		pieceTypeProperties: clone(props.pieceTypeProperties),
+
+		operations: props.operations?.map(
+			(userEdit) =>
+				({
+					type: UserEditingType.ACTION,
+					id: userEdit.id,
+					label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
+					svgIcon: userEdit.svgIcon,
+					svgIconInactive: userEdit.svgIconInactive,
+					isActive: userEdit.isActive,
+					buttonType: userEdit.buttonType,
+				} satisfies Complete<UserEditingDefinitionAction>)
+		),
+
+		translationNamespaces: blueprintIds.map((id) => `blueprint_${id}`),
+	}
+}
+
 export function convertPartialBlueprintMutablePartToCore(
 	updatePart: Partial<IBlueprintMutatablePart>,
 	blueprintId: BlueprintId
@@ -600,6 +652,14 @@ export function convertPartialBlueprintMutablePartToCore(
 
 	if ('userEditOperations' in updatePart) {
 		playoutUpdatePart.userEditOperations = translateUserEditsFromBlueprint(updatePart.userEditOperations, [
+			blueprintId,
+		])
+	} else {
+		delete playoutUpdatePart.userEditOperations
+	}
+
+	if ('userEditProperties' in updatePart) {
+		playoutUpdatePart.userEditProperties = translateUserEditPropertiesFromBlueprint(updatePart.userEditProperties, [
 			blueprintId,
 		])
 	} else {

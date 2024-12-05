@@ -67,7 +67,7 @@ export interface CoreUserEditingDefinitionSourceLayerForm {
 	}
 }
 
-export interface UserEditingProperties {
+export interface CoreUserEditingProperties {
 	/**
 	 * These properties are dependent on the (primary) piece type, the user will get the option
 	 * to select the type of piece (from the SourceLayerTypes i.e. Camera or Split etc.) and then
@@ -106,5 +106,8 @@ export interface UserEditingProperties {
 	 *
 	 * note - perhaps these should have their own full definitions?
 	 */
-	operations?: string[]
+	operations?: CoreUserEditingDefinitionAction[]
+
+	/** Translation namespaces to use when rendering this form */
+	translationNamespaces: string[]
 }

@@ -74,9 +74,10 @@ export enum UserEditingType {
 }
 
 export interface UserEditingSourceLayer {
-	sourceLayerLabel: string // translate? take from type?
+	sourceLayerLabel: string
 	sourceLayerType: SourceLayerType
 	schema: JSONBlob<JSONSchema>
+	defaultValue?: Record<string, any>
 }
 
 export enum UserEditingButtonType {
@@ -124,7 +125,6 @@ export interface UserEditingProperties {
 	/**
 	 * A list of id's of operations to be exposed on the properties panel as buttons. These operations
 	 * must be available on the element
-	 *
 	 */
 	operations?: UserEditingDefinitionAction[]
 }

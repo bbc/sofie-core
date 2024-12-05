@@ -3,7 +3,7 @@ import { ITranslatableMessage } from '../TranslatableMessage'
 import { PartId, RundownId, SegmentId } from './Ids'
 import { PartNote } from './Notes'
 import { ReadonlyDeep } from 'type-fest'
-import { CoreUserEditingDefinition, UserEditingProperties } from './UserEditingDefinitions'
+import { CoreUserEditingDefinition, CoreUserEditingProperties } from './UserEditingDefinitions'
 
 export interface PartInvalidReason {
 	message: ITranslatableMessage
@@ -46,7 +46,7 @@ export interface DBPart extends Omit<IBlueprintPart, 'userEditOperations'> {
 	 * Properties that are user editable from the properties panel in the Sofie UI, if the user saves changes to these
 	 * it will trigger a user edit operation of type DefaultUserOperationEditProperties
 	 */
-	userEditProperties?: UserEditingProperties
+	userEditProperties?: CoreUserEditingProperties
 }
 
 export function isPartPlayable(part: Pick<ReadonlyDeep<DBPart>, 'invalid' | 'floated'>): boolean {

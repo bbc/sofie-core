@@ -93,7 +93,7 @@ export interface IBlueprintMutatablePart<TPrivateData = unknown, TPublicData = u
 	 * Properties that are user editable from the properties panel in the Sofie UI, if the user saves changes to these
 	 * it will trigger a user edit operation of type DefaultUserOperationEditProperties
 	 */
-	userEditProperties?: Readonly<UserEditingProperties>
+	userEditProperties?: UserEditingProperties
 }
 
 export interface HackPartMediaObjectSubscription {

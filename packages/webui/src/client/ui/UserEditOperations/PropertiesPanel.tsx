@@ -22,9 +22,8 @@ import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState'
-import { t } from 'i18next'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
@@ -178,9 +177,13 @@ export function PropertiesPanel(): JSX.Element {
 						})}
 					<div className="title">{title}</div>
 					<span className="properties">{t('Properties')}</span>
-					<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
+					<button
+						className="propertiespanel-pop-up_close"
+						title={t('Close Properties Panel')}
+						onClick={clearSelections}
+					>
 						<CoreIcon.NrkClose width="1em" height="1em" />
-					</div>
+					</button>
 				</div>
 
 				<div className="propertiespanel-pop-up__contents">
@@ -189,6 +192,7 @@ export function PropertiesPanel(): JSX.Element {
 							properties={userEditProperties.pieceTypeProperties}
 							change={change}
 							setChange={setPendingChange}
+							translationNamespace={userEditProperties.translationNamespaces}
 						/>
 					)}
 					{userEditProperties?.globalProperties && (
@@ -196,6 +200,7 @@ export function PropertiesPanel(): JSX.Element {
 							schema={userEditProperties.globalProperties.schema}
 							change={change}
 							setChange={setPendingChange}
+							translationNamespace={userEditProperties.translationNamespaces}
 						/>
 					)}
 					{userEditProperties?.operations && (
@@ -206,8 +211,8 @@ export function PropertiesPanel(): JSX.Element {
 				<div className="propertiespanel-pop-up__footer">
 					<button
 						className="propertiespanel-pop-up__button start"
+						title={t('Revert Changes')}
 						onClick={handleRevertChanges}
-						// disabled={!hasPendingChanges}
 					>
 						<span className="svg">
 							<svg viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -220,13 +225,19 @@ export function PropertiesPanel(): JSX.Element {
 						<span className="propertiespanel-pop-up__label">{t('Restore from NRCS')}</span>
 					</button>
 					<div className="propertiespanel-pop-up__button-group">
-						<button className="propertiespanel-pop-up__button end" onClick={handleCancel} disabled={!hasPendingChanges}>
+						<button
+							className="propertiespanel-pop-up__button end"
+							onClick={handleCancel}
+							disabled={!hasPendingChanges}
+							title={t('Cancel')}
+						>
 							<span className="propertiespanel-pop-up__label">{t('Cancel')}</span>
 						</button>
 						<button
 							className="propertiespanel-pop-up__button end"
 							onClick={handleCommitChanges}
 							disabled={!hasPendingChanges}
+							title={t('Save')}
 						>
 							<span className="propertiespanel-pop-up__label">{t('Save')}</span>
 						</button>
@@ -241,16 +252,21 @@ function PropertiesEditor({
 	properties,
 	change,
 	setChange,
+	translationNamespace,
 }: {
 	properties: UserEditingProperties['pieceTypeProperties']
 	change: PendingChange
 	setChange: React.Dispatch<React.SetStateAction<PendingChange | undefined>>
+	translationNamespace: string[]
 }): JSX.Element {
 	if (!properties) return <></>
 
 	const selectedGroupId = change.pieceTypeProperties.type
 	const selectedGroupSchema = properties.schema[selectedGroupId]?.schema
-	const parsedSchema = selectedGroupSchema ? JSONBlobParse(selectedGroupSchema) : undefined
+	const parsedSchema = useMemo(
+		() => (selectedGroupSchema ? JSONBlobParse(selectedGroupSchema) : undefined),
+		[selectedGroupSchema]
+	)
 
 	const updateGroup = useCallback(
 		(key: string) => {
@@ -258,7 +274,7 @@ function PropertiesEditor({
 				...change,
 				pieceTypeProperties: {
 					type: key,
-					value: {}, // todo - take defaults
+					value: properties.schema[key]?.defaultValue ?? {},
 				},
 			})
 		},
@@ -307,7 +323,7 @@ function PropertiesEditor({
 						schema={parsedSchema}
 						object={value}
 						onUpdate={onUpdate}
-						translationNamespaces={[]}
+						translationNamespaces={translationNamespace}
 					/>
 				</div>
 			)}
@@ -316,17 +332,16 @@ function PropertiesEditor({
 	)
 }
 
-/**
- * @todo - retrieve translationNamespaces for correct blueprint translations?
- */
 function GlobalPropertiesEditor({
 	schema,
 	change,
 	setChange,
+	translationNamespace,
 }: {
 	schema: JSONBlob<JSONSchema>
 	change: PendingChange
 	setChange: React.Dispatch<React.SetStateAction<PendingChange | undefined>>
+	translationNamespace: string[]
 }): JSX.Element {
 	const parsedSchema = schema ? JSONBlobParse(schema) : undefined
 	const currentValue = change.globalProperties
@@ -349,7 +364,7 @@ function GlobalPropertiesEditor({
 					schema={parsedSchema}
 					object={currentValue}
 					onUpdate={onUpdate}
-					translationNamespaces={[]}
+					translationNamespaces={translationNamespace}
 				/>
 			) : (
 				<></>
@@ -371,7 +386,7 @@ function ActionList({
 		<div>
 			{actions.map((action) => (
 				<button
-					title={'User Action : ' + action.label.key}
+					title={'User Operation: ' + translateMessage(action.label, t)}
 					className="propertiespanel-pop-up__button"
 					onClick={(e) => executeAction(e, action.id)}
 					key={action.id}
