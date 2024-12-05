@@ -1,52 +1,40 @@
 import * as React from 'react'
-import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
 import {
+	DefaultUserOperationEditProperties,
 	DefaultUserOperationsTypes,
+	JSONBlob,
 	JSONBlobParse,
-	SourceLayerType,
-	UserEditingButtonType,
+	JSONSchema,
+	UserEditingDefinitionAction,
+	UserEditingProperties,
 	UserEditingSourceLayer,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
-import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
+import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
-import {
-	CoreUserEditingDefinitionAction,
-	CoreUserEditingDefinitionForm,
-	CoreUserEditingDefinitionSourceLayerForm,
-} from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import { Segments } from '../../collections'
 import { UIParts } from '../Collections'
 import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { StyledSchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPencilAlt } from '@fortawesome/free-solid-svg-icons'
+import { useCallback, useMemo } from 'react'
+import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState'
+import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
-interface PendingChange {
-	operationId: string
-	userEditingType: UserEditingType
-	sourceLayerType?: SourceLayerType
-	value?: Record<string, any>
-	switchState?: boolean
-	cssTypeClass?: string
-}
+type PendingChange = DefaultUserOperationEditProperties['payload']
 
 export function PropertiesPanel(): JSX.Element {
 	const { listSelectedElements, clearSelections } = useSelection()
 	const selectedElement = listSelectedElements()?.[0]
 	const { t } = useTranslation()
 
-	const [pendingChanges, setPendingChanges] = React.useState<PendingChange[]>([])
-	const hasPendingChanges = pendingChanges.length > 0
+	const [pendingChange, setPendingChange] = React.useState<PendingChange | undefined>(undefined)
+	const hasPendingChanges = !!pendingChange
 
 	const [isAnimatedIn, setIsAnimatedIn] = React.useState(false)
 	React.useEffect(() => {
@@ -67,7 +55,7 @@ export function PropertiesPanel(): JSX.Element {
 	}, [])
 
 	const part = useTracker(() => {
-		setPendingChanges([])
+		setPendingChange(undefined)
 		return UIParts.findOne({ _id: selectedElement?.elementId })
 	}, [selectedElement?.elementId])
 
@@ -78,9 +66,13 @@ export function PropertiesPanel(): JSX.Element {
 	const rundownId = part ? part.rundownId : segment?.rundownId
 
 	const handleCommitChanges = async (e: React.MouseEvent) => {
-		if (!rundownId || !selectedElement) return
-		for (const change of pendingChanges) {
-			doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+		if (!rundownId || !selectedElement || !pendingChange) return
+
+		doUserAction(
+			t,
+			e,
+			UserAction.EXECUTE_USER_OPERATION,
+			(e, ts) =>
 				MeteorCall.userAction.executeUserChangeOperation(
 					e,
 					ts,
@@ -90,20 +82,18 @@ export function PropertiesPanel(): JSX.Element {
 						partExternalId: part?.externalId,
 						pieceExternalId: undefined,
 					},
-					{
-						id: change.operationId,
-						values: change.value,
-					}
-				)
-			)
-		}
-		// Delay the Clear pending changes after executing to avoid async flickering:
-		setTimeout(() => setPendingChanges([]), 100)
+					literal<DefaultUserOperationEditProperties>({
+						id: DefaultUserOperationsTypes.UPDATE_PROPS,
+						payload: pendingChange,
+					})
+				),
+			() => setPendingChange(undefined)
+		)
 	}
 
 	const handleRevertChanges = (e: React.MouseEvent) => {
 		if (!rundownId || !selectedElement) return
-		setPendingChanges([])
+		setPendingChange(undefined)
 		doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
 			MeteorCall.userAction.executeUserChangeOperation(
 				e,
@@ -124,424 +114,294 @@ export function PropertiesPanel(): JSX.Element {
 		)
 	}
 
+	const handleCancel = () => {
+		setPendingChange(undefined)
+		clearSelections()
+	}
+
+	const executeAction = (e: React.MouseEvent, id: string) => {
+		if (!rundownId || !selectedElement) return
+		doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+			MeteorCall.userAction.executeUserChangeOperation(
+				e,
+				ts,
+				rundownId,
+				{
+					segmentExternalId: segment?.externalId,
+					partExternalId: part?.externalId,
+					pieceExternalId: undefined,
+				},
+				{
+					id,
+				}
+			)
+		)
+	}
+
+	const userEditOperations =
+		selectedElement?.type === 'part'
+			? part?.userEditOperations
+			: selectedElement?.type === 'segment'
+			? segment?.userEditOperations
+			: undefined
+	const userEditProperties =
+		selectedElement?.type === 'part'
+			? part?.userEditProperties
+			: selectedElement?.type === 'segment'
+			? segment?.userEditProperties
+			: undefined
+	const change = pendingChange ?? {
+		pieceTypeProperties: userEditProperties?.pieceTypeProperties?.currentValue ?? { type: '', value: {} },
+		globalProperties: userEditProperties?.globalProperties?.currentValue ?? {},
+	}
+
+	const title =
+		selectedElement?.type === 'part' ? part?.title : selectedElement?.type === 'segment' ? segment?.name : undefined
+
 	return (
 		<div className={classNames('properties-panel', isAnimatedIn && 'is-mounted')}>
 			<div className="propertiespanel-pop-up">
-				<div className="propertiespanel-pop-up_close" onClick={clearSelections}>
-					<CoreIcon.NrkClose />
+				<div className="propertiespanel-pop-up__header">
+					{userEditOperations &&
+						userEditOperations.map((operation) => {
+							if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive) return null
+							return (
+								<div
+									key={operation.id}
+									className="svg"
+									dangerouslySetInnerHTML={{
+										__html: operation.svgIcon,
+									}}
+								></div>
+							)
+						})}
+					<div className="title">{title}</div>
+					<span className="properties">{t('Properties')}</span>
+					<button
+						className="propertiespanel-pop-up_close"
+						title={t('Close Properties Panel')}
+						onClick={clearSelections}
+					>
+						<CoreIcon.NrkClose width="1em" height="1em" />
+					</button>
 				</div>
 
-				{rundownId && selectedElement?.type === 'part' && (
-					<>
-						<div className="propertiespanel-pop-up__header">
-							{part?.userEditOperations &&
-								part.userEditOperations.map((operation) => {
-									if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive)
-										return null
-									return (
-										<div
-											key={operation.id}
-											className="svg"
-											dangerouslySetInnerHTML={{
-												__html: operation.svgIcon,
-											}}
-										></div>
-									)
-								})}
-							{part?.title.slice(0, 30)}
-						</div>
-						<div className="propertiespanel-pop-up__contents">
-							{segment &&
-								part?._id &&
-								part.userEditOperations?.map((userEditOperation, i) => {
-									switch (userEditOperation.type) {
-										case UserEditingType.ACTION:
-											return (
-												<EditingTypeAction
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										case UserEditingType.FORM:
-											return (
-												<EditingTypeChangeForm
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										case UserEditingType.SOURCE_LAYER_FORM:
-											return (
-												<EditingTypeChangeSourceLayerSource
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										default:
-											assertNever(userEditOperation)
-											return null
-									}
-								})}
-							<hr />
-						</div>
-					</>
-				)}
-				{rundownId && selectedElement?.type === 'segment' && (
-					<>
-						<div className="propertiespanel-pop-up__header">
-							{segment?.userEditOperations &&
-								segment.userEditOperations.map((operation) => {
-									if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive)
-										return null
+				<div className="propertiespanel-pop-up__contents">
+					{userEditProperties?.pieceTypeProperties && (
+						<PropertiesEditor
+							properties={userEditProperties.pieceTypeProperties}
+							change={change}
+							setChange={setPendingChange}
+							translationNamespace={userEditProperties.translationNamespaces}
+						/>
+					)}
+					{userEditProperties?.globalProperties && (
+						<GlobalPropertiesEditor
+							schema={userEditProperties.globalProperties.schema}
+							change={change}
+							setChange={setPendingChange}
+							translationNamespace={userEditProperties.translationNamespaces}
+						/>
+					)}
+					{userEditProperties?.operations && (
+						<ActionList actions={userEditProperties?.operations} executeAction={executeAction} />
+					)}
+				</div>
 
-									return (
-										<div
-											key={operation.id}
-											className="svg"
-											dangerouslySetInnerHTML={{
-												__html: operation.svgIcon,
-											}}
-										></div>
-									)
-								})}
-							{segment?.name.slice(0, 30)}
-						</div>
-						<div className="propertiespanel-pop-up__contents">
-							{segment &&
-								segment?.userEditOperations?.map((userEditOperation, i) => {
-									switch (userEditOperation.type) {
-										case UserEditingType.ACTION:
-											return (
-												<EditingTypeAction
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										case UserEditingType.FORM:
-											return (
-												<EditingTypeChangeForm
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										case UserEditingType.SOURCE_LAYER_FORM:
-											return (
-												<EditingTypeChangeSourceLayerSource
-													key={i}
-													userEditOperation={userEditOperation}
-													segment={segment}
-													part={part}
-													rundownId={rundownId}
-													pendingChanges={pendingChanges}
-													setPendingChanges={setPendingChanges}
-												/>
-											)
-										default:
-											assertNever(userEditOperation)
-											return null
-									}
-								})}
-						</div>
-					</>
-				)}
 				<div className="propertiespanel-pop-up__footer">
 					<button
-						className="propertiespanel-pop-up__button"
+						className="propertiespanel-pop-up__button start"
+						title={t('Revert Changes')}
 						onClick={handleRevertChanges}
-						disabled={!hasPendingChanges}
 					>
-						<span className="propertiespanel-pop-up__label">REVERT CHANGES</span>
+						<span className="svg">
+							<svg viewBox="0 0 20 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path
+									d="M2 14.5251H15C16.3261 14.5251 17.5979 13.9984 18.5355 13.0607C19.4732 12.123 20 10.8512 20 9.52515C20 8.19906 19.4732 6.92729 18.5355 5.98961C17.5979 5.05193 16.3261 4.52515 15 4.52515H10V0.475147L5 5.47515L10 10.4751V6.52515H15C15.7956 6.52515 16.5587 6.84122 17.1213 7.40383C17.6839 7.96643 18 8.7295 18 9.52515C18 10.3208 17.6839 11.0839 17.1213 11.6465C16.5587 12.2091 15.7956 12.5251 15 12.5251H2V14.5251Z"
+									fill="#979797"
+								/>
+							</svg>
+						</span>
+						<span className="propertiespanel-pop-up__label">{t('Restore from NRCS')}</span>
 					</button>
-					<button
-						className="propertiespanel-pop-up__button"
-						onClick={handleCommitChanges}
-						disabled={!hasPendingChanges}
-					>
-						<span className="propertiespanel-pop-up__label">COMMIT CHANGES</span>
-					</button>
+					<div className="propertiespanel-pop-up__button-group">
+						<button
+							className="propertiespanel-pop-up__button end"
+							onClick={handleCancel}
+							disabled={!hasPendingChanges}
+							title={t('Cancel')}
+						>
+							<span className="propertiespanel-pop-up__label">{t('Cancel')}</span>
+						</button>
+						<button
+							className="propertiespanel-pop-up__button end"
+							onClick={handleCommitChanges}
+							disabled={!hasPendingChanges}
+							title={t('Save')}
+						>
+							<span className="propertiespanel-pop-up__label">{t('Save')}</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
 	)
 }
 
-function EditingTypeAction(props: {
-	userEditOperation: CoreUserEditingDefinitionAction
-	segment: DBSegment | undefined
-	part: DBPart | undefined
-	rundownId: RundownId
-	pendingChanges: PendingChange[]
-	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
-}) {
-	const { t } = useTranslation()
+function PropertiesEditor({
+	properties,
+	change,
+	setChange,
+	translationNamespace,
+}: {
+	properties: UserEditingProperties['pieceTypeProperties']
+	change: PendingChange
+	setChange: React.Dispatch<React.SetStateAction<PendingChange | undefined>>
+	translationNamespace: string[]
+}): JSX.Element {
+	if (!properties) return <></>
 
-	const getPendingState = () => {
-		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
-		return pendingChange?.switchState
-	}
-
-	const [hasBeenEdited, setHasBeenEdited] = React.useState<boolean>(
-		getPendingState() !== undefined && getPendingState() !== props.userEditOperation.isActive
+	const selectedGroupId = change.pieceTypeProperties.type
+	const selectedGroupSchema = properties.schema[selectedGroupId]?.schema
+	const parsedSchema = useMemo(
+		() => (selectedGroupSchema ? JSONBlobParse(selectedGroupSchema) : undefined),
+		[selectedGroupSchema]
 	)
 
-	React.useEffect(() => {
-		setHasBeenEdited(getPendingState() !== undefined && getPendingState() !== props.userEditOperation.isActive)
-	}, [props.userEditOperation.id, props.pendingChanges])
-
-	if (!props.userEditOperation.buttonType) return null
-	const addPendingChange = () => {
-		setHasBeenEdited(!hasBeenEdited)
-		props.setPendingChanges((prev) => {
-			// Find if there's an existing pending change for this operation
-			const existingChangeIndex = prev.findIndex((change) => change.operationId === props.userEditOperation.id)
-
-			if (existingChangeIndex !== -1) {
-				// If exists, toggle the switch state
-				const newChanges = [...prev]
-				newChanges[existingChangeIndex] = {
-					...newChanges[existingChangeIndex],
-					switchState: !newChanges[existingChangeIndex].switchState,
-				}
-				return newChanges
-			}
-
-			// If doesn't exist, add new change with opposite of current state
-			return [
-				...prev,
-				{
-					operationId: props.userEditOperation.id,
-					userEditingType: UserEditingType.ACTION,
-					switchState: !props.userEditOperation.isActive,
+	const updateGroup = useCallback(
+		(key: string) => {
+			setChange({
+				...change,
+				pieceTypeProperties: {
+					type: key,
+					value: properties.schema[key]?.defaultValue ?? {},
 				},
-			]
-		})
-	}
-
-	switch (props.userEditOperation.buttonType) {
-		case UserEditingButtonType.BUTTON:
-			return (
-				<button
-					title={'User Action : ' + props.userEditOperation.label}
-					className="propertiespanel-pop-up__button"
-					onClick={addPendingChange}
-				>
-					<span className="propertiespanel-pop-up__label">{translateMessage(props.userEditOperation.label, t)}</span>
-				</button>
-			)
-		case UserEditingButtonType.SWITCH:
-			return (
-				<div
-					className={classNames(
-						'propertiespanel-pop-up__action',
-						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
-					)}
-				>
-					{hasBeenEdited && (
-						<>
-							{' '}
-							<FontAwesomeIcon icon={faPencilAlt} />
-						</>
-					)}{' '}
-					<a
-						className={classNames('propertiespanel-pop-up__switchbutton', 'switch-button', {
-							'sb-on': getPendingState() ?? (props.userEditOperation.isActive || false),
-						})}
-						role="button"
-						onClick={addPendingChange}
-						tabIndex={0}
-					>
-						<div className="sb-content">
-							<div className="sb-label">
-								<span className="mls">&nbsp;</span>
-								<span className="mrs right">&nbsp;</span>
-							</div>
-							<div className="sb-switch"></div>
-						</div>
-					</a>
-					<span className="propertiespanel-pop-up__label">{translateMessage(props.userEditOperation.label, t)}</span>
-				</div>
-			)
-		case UserEditingButtonType.HIDDEN || undefined:
-			return null
-		default:
-			assertNever(props.userEditOperation.buttonType)
-			return null
-	}
-}
-
-function EditingTypeChangeForm(props: {
-	userEditOperation: CoreUserEditingDefinitionForm
-	segment: DBSegment | undefined
-	part: DBPart | undefined
-	rundownId: RundownId
-	pendingChanges: PendingChange[]
-	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
-}) {
-	const { t } = useTranslation()
-
-	const jsonSchema = props.userEditOperation.schema
-	const schema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
-	const values = clone(props.userEditOperation.currentValues)
-
-	return (
-		<>
-			{schema && (
-				<>
-					<a className="propertiespanel-pop-up__label">{t('Source')}:</a>
-					<StyledSchemaFormInPlace
-						schema={schema}
-						object={values}
-						translationNamespaces={props.userEditOperation.translationNamespaces}
-						width="100%"
-					/>
-					<br />
-					<hr />
-				</>
-			)}
-		</>
-	)
-}
-
-function EditingTypeChangeSourceLayerSource(props: {
-	userEditOperation: CoreUserEditingDefinitionSourceLayerForm
-	segment: DBSegment | undefined
-	part: DBPart | undefined
-	rundownId: RundownId
-	pendingChanges: PendingChange[]
-	setPendingChanges: React.Dispatch<React.SetStateAction<PendingChange[]>>
-}) {
-	const [selectedSourceGroup, setSelectedSourceButton] = React.useState<SourceLayerType>(
-		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.sourceLayerType ||
-			props.userEditOperation.currentValues.type
-	)
-	const [selectedValues, setSelectedValues] = React.useState<Record<string, string>>(
-		props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)?.value ||
-			props.userEditOperation.currentValues.value
-	)
-
-	const getPendingState = () => {
-		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
-		return pendingChange?.value
-	}
-
-	const [hasBeenEdited, setHasBeenEdited] = React.useState<boolean>(
-		getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
-	)
-
-	const jsonSchema = Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).find(
-		(layer) => layer.sourceLayerType === selectedSourceGroup
-	)?.schema
-	const selectedGroupSchema = jsonSchema ? JSONBlobParse(jsonSchema) : undefined
-
-	React.useEffect(() => {
-		const pendingChange = props.pendingChanges.find((change) => change.operationId === props.userEditOperation.id)
-
-		setSelectedSourceButton(pendingChange?.sourceLayerType || props.userEditOperation.currentValues.type)
-
-		setSelectedValues(pendingChange?.value || props.userEditOperation.currentValues.value)
-
-		setHasBeenEdited(
-			getPendingState() !== undefined && getPendingState() !== props.userEditOperation.currentValues.value
-		)
-	}, [props.userEditOperation.id, props.pendingChanges])
-
-	const handleSourceChange = () => {
-		setSelectedValues(selectedValues)
-		setHasBeenEdited(true)
-		// Add to pending changes instead of executing immediately
-		props.setPendingChanges((prev) => {
-			const filtered = prev.filter(
-				(change) =>
-					!(
-						change.operationId === props.userEditOperation.id &&
-						change.userEditingType === UserEditingType.SOURCE_LAYER_FORM
-					)
-			)
-			// Only use the key,value pair from the selected source group:
-			const newKey = Object.keys(props.userEditOperation.schemas).find((key) => {
-				return props.userEditOperation.schemas[key].sourceLayerType === selectedSourceGroup
 			})
-			if (!newKey) return filtered
-			const newValue = selectedValues[newKey]
-			return [
-				...filtered,
-				{
-					operationId: props.userEditOperation.id,
-					userEditingType: UserEditingType.SOURCE_LAYER_FORM,
-					sourceLayerType: selectedSourceGroup,
-					value: { [newKey]: newValue },
+		},
+		[change]
+	)
+	const onUpdate = useCallback(
+		(update: Record<string, any>) => {
+			setChange({
+				...change,
+				pieceTypeProperties: {
+					type: change.pieceTypeProperties.type,
+					value: update,
 				},
-			]
-		})
-	}
+			})
+		},
+		[change]
+	)
+	const value = change.pieceTypeProperties.value
 
 	return (
 		<>
 			<div className="propertiespanel-pop-up__groupselector">
-				{Object.values<UserEditingSourceLayer>(props.userEditOperation.schemas).map((group, index) => {
+				{Object.entries<UserEditingSourceLayer>(properties.schema).map(([key, group]) => {
 					return (
 						<button
 							className={classNames(
+								'propertiespanel-pop-up__groupselector__button',
 								RundownUtils.getSourceLayerClassName(group.sourceLayerType),
-								selectedSourceGroup !== group.sourceLayerType
-									? `propertiespanel-pop-up__groupselector__button`
-									: `propertiespanel-pop-up__groupselector__button-active`
+								selectedGroupId === key && 'active'
 							)}
-							key={index}
+							key={key}
 							onClick={() => {
-								setSelectedSourceButton(group.sourceLayerType)
+								updateGroup(key)
 							}}
 						>
 							{group.sourceLayerLabel}
 						</button>
 					)
 				})}
-				<br />
-				<br />
 			</div>
-			{selectedGroupSchema && (
-				<div
-					className={classNames(
-						'properties-panel-pop-up__form',
-						hasBeenEdited ? 'properties-panel-pop-up__has-been-edited' : ''
-					)}
-				>
-					{hasBeenEdited && <FontAwesomeIcon icon="pencil-alt" />}
-					<div className="properties-panel-pop-up__form__schema" onChange={handleSourceChange}>
-						<StyledSchemaFormInPlace
-							schema={selectedGroupSchema}
-							object={selectedValues}
-							translationNamespaces={props.userEditOperation.translationNamespaces}
-							width="100%"
-						/>
-					</div>
+			<hr />
+			{parsedSchema && (
+				<div className="properties-panel-pop-up__form styled-schema-form">
+					<SchemaFormWithState
+						key={(selectedGroupSchema as any as string) ?? 'key'}
+						schema={parsedSchema}
+						object={value}
+						onUpdate={onUpdate}
+						translationNamespaces={translationNamespace}
+					/>
 				</div>
 			)}
 			<hr />
 		</>
+	)
+}
+
+function GlobalPropertiesEditor({
+	schema,
+	change,
+	setChange,
+	translationNamespace,
+}: {
+	schema: JSONBlob<JSONSchema>
+	change: PendingChange
+	setChange: React.Dispatch<React.SetStateAction<PendingChange | undefined>>
+	translationNamespace: string[]
+}): JSX.Element {
+	const parsedSchema = schema ? JSONBlobParse(schema) : undefined
+	const currentValue = change.globalProperties
+
+	const onUpdate = useCallback(
+		(update: Record<string, any>) => {
+			setChange({
+				...change,
+				globalProperties: update,
+			})
+		},
+		[change]
+	)
+
+	return (
+		<div className="properties-grid" style={{ color: 'white' }}>
+			{parsedSchema ? (
+				<SchemaFormWithState
+					key={(schema as any as string) ?? 'key'}
+					schema={parsedSchema}
+					object={currentValue}
+					onUpdate={onUpdate}
+					translationNamespaces={translationNamespace}
+				/>
+			) : (
+				<></>
+			)}
+		</div>
+	)
+}
+
+function ActionList({
+	actions,
+	executeAction,
+}: {
+	actions: UserEditingDefinitionAction[]
+	executeAction: (e: any, id: string) => void
+}) {
+	const { t } = useTranslation()
+
+	return (
+		<div>
+			{actions.map((action) => (
+				<button
+					title={'User Operation: ' + translateMessage(action.label, t)}
+					className="propertiespanel-pop-up__button"
+					onClick={(e) => executeAction(e, action.id)}
+					key={action.id}
+				>
+					{action.svgIcon && (
+						<span
+							className="svg"
+							dangerouslySetInnerHTML={{
+								__html: action.svgIcon,
+							}}
+						></span>
+					)}
+					<span className="propertiespanel-pop-up__label">{translateMessage(action.label, t)}</span>
+				</button>
+			))}
+		</div>
 	)
 }

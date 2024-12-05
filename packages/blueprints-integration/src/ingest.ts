@@ -125,9 +125,10 @@ export interface UserOperationTarget {
 }
 
 export enum DefaultUserOperationsTypes {
-	REVERT_SEGMENT = 'revert-segment',
-	REVERT_PART = 'revert-part',
-	REVERT_RUNDOWN = 'revert-rundown',
+	REVERT_SEGMENT = '__sofie-revert-segment',
+	REVERT_PART = '__sofie-revert-part',
+	REVERT_RUNDOWN = '__sofie-revert-rundown',
+	UPDATE_PROPS = '__sofie-update-props',
 }
 
 export interface DefaultUserOperationRevertRundown {
@@ -144,14 +145,19 @@ export interface DefaultUserOperationRevertPart {
 	id: DefaultUserOperationsTypes.REVERT_PART
 }
 
+export interface DefaultUserOperationEditProperties {
+	id: DefaultUserOperationsTypes.UPDATE_PROPS
+	payload: {
+		pieceTypeProperties: { type: string; value: Record<string, any> }
+		globalProperties: Record<string, any>
+	}
+}
+
 export type DefaultUserOperations =
-	| {
-			id: '__sofie-move-segment' // Future: define properly
-			payload: Record<string, never>
-	  }
 	| DefaultUserOperationRevertRundown
 	| DefaultUserOperationRevertSegment
 	| DefaultUserOperationRevertPart
+	| DefaultUserOperationEditProperties
 
 export interface UserOperationChange<TCustomBlueprintOperations extends { id: string } = never> {
 	/** Indicate that this change is from user operations */

@@ -2,25 +2,23 @@
 @import '_colorScheme';
 @import '_variables';
 
-
-
 .properties-panel {
 	position: fixed;
 	background: #7b7b7b;
 	color: #000;
-	top: 50px;
+	top: 4rem;
 	right: 0;
-	bottom: 10px;
-	width: calc(#{$notification-center-width} + 4.6875rem);
+	bottom: 0;
+	width: $properties-panel-width;
 	z-index: 292;
 
-    transform: translateX(100%);
-    transition: transform 0.2s ease-out;
-    
-    // Add a class that will be applied when the component mounts
-    &.is-mounted {
-        transform: translateX(0%);
-    }
+	transform: translateX(100%);
+	transition: transform 0.2s ease-out;
+
+	// Add a class that will be applied when the component mounts
+	&.is-mounted {
+		transform: translateX(0%);
+	}
 
 	&::before {
 		content: ' ';
@@ -34,70 +32,108 @@
 	}
 
 	.propertiespanel-pop-up {
-		background: #252525;
+		background: #2e2e2e;
 		border-radius: 1px;
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-		margin: 1px;
-		height: 98.2%;
-		width: 87%;
+		height: 100%;
+		width: calc(100% - 3.75rem);
+		position: relative;
 
-		&:first-child {
-			margin-top: 0.9375rem;
-		}
-
-		&:last-child {
-			margin-bottom: 0.9375rem;
-		}
-
-		> .propertiespanel-pop-up_close {
-			position: absolute;
-			top: 25px;
-			right: 70px;
-			color: white;
-		}
+		display: flex;
+		flex-direction: column;
 
 		> .propertiespanel-pop-up__header {
-			background: #3d3d3d;
+			background: #0a20ed;
 			color: #ddd;
 
-			min-width: 2.5rem;
-			height: 2.5rem;
-			font-size: 1.2em;
+			// min-width: 2.5rem;
+			// height: 2.5rem;
+			max-width: 100%;
 
-			text-align: left;
-			padding-left: 1rem;
 			display: flex;
+			padding: 1em;
 			align-items: center;
-			gap: 0.5rem;
+			gap: 0.2em;
+			align-self: stretch;
+
+			// text-align: left;
+			// padding-left: 1rem;
+			// display: flex;
+			// align-items: center;
+			// gap: 0.5rem;
+
+			text-shadow: 0.5px 0.5px 8px rgba(0, 0, 0, 0.8);
+			font-family: Roboto;
+			font-size: 1em;
+			font-style: normal;
+			font-weight: 500;
+			line-height: normal;
+			letter-spacing: 0.5px;
 
 			> .svg {
-				filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
-				width: 1.1em;
-				height: 1.1em;
+				// filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
+				width: 1em;
+				height: 1.2em;
+				flex-shrink: 0;
+			}
+			> .title {
+				flex-grow: 1;
+				flex-shrink: 1;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				overflow: hidden;
+				min-width: 0;
+			}
+			> .properties {
+				color: #fff;
+				font-family: Roboto;
+				font-size: 16px;
+				font-style: normal;
+				font-weight: 300;
+				line-height: normal;
+				letter-spacing: -0.1px;
+				flex-shrink: 0;
+			}
+			> .propertiespanel-pop-up_close {
+				height: 1em;
+				margin-left: 1em;
+				background-color: unset;
+				border: none;
 			}
 		}
 
 		> .propertiespanel-pop-up__footer {
 			flex: 1;
-			position: absolute;
-			left: 0;
-			right: 0;
-			bottom: 10px;
+			// position: absolute;
+			// left: 0;
+			// right: 0;
+			// bottom: 0;
+			flex: 0 0 0;
+			padding: 10px;
 			display: flex;
-			justify-content: center;
-			align-items: center; 
-			margin-right: 50px;
+			justify-content: space-between;
+			// align-items: center;
+			gap: 12px;
 
-			> .propertiespanel-pop-up__button {
-				background: #636363;
-				padding: 5px 5px 5px 5px;
-				gap: 10px;
-				border-radius: 5px;
-				border: 1px;
-				border: 1px solid #7F7F7F;
-				color: #ddd;
+			// margin-right: 50px;
+
+			> .propertiespanel-pop-up__button-group {
+				display: inherit;
+				gap: inherit;
+			}
+
+			> .propertiespanel-pop-up__button,
+			.propertiespanel-pop-up__button-group .propertiespanel-pop-up__button {
 				display: block;
-				margin: 10px auto;
+
+				border-radius: 5px;
+				border: 1px solid #7f7f7f;
+				background: #636363;
+				padding: 10px;
+
+				color: #dfdfdf;
+				font-size: 0.875em;
+				font-weight: 500;
 
 				&:active {
 					transform: scale(0.95);
@@ -107,7 +143,7 @@
 				&:disabled {
 					cursor: not-allowed;
 					opacity: 0.3;
-			
+
 					&:active {
 						transform: none;
 						top: 0;
@@ -122,27 +158,40 @@
 					height: 1em;
 				}
 
+				svg {
+					width: 1.3em;
+					height: 0.875em;
+				}
+
 				.label {
 					margin-left: 10px;
 					margin-right: 10px;
 					margin-top: 2px;
 					line-height: inherit;
 				}
+
+				&.start {
+					justify-self: start;
+				}
+				&.end {
+					justify-self: end;
+				}
 			}
 		}
 
 		> .propertiespanel-pop-up__contents {
 			flex: 1;
-			padding: 0.625rem 0.9375rem;
 			padding: 0.525rem 0.6375rem;
 			cursor: default;
-
+			overflow: hidden auto;
 			overflow-wrap: break-word;
+
+			flex: 1 0;
 
 			> hr {
 				margin-left: 0px;
 				width: 100%;
-				border-color: #7F7F7F;
+				border-color: #7f7f7f;
 			}
 
 			> .propertiespanel-pop-up__groupselector {
@@ -150,7 +199,7 @@
 				flex-wrap: wrap;
 				margin-top: 0.5em;
 				margin-bottom: 0.5em;
-	
+
 				> .propertiespanel-pop-up__groupselector__button {
 					@include item-type-colors();
 
@@ -161,20 +210,20 @@
 					gap: 10px;
 					color: #ddd;
 					opacity: 0.2;
+
+					&.splits {
+						background: linear-gradient(
+							to right,
+							$segment-layer-background-camera 50%,
+							$segment-layer-background-remote 50.0001%
+						);
+					}
+
+					&.active {
+						color: #fff;
+						opacity: 1;
+					}
 				}
-
-				> .propertiespanel-pop-up__groupselector__button-active {
-					@include item-type-colors();
-
-					width: 50px;
-					height: 30px;
-					border: 0px;
-					margin: 3px;
-					gap: 10px;
-					color: #fff;
-					opacity: 1;
-				}
-
 			}
 
 			> .propertiespanel-pop-up__action {
@@ -184,68 +233,29 @@
 			}
 
 			> .properties-panel-pop-up__form {
-				margin-top: 15px;
-				color: #ddd;
-				padding: 4px 4px;
-				position: relative;
-				display: flex;
-				align-items: flex-start;
-				gap: 8px;
-		
-				// Add positioning for the pencil icon
-				> svg {
-				  margin-top: 4px;
-				  flex-shrink: 0;
-				}
-		
-				> .properties-panel-pop-up__form__schema {
-				  border-color: pink;
-				  border-width: 0px;
-				  flex-grow: 1;
-				}
-			}
-		
-			> .properties-panel-pop-up__has-been-edited {
-				background-color: #ffffff16;
-				border-radius: 8px;
-				padding: 4px 4px;
-			}
-
-
-			> .propertiespanel-pop-up__label {
 				color: #ddd;
 			}
 
-			> .propertiespanel-pop-up__select{
-				margin-top: 10px;
-				width: 100%;
-				height: 3em;
-				background: #232323;
-				margin-bottom: 0.5em;
-				color: #ddd;
-			}
-
-			> .propertiespanel-pop-up__button {
-				margin-top: 10px;
+			.propertiespanel-pop-up__button {
+				// margin-top: 10px;
 				background: #636363;
-				padding: 5px 5px 5px 5px;
+				padding: 10px;
 				gap: 10px;
 				border-radius: 5px;
-				border: 1px;
-				border: 1px solid #7F7F7F;
-				color: #ddd;
+				border: 1px solid #7f7f7f;
+				color: #dfdfdf;
+
+				font-size: 0.875em;
+				font-weight: 500;
 
 				&:active {
 					transform: scale(0.95);
 					top: 2px;
 				}
 
-				> svg {
-					margin-top: -0.1em;
-					vertical-align: middle;
-					margin-right: -0.4em;
+				svg {
 					width: 1em;
-					height: 1em;
+					height: 0.875em;
 				}
 
 				.label {
