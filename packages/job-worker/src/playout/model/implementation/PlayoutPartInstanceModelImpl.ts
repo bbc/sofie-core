@@ -540,6 +540,7 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 			...this.partInstanceImpl.part,
 			...trimmedProps,
 			userEditOperations: this.partInstanceImpl.part.userEditOperations, // Replaced below if changed
+			userEditProperties: this.partInstanceImpl.part.userEditProperties,
 		}
 
 		// Only replace `userEditOperations` if new values were provided
