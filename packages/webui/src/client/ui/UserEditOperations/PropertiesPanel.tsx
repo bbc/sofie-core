@@ -16,7 +16,7 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
-import { Segments } from '../../collections'
+import { Pieces, Segments } from '../../collections'
 import { UIParts } from '../Collections'
 import { useSelection } from '../RundownView/SelectedElementsContext'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
@@ -54,6 +54,11 @@ export function PropertiesPanel(): JSX.Element {
 		}
 	}, [])
 
+	const piece = useTracker(() => {
+		setPendingChange(undefined)
+		return Pieces.findOne(selectedElement?.elementId)
+	}, [selectedElement?.elementId])
+
 	const part = useTracker(() => {
 		setPendingChange(undefined)
 		return UIParts.findOne({ _id: selectedElement?.elementId })
@@ -63,7 +68,7 @@ export function PropertiesPanel(): JSX.Element {
 		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId }),
 		[selectedElement?.elementId, part?.segmentId]
 	)
-	const rundownId = part ? part.rundownId : segment?.rundownId
+	const rundownId = piece ? piece.startRundownId : part ? part.rundownId : segment?.rundownId
 
 	const handleCommitChanges = async (e: React.MouseEvent) => {
 		if (!rundownId || !selectedElement || !pendingChange) return
@@ -129,7 +134,7 @@ export function PropertiesPanel(): JSX.Element {
 				{
 					segmentExternalId: segment?.externalId,
 					partExternalId: part?.externalId,
-					pieceExternalId: undefined,
+					pieceExternalId: piece?.externalId,
 				},
 				{
 					id,
@@ -139,13 +144,17 @@ export function PropertiesPanel(): JSX.Element {
 	}
 
 	const userEditOperations =
-		selectedElement?.type === 'part'
+		selectedElement?.type === 'piece'
+			? piece?.userEditOperations
+			: selectedElement?.type === 'part'
 			? part?.userEditOperations
 			: selectedElement?.type === 'segment'
 			? segment?.userEditOperations
 			: undefined
 	const userEditProperties =
-		selectedElement?.type === 'part'
+		selectedElement?.type === 'piece'
+			? piece?.userEditProperties
+			: selectedElement?.type === 'part'
 			? part?.userEditProperties
 			: selectedElement?.type === 'segment'
 			? segment?.userEditProperties
@@ -156,7 +165,13 @@ export function PropertiesPanel(): JSX.Element {
 	}
 
 	const title =
-		selectedElement?.type === 'part' ? part?.title : selectedElement?.type === 'segment' ? segment?.name : undefined
+		selectedElement?.type === 'piece'
+			? piece?.name
+			: selectedElement?.type === 'part'
+			? part?.title
+			: selectedElement?.type === 'segment'
+			? segment?.name
+			: undefined
 
 	return (
 		<div className={classNames('properties-panel', isAnimatedIn && 'is-mounted')}>

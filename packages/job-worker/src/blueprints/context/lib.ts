@@ -100,6 +100,7 @@ export const IBlueprintPieceObjectsSampleKeys = allKeysOfObject<IBlueprintPiece>
 	notInVision: true,
 	abSessions: true,
 	userEditOperations: true,
+	userEditProperties: true,
 })
 
 // Compile a list of the keys which are allowed to be set
@@ -243,6 +244,7 @@ export function convertPieceToBlueprints(piece: ReadonlyDeep<PieceInstancePiece>
 		extendOnHold: piece.extendOnHold,
 		notInVision: piece.notInVision,
 		userEditOperations: translateUserEditsToBlueprint(piece.userEditOperations),
+		userEditProperties: translateUserEditPropertiesToBlueprint(piece.userEditProperties),
 	}
 
 	return obj

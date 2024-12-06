@@ -24,7 +24,6 @@ import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { ReadonlyDeep } from 'type-fest'
 import { PieceContentStatusObj } from '@sofie-automation/meteor-lib/dist/api/pieceContentStatus'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
-import classNames from 'classnames'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -672,33 +671,38 @@ export const SourceLayerItem = withTranslation()(
 					<SelectedElementsContext.Consumer>
 						{(selectElementContext) => (
 							<div
-								className={classNames(
-									pieceUiClassNames(
-										piece,
-										this.props.contentStatus,
-										'segment-timeline__piece',
-										this.props.layer.type,
-										this.props.part.partId,
-										this.state.highlight,
-										elementWidth,
-										this.state
-									),
-									selectElementContext.isSelected(this.props.part.instance.part._id) ? 'element-selected' : ''
+								className={pieceUiClassNames(
+									piece,
+									this.props.contentStatus,
+									'segment-timeline__piece',
+									selectElementContext.isSelected(this.props.piece.instance.piece._id) ||
+										selectElementContext.isSelected(this.props.part.instance.part._id),
+									this.props.layer.type,
+									this.props.part.partId,
+									this.state.highlight,
+									elementWidth,
+									this.state
 								)}
 								data-obj-id={piece.instance._id}
 								ref={this.setRef}
 								onClick={this.itemClick}
-								onDoubleClick={() => {
+								onDoubleClick={(e) => {
 									if (this.props.studio?.settings.enableUserEdits) {
-										// Until a proper data structure, the only reference is a part.
-										const partId = this.props.part.instance.part._id
-										if (!selectElementContext.isSelected(partId)) {
-											selectElementContext.clearAndSetSelection({ type: 'part', elementId: partId })
+										const pieceId = this.props.piece.instance.piece._id
+										if (!selectElementContext.isSelected(pieceId)) {
+											selectElementContext.clearAndSetSelection({ type: 'piece', elementId: pieceId })
 										} else {
 											selectElementContext.clearSelections()
 										}
+										// Until a proper data structure, the only reference is a part.
+										// const partId = this.props.part.instance.part._id
+										// if (!selectElementContext.isSelected(partId)) {
+										// 	selectElementContext.clearAndSetSelection({ type: 'part', elementId: partId })
+										// } else {
+										// 	selectElementContext.clearSelections()
+										// }
 									} else {
-										this.itemDblClick
+										this.itemDblClick(e)
 									}
 								}}
 								onMouseUp={this.itemMouseUp}

@@ -3132,9 +3132,16 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 														onQueueNextSegment={this.onQueueNextSegment}
 														onSetQuickLoopStart={this.onSetQuickLoopStart}
 														onSetQuickLoopEnd={this.onSetQuickLoopEnd}
+														onEditSegmentProps={(id) =>
+															selectionContext.clearAndSetSelection({ type: 'segment', elementId: id })
+														}
+														onEditPartProps={(id) =>
+															selectionContext.clearAndSetSelection({ type: 'part', elementId: id })
+														}
 														studioMode={this.state.studioMode}
 														enablePlayFromAnywhere={!!studio.settings.enablePlayFromAnywhere}
 														enableQuickLoop={!!studio.settings.enableQuickLoop}
+														enableUserEdits={!!studio.settings.enableUserEdits}
 													/>
 												</ErrorBoundary>
 												<ErrorBoundary>
