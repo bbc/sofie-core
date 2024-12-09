@@ -6,7 +6,7 @@ export interface IngestRundownStatus {
 	/** Rundown external id */
 	externalId: string
 
-	active: 'active' | 'rehearsal'| 'inactive'
+	active: 'active' | 'rehearsal' | 'inactive'
 
 	segments: IngestSegmentStatus[]
 
