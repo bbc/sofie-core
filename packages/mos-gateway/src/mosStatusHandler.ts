@@ -90,7 +90,7 @@ export class MosStatusHandler {
 
 		const diffTime = this.#mosTypes.mosTime.create(Date.now())
 
-		// nocommit - should this be done with some concurrency?
+		// Future: should this be done with some concurrency?
 		for (const status of statusDiff) {
 			// New implementation 2022 only sends PLAY, never stop, after getting advice from AP
 			// Reason 1: NRK ENPS "sendt tid" (elapsed time) stopped working in ENPS 8/9 when doing STOP prior to PLAY
