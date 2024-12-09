@@ -6,11 +6,15 @@ export interface IngestRundownStatus {
 	/** Rundown external id */
 	externalId: string
 
-	active: 'active' | 'rehearsal' | 'inactive'
+	active: IngestRundownActiveStatus
 
 	segments: IngestSegmentStatus[]
+}
 
-	// Future: the rundown could have a status that we report?
+export enum IngestRundownActiveStatus {
+	ACTIVE = 'active',
+	REHEARSAL = 'rehearsal',
+	INACTIVE = 'inactive',
 }
 
 export interface IngestSegmentStatus {
