@@ -1248,7 +1248,7 @@ function HeaderEditStates({ userEditOperations }: HeaderEditStatesProps) {
 		<div className="segment-timeline__title__user-edit-states">
 			{userEditOperations &&
 				userEditOperations.map((operation) => {
-					if (operation.type === UserEditingType.FORM || !operation.svgIcon || !operation.isActive) return null
+					if (operation.type !== UserEditingType.ACTION || !operation.svgIcon || !operation.isActive) return null
 
 					return (
 						<div

@@ -1399,12 +1399,13 @@ svg.icon {
 				&.quickloop-start {
 					left: -2px;
 
-					&::before, &::after {
+					&::before,
+					&::after {
 						z-index: 1;
 						margin-left: 5px;
 						border-left-color: white;
 					}
-					
+
 					.segment-timeline__part__nextline__label {
 						z-index: 5;
 						left: 5px;
@@ -1571,6 +1572,19 @@ svg.icon {
 				z-index: 1;
 			}
 
+			&.drop-active {
+				&::after {
+					content: ' ';
+					display: block;
+					background-color: rgba(0, 183, 255, 0.5);
+					position: absolute;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					right: 0;
+				}
+			}
+
 			&.outside-quickloop {
 				&::before {
 					content: ' ';
@@ -1585,7 +1599,6 @@ svg.icon {
 					pointer-events: none;
 				}
 			}
-
 
 			&:not(.live) {
 				.segment-timeline__part__nextline.auto-next:not(.segment-timeline__part__nextline--endline),
@@ -1832,7 +1845,8 @@ svg.icon {
 					right: 0;
 				}
 
-				.segment-timeline__part__quickloop-start, .segment-timeline__part__quickloop-end {
+				.segment-timeline__part__quickloop-start,
+				.segment-timeline__part__quickloop-end {
 					background: $segment-background-color;
 					padding: 0 0.3em;
 					margin-bottom: -2px;
@@ -1849,7 +1863,7 @@ svg.icon {
 
 				.segment-timeline__part__quickloop-end {
 					padding-right: 0.6em;
-					margin-left: auto
+					margin-left: auto;
 				}
 			}
 
