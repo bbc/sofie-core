@@ -57,7 +57,6 @@ import { logger } from '../../lib/logging'
 import * as RundownResolver from '../../lib/RundownResolver'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext'
-import classNames from 'classnames'
 
 interface IProps {
 	id: string
@@ -93,8 +92,8 @@ interface IProps {
 	onFollowLiveLine?: (state: boolean, event: any) => void
 	onShowEntireSegment?: (event: React.MouseEvent | undefined) => void
 	onContextMenu?: (contextMenuContext: IContextMenuContext) => void
-	onItemClick?: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
-	onPieceDoubleClick?: (item: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
+	onPieceClick?: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
+	onPieceDoubleClick?: (piece: PieceUi, e: React.MouseEvent<HTMLDivElement>) => void
 	onHeaderNoteClick?: (segmentId: SegmentId, level: NoteSeverity) => void
 	onSwitchViewMode?: (newViewMode: SegmentViewMode) => void
 	segmentRef?: (el: SegmentTimelineClass, segmentId: SegmentId) => void
@@ -103,7 +102,6 @@ interface IProps {
 	showCountdownToSegment: boolean
 	showDurationSourceLayers?: Set<ISourceLayer['_id']>
 	fixedSegmentDuration: boolean | undefined
-	// isSelected: boolean
 }
 interface IStateHeader {
 	timelineWidth: number
@@ -790,7 +788,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 						onCollapseOutputToggle={this.props.onCollapseOutputToggle}
 						onFollowLiveLine={this.props.onFollowLiveLine}
 						onContextMenu={this.props.onContextMenu}
-						onPieceClick={this.props.onItemClick}
+						onPieceClick={this.props.onPieceClick}
 						onPieceDoubleClick={this.props.onPieceDoubleClick}
 						onPartTooSmallChanged={this.onPartTooSmallChanged}
 						scrollWidth={this.state.timelineWidth / this.props.timeScale}
@@ -867,7 +865,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				onCollapseOutputToggle={this.props.onCollapseOutputToggle}
 				onFollowLiveLine={this.props.onFollowLiveLine}
 				onContextMenu={this.props.onContextMenu}
-				onPieceClick={this.props.onItemClick}
+				onPieceClick={this.props.onPieceClick}
 				onPieceDoubleClick={this.props.onPieceDoubleClick}
 				scrollWidth={this.state.timelineWidth / this.props.timeScale}
 				firstPartInSegment={firstPartInSegment}
@@ -1058,10 +1056,9 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							id="segment-timeline-context-menu"
 							collect={this.getSegmentContext}
 							attributes={{
-								className: classNames(
-									'segment-timeline__title',
-									selectElementContext.isSelected(this.props.segment._id) ? 'element-selected' : ''
-								),
+								className: ClassNames('segment-timeline__title', {
+									'element-selected': selectElementContext.isSelected(this.props.segment._id),
+								}),
 							}}
 							holdToDisplay={contextMenuHoldToDisplayTime()}
 							renderTag="div"
@@ -1079,9 +1076,9 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							>
 								<h2
 									id={`segment-name-${this.props.segment._id}`}
-									className={ClassNames(
-										'segment-timeline__title__label' + (this.props.segment.identifier ? ' identifier' : '')
-									)}
+									className={ClassNames('segment-timeline__title__label', {
+										identifier: this.props.segment.identifier,
+									})}
 									data-identifier={this.props.segment.identifier}
 								>
 									{this.props.segment.name}

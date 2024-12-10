@@ -6,10 +6,7 @@ import { SourceLayerType } from './content'
 /**
  * Description of a user performed editing operation allowed on an document
  */
-export type UserEditingDefinition =
-	| UserEditingDefinitionAction
-	| UserEditingDefinitionForm
-	| UserEditingDefinitionSourceLayerForm
+export type UserEditingDefinition = UserEditingDefinitionAction | UserEditingDefinitionForm
 
 /**
  * A simple 'action' that can be performed
@@ -26,8 +23,6 @@ export interface UserEditingDefinitionAction {
 	svgIconInactive?: string
 	/** Whether this action should be indicated as being active */
 	isActive?: boolean
-	/** Button Type */
-	buttonType?: UserEditingButtonType
 }
 
 /**
@@ -45,32 +40,11 @@ export interface UserEditingDefinitionForm {
 	currentValues: Record<string, any>
 }
 
-/**
- * A form based operation where the user first selects the type
- * of form they want to use (i.e. Camera form vs VT form)
- */
-export interface UserEditingDefinitionSourceLayerForm {
-	type: UserEditingType.SOURCE_LAYER_FORM
-	/** Id of this operation */
-	id: string
-	/** Label to show to the user for this operation */
-	label: ITranslatableMessage
-	/** The json schemas describing the form to display */
-	schemas: Record<string, UserEditingSourceLayer>
-	/** Current values to populate the form with */
-	currentValues: {
-		type: SourceLayerType
-		value: Record<string, any>
-	}
-}
-
 export enum UserEditingType {
 	/** Action */
 	ACTION = 'action',
 	/** Form */
 	FORM = 'form',
-	/** Forms that the user has to select a sourceLayerType first */
-	SOURCE_LAYER_FORM = 'sourceLayerForm',
 }
 
 export interface UserEditingSourceLayer {
@@ -78,15 +52,6 @@ export interface UserEditingSourceLayer {
 	sourceLayerType: SourceLayerType
 	schema: JSONBlob<JSONSchema>
 	defaultValue?: Record<string, any>
-}
-
-export enum UserEditingButtonType {
-	/** Button */
-	BUTTON = 'button',
-	/** Icon */
-	SWITCH = 'switch',
-	/** Hidden */
-	HIDDEN = 'hidden',
 }
 
 export interface UserEditingProperties {

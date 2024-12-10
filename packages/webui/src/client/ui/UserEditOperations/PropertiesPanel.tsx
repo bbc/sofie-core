@@ -15,60 +15,24 @@ import {
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
-import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
-import { Pieces, Segments } from '../../collections'
-import { UIParts } from '../Collections'
-import { useSelection } from '../RundownView/SelectedElementsContext'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { useSelectedElements, useSelectedElementsContext } from '../RundownView/SelectedElementsContext'
 import { RundownUtils } from '../../lib/rundown'
 import * as CoreIcon from '@nrk/core-icons/jsx'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 
 export function PropertiesPanel(): JSX.Element {
-	const { listSelectedElements, clearSelections } = useSelection()
+	const { listSelectedElements, clearSelections } = useSelectedElementsContext()
 	const selectedElement = listSelectedElements()?.[0]
 	const { t } = useTranslation()
 
-	const [pendingChange, setPendingChange] = React.useState<PendingChange | undefined>(undefined)
+	const [pendingChange, setPendingChange] = useState<PendingChange | undefined>(undefined)
 	const hasPendingChanges = !!pendingChange
 
-	const [isAnimatedIn, setIsAnimatedIn] = React.useState(false)
-	React.useEffect(() => {
-		const timer = setTimeout(() => {
-			setIsAnimatedIn(true)
-		}, 10)
-		return () => clearTimeout(timer)
-	}, [])
-
-	React.useEffect(() => {
-		return () => {
-			Array.from(document.querySelectorAll('.propertiespanel-pop-up.is-highlighted')).forEach((element: Element) => {
-				if (element instanceof HTMLElement) {
-					element.style.animationName = ''
-				}
-			})
-		}
-	}, [])
-
-	const piece = useTracker(() => {
-		setPendingChange(undefined)
-		return Pieces.findOne(selectedElement?.elementId)
-	}, [selectedElement?.elementId])
-
-	const part = useTracker(() => {
-		setPendingChange(undefined)
-		return UIParts.findOne({ _id: selectedElement?.elementId })
-	}, [selectedElement?.elementId])
-
-	const segment: DBSegment | undefined = useTracker(
-		() => Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId }),
-		[selectedElement?.elementId, part?.segmentId]
-	)
-	const rundownId = piece ? piece.startRundownId : part ? part.rundownId : segment?.rundownId
+	const { piece, part, segment, rundownId } = useSelectedElements(selectedElement, () => setPendingChange(undefined))
 
 	const handleCommitChanges = async (e: React.MouseEvent) => {
 		if (!rundownId || !selectedElement || !pendingChange) return
@@ -85,7 +49,7 @@ export function PropertiesPanel(): JSX.Element {
 					{
 						segmentExternalId: segment?.externalId,
 						partExternalId: part?.externalId,
-						pieceExternalId: undefined,
+						pieceExternalId: piece?.externalId,
 					},
 					literal<DefaultUserOperationEditProperties>({
 						id: DefaultUserOperationsTypes.UPDATE_PROPS,
@@ -111,9 +75,9 @@ export function PropertiesPanel(): JSX.Element {
 				},
 				{
 					id:
-						selectedElement.type === 'partInstance'
-							? DefaultUserOperationsTypes.REVERT_PART
-							: DefaultUserOperationsTypes.REVERT_SEGMENT,
+						selectedElement.type === 'segment'
+							? DefaultUserOperationsTypes.REVERT_SEGMENT
+							: DefaultUserOperationsTypes.REVERT_PART,
 				}
 			)
 		)
@@ -174,7 +138,7 @@ export function PropertiesPanel(): JSX.Element {
 			: undefined
 
 	return (
-		<div className={classNames('properties-panel', isAnimatedIn && 'is-mounted')}>
+		<div className={'properties-panel'}>
 			<div className="propertiespanel-pop-up">
 				<div className="propertiespanel-pop-up__header">
 					{userEditOperations &&
@@ -226,7 +190,7 @@ export function PropertiesPanel(): JSX.Element {
 				<div className="propertiespanel-pop-up__footer">
 					<button
 						className="propertiespanel-pop-up__button start"
-						title={t('Revert Changes')}
+						title={selectedElement.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
 						onClick={handleRevertChanges}
 					>
 						<span className="svg">
@@ -237,8 +201,11 @@ export function PropertiesPanel(): JSX.Element {
 								/>
 							</svg>
 						</span>
-						<span className="propertiespanel-pop-up__label">{t('Restore from NRCS')}</span>
+						<span className="propertiespanel-pop-up__label">
+							{selectedElement.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
+						</span>
 					</button>
+
 					<div className="propertiespanel-pop-up__button-group">
 						<button
 							className="propertiespanel-pop-up__button end"

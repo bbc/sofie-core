@@ -3020,6 +3020,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 														isSupportPanelOpen={this.state.isSupportPanelOpen}
 														onToggleSupportPanel={this.onToggleSupportPanel}
 														isStudioMode={this.state.studioMode}
+														isUserEditsEnabled={this.props.studio?.settings.enableUserEdits ?? false}
 														onTake={this.onTake}
 														studioRouteSets={studio.routeSets}
 														studioRouteSetExclusivityGroups={studio.routeSetExclusivityGroups}

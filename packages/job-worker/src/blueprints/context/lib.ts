@@ -13,7 +13,6 @@ import {
 	CoreUserEditingDefinition,
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
-	CoreUserEditingDefinitionSourceLayerForm,
 	CoreUserEditingProperties,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
@@ -58,7 +57,6 @@ import {
 	UserEditingDefinition,
 	UserEditingDefinitionAction,
 	UserEditingDefinitionForm,
-	UserEditingDefinitionSourceLayerForm,
 	UserEditingProperties,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
@@ -521,7 +519,6 @@ function translateUserEditsToBlueprint(
 						svgIcon: userEdit.svgIcon,
 						svgIconInactive: userEdit.svgIconInactive,
 						isActive: userEdit.isActive,
-						buttonType: userEdit.buttonType,
 					} satisfies Complete<UserEditingDefinitionAction>
 				case UserEditingType.FORM:
 					return {
@@ -531,14 +528,6 @@ function translateUserEditsToBlueprint(
 						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
 					} satisfies Complete<UserEditingDefinitionForm>
-				case UserEditingType.SOURCE_LAYER_FORM:
-					return {
-						type: UserEditingType.SOURCE_LAYER_FORM,
-						id: userEdit.id,
-						label: omit(userEdit.label, 'namespaces'),
-						schemas: clone(userEdit.schemas),
-						currentValues: clone(userEdit.currentValues),
-					} satisfies Complete<UserEditingDefinitionSourceLayerForm>
 				default:
 					assertNever(userEdit)
 					return undefined
@@ -565,7 +554,6 @@ function translateUserEditPropertiesToBlueprint(
 					svgIcon: userEdit.svgIcon,
 					svgIconInactive: userEdit.svgIconInactive,
 					isActive: userEdit.isActive,
-					buttonType: userEdit.buttonType,
 				} satisfies Complete<UserEditingDefinitionAction>)
 		),
 	}
@@ -588,7 +576,6 @@ export function translateUserEditsFromBlueprint(
 						svgIcon: userEdit.svgIcon,
 						svgIconInactive: userEdit.svgIconInactive,
 						isActive: userEdit.isActive,
-						buttonType: userEdit.buttonType,
 					} satisfies Complete<CoreUserEditingDefinitionAction>
 				case UserEditingType.FORM:
 					return {
@@ -599,15 +586,6 @@ export function translateUserEditsFromBlueprint(
 						currentValues: clone(userEdit.currentValues),
 						translationNamespaces: unprotectStringArray(blueprintIds),
 					} satisfies Complete<CoreUserEditingDefinitionForm>
-				case UserEditingType.SOURCE_LAYER_FORM:
-					return {
-						type: UserEditingType.SOURCE_LAYER_FORM,
-						id: userEdit.id,
-						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
-						schemas: clone(userEdit.schemas),
-						currentValues: clone(userEdit.currentValues),
-						translationNamespaces: unprotectStringArray(blueprintIds),
-					} satisfies Complete<CoreUserEditingDefinitionSourceLayerForm>
 				default:
 					assertNever(userEdit)
 					return undefined
@@ -635,7 +613,6 @@ export function translateUserEditPropertiesFromBlueprint(
 					svgIcon: userEdit.svgIcon,
 					svgIconInactive: userEdit.svgIconInactive,
 					isActive: userEdit.isActive,
-					buttonType: userEdit.buttonType,
 				} satisfies Complete<UserEditingDefinitionAction>)
 		),
 

@@ -43,7 +43,12 @@ export const SegmentContextMenu = withTranslation()(
 		render(): JSX.Element | null {
 			const { t } = this.props
 
-			if (!this.props.studioMode || !this.props.playlist || !this.props.playlist.activationId) return null
+			if (
+				!this.props.studioMode ||
+				!this.props.playlist ||
+				(!this.props.enableUserEdits && !this.props.playlist.activationId)
+			)
+				return null
 
 			const part = this.getPartFromContext()
 			const segment = this.getSegmentFromContext()
@@ -103,7 +108,7 @@ export const SegmentContextMenu = withTranslation()(
 								{this.props.enableUserEdits && (
 									<>
 										<hr />
-										<MenuItem onClick={(e) => this.props.onEditSegmentProps(part.instance.segmentId)}>
+										<MenuItem onClick={() => this.props.onEditSegmentProps(part.instance.segmentId)}>
 											<span>{t('Edit Segment Properties')}</span>
 										</MenuItem>
 									</>
@@ -192,10 +197,10 @@ export const SegmentContextMenu = withTranslation()(
 								{this.props.enableUserEdits && (
 									<>
 										<hr />
-										<MenuItem onClick={(e) => this.props.onEditSegmentProps(part.instance.segmentId)}>
+										<MenuItem onClick={() => this.props.onEditSegmentProps(part.instance.segmentId)}>
 											<span>{t('Edit Segment Properties')}</span>
 										</MenuItem>
-										<MenuItem onClick={(e) => this.props.onEditPartProps(part.instance.part._id)}>
+										<MenuItem onClick={() => this.props.onEditPartProps(part.instance.part._id)}>
 											<span>{t('Edit Part Properties')}</span>
 										</MenuItem>
 									</>

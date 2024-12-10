@@ -664,7 +664,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							maxTimeScale={this.state.maxTimeScale}
 							onRecalculateMaxTimeScale={this.updateMaxTimeScale}
 							showingAllSegment={this.state.showingAllSegment}
-							onItemClick={this.props.onPieceClick}
+							onPieceClick={this.props.onPieceClick}
 							onPieceDoubleClick={this.props.onPieceDoubleClick}
 							onCollapseOutputToggle={this.onCollapseOutputToggle}
 							collapsedOutputs={this.state.collapsedOutputs}
@@ -694,7 +694,6 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							showCountdownToSegment={this.props.showCountdownToSegment}
 							fixedSegmentDuration={this.props.fixedSegmentDuration}
 							showDurationSourceLayers={this.props.showDurationSourceLayers}
-							//isSelected={this.props.isSelected}
 						/>
 					)}
 					{this.props.segmentui.showShelf && this.props.adLibSegmentUi && (

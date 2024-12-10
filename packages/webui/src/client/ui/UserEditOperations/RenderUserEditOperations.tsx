@@ -14,7 +14,7 @@ import { MeteorCall } from '../../lib/meteorApi'
 export function RenderUserEditOperations(
 	isFormEditable: boolean,
 	rundownId: RundownId,
-	targetName: string,
+	_targetName: string,
 	userEditOperations: CoreUserEditingDefinition[] | undefined,
 	operationTarget: UserOperationTarget
 ): React.JSX.Element | null {
@@ -74,9 +74,8 @@ export function RenderUserEditOperations(
 									const schema = JSONBlobParse(userEditOperation.schema)
 									const values = clone(userEditOperation.currentValues)
 
-									// TODO:
 									doModalDialog({
-										title: t(`Edit {{targetName}}`, { targetName }),
+										title: translateMessage(userEditOperation.label, t),
 										message: (
 											<SchemaFormInPlace
 												schema={schema}
@@ -84,7 +83,6 @@ export function RenderUserEditOperations(
 												translationNamespaces={userEditOperation.translationNamespaces}
 											/>
 										),
-										// acceptText: 'OK',
 										yes: t('Save Changes'),
 										no: t('Cancel'),
 										onAccept: () => {
@@ -98,11 +96,9 @@ export function RenderUserEditOperations(
 									})
 								}}
 							>
-								<span>Open Properties</span>
+								<span>{translateMessage(userEditOperation.label, t)}</span>
 							</MenuItem>
 						)
-					case UserEditingType.SOURCE_LAYER_FORM:
-						return <></>
 					default:
 						assertNever(userEditOperation)
 						return null

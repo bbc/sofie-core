@@ -12,12 +12,12 @@ import { UIParts } from '../../Collections'
 import { Segments } from '../../../../client/collections'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { UserEditingType, UserEditingButtonType } from '@sofie-automation/blueprints-integration'
+import { UserEditingType } from '@sofie-automation/blueprints-integration'
 import {
 	SelectedElementProvider,
 	SelectedElementsContext,
 	SelectionContextType,
-	useSelection,
+	useSelectedElementsContext,
 } from '../../RundownView/SelectedElementsContext'
 import { MongoMock } from '../../../../__mocks__/mongo'
 import { PropertiesPanel } from '../PropertiesPanel'
@@ -202,7 +202,6 @@ describe('PropertiesPanel', () => {
 				id: 'operation1',
 				label: { key: 'TEST_LABEL', namespaces: ['blueprint_main-showstyle'] },
 				type: UserEditingType.ACTION,
-				buttonType: UserEditingButtonType.SWITCH,
 				isActive: false,
 				svgIcon: '<svg></svg>',
 			},
@@ -223,7 +222,6 @@ describe('PropertiesPanel', () => {
 				id: 'operation2',
 				label: { key: 'TEST_PART_LABEL', namespaces: ['blueprint_main-showstyle'] },
 				type: UserEditingType.ACTION,
-				buttonType: UserEditingButtonType.BUTTON,
 				isActive: true,
 			},
 		],
@@ -245,7 +243,7 @@ describe('PropertiesPanel', () => {
 		expect(verifySegment).toBeTruthy()
 		expect(mockSegmentsCollection.findOne({ _id: protectedMockId })).toBeTruthy()
 
-		const { result } = renderHook(() => useSelection(), { wrapper })
+		const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 		// Update selection and wait for component to update
 		await act(async () => {
@@ -274,7 +272,7 @@ describe('PropertiesPanel', () => {
 		mockSegmentsCollection.insert(mockSegment)
 		const mockId = mockPartsCollection.insert(mockPart)
 
-		const { result } = renderHook(() => useSelection(), { wrapper })
+		const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
@@ -300,7 +298,7 @@ describe('PropertiesPanel', () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		const { result } = renderHook(() => useSelection(), { wrapper })
+		const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
@@ -348,7 +346,7 @@ describe('PropertiesPanel', () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		const { result } = renderHook(() => useSelection(), { wrapper })
+		const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 		await act(async () => {
 			result.current.clearAndSetSelection({
@@ -392,7 +390,7 @@ describe('PropertiesPanel', () => {
 		const mockSegment = createMockSegment('segment1')
 		mockSegmentsCollection.insert(mockSegment)
 
-		const { result } = renderHook(() => useSelection(), { wrapper })
+		const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 		const { container } = render(<PropertiesPanel />, { wrapper })
 
 		await act(async () => {

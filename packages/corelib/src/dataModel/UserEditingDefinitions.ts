@@ -3,15 +3,10 @@ import type {
 	JSONBlob,
 	JSONSchema,
 	UserEditingSourceLayer,
-	UserEditingButtonType,
-	SourceLayerType,
 } from '@sofie-automation/blueprints-integration'
 import type { ITranslatableMessage } from '../TranslatableMessage'
 
-export type CoreUserEditingDefinition =
-	| CoreUserEditingDefinitionAction
-	| CoreUserEditingDefinitionForm
-	| CoreUserEditingDefinitionSourceLayerForm
+export type CoreUserEditingDefinition = CoreUserEditingDefinitionAction | CoreUserEditingDefinitionForm
 
 export interface CoreUserEditingDefinitionAction {
 	type: UserEditingType.ACTION
@@ -25,8 +20,6 @@ export interface CoreUserEditingDefinitionAction {
 	svgIconInactive?: string
 	/** Whether this action should be indicated as being active */
 	isActive?: boolean
-	//** Button Type */
-	buttonType?: UserEditingButtonType
 }
 
 /**
@@ -44,27 +37,6 @@ export interface CoreUserEditingDefinitionForm {
 	currentValues: Record<string, any>
 	/** Translation namespaces to use when rendering this form */
 	translationNamespaces: string[]
-}
-
-/**
- * A form based operation where the user first selects the type
- * of form they want to use (i.e. Camera form vs VT form)
- */
-export interface CoreUserEditingDefinitionSourceLayerForm {
-	type: UserEditingType.SOURCE_LAYER_FORM
-	/** Id of this operation */
-	id: string
-	/** Label to show to the user for this operation */
-	label: ITranslatableMessage
-	/** Sourcelayer Type */
-	schemas: Record<string, UserEditingSourceLayer>
-	/** Translation namespaces to use when rendering this form */
-	translationNamespaces: string[]
-	/** Current values to populate the form with */
-	currentValues: {
-		type: SourceLayerType
-		value: Record<string, any>
-	}
 }
 
 export interface CoreUserEditingProperties {

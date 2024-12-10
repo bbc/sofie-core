@@ -1,7 +1,7 @@
 import React from 'react'
 // eslint-disable-next-line node/no-unpublished-import
 import { renderHook, act } from '@testing-library/react'
-import { SelectedElementProvider, useSelection, useElementSelection } from '../SelectedElementsContext'
+import { SelectedElementProvider, useSelectedElementsContext, useElementSelection } from '../SelectedElementsContext'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { RundownId, SegmentId, PartInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
@@ -27,14 +27,14 @@ describe('SelectedElementProvider', () => {
 		)
 
 		test('init with no selections', () => {
-			const { result } = renderHook(() => useSelection(), { wrapper })
+			const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 			expect(result.current.listSelectedElements().length).toBe(0)
 			expect(result.current.getSelectedCount()).toBe(0)
 		})
 
 		test('clearAndSetSelection', () => {
-			const { result } = renderHook(() => useSelection(), { wrapper })
+			const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 			const element1 = createRundownElement('rundown1')
 			const element2 = createRundownElement('rundown2')
 
@@ -53,7 +53,7 @@ describe('SelectedElementProvider', () => {
 		})
 
 		test('toggleSelection', () => {
-			const { result } = renderHook(() => useSelection(), { wrapper })
+			const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 			const element = createSegmentElement('segment1')
 
 			act(() => {
@@ -71,7 +71,7 @@ describe('SelectedElementProvider', () => {
 			const wrapper = ({ children }: { children: React.ReactNode }) => (
 				<SelectedElementProvider maxSelections={2}>{children}</SelectedElementProvider>
 			)
-			const { result } = renderHook(() => useSelection(), { wrapper })
+			const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 			const elements = [
 				createRundownElement('rundown1'),
@@ -92,7 +92,7 @@ describe('SelectedElementProvider', () => {
 		})
 
 		test('clearSelections removes all selections', () => {
-			const { result } = renderHook(() => useSelection(), { wrapper })
+			const { result } = renderHook(() => useSelectedElementsContext(), { wrapper })
 
 			act(() => {
 				result.current.addSelection(createRundownElement('rundown1'))

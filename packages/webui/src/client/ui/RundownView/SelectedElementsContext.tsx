@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react'
 import {
 	AdLibActionId,
 	PartId,
@@ -8,6 +8,12 @@ import {
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
+import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { Tracker } from 'meteor/tracker'
+import { Pieces, Segments } from '../../collections'
+import { UIParts } from '../Collections'
 
 interface RundownElement {
 	type: 'rundown'
@@ -40,7 +46,7 @@ interface AdlibActionElement {
 }
 
 // Union types for all possible elements
-type SelectedElement =
+export type SelectedElement =
 	| RundownElement
 	| SegmentElement
 	| PartElement
@@ -118,18 +124,18 @@ const defaultSelectionContext: SelectionContextType = {
 	getSelectedCount: () => 0,
 }
 
-export const SelectedElementsContext = React.createContext<SelectionContextType>(defaultSelectionContext)
+export const SelectedElementsContext = createContext<SelectionContextType>(defaultSelectionContext)
 
 export const SelectedElementProvider: React.FC<{
 	children: React.ReactNode
 	maxSelections?: number // Optional prop to limit maximum selections
 }> = ({ children, maxSelections = 10 }) => {
-	const [selectedElements, dispatch] = React.useReducer(
+	const [selectedElements, dispatch] = useReducer(
 		(state: Map<ElementId, SelectedElement>, action: SelectionAction) => selectionReducer(state, action, maxSelections),
 		new Map()
 	)
 
-	const value = React.useMemo(
+	const value = useMemo(
 		() => ({
 			isSelected: (elementId: ElementId) => {
 				return selectedElements.has(elementId)
@@ -169,20 +175,58 @@ export const SelectedElementProvider: React.FC<{
 }
 
 // Custom hook for using the selection context
-export const useSelection = (): SelectionContextType => {
-	const context = React.useContext(SelectedElementsContext)
-	if (!context) {
-		throw new Error('useSelection must be used within a SelectedElementProvider')
-	}
+export const useSelectedElementsContext = (): SelectionContextType => {
+	const context = useContext(SelectedElementsContext)
+
 	return context
 }
 
 // Helper hook for common selection patterns
 export const useElementSelection = (element: SelectedElement): { isSelected: boolean; toggleSelection: () => void } => {
-	const { isSelected, toggleSelection } = useSelection()
+	const { isSelected, toggleSelection } = useSelectedElementsContext()
 
 	return {
-		isSelected: React.useMemo(() => isSelected(element.elementId), [isSelected, element.elementId]),
-		toggleSelection: React.useCallback(() => toggleSelection(element), [toggleSelection, element]),
+		isSelected: useMemo(() => isSelected(element.elementId), [isSelected, element.elementId]),
+		toggleSelection: useCallback(() => toggleSelection(element), [toggleSelection, element]),
+	}
+}
+
+export function useSelectedElements(
+	selectedElement: SelectedElement,
+	clearPendingChange: () => void
+): {
+	piece: Piece | undefined
+	part: DBPart | undefined
+	segment: DBSegment | undefined
+	rundownId: RundownId | undefined
+} {
+	const [piece, setPiece] = useState<Piece | undefined>(undefined)
+	const [part, setPart] = useState<DBPart | undefined>(undefined)
+	const [segment, setSegment] = useState<DBSegment | undefined>(undefined)
+	const rundownId = piece ? piece.startRundownId : part ? part.rundownId : segment?.rundownId
+
+	useEffect(() => {
+		clearPendingChange() // element id changed so any pending change is for an old element
+
+		const pieceComputation = Tracker.nonreactive(() =>
+			Tracker.autorun(() => {
+				const piece = Pieces.findOne(selectedElement.elementId)
+				const part = UIParts.findOne({ _id: piece ? piece.startPartId : selectedElement?.elementId })
+				const segment = Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId })
+
+				setPiece(piece)
+				setPart(part)
+				setSegment(segment)
+			})
+		)
+
+		return () => pieceComputation.stop()
+	}, [selectedElement?.elementId])
+
+	return {
+		piece,
+		part,
+		segment,
+		rundownId,
 	}
 }
