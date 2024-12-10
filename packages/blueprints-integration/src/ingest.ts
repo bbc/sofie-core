@@ -124,9 +124,27 @@ export interface UserOperationTarget {
 	pieceExternalId: string | undefined
 }
 
-export type DefaultUserOperations = {
-	id: '__sofie-move-segment' // Future: define properly
+export enum SofieUserOperations {
+	MoveSegment = '__sofie-move-segment',
+	RetimePiece = '__sofie-retime-piece',
+}
+
+export type DefaultUserOperations = SofieUserOperationMoveSegment | SofieUserOperationRetimePiece
+
+export type SofieUserOperationMoveSegment = {
+	id: SofieUserOperations.MoveSegment
 	payload: Record<string, never>
+}
+
+export type SofieUserOperationRetimePiece = {
+	id: SofieUserOperations.RetimePiece
+	payload: {
+		segmentExternalId: string
+		partExternalId: string
+
+		inPoint: number
+		// note - at some point this could also include an updated duration
+	}
 }
 
 export interface UserOperationChange<TCustomBlueprintOperations extends { id: string } = never> {
