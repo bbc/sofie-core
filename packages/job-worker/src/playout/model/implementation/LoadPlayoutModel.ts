@@ -21,6 +21,8 @@ import { PeripheralDevice } from '@sofie-automation/corelib/dist/dataModel/Perip
 import { PlayoutModel, PlayoutModelPreInit } from '../PlayoutModel'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownBaselineObj } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineObj'
+import { sortRundownsWithinPlaylist } from '@sofie-automation/corelib/dist/playout/playlist'
+import { logger } from '../../../logging'
 
 /**
  * Load a PlayoutModelPreInit for the given RundownPlaylist
@@ -44,7 +46,7 @@ export async function loadPlayoutModelPreInit(
 	}
 
 	const [PeripheralDevices, Playlist, Rundowns] = await Promise.all([
-		context.directCollections.PeripheralDevices.findFetch({ studioId: tmpPlaylist.studioId }),
+		context.directCollections.PeripheralDevices.findFetch({ 'studioAndConfigId.studioId': tmpPlaylist.studioId }),
 		reloadPlaylist ? context.directCollections.RundownPlaylists.findOne(tmpPlaylist._id) : clone(tmpPlaylist),
 		context.directCollections.Rundowns.findFetch({ playlistId: tmpPlaylist._id }),
 	])
@@ -58,7 +60,7 @@ export async function loadPlayoutModelPreInit(
 		peripheralDevices: PeripheralDevices,
 
 		playlist: Playlist,
-		rundowns: Rundowns,
+		rundowns: sortRundownsWithinPlaylist(Playlist.rundownIdsInOrder, Rundowns),
 
 		getRundown: (id: RundownId) => Rundowns.find((rd) => rd._id === id),
 	}
@@ -88,7 +90,7 @@ export async function createPlayoutModelFromIngestModel(
 
 	const [{ partInstances, groupedPieceInstances }, rundownsWithContent, timeline] = await Promise.all([
 		loadPartInstances(context, loadedPlaylist, rundownIds),
-		loadRundowns(context, ingestModel, rundowns),
+		loadRundowns(context, ingestModel, sortRundownsWithinPlaylist(playlist.rundownIdsInOrder, rundowns)),
 		loadTimeline(context),
 	])
 
@@ -119,7 +121,7 @@ async function loadInitData(
 	existingRundowns: ReadonlyDeep<DBRundown[]> | undefined
 ): Promise<[ReadonlyDeep<PeripheralDevice[]>, DBRundownPlaylist, ReadonlyDeep<DBRundown[]>]> {
 	const [peripheralDevices, reloadedPlaylist, rundowns] = await Promise.all([
-		context.directCollections.PeripheralDevices.findFetch({ studioId: tmpPlaylist.studioId }),
+		context.directCollections.PeripheralDevices.findFetch({ 'studioAndConfigId.studioId': tmpPlaylist.studioId }),
 		reloadPlaylist
 			? await context.directCollections.RundownPlaylists.findOne(tmpPlaylist._id)
 			: clone<DBRundownPlaylist>(tmpPlaylist),
@@ -188,7 +190,7 @@ async function loadRundowns(
 		context.directCollections.Segments.findFetch({
 			$or: [
 				{
-					// In a different rundown
+					// Either in rundown when ingestModel === null or not available in ingestModel
 					rundownId: { $in: loadRundownIds },
 				},
 				{
@@ -233,14 +235,25 @@ async function loadRundowns(
 		}
 	}
 
-	return rundowns.map(
-		(rundown) =>
-			new PlayoutRundownModelImpl(
-				rundown,
-				groupedSegmentsWithParts.get(rundown._id) ?? [],
-				groupedBaselineObjects.get(rundown._id) ?? []
+	return rundowns.map((rundown) => {
+		const groupedSegmentsWithPartsForRundown = groupedSegmentsWithParts.get(rundown._id)
+		if (!groupedSegmentsWithPartsForRundown) {
+			logger.debug(
+				`groupedSegmentsWithPartsForRundown for Rundown "${rundown._id}" is undefined (has the rundown no segments?)`
 			)
-	)
+		}
+		const groupedBaselineObjectsForRundown = groupedBaselineObjects.get(rundown._id)
+		if (!groupedBaselineObjectsForRundown)
+			logger.debug(
+				`groupedBaselineObjectsForRundown for Rundown "${rundown._id}" is undefined (has the rundown no baseline objects?)`
+			)
+
+		return new PlayoutRundownModelImpl(
+			rundown,
+			groupedSegmentsWithPartsForRundown ?? [],
+			groupedBaselineObjectsForRundown ?? []
+		)
+	})
 }
 
 async function loadPartInstances(

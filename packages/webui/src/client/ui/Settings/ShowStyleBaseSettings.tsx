@@ -21,7 +21,6 @@ import { Blueprints, ShowStyleBases, ShowStyleVariants, Studios } from '../../co
 import { JSONBlobParse } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import { ShowStyleBaseBlueprintConfigurationSettings } from './ShowStyle/BlueprintConfiguration'
-import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 
 interface IProps {
 	match: {
@@ -150,7 +149,6 @@ export default translateWithTracker<IProps, IState, ITrackedProps>((props: IProp
 									</Route>
 									<Route path={`${this.props.match.path}/action-triggers`}>
 										<TriggeredActionsEditor
-											studioId={protectString('fakeStudio')} // A studioId is needed to enable the preview renders
 											showStyleBaseId={showStyleBase._id}
 											sourceLayers={this.props.sourceLayers}
 											outputLayers={this.props.outputLayers}

@@ -3,25 +3,10 @@
  */
 
 import { Meteor } from 'meteor/meteor'
-import { setMinimumBrowserVersions } from 'meteor/modern-browsers'
 
 Meteor.startup(() => {
 	console.log('startup')
 })
-
-setMinimumBrowserVersions(
-	{
-		chrome: 80,
-		firefox: 74,
-		edge: 80,
-		ie: Infinity,
-		mobile_safari: [13, 4],
-		opera: 67,
-		safari: [13, 1],
-		electron: 6,
-	},
-	'optional chaining'
-)
 
 // Import all files that register Meteor methods:
 import './api/blueprints/api'
@@ -61,7 +46,6 @@ import './api/rest/api'
 import './Connections'
 import './coreSystem'
 import './cronjobs'
-import './email'
 import './prometheus'
 import './api/deviceTriggers/observer'
 import './logo'
@@ -70,4 +54,4 @@ import './systemTime'
 
 // Setup publications and security:
 import './publications/_publications'
-import './security/_security'
+import './security/securityVerify'

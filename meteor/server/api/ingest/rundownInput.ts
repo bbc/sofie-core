@@ -7,18 +7,14 @@ import { lazyIgnore } from '../../lib/lib'
 import { IngestRundown, IngestSegment, IngestPart, IngestPlaylist } from '@sofie-automation/blueprints-integration'
 import { logger } from '../../logging'
 import { RundownIngestDataCache } from './ingestCache'
-import {
-	checkAccessAndGetPeripheralDevice,
-	fetchStudioIdFromDevice,
-	generateRundownSource,
-	runIngestOperation,
-} from './lib'
+import { fetchStudioIdFromDevice, generateRundownSource, runIngestOperation } from './lib'
 import { MethodContext } from '../methodContext'
 import { IngestJobs } from '@sofie-automation/corelib/dist/worker/ingest'
 import { MediaObject } from '@sofie-automation/shared-lib/dist/core/model/MediaObjects'
 import { PeripheralDeviceId, RundownId, SegmentId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { NrcsIngestCacheType } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { checkAccessAndGetPeripheralDevice } from '../../security/check'
 
 export namespace RundownInput {
 	export async function dataPlaylistGet(
@@ -363,17 +359,15 @@ async function listIngestRundowns(peripheralDevice: PeripheralDevice): Promise<s
 }
 
 // hackGetMediaObjectDuration stuff
-Meteor.startup(() => {
-	if (Meteor.isServer) {
-		MediaObjects.observe(
-			{},
-			{
-				added: onMediaObjectChanged,
-				changed: onMediaObjectChanged,
-			},
-			{ fields: { _id: 1, mediaId: 1, mediainfo: 1, studioId: 1 } }
-		)
-	}
+Meteor.startup(async () => {
+	await MediaObjects.observe(
+		{},
+		{
+			added: onMediaObjectChanged,
+			changed: onMediaObjectChanged,
+		},
+		{ fields: { _id: 1, mediaId: 1, mediainfo: 1, studioId: 1 } }
+	)
 })
 
 interface MediaObjectUpdatedIds {
@@ -431,19 +425,19 @@ async function onMediaObjectChanged(newDocument: MediaObject, oldDocument?: Medi
 
 		for (const mediaObjectUpdatedIds of updateIds) {
 			if (validSegmentIds.has(mediaObjectUpdatedIds.segmentId)) {
-				try {
-					lazyIgnore(
-						`updateSegmentFromMediaObject_${mediaObjectUpdatedIds.segmentId}`,
-						async () => updateSegmentFromCache(newDocument.studioId, mediaObjectUpdatedIds),
-						200
-					)
-				} catch (exception) {
-					logger.error(
-						`Error thrown while updating Segment from cache after MediaObject changed: ${stringifyError(
-							exception
-						)}`
-					)
-				}
+				lazyIgnore(
+					`updateSegmentFromMediaObject_${mediaObjectUpdatedIds.segmentId}`,
+					() => {
+						updateSegmentFromCache(newDocument.studioId, mediaObjectUpdatedIds).catch((e) => {
+							logger.error(
+								`Error thrown while updating Segment from cache after MediaObject changed: ${stringifyError(
+									e
+								)}`
+							)
+						})
+					},
+					200
+				)
 			}
 		}
 	}

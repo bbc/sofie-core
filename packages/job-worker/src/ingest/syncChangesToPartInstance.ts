@@ -9,9 +9,7 @@ import { PlayoutPartInstanceModel } from '../playout/model/PlayoutPartInstanceMo
 import { IngestModelReadonly } from './model/IngestModel'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
-import { PartNote, SegmentNote } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
-import { literal } from '@sofie-automation/corelib/dist/lib'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { logger } from '../logging'
 import {
@@ -31,6 +29,8 @@ import {
 import { validateAdlibTestingPartInstanceProperties } from '../playout/adlibTesting'
 import { ReadonlyDeep } from 'type-fest'
 import { convertIngestModelToPlayoutRundownWithSegments } from './commit'
+import { convertNoteToNotification } from '../notifications/util'
+import { PlayoutRundownModel } from '../playout/model/PlayoutRundownModel'
 
 type PlayStatus = 'previous' | 'current' | 'next'
 type SyncedInstance = {
@@ -131,12 +131,22 @@ export async function syncChangesToPartInstances(
 					pieceInstances: pieceInstancesInPart.map((p) => convertPieceInstanceToBlueprints(p.pieceInstance)),
 				}
 
+				const part = newPart ?? existingPartInstance.partInstance.part
+
+				let playoutRundownModelForPart: PlayoutRundownModel | undefined = playoutRundownModel
+				// Handle a case where the part is in a different rundown than the playoutRundownModel:
+				if (playoutRundownModel.rundown._id !== part.rundownId) {
+					playoutRundownModelForPart = playoutModel.getRundown(part.rundownId)
+				}
+				if (!playoutRundownModelForPart)
+					throw new Error(`Internal Error: playoutRundownModelForPart is undefined (it should never be)`)
+
 				const proposedPieceInstances = getPieceInstancesForPart(
 					context,
 					playoutModel,
 					previousPartInstance,
-					playoutRundownModel,
-					newPart ?? existingPartInstance.partInstance.part,
+					playoutRundownModelForPart,
+					part,
 					await piecesThatMayBeActive,
 					existingPartInstance.partInstance._id
 				)
@@ -195,25 +205,21 @@ export async function syncChangesToPartInstances(
 				}
 
 				// Save notes:
-				const newNotes: PartNote[] = []
+				const notificationCategory = `syncIngestUpdateToPartInstance:${existingPartInstance.partInstance._id}`
+				playoutModel.clearAllNotifications(notificationCategory)
 				for (const note of syncContext.notes) {
-					newNotes.push(
-						literal<SegmentNote>({
-							type: note.type,
-							message: note.message,
-							origin: {
-								name: '', // TODO
-							},
-						})
-					)
+					playoutModel.setNotification(notificationCategory, {
+						...convertNoteToNotification(note, [blueprint.blueprintId]),
+						relatedTo: {
+							type: 'partInstance',
+							rundownId: existingPartInstance.partInstance.part.rundownId,
+							partInstanceId: existingPartInstance.partInstance._id,
+						},
+					})
 				}
-				if (newNotes.length) {
-					// TODO - these dont get shown to the user currently
-					// TODO - old notes from the sync may need to be pruned, or we will end up with duplicates and 'stuck' notes?+
-					existingPartInstance.appendNotes(newNotes)
 
-					validateAdlibTestingPartInstanceProperties(context, playoutModel, existingPartInstance)
-				}
+				// Make sure an adlib-testing part is still labeled correctly. This could happen if the partInstance used any recently updated adlibs
+				validateAdlibTestingPartInstanceProperties(context, playoutModel, existingPartInstance)
 
 				if (existingPartInstance.partInstance._id === playoutModel.playlist.currentPartInfo?.partInstanceId) {
 					// This should be run after 'current', before 'next':

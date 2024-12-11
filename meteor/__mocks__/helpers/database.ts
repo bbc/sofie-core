@@ -127,8 +127,7 @@ export async function setupMockPeripheralDevice(
 		_id: protectString('mockDevice' + dbI++),
 		name: 'mockDevice',
 		organizationId: null,
-		studioId: studio ? studio._id : undefined,
-		settings: {},
+		studioAndConfigId: studio ? { studioId: studio._id, configId: 'test' } : undefined,
 
 		category: category,
 		type: type,
@@ -171,6 +170,25 @@ export async function setupMockCore(doc?: Partial<ICoreSystem>): Promise<ICoreSy
 		version: '0.0.0',
 		previousVersion: '0.0.0',
 		serviceMessages: {},
+		settingsWithOverrides: wrapDefaultObject({
+			cron: {
+				casparCGRestart: {
+					enabled: true,
+				},
+				storeRundownSnapshots: {
+					enabled: false,
+				},
+			},
+			support: {
+				message: '',
+			},
+			evaluationsMessage: {
+				enabled: false,
+				heading: '',
+				message: '',
+			},
+		}),
+		lastBlueprintConfig: undefined,
 	}
 	const coreSystem = _.extend(defaultCore, doc)
 	await CoreSystem.removeAsync(SYSTEM_ID)
@@ -368,7 +386,6 @@ export async function setupMockStudioBlueprint(
 				},
 
 				studioConfigSchema: '{}' as any,
-				studioMigrations: [],
 				getBaseline: () => {
 					return {
 						timelineObjects: [],
@@ -425,7 +442,6 @@ export async function setupMockShowStyleBlueprint(
 				},
 
 				showStyleConfigSchema: '{}' as any,
-				showStyleMigrations: [],
 				getShowStyleVariantId: (): string | null => {
 					return SHOW_STYLE_VARIANT_ID
 				},

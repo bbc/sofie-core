@@ -20,7 +20,6 @@ import { SnapshotItem } from '../collections/Snapshots'
 import { TranslationsBundle } from '../collections/TranslationsBundles'
 import { DBTriggeredActions, UITriggeredActionsObj } from '../collections/TriggeredActions'
 import { UserActionsLogItem } from '../collections/UserActionsLog'
-import { DBUser } from '../collections/Users'
 import { UIBucketContentStatus, UIPieceContentStatus, UISegmentPartNote } from './rundownNotifications'
 import { UIShowStyleBase } from './showStyles'
 import { UIStudio } from './studios'
@@ -36,6 +35,7 @@ import { CorelibPubSub, CorelibPubSubCollections, CorelibPubSubTypes } from '@so
 import { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { PartInstance } from '../collections/PartInstances'
+import type { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 /**
  * Ids of possible DDP subscriptions for the UI only
@@ -110,6 +110,14 @@ export enum MeteorPubSub {
 	 * Fetch all translation bundles
 	 */
 	translationsBundles = 'translationsBundles',
+	/**
+	 * Fetch notifications for playlist
+	 */
+	notificationsForRundownPlaylist = 'notificationsForRundownPlaylist',
+	/**
+	 * Fetch notifications for rundown
+	 */
+	notificationsForRundown = 'notificationsForRundown',
 
 	// custom publications:
 
@@ -209,11 +217,14 @@ export interface MeteorPubSubTypes {
 		showStyleBaseIds: ShowStyleBaseId[] | null,
 		token?: string
 	) => CollectionName.RundownLayouts
-	[MeteorPubSub.loggedInUser]: (token?: string) => CollectionName.Users
-	[MeteorPubSub.usersInOrganization]: (organizationId: OrganizationId, token?: string) => CollectionName.Users
 	[MeteorPubSub.organization]: (organizationId: OrganizationId | null, token?: string) => CollectionName.Organizations
 	[MeteorPubSub.buckets]: (studioId: StudioId, bucketId: BucketId | null, token?: string) => CollectionName.Buckets
 	[MeteorPubSub.translationsBundles]: (token?: string) => CollectionName.TranslationsBundles
+	[MeteorPubSub.notificationsForRundown]: (studioId: StudioId, rundownId: RundownId) => CollectionName.Notifications
+	[MeteorPubSub.notificationsForRundownPlaylist]: (
+		studioId: StudioId,
+		playlistId: RundownPlaylistId
+	) => CollectionName.Notifications
 
 	// custom publications:
 
@@ -247,9 +258,8 @@ export interface MeteorPubSubTypes {
 		bucketId: BucketId
 	) => CustomCollectionName.UIBucketContentStatuses
 	[MeteorPubSub.uiBlueprintUpgradeStatuses]: () => CustomCollectionName.UIBlueprintUpgradeStatuses
-	[MeteorPubSub.uiParts]: (playlistId: RundownPlaylistId) => CustomCollectionName.UIParts
+	[MeteorPubSub.uiParts]: (playlistId: RundownPlaylistId | null) => CustomCollectionName.UIParts
 	[MeteorPubSub.uiPartInstances]: (
-		rundownIds: RundownId[],
 		playlistActivationId: RundownPlaylistActivationId | null
 	) => CustomCollectionName.UIPartInstances
 }
@@ -284,8 +294,8 @@ export type MeteorPubSubCollections = {
 	[CollectionName.Organizations]: DBOrganization
 	[CollectionName.Buckets]: Bucket
 	[CollectionName.TranslationsBundles]: TranslationsBundle
-	[CollectionName.Users]: DBUser
 	[CollectionName.ExpectedPlayoutItems]: ExpectedPlayoutItem
+	[CollectionName.Notifications]: DBNotificationObj
 
 	[CollectionName.MediaWorkFlows]: MediaWorkFlow
 	[CollectionName.MediaWorkFlowSteps]: MediaWorkFlowStep

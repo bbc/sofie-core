@@ -1,6 +1,8 @@
 import { BlueprintMapping } from './Timeline'
 import { TSR } from '../../tsr'
 
+export type AbPlayerId = number | string
+
 export interface StudioRouteSetExclusivityGroup {
 	name: string
 }
@@ -20,7 +22,8 @@ export interface StudioRouteSet {
 	routes: RouteMapping[]
 	/**
 	 * AB Pool members
-	 * Any players referenced here will only be active when this or another routeset is `active`
+	 * An AB player will be active if either no routesets reference it, or any active routset references it.
+	 * Specify the players here which this routeset should enable
 	 */
 	abPlayers: StudioAbPlayerDisabling[]
 }
@@ -45,7 +48,7 @@ export interface RouteMapping extends ResultingMappingRoute {
 
 export interface StudioAbPlayerDisabling {
 	poolName: string
-	playerId: string | number
+	playerId: AbPlayerId
 }
 
 export interface ResultingMappingRoutes {

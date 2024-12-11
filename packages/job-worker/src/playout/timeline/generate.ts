@@ -1,5 +1,5 @@
-import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { JobContext } from '../../jobs'
+import { BlueprintId, TimelineHash } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { JobContext, JobStudio } from '../../jobs'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	BlueprintResultBaseline,
@@ -36,7 +36,6 @@ import { WatchedPackagesHelper } from '../../blueprints/context/watchedPackages'
 import { postProcessStudioBaselineObjects } from '../../blueprints/postProcess'
 import { updateBaselineExpectedPackagesOnStudio } from '../../ingest/expectedPackages'
 import { endTrace, sendTrace, startTrace } from '@sofie-automation/corelib/dist/influxdb'
-import { StudioLight } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { deserializePieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { convertResolvedPieceInstanceToBlueprints } from '../../blueprints/context/lib'
 import { buildTimelineObjsForRundown, RundownTimelineTimingContext } from './rundown'
@@ -54,7 +53,7 @@ function isModelForStudio(model: StudioPlayoutModelBase): model is StudioPlayout
 }
 
 function generateTimelineVersions(
-	studio: ReadonlyDeep<StudioLight>,
+	studio: ReadonlyDeep<JobStudio>,
 	blueprintId: BlueprintId | undefined,
 	blueprintVersion: string
 ): TimelineCompleteGenerationVersions {
@@ -127,13 +126,13 @@ export async function updateStudioTimeline(
 		logAnyRemainingNowTimes(context, baselineObjects)
 	}
 
-	saveTimeline(context, playoutModel, baselineObjects, versions)
+	const timelineHash = saveTimeline(context, playoutModel, baselineObjects, versions)
 
 	if (studioBaseline) {
 		updateBaselineExpectedPackagesOnStudio(context, playoutModel, studioBaseline)
 	}
 
-	logger.debug('updateStudioTimeline done!')
+	logger.verbose(`updateStudioTimeline done, hash: "${timelineHash}"`)
 	if (span) span.end()
 }
 
@@ -157,9 +156,8 @@ export async function updateTimeline(context: JobContext, playoutModel: PlayoutM
 		logAnyRemainingNowTimes(context, timelineObjs)
 	}
 
-	saveTimeline(context, playoutModel, timelineObjs, versions)
-
-	logger.debug('updateTimeline done!')
+	const timelineHash = saveTimeline(context, playoutModel, timelineObjs, versions)
+	logger.verbose(`updateTimeline done, hash: "${timelineHash}"`)
 
 	if (span) span.end()
 }
@@ -198,31 +196,30 @@ function preserveOrReplaceNowTimesInObjects(
 }
 
 function logAnyRemainingNowTimes(_context: JobContext, timelineObjs: Array<TimelineObjGeneric>): void {
-	const ids: string[] = []
-
-	const hasNow = (obj: TimelineEnableExt | TimelineEnableExt[]) => {
-		let res = false
-		applyToArray(obj, (enable) => {
-			if (enable.start === 'now' || enable.end === 'now') res = true
-		})
-		return res
-	}
+	const badTimelineObjs: any[] = []
 
 	for (const obj of timelineObjs) {
 		if (hasNow(obj.enable)) {
-			ids.push(obj.id)
+			badTimelineObjs.push(obj)
 		}
 
 		for (const kf of obj.keyframes || []) {
 			if (hasNow(kf.enable)) {
-				ids.push(kf.id)
+				badTimelineObjs.push(kf)
 			}
 		}
 	}
 
-	if (ids.length) {
-		logger.error(`Some timeline objects have unexpected now times!: ${JSON.stringify(ids)}`)
+	if (badTimelineObjs.length) {
+		logger.error(`Some timeline objects have unexpected now times!: ${JSON.stringify(badTimelineObjs)}`)
 	}
+}
+function hasNow(obj: TimelineEnableExt | TimelineEnableExt[]) {
+	let res = false
+	applyToArray(obj, (enable) => {
+		if (enable.start === 'now' || enable.end === 'now') res = true
+	})
+	return res
 }
 
 /** Store the timelineobjects into the model, and perform any post-save actions */
@@ -231,11 +228,13 @@ export function saveTimeline(
 	studioPlayoutModel: StudioPlayoutModelBase,
 	timelineObjs: TimelineObjGeneric[],
 	generationVersions: TimelineCompleteGenerationVersions
-): void {
+): TimelineHash {
 	const newTimeline = studioPlayoutModel.setTimeline(timelineObjs, generationVersions)
 
 	// Also do a fast-track for the timeline to be published faster:
 	context.hackPublishTimelineToFastTrack(newTimeline)
+
+	return newTimeline.timelineHash
 }
 
 export interface SelectedPartInstancesTimelineInfo {
@@ -337,12 +336,7 @@ async function getTimelineRundown(
 				logger.warn(`Missing Baseline objects for Rundown "${activeRundown.rundown._id}"`)
 			}
 
-			const rundownTimelineResult = buildTimelineObjsForRundown(
-				context,
-				playoutModel,
-				activeRundown.rundown,
-				partInstancesInfo
-			)
+			const rundownTimelineResult = buildTimelineObjsForRundown(context, playoutModel.playlist, partInstancesInfo)
 
 			timelineObjs = timelineObjs.concat(rundownTimelineResult.timeline)
 			timelineObjs = timelineObjs.concat(await pLookaheadObjs)
@@ -384,6 +378,16 @@ async function getTimelineRundown(
 						timelineObjs
 					)
 
+					// Store the new notes in the model
+					const notificationCategory = 'abPlayback'
+					playoutModel.clearAllNotifications(notificationCategory)
+					for (const notification of newAbSessionsResult.notifications) {
+						playoutModel.setNotification(notificationCategory, {
+							...notification,
+							relatedTo: { type: 'playlist' },
+						})
+					}
+
 					let tlGenRes: BlueprintResultTimeline | undefined
 					if (blueprint.blueprint.onTimelineGenerate) {
 						const span = context.startSpan('blueprint.onTimelineGenerate')
@@ -408,7 +412,7 @@ async function getTimelineRundown(
 
 					playoutModel.setOnTimelineGenerateResult(
 						tlGenRes?.persistentState,
-						newAbSessionsResult,
+						newAbSessionsResult.assignments,
 						blueprintContext.abSessionsHelper.knownSessions
 					)
 				} catch (err) {

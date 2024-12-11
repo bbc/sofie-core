@@ -115,10 +115,9 @@ function AbPlayerRow({
 			</button>
 			<div className="properties-grid">
 				<LabelAndOverrides
-					label={t('Pool PlayerId')}
+					label={t('Pool name')}
 					item={player}
-					itemKey={'playerId'}
-					opPrefix={player.id}
+					itemKey={'poolName'}
 					overrideHelper={tableOverrideHelper}
 				>
 					{(value, handleUpdate) => (
@@ -131,10 +130,9 @@ function AbPlayerRow({
 					)}
 				</LabelAndOverrides>
 				<LabelAndOverrides
-					label={t('Pool name')}
+					label={t('Pool PlayerId')}
 					item={player}
-					itemKey={'poolName'}
-					opPrefix={player.id}
+					itemKey={'playerId'}
 					overrideHelper={tableOverrideHelper}
 				>
 					{(value, handleUpdate) => (

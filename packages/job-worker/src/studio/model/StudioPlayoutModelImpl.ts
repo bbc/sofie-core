@@ -101,8 +101,8 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 		return this.#timeline
 	}
 
-	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): void {
-		this.#baselineHelper.updateRouteSetActive(routeSetId, isActive)
+	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean {
+		return this.context.setRouteSetActive(routeSetId, isActive)
 	}
 
 	/**
@@ -125,7 +125,11 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 		}
 		this.#timelineHasChanged = false
 
-		await this.#baselineHelper.saveAllToDatabase()
+		await Promise.all([
+			this.#baselineHelper.saveAllToDatabase(),
+			this.context.saveRouteSetChanges(),
+			//
+		])
 
 		if (span) span.end()
 	}
@@ -173,7 +177,7 @@ export async function loadStudioPlayoutModel(
 	const studioId = context.studioId
 
 	const collections = await Promise.all([
-		context.directCollections.PeripheralDevices.findFetch({ studioId }),
+		context.directCollections.PeripheralDevices.findFetch({ 'studioAndConfigId.studioId': studioId }),
 		context.directCollections.RundownPlaylists.findFetch({ studioId }),
 		context.directCollections.Timelines.findOne(studioId),
 	])

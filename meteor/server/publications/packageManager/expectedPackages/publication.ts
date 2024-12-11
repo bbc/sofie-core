@@ -1,11 +1,10 @@
-import { Meteor } from 'meteor/meteor'
-import { PeripheralDeviceReadAccess } from '../../../security/peripheralDevice'
-import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import { DBStudio, StudioPackageContainer } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import {
 	TriggerUpdate,
 	meteorCustomPublish,
 	setUpCollectionOptimizedObserver,
 	CustomPublishCollection,
+	SetupObserversResult,
 } from '../../../lib/customPublication'
 import { literal, omit, protectString } from '../../../lib/tempLib'
 import { logger } from '../../../logging'
@@ -18,7 +17,7 @@ import {
 	PieceInstanceId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { PeripheralDevices, Studios } from '../../../collections'
+import { Studios } from '../../../collections'
 import { check, Match } from 'meteor/check'
 import { PackageManagerExpectedPackage } from '@sofie-automation/shared-lib/dist/package-manager/publications'
 import { ExpectedPackagesContentObserver } from './contentObserver'
@@ -29,6 +28,7 @@ import {
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
 } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
+import { checkAccessAndGetPeripheralDevice } from '../../../security/check'
 
 interface ExpectedPackagesPublicationArgs {
 	readonly studioId: StudioId
@@ -48,6 +48,7 @@ interface ExpectedPackagesPublicationUpdateProps {
 interface ExpectedPackagesPublicationState {
 	studio: Pick<DBStudio, StudioFields> | undefined
 	layerNameToDeviceIds: Map<string, PeripheralDeviceId[]>
+	packageContainers: Record<string, StudioPackageContainer>
 
 	contentCache: ReadonlyDeep<ExpectedPackagesContentCache>
 }
@@ -71,7 +72,7 @@ const studioFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBStudio
 async function setupExpectedPackagesPublicationObservers(
 	args: ReadonlyDeep<ExpectedPackagesPublicationArgs>,
 	triggerUpdate: TriggerUpdate<ExpectedPackagesPublicationUpdateProps>
-): Promise<Meteor.LiveQueryHandle[]> {
+): Promise<SetupObserversResult> {
 	const contentCache = createReactiveContentCache()
 
 	// Push update
@@ -79,7 +80,7 @@ async function setupExpectedPackagesPublicationObservers(
 
 	// Set up observers:
 	return [
-		new ExpectedPackagesContentObserver(args.studioId, contentCache),
+		ExpectedPackagesContentObserver.create(args.studioId, contentCache),
 
 		contentCache.ExpectedPackages.find({}).observeChanges({
 			added: (id) => triggerUpdate({ invalidateExpectedPackageIds: [protectString<ExpectedPackageId>(id)] }),
@@ -122,6 +123,7 @@ async function manipulateExpectedPackagesPublicationData(
 	const invalidateAllItems = !updateProps || updateProps.newCache || updateProps.invalidateStudio
 
 	if (!state.layerNameToDeviceIds) state.layerNameToDeviceIds = new Map()
+	if (!state.packageContainers) state.packageContainers = {}
 
 	if (invalidateAllItems) {
 		// Everything is invalid, reset everything
@@ -141,12 +143,14 @@ async function manipulateExpectedPackagesPublicationData(
 		if (!state.studio) {
 			logger.warn(`Pub.expectedPackagesForDevice: studio "${args.studioId}" not found!`)
 			state.layerNameToDeviceIds = new Map()
+			state.packageContainers = {}
 		} else {
 			const studioMappings = applyAndValidateOverrides(state.studio.mappingsWithOverrides).obj
 			state.layerNameToDeviceIds = buildMappingsToDeviceIdMap(
 				applyAndValidateOverrides(state.studio.routeSetsWithOverrides).obj,
 				studioMappings
 			)
+			state.packageContainers = applyAndValidateOverrides(state.studio.packageContainersWithOverrides).obj
 		}
 	}
 
@@ -173,6 +177,7 @@ async function manipulateExpectedPackagesPublicationData(
 		state.contentCache,
 		state.studio,
 		state.layerNameToDeviceIds,
+		state.packageContainers,
 		collection,
 		args.filterPlayoutDeviceIds,
 		regenerateExpectedPackageIds
@@ -181,6 +186,7 @@ async function manipulateExpectedPackagesPublicationData(
 		state.contentCache,
 		state.studio,
 		state.layerNameToDeviceIds,
+		state.packageContainers,
 		collection,
 		args.filterPlayoutDeviceIds,
 		regeneratePieceInstanceIds
@@ -199,34 +205,28 @@ meteorCustomPublish(
 		check(deviceId, String)
 		check(filterPlayoutDeviceIds, Match.Maybe([String]))
 
-		if (await PeripheralDeviceReadAccess.peripheralDeviceContent(deviceId, { userId: this.userId, token })) {
-			const peripheralDevice = await PeripheralDevices.findOneAsync(deviceId)
+		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, this)
 
-			if (!peripheralDevice) throw new Meteor.Error('PeripheralDevice "' + deviceId + '" not found')
-
-			const studioId = peripheralDevice.studioId
-			if (!studioId) {
-				logger.warn(`Pub.packageManagerExpectedPackages: device "${peripheralDevice._id}" has no studioId`)
-				return this.ready()
-			}
-
-			await setUpCollectionOptimizedObserver<
-				PackageManagerExpectedPackage,
-				ExpectedPackagesPublicationArgs,
-				ExpectedPackagesPublicationState,
-				ExpectedPackagesPublicationUpdateProps
-			>(
-				`${PeripheralDevicePubSub.packageManagerExpectedPackages}_${studioId}_${deviceId}_${JSON.stringify(
-					(filterPlayoutDeviceIds || []).sort()
-				)}`,
-				{ studioId, deviceId, filterPlayoutDeviceIds },
-				setupExpectedPackagesPublicationObservers,
-				manipulateExpectedPackagesPublicationData,
-				pub,
-				500 // ms, wait this time before sending an update
-			)
-		} else {
-			logger.warn(`Pub.packageManagerExpectedPackages: Not allowed: "${deviceId}"`)
+		const studioId = peripheralDevice.studioAndConfigId?.studioId
+		if (!studioId) {
+			logger.warn(`Pub.packageManagerExpectedPackages: device "${peripheralDevice._id}" has no studioId`)
+			return this.ready()
 		}
+
+		await setUpCollectionOptimizedObserver<
+			PackageManagerExpectedPackage,
+			ExpectedPackagesPublicationArgs,
+			ExpectedPackagesPublicationState,
+			ExpectedPackagesPublicationUpdateProps
+		>(
+			`${PeripheralDevicePubSub.packageManagerExpectedPackages}_${studioId}_${deviceId}_${JSON.stringify(
+				(filterPlayoutDeviceIds || []).sort()
+			)}`,
+			{ studioId, deviceId, filterPlayoutDeviceIds },
+			setupExpectedPackagesPublicationObservers,
+			manipulateExpectedPackagesPublicationData,
+			pub,
+			500 // ms, wait this time before sending an update
+		)
 	}
 )

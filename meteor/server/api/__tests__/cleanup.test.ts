@@ -1,5 +1,4 @@
 import { getRandomId } from '../../lib/tempLib'
-import { beforeEachInFiber, testInFiber } from '../../../__mocks__/helpers/jest'
 
 import '../../collections' // include this in order to get all of the collection set up
 import { cleanupOldDataInner } from '../cleanup'
@@ -46,20 +45,22 @@ import {
 	PackageContainerStatuses,
 	TimelineDatastore,
 	SofieIngestDataCache,
+	Notifications,
 } from '../../collections'
 import { Collections } from '../../collections/lib'
 import { generateTranslationBundleOriginId } from '../translationsBundles'
 import { CollectionCleanupResult } from '@sofie-automation/meteor-lib/dist/api/system'
+import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 describe('Cleanup', () => {
 	let env: DefaultEnvironment
 
-	beforeEachInFiber(async () => {
+	beforeEach(async () => {
 		await clearAllDBCollections()
 		env = await setupDefaultStudioEnvironment()
 	})
 
-	testInFiber('Check that all collections are covered', async () => {
+	test('Check that all collections are covered', async () => {
 		expect(Collections.size).toBeGreaterThan(10)
 
 		const result = await cleanupOldDataInner(false)
@@ -71,7 +72,7 @@ describe('Cleanup', () => {
 		}
 	})
 
-	testInFiber('No bad removals', async () => {
+	test('No bad removals', async () => {
 		// Check that cleanupOldDataInner() doesn't remove any data when the default data set is in the DB.
 
 		await setDefaultDatatoDB(env, Date.now())
@@ -92,7 +93,7 @@ describe('Cleanup', () => {
 		expect(await RundownPlaylists.countDocuments()).toBe(1)
 		expect(await Rundowns.countDocuments()).toBe(1)
 	})
-	testInFiber('All dependants should be removed', async () => {
+	test('All dependants should be removed', async () => {
 		// Check that cleanupOldDataInner() cleans up all data from the database.
 
 		await setDefaultDatatoDB(env, 0)
@@ -135,7 +136,7 @@ describe('Cleanup', () => {
 			}
 		}
 	})
-	testInFiber('PieceInstance should be removed when PartInstance is removed', async () => {
+	test('PieceInstance should be removed when PartInstance is removed', async () => {
 		// Check that cleanupOldDataInner() cleans up all data from the database.
 
 		await setDefaultDatatoDB(env, 0)
@@ -444,6 +445,21 @@ async function setDefaultDatatoDB(env: DefaultEnvironment, now: number) {
 		language: '',
 		originId: generateTranslationBundleOriginId(deviceId, 'peripheralDevice'),
 		type: '' as any,
+	})
+
+	await Notifications.insertAsync({
+		_id: getRandomId(),
+		category: '',
+		created: now,
+		localId: '',
+		message: {} as any,
+		severity: 0 as any,
+		modified: now,
+		relatedTo: {
+			type: DBNotificationTargetType.RUNDOWN,
+			studioId,
+			rundownId,
+		},
 	})
 
 	// Ensure that we have added one of everything:

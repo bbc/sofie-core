@@ -22,13 +22,7 @@ import classNames from 'classnames'
 import { catchError, fetchFrom } from '../../../../lib/lib'
 import { NotificationCenter, Notification, NoticeLevel } from '../../../../lib/notifications/notifications'
 import { doModalDialog } from '../../../../lib/ModalDialog'
-import {
-	PartId,
-	RundownId,
-	ShowStyleBaseId,
-	StudioId,
-	TriggeredActionId,
-} from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PartId, RundownId, ShowStyleBaseId, TriggeredActionId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownPlaylists, Rundowns, TriggeredActions } from '../../../../collections'
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { SourceLayers, OutputLayers } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
@@ -46,7 +40,6 @@ export interface PreviewContext {
 }
 
 interface IProps {
-	studioId: StudioId | null
 	showStyleBaseId: ShowStyleBaseId | null
 	sourceLayers: SourceLayers
 	outputLayers: OutputLayers
@@ -81,7 +74,7 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 		},
 	})
 
-	const { studioId, showStyleBaseId, sourceLayers, outputLayers } = props
+	const { showStyleBaseId, sourceLayers, outputLayers } = props
 
 	useSubscription(MeteorPubSub.triggeredActions, showStyleBaseId ? [showStyleBaseId] : null)
 	useSubscription(CorelibPubSub.rundownsWithShowStyleBases, showStyleBaseId ? [showStyleBaseId] : [])
@@ -198,8 +191,8 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 		null
 	)
 
-	useSubscription(MeteorPubSub.uiPartInstances, rundown ? [rundown._id] : [], rundownPlaylist?.activationId ?? null)
-	useSubscription(CorelibPubSub.parts, rundown ? [rundown._id] : [], null)
+	useSubscription(MeteorPubSub.uiPartInstances, rundownPlaylist?.activationId ?? null)
+	useSubscription(MeteorPubSub.uiParts, rundownPlaylist?._id ?? null)
 
 	const previewContext = useTracker(
 		() => {
@@ -392,12 +385,12 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 
 	return (
 		<div>
-			{sorensen && previewContext.rundownPlaylist && showStyleBaseId && studioId && (
+			{sorensen && previewContext.rundownPlaylist && showStyleBaseId && (
 				<ErrorBoundary>
 					<TriggersHandler
 						sorensen={sorensen}
 						simulateTriggerBinding={true}
-						studioId={studioId}
+						studioId={previewContext.rundownPlaylist.studioId}
 						showStyleBaseId={showStyleBaseId}
 						currentRundownId={previewContext.currentRundownId}
 						rundownPlaylistId={previewContext.rundownPlaylist._id}
@@ -444,7 +437,7 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 			{showStyleBaseId !== null ? (
 				<>
 					<div className={classNames('mod mhn', parsedTriggerFilter ? 'mtn' : undefined)}>
-						{(systemTriggeredActionIds?.length ?? 0) > 0 && !parsedTriggerFilter ? (
+						{!parsedTriggerFilter ? (
 							<h3
 								className="mhn mvs clickable disable-select"
 								onClick={() => setSystemWideCollapsed(!systemWideCollapsed)}
@@ -477,13 +470,19 @@ export const TriggeredActionsEditor: React.FC<IProps> = function TriggeredAction
 									/>
 							  ))
 							: null}
+
+						{!systemWideCollapsed && !parsedTriggerFilter && systemTriggeredActionIds?.length === 0 && (
+							<p className="mod mhn subtle">{t('No Action Triggers set up.')}</p>
+						)}
 					</div>
 				</>
 			) : null}
 			<div className="mod mhs">
-				<button className="btn btn-primary" onClick={onNewTriggeredAction}>
-					<FontAwesomeIcon icon={faPlus} />
-				</button>
+				<Tooltip overlay={t('Add Action Trigger')} placement="top">
+					<button className="btn btn-primary" onClick={onNewTriggeredAction}>
+						<FontAwesomeIcon icon={faPlus} />
+					</button>
+				</Tooltip>
 				<Tooltip overlay={t('Upload stored Action Triggers')} placement="top">
 					<span className="inline-block">
 						<UploadButton

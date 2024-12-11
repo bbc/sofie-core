@@ -61,6 +61,7 @@ import { QuickLoopService } from '../services/QuickLoopService'
 import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -262,6 +263,7 @@ export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
  */
 export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements PlayoutModel, DatabasePersistedModel {
 	readonly #baselineHelper: StudioBaselineHelper
+	readonly #notificationsHelper: NotificationsModelHelper
 
 	#deferredBeforeSaveFunctions: DeferredFunction[] = []
 	#deferredAfterSaveFunctions: DeferredAfterSaveFunction[] = []
@@ -306,6 +308,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		context.trackCache(this)
 
 		this.#baselineHelper = new StudioBaselineHelper(context)
+		this.#notificationsHelper = new NotificationsModelHelper(context, `playout:${playlist._id}`, playlistId)
 	}
 
 	public get displayName(): string {
@@ -480,8 +483,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		return partInstance
 	}
 
-	switchRouteSet(routeSetId: string, isActive: boolean): void {
-		this.#baselineHelper.updateRouteSetActive(routeSetId, isActive)
+	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean {
+		return this.context.setRouteSetActive(routeSetId, isActive)
 	}
 
 	cycleSelectedPartInstances(): void {
@@ -501,6 +504,11 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	deactivatePlaylist(): void {
 		delete this.playlistImpl.activationId
+
+		if (this.currentPartInstance) {
+			this.currentPartInstance.setReportedStoppedPlaybackWithPieceInstances(getCurrentTime())
+			this.queuePartInstanceTimingEvent(this.currentPartInstance.partInstance._id)
+		}
 
 		this.clearSelectedPartInstances()
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedPropsByClearingMarkers()
@@ -562,15 +570,38 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 							rundownId: { $in: rundownIds },
 					  })
 					: undefined,
+				allToRemove.length > 0
+					? this.context.directCollections.Notifications.remove({
+							'relatedTo.studioId': this.context.studioId,
+							'relatedTo.rundownId': { $in: rundownIds },
+							'relatedTo.partInstanceId': { $in: allToRemove },
+					  })
+					: undefined,
 			])
 		})
 	}
 
 	removeUntakenPartInstances(): void {
+		const removedPartInstanceIds: PartInstanceId[] = []
+
 		for (const partInstance of this.olderPartInstances) {
 			if (!partInstance.partInstance.isTaken) {
 				this.allPartInstances.set(partInstance.partInstance._id, null)
+				removedPartInstanceIds.push(partInstance.partInstance._id)
 			}
+		}
+
+		// Ensure there are no notifications left for these partInstances
+		if (removedPartInstanceIds.length > 0) {
+			this.deferAfterSave(async (playoutModel) => {
+				const rundownIds = playoutModel.getRundownIds()
+
+				await this.context.directCollections.Notifications.remove({
+					'relatedTo.studioId': this.context.studioId,
+					'relatedTo.rundownId': { $in: rundownIds },
+					'relatedTo.partInstanceId': { $in: removedPartInstanceIds },
+				})
+			})
 		}
 	}
 
@@ -594,9 +625,11 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 		if (regenerateActivationId) this.playlistImpl.activationId = getRandomId()
 
-		// reset quickloop:
-		this.setQuickLoopMarker('start', null)
-		this.setQuickLoopMarker('end', null)
+		// reset quickloop if applicable:
+		if (this.playlist.quickLoop && !this.playlist.quickLoop.locked) {
+			this.setQuickLoopMarker('start', null)
+			this.setQuickLoopMarker('end', null)
+		}
 
 		this.#playlistHasChanged = true
 	}
@@ -638,6 +671,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
 			this.#baselineHelper.saveAllToDatabase(),
+			this.context.saveRouteSetChanges(),
+			this.#notificationsHelper.saveAllToDatabase(),
 		])
 
 		this.#playlistHasChanged = false
@@ -799,6 +834,29 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		return this.quickLoopService.getSegmentsBetweenMarkers(start, end)
 	}
 
+	/** Notifications */
+
+	async getAllNotifications(
+		...args: Parameters<NotificationsModelHelper['getAllNotifications']>
+	): ReturnType<NotificationsModelHelper['getAllNotifications']> {
+		return this.#notificationsHelper.getAllNotifications(...args)
+	}
+	clearNotification(
+		...args: Parameters<NotificationsModelHelper['clearNotification']>
+	): ReturnType<NotificationsModelHelper['clearNotification']> {
+		return this.#notificationsHelper.clearNotification(...args)
+	}
+	setNotification(
+		...args: Parameters<NotificationsModelHelper['setNotification']>
+	): ReturnType<NotificationsModelHelper['setNotification']> {
+		return this.#notificationsHelper.setNotification(...args)
+	}
+	clearAllNotifications(
+		...args: Parameters<NotificationsModelHelper['clearAllNotifications']>
+	): ReturnType<NotificationsModelHelper['clearAllNotifications']> {
+		return this.#notificationsHelper.clearAllNotifications(...args)
+	}
+
 	/** Lifecycle */
 
 	/** @deprecated */
@@ -855,12 +913,30 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		if (this.rundownsImpl.find((rd) => rd.AdlibTestingSegmentHasChanged))
 			logOrThrowError(new Error(`Failed no changes in model assertion, an AdlibTesting Segment has been changed`))
 
-		if (
-			Array.from(this.allPartInstances.values()).find(
-				(part) => !part || part.partInstanceHasChanges || part.changedPieceInstanceIds().length > 0
-			)
+		const changedPartInstances = Array.from(this.allPartInstances.entries()).filter(
+			([_, partInstance]) =>
+				!partInstance ||
+				partInstance.partInstanceHasChanges ||
+				partInstance.changedPieceInstanceIds().length > 0
 		)
-			logOrThrowError(new Error(`Failed no changes in model assertion, a PartInstance has been changed`))
+
+		if (changedPartInstances.length > 0) {
+			logOrThrowError(
+				new Error(
+					`Failed no changes in model assertion, PartInstances has been changed: ${JSON.stringify(
+						changedPartInstances.map(
+							([id, pi]) =>
+								`${id}: ` +
+								(!pi
+									? 'null'
+									: `partInstanceHasChanges: ${
+											pi.partInstanceHasChanges
+									  }, changedPieceInstanceIds: ${JSON.stringify(pi.changedPieceInstanceIds())}`)
+						)
+					)}`
+				)
+			)
+		}
 
 		if (span) span.end()
 	}

@@ -26,10 +26,9 @@ import { MediaWorkFlowStep } from '@sofie-automation/shared-lib/dist/core/model/
 import { MOS } from '@sofie-automation/corelib'
 import { determineDiffTime } from './systemTime/systemTime'
 import { getTimeDiff } from './systemTime/api'
-import { PeripheralDeviceContentWriteAccess } from '../security/peripheralDevice'
 import { MethodContextAPI, MethodContext } from './methodContext'
-import { triggerWriteAccess, triggerWriteAccessBecauseNoCheckNecessary } from '../security/lib/securityVerify'
-import { checkAccessAndGetPeripheralDevice } from './ingest/lib'
+import { triggerWriteAccess, triggerWriteAccessBecauseNoCheckNecessary } from '../security/securityVerify'
+import { checkAccessAndGetPeripheralDevice } from '../security/check'
 import { UserActionsLogItem } from '@sofie-automation/meteor-lib/dist/collections/UserActionsLog'
 import { PackageManagerIntegration } from './integration/expectedPackages'
 import { profiler } from './profiler'
@@ -68,6 +67,8 @@ import { convertPeripheralDeviceForGateway } from '../publications/peripheralDev
 import { executePeripheralDeviceFunction } from './peripheralDevice/executeFunction'
 import KoaRouter from '@koa/router'
 import bodyParser from 'koa-bodyparser'
+import { assertConnectionHasOneOfPermissions } from '../security/auth'
+import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 
 const apmNamespace = 'peripheralDevice'
 export namespace ServerPeripheralDeviceAPI {
@@ -81,7 +82,9 @@ export namespace ServerPeripheralDeviceAPI {
 		check(deviceId, String)
 		const existingDevice = await PeripheralDevices.findOneAsync(deviceId)
 		if (existingDevice) {
-			await PeripheralDeviceContentWriteAccess.peripheralDevice({ userId: context.userId, token }, deviceId)
+			await checkAccessAndGetPeripheralDevice(deviceId, token, context)
+		} else {
+			triggerWriteAccessBecauseNoCheckNecessary()
 		}
 
 		check(token, String)
@@ -144,7 +147,6 @@ export namespace ServerPeripheralDeviceAPI {
 				status: {
 					statusCode: StatusCode.UNKNOWN,
 				},
-				settings: {},
 				connected: true,
 				connectionId: options.connectionId,
 				lastSeen: getCurrentTime(),
@@ -159,7 +161,6 @@ export namespace ServerPeripheralDeviceAPI {
 				deviceName: options.name,
 				parentDeviceId: options.parentDeviceId,
 				versions: options.versions,
-				// settings: {},
 
 				configManifest: options.configManifest
 					? {
@@ -265,7 +266,7 @@ export namespace ServerPeripheralDeviceAPI {
 
 		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, context)
 
-		if (!peripheralDevice.studioId)
+		if (!peripheralDevice.studioAndConfigId)
 			throw new Meteor.Error(401, `peripheralDevice "${deviceId}" not attached to a studio`)
 
 		// check(r.time, Number)
@@ -276,9 +277,13 @@ export namespace ServerPeripheralDeviceAPI {
 		})
 
 		if (results.length > 0) {
-			const job = await QueueStudioJob(StudioJobs.OnTimelineTriggerTime, peripheralDevice.studioId, {
-				results,
-			})
+			const job = await QueueStudioJob(
+				StudioJobs.OnTimelineTriggerTime,
+				peripheralDevice.studioAndConfigId.studioId,
+				{
+					results,
+				}
+			)
 			await job.complete
 		}
 
@@ -296,16 +301,20 @@ export namespace ServerPeripheralDeviceAPI {
 		// Note that this function can / might be called several times from playout-gateway for the same part
 		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, context)
 
-		if (!peripheralDevice.studioId)
+		if (!peripheralDevice.studioAndConfigId)
 			throw new Error(`PeripheralDevice "${peripheralDevice._id}" sent piecePlaybackStarted, but has no studioId`)
 
 		if (changedResults.changes.length) {
 			check(changedResults.rundownPlaylistId, String)
 
-			const job = await QueueStudioJob(StudioJobs.OnPlayoutPlaybackChanged, peripheralDevice.studioId, {
-				playlistId: changedResults.rundownPlaylistId,
-				changes: changedResults.changes,
-			})
+			const job = await QueueStudioJob(
+				StudioJobs.OnPlayoutPlaybackChanged,
+				peripheralDevice.studioAndConfigId.studioId,
+				{
+					playlistId: changedResults.rundownPlaylistId,
+					changes: changedResults.changes,
+				}
+			)
 			await job.complete
 		}
 
@@ -356,22 +365,22 @@ export namespace ServerPeripheralDeviceAPI {
 		return false
 	}
 	export async function disableSubDevice(
-		access: PeripheralDeviceContentWriteAccess.ContentAccess,
+		deviceId: PeripheralDeviceId,
 		subDeviceId: string,
 		disable: boolean
 	): Promise<void> {
-		const peripheralDevice = access.device
-		const deviceId = access.deviceId
+		const peripheralDevice = await PeripheralDevices.findOneAsync(deviceId)
+		if (!peripheralDevice) throw new Meteor.Error(404, `PeripheralDevice "${deviceId}" not found`)
 
 		// check that the peripheralDevice has subDevices
 		if (peripheralDevice.type !== PeripheralDeviceType.PLAYOUT)
 			throw new Meteor.Error(405, `PeripheralDevice "${deviceId}" cannot have subdevice disabled`)
 		if (!peripheralDevice.configManifest)
 			throw new Meteor.Error(405, `PeripheralDevice "${deviceId}" does not provide a configuration manifest`)
-		if (!peripheralDevice.studioId)
+		if (!peripheralDevice.studioAndConfigId)
 			throw new Meteor.Error(405, `PeripheralDevice "${deviceId}" does not belong to a Studio`)
 
-		const studio = await Studios.findOneAsync(peripheralDevice.studioId)
+		const studio = await Studios.findOneAsync(peripheralDevice.studioAndConfigId.studioId)
 		if (!studio) throw new Meteor.Error(405, `PeripheralDevice "${deviceId}" does not belong to a Studio`)
 
 		const playoutDevices = applyAndValidateOverrides(studio.peripheralDeviceSettings.playoutDevices).obj
@@ -419,31 +428,51 @@ export namespace ServerPeripheralDeviceAPI {
 			(o) => o.path === propPath
 		)
 		if (existingIndex !== -1) {
-			await Studios.updateAsync(peripheralDevice.studioId, {
+			await Studios.updateAsync(peripheralDevice.studioAndConfigId.studioId, {
 				$set: {
 					[`${overridesPath}.${existingIndex}`]: newOverrideOp,
 				},
 			})
 		} else {
-			await Studios.updateAsync(peripheralDevice.studioId, {
+			await Studios.updateAsync(peripheralDevice.studioAndConfigId.studioId, {
 				$push: {
 					[overridesPath]: newOverrideOp,
 				},
 			})
 		}
 	}
-	export async function getDebugStates(access: PeripheralDeviceContentWriteAccess.ContentAccess): Promise<object> {
+	export async function getDebugStates(peripheralDeviceId: PeripheralDeviceId): Promise<object> {
+		const peripheralDevice = await PeripheralDevices.findOneAsync(peripheralDeviceId)
+		if (!peripheralDevice) return {}
+
 		if (
 			// Debug states are only valid for Playout devices and must be enabled with the `debugState` option
-			access.device.type !== PeripheralDeviceType.PLAYOUT ||
-			!access.device.settings ||
-			!(access.device.settings as any)['debugState']
+			peripheralDevice.type !== PeripheralDeviceType.PLAYOUT ||
+			!peripheralDevice.studioAndConfigId // Must be attached to a studio
 		) {
 			return {}
 		}
 
+		// Fetch the relevant studio
+		const studioForDevice = (await Studios.findOneAsync(peripheralDevice.studioAndConfigId.studioId, {
+			fields: {
+				peripheralDeviceSettings: 1,
+			},
+		})) as Pick<DBStudio, 'peripheralDeviceSettings'> | undefined
+		if (!studioForDevice) return {}
+
+		const studioDeviceSettings = applyAndValidateOverrides(
+			studioForDevice.peripheralDeviceSettings.deviceSettings
+		).obj
+
+		const settingsForDevice = studioDeviceSettings[peripheralDevice.studioAndConfigId.configId]
+		if (!settingsForDevice) return {}
+
+		// Make sure debugState is enabled
+		if (!(settingsForDevice.options as Record<string, any> | undefined)?.['debugState']) return {}
+
 		try {
-			return await executePeripheralDeviceFunction(access.deviceId, 'getDebugStates')
+			return await executePeripheralDeviceFunction(peripheralDevice._id, 'getDebugStates')
 		} catch (e) {
 			logger.error(e)
 			return {}
@@ -505,16 +534,15 @@ export namespace ServerPeripheralDeviceAPI {
 			$set: {
 				accessTokenUrl: '',
 				'secretSettings.accessToken': accessToken,
-				'settings.secretAccessToken': true,
+				'secretSettingsStatus.accessToken': true,
 			},
 		})
 	}
-	export async function removePeripheralDevice(
-		context: MethodContext,
-		deviceId: PeripheralDeviceId,
-		token?: string
-	): Promise<void> {
-		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, token, context)
+	export async function removePeripheralDevice(context: MethodContext, deviceId: PeripheralDeviceId): Promise<void> {
+		assertConnectionHasOneOfPermissions(context.connection, 'configure')
+
+		const peripheralDevice = await PeripheralDevices.findOneAsync(deviceId)
+		if (!peripheralDevice) throw new Meteor.Error(404, `PeripheralDevice "${deviceId}" not found`)
 
 		logger.info(`Removing PeripheralDevice ${peripheralDevice._id}`)
 
@@ -606,7 +634,7 @@ peripheralDeviceRouter.post('/:deviceId/uploadCredentials', bodyParser(), async 
 		await PeripheralDevices.updateAsync(peripheralDevice._id, {
 			$set: {
 				'secretSettings.credentials': body,
-				'settings.secretCredentials': true,
+				'secretSettingsStatus.credentials': true,
 			},
 		})
 
@@ -629,11 +657,11 @@ peripheralDeviceRouter.get('/:deviceId/oauthResponse', async (ctx) => {
 		const peripheralDevice = await PeripheralDevices.findOneAsync(deviceId)
 		if (!peripheralDevice) throw new Meteor.Error(404, `Peripheral device "${deviceId}" not found`)
 
-		if (!peripheralDevice.studioId)
+		if (!peripheralDevice.studioAndConfigId)
 			throw new Meteor.Error(400, `Peripheral device "${deviceId}" is not attached to a studio`)
 
-		if (!(await checkStudioExists(peripheralDevice.studioId)))
-			throw new Meteor.Error(404, `Studio "${peripheralDevice.studioId}" not found`)
+		if (!(await checkStudioExists(peripheralDevice.studioAndConfigId.studioId)))
+			throw new Meteor.Error(404, `Studio "${peripheralDevice.studioAndConfigId.studioId}" not found`)
 
 		let accessToken = ctx.query['code'] || undefined
 		const scopes = ctx.query['scope'] || undefined
@@ -677,7 +705,7 @@ peripheralDeviceRouter.post('/:deviceId/resetAuth', async (ctx) => {
 			$unset: {
 				// User credentials
 				'secretSettings.accessToken': true,
-				'settings.secretAccessToken': true,
+				'secretSettingsStatus.accessToken': true,
 				accessTokenUrl: true,
 			},
 		})
@@ -707,10 +735,10 @@ peripheralDeviceRouter.post('/:deviceId/resetAppCredentials', async (ctx) => {
 			$unset: {
 				// App credentials
 				'secretSettings.credentials': true,
-				'settings.secretCredentials': true,
+				'secretSettingsStatus.credentials': true,
 				// User credentials
 				'secretSettings.accessToken': true,
-				'settings.secretAccessToken': true,
+				'secretSettingsStatus.accessToken': true,
 				accessTokenUrl: true,
 			},
 		})
@@ -828,7 +856,9 @@ class ServerPeripheralDeviceAPIClass extends MethodContextAPI implements NewPeri
 	async getPeripheralDevice(deviceId: PeripheralDeviceId, deviceToken: string) {
 		const peripheralDevice = await checkAccessAndGetPeripheralDevice(deviceId, deviceToken, this)
 
-		const studio = peripheralDevice.studioId && (await Studios.findOneAsync(peripheralDevice.studioId))
+		const studio =
+			peripheralDevice.studioAndConfigId?.studioId &&
+			(await Studios.findOneAsync(peripheralDevice.studioAndConfigId.studioId))
 
 		return convertPeripheralDeviceForGateway(peripheralDevice, studio)
 	}
@@ -846,8 +876,8 @@ class ServerPeripheralDeviceAPIClass extends MethodContextAPI implements NewPeri
 	async testMethod(deviceId: PeripheralDeviceId, deviceToken: string, returnValue: string, throwError?: boolean) {
 		return ServerPeripheralDeviceAPI.testMethod(this, deviceId, deviceToken, returnValue, throwError)
 	}
-	async removePeripheralDevice(deviceId: PeripheralDeviceId, token?: string) {
-		return ServerPeripheralDeviceAPI.removePeripheralDevice(this, deviceId, token)
+	async removePeripheralDevice(deviceId: PeripheralDeviceId) {
+		return ServerPeripheralDeviceAPI.removePeripheralDevice(this, deviceId)
 	}
 
 	// ------ Playout Gateway --------

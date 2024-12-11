@@ -30,6 +30,7 @@ import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { PlayoutPieceInstanceModel } from './PlayoutPieceInstanceModel'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
+import type { INotificationsModel } from '../../notifications/NotificationsModel'
 
 export type DeferredFunction = (playoutModel: PlayoutModel) => void | Promise<void>
 export type DeferredAfterSaveFunction = (playoutModel: PlayoutModelReadonly) => void | Promise<void>
@@ -59,7 +60,7 @@ export interface PlayoutModelPreInit {
 	 */
 	readonly playlist: ReadonlyDeep<DBRundownPlaylist>
 	/**
-	 * The unwrapped Rundowns in this RundownPlaylist
+	 * The unwrapped Rundowns in this RundownPlaylist, sorted in order specified by RundownPlaylist
 	 */
 	readonly rundowns: ReadonlyDeep<DBRundown[]>
 
@@ -179,7 +180,7 @@ export interface PlayoutModelReadonly extends StudioPlayoutModelBaseReadonly {
 /**
  * A view of a `RundownPlaylist` and its content in a `Studio`
  */
-export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBase, BaseModel {
+export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBase, BaseModel, INotificationsModel {
 	/**
 	 * Temporary hack for debug logging
 	 */
@@ -196,8 +197,9 @@ export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBa
 	 * Update the active state of a RouteSet
 	 * @param routeSetId
 	 * @param isActive
+	 * @returns Whether the change may affect timeline generation
 	 */
-	switchRouteSet(routeSetId: string, isActive: boolean): void
+	switchRouteSet(routeSetId: string, isActive: boolean | 'toggle'): boolean
 
 	/**
 	 * Clear the currently selected PartInstances, so that nothing is selected for playback
@@ -343,6 +345,12 @@ export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBa
 	 */
 	setQuickLoopMarker(type: 'start' | 'end', marker: QuickLoopMarker | null): void
 
+	/**
+	 * Returns any segmentId's that are found between 2 quickloop markers, none will be returned if
+	 * the end is before the start.
+	 * @param start A quickloop marker
+	 * @param end A quickloop marker
+	 */
 	getSegmentsBetweenQuickLoopMarker(start: QuickLoopMarker, end: QuickLoopMarker): SegmentId[]
 
 	calculatePartTimings(

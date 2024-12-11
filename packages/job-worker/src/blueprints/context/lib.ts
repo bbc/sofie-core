@@ -61,6 +61,7 @@ import {
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration/dist/userEditing'
 import type { PlayoutMutatablePart } from '../../playout/model/PlayoutPartInstanceModel'
+import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 
 /**
  * Convert an object to have all the values of all keys (including optionals) be 'true'
@@ -99,10 +100,11 @@ export const IBlueprintPieceObjectsSampleKeys = allKeysOfObject<IBlueprintPiece>
 	abSessions: true,
 	userEditOperations: true,
 	userEditProperties: true,
+	excludeDuringPartKeepalive: true,
 })
 
 // Compile a list of the keys which are allowed to be set
-export const IBlueprintMutatablePartSampleKeys = allKeysOfObject<IBlueprintMutatablePart>({
+export const PlayoutMutatablePartSampleKeys = allKeysOfObject<PlayoutMutatablePart>({
 	title: true,
 	prompterTitle: true,
 	privateData: true,
@@ -243,6 +245,7 @@ export function convertPieceToBlueprints(piece: ReadonlyDeep<PieceInstancePiece>
 		notInVision: piece.notInVision,
 		userEditOperations: translateUserEditsToBlueprint(piece.userEditOperations),
 		userEditProperties: translateUserEditPropertiesToBlueprint(piece.userEditProperties),
+		excludeDuringPartKeepalive: piece.excludeDuringPartKeepalive,
 	}
 
 	return obj
@@ -307,6 +310,7 @@ export function convertAdLibPieceToBlueprints(adLib: ReadonlyDeep<AdLibPiece>): 
 		nextPieceTags: clone<string[] | undefined>(adLib.nextPieceTags),
 		uniquenessId: adLib.uniquenessId,
 		invertOnAirState: adLib.invertOnAirState,
+		hidden: adLib.hidden,
 	}
 
 	return obj
@@ -646,4 +650,14 @@ export function convertPartialBlueprintMutablePartToCore(
 	}
 
 	return playoutUpdatePart
+}
+
+export function createBlueprintQuickLoopInfo(playlist: ReadonlyDeep<DBRundownPlaylist>): BlueprintQuickLookInfo | null {
+	const playlistLoopProps = playlist.quickLoop
+	if (!playlistLoopProps) return null
+
+	return {
+		running: playlistLoopProps.running,
+		locked: playlistLoopProps.locked,
+	}
 }

@@ -14,6 +14,8 @@ interface IPartRemainingProps {
 	heavyClassName?: string
 	speaking?: boolean
 	vibrating?: boolean
+	/** Use the segment budget instead of the part duration if available */
+	preferSegmentTime?: boolean
 }
 
 // global variable for remembering last uttered displayTime
@@ -30,13 +32,13 @@ export const CurrentPartOrSegmentRemaining = withTiming<IPartRemainingProps, {}>
 	tickResolution: TimingTickResolution.Synced,
 	dataResolution: TimingDataResolution.Synced,
 })(
-	class CurrentPartRemaining extends React.Component<WithTiming<IPartRemainingProps>> {
+	class CurrentPartOrSegmentRemaining extends React.Component<WithTiming<IPartRemainingProps>> {
 		render(): JSX.Element | null {
 			if (!this.props.timingDurations || !this.props.timingDurations.currentTime) return null
 			if (this.props.timingDurations.currentPartInstanceId !== this.props.currentPartInstanceId) return null
-			let displayTimecode =
-				this.props.timingDurations.remainingBudgetOnCurrentSegment ??
-				this.props.timingDurations.remainingTimeOnCurrentPart
+			let displayTimecode = this.props.timingDurations.remainingTimeOnCurrentPart
+			if (this.props.preferSegmentTime)
+				displayTimecode = this.props.timingDurations.remainingBudgetOnCurrentSegment ?? displayTimecode
 			if (displayTimecode === undefined) return null
 			displayTimecode *= -1
 			return (

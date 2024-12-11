@@ -116,7 +116,7 @@ export class NotifierHandle {
 				this.result = source().get()
 				notificationsDep.changed()
 			})
-		}) as any as Tracker.Computation
+		})
 
 		notifiers[notifierId] = this
 	}
@@ -135,7 +135,7 @@ export class NotifierHandle {
 	}
 }
 
-type NotificationsSource = RundownId | SegmentId | string | undefined
+export type NotificationsSource = RundownId | SegmentId | string | undefined
 /**
  * Singleton handling all the notifications.
  *

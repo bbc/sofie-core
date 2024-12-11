@@ -8,7 +8,8 @@ import { MockJobContext, setupDefaultJobEnvironment } from '../../__mocks__/cont
 import { PlayoutSegmentModelImpl } from '../model/implementation/PlayoutSegmentModelImpl'
 import { PlayoutSegmentModel } from '../model/PlayoutSegmentModel'
 import { selectNextPart } from '../selectNextPart'
-import { ForceQuickLoopAutoNext, QuickLoopMarkerType } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { QuickLoopMarkerType } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
 class MockPart {
 	constructor(
@@ -416,5 +417,12 @@ describe('selectNextPart', () => {
 			const nextPart = selectNextPart2(previousPartInstance, null)
 			expect(nextPart).toEqual({ index: 6, part: defaultParts[6], consumesQueuedSegmentId: false })
 		}
+	})
+
+	test('on last part, with queued segment', () => {
+		// On the last part in the rundown, with a queuedSegment id set to earlier
+		defaultPlaylist.queuedSegmentId = segment2
+		const nextPart = selectNextPart2(defaultParts[8].toPartInstance(), defaultParts[8].toPartInstance())
+		expect(nextPart).toEqual({ index: 4, part: defaultParts[4], consumesQueuedSegmentId: true })
 	})
 })

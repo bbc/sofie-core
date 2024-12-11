@@ -1,6 +1,11 @@
 import { RundownImportVersions } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { ShowStyleUserContext } from '../../blueprints/context'
-import { IBlueprintActionManifest, IBlueprintAdLibPiece, IngestAdlib } from '@sofie-automation/blueprints-integration'
+import {
+	IBlueprintActionManifest,
+	IBlueprintAdLibPiece,
+	IngestAdlib,
+	NoteSeverity,
+} from '@sofie-automation/blueprints-integration'
 import { WatchedPackagesHelper } from '../../blueprints/context/watchedPackages'
 import { JobContext, ProcessedShowStyleCompound } from '../../jobs'
 import { getSystemVersion } from '../../lib'
@@ -28,12 +33,20 @@ import { WrappedShowStyleBlueprint } from '../../blueprints/cache'
 import { ReadonlyDeep } from 'type-fest'
 import { BucketId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { interpollateTranslation } from '@sofie-automation/corelib/dist/TranslatableMessage'
 
 export async function handleBucketItemImport(context: JobContext, data: BucketItemImportProps): Promise<void> {
-	await regenerateBucketItemFromIngestInfo(context, data.bucketId, data.showStyleBaseId, {
-		limitToShowStyleVariantIds: data.showStyleVariantIds,
-		payload: data.payload,
-	})
+	await regenerateBucketItemFromIngestInfo(
+		context,
+		data.bucketId,
+		data.showStyleBaseId,
+		{
+			limitToShowStyleVariantIds: data.showStyleVariantIds,
+			payload: data.payload,
+		},
+		undefined,
+		undefined
+	)
 }
 
 export async function handleBucketItemRegenerate(context: JobContext, data: BucketItemRegenerateProps): Promise<void> {
@@ -49,9 +62,11 @@ export async function handleBucketItemRegenerate(context: JobContext, data: Buck
 				projection: {
 					showStyleBaseId: 1,
 					ingestInfo: 1,
+					name: 1,
+					_rank: 1,
 				},
 			}
-		) as Promise<Pick<BucketAdLib, 'showStyleBaseId' | 'ingestInfo'>> | undefined,
+		) as Promise<Pick<BucketAdLib, 'showStyleBaseId' | 'ingestInfo' | 'name' | '_rank'>> | undefined,
 		context.directCollections.BucketAdLibActions.findOne(
 			{
 				externalId: data.externalId,
@@ -62,9 +77,10 @@ export async function handleBucketItemRegenerate(context: JobContext, data: Buck
 				projection: {
 					showStyleBaseId: 1,
 					ingestInfo: 1,
+					display: 1,
 				},
 			}
-		) as Promise<Pick<BucketAdLibAction, 'showStyleBaseId' | 'ingestInfo'>> | undefined,
+		) as Promise<Pick<BucketAdLibAction, 'showStyleBaseId' | 'ingestInfo' | 'display'>> | undefined,
 	])
 
 	// TODO - UserErrors?
@@ -74,7 +90,9 @@ export async function handleBucketItemRegenerate(context: JobContext, data: Buck
 			context,
 			data.bucketId,
 			adlibAction.showStyleBaseId,
-			adlibAction.ingestInfo
+			adlibAction.ingestInfo,
+			adlibAction.display._rank,
+			typeof adlibAction.display.label === 'string' ? adlibAction.display.label : undefined
 		)
 	} else if (adlibPiece) {
 		if (!adlibPiece.ingestInfo) throw new Error(`Bucket AdLibPiece cannot be resynced, it has no ingest data`)
@@ -82,7 +100,9 @@ export async function handleBucketItemRegenerate(context: JobContext, data: Buck
 			context,
 			data.bucketId,
 			adlibPiece.showStyleBaseId,
-			adlibPiece.ingestInfo
+			adlibPiece.ingestInfo,
+			adlibPiece._rank,
+			adlibPiece.name
 		)
 	} else {
 		throw new Error(`No Bucket Items with externalId "${data.externalId}" were found`)
@@ -93,7 +113,9 @@ async function regenerateBucketItemFromIngestInfo(
 	context: JobContext,
 	bucketId: BucketId,
 	showStyleBaseId: ShowStyleBaseId,
-	ingestInfo: BucketAdLibIngestInfo
+	ingestInfo: BucketAdLibIngestInfo,
+	oldRank: number | undefined,
+	oldLabel: string | undefined
 ): Promise<void> {
 	const [showStyleBase, allShowStyleVariants, allOldAdLibPieces, allOldAdLibActions, blueprint] = await Promise.all([
 		context.getShowStyleBase(showStyleBaseId),
@@ -130,7 +152,7 @@ async function regenerateBucketItemFromIngestInfo(
 	const actionIdsToRemove = new Set(allOldAdLibActions.map((p) => p._id))
 
 	let isFirstShowStyleVariant = true
-	let newRank: number | undefined = undefined
+	const newRank: number | undefined = oldRank ?? (await calculateHighestRankInBucket(context, bucketId)) + 1
 	let onlyGenerateOneItem = false
 
 	const ps: Promise<any>[] = []
@@ -150,13 +172,6 @@ async function regenerateBucketItemFromIngestInfo(
 				core: getSystemVersion(),
 			}
 
-			// Cache the newRank, so we only have to calculate it once:
-			if (newRank === undefined) {
-				newRank = (await calculateHighestRankInBucket(context, bucketId)) + 1
-			} else {
-				newRank++
-			}
-
 			if (isAdlibAction(rawAdlib)) {
 				if (isFirstShowStyleVariant) {
 					if (rawAdlib.allVariants) {
@@ -174,6 +189,7 @@ async function regenerateBucketItemFromIngestInfo(
 					blueprint.blueprintId,
 					bucketId,
 					newRank,
+					oldLabel,
 					importVersions
 				)
 
@@ -194,6 +210,7 @@ async function regenerateBucketItemFromIngestInfo(
 					blueprint.blueprintId,
 					bucketId,
 					newRank,
+					oldLabel,
 					importVersions
 				)
 
@@ -244,6 +261,8 @@ async function generateBucketAdlibForVariant(
 	// pieceId: BucketAdLibId | BucketAdLibActionId,
 	payload: IngestAdlib
 ): Promise<IBlueprintAdLibPiece | IBlueprintActionManifest | null> {
+	if (!blueprint.blueprint.getAdlibItem) return null
+
 	const watchedPackages = await WatchedPackagesHelper.create(context, {
 		// We don't know what the `pieceId` will be, but we do know the `externalId`
 		pieceExternalId: payload.externalId,
@@ -256,7 +275,6 @@ async function generateBucketAdlibForVariant(
 		{
 			name: `Bucket Ad-Lib`,
 			identifier: `studioId=${context.studioId},showStyleBaseId=${showStyleCompound._id},showStyleVariantId=${showStyleCompound.showStyleVariantId}`,
-			tempSendUserNotesIntoBlackHole: true, // TODO-CONTEXT
 		},
 		context,
 		showStyleCompound,
@@ -264,9 +282,26 @@ async function generateBucketAdlibForVariant(
 	)
 
 	try {
-		if (blueprint.blueprint.getAdlibItem) {
-			return blueprint.blueprint.getAdlibItem(contextForVariant, payload)
+		const adlibItem = blueprint.blueprint.getAdlibItem(contextForVariant, payload)
+
+		// Log any notes
+		// Future: This should either be a context which doesn't support notes, or should do something better with them
+		for (const note of contextForVariant.notes) {
+			switch (note.type) {
+				case NoteSeverity.ERROR:
+					contextForVariant.logError(`UserNote: ${interpollateTranslation(note.message)}`)
+					break
+				case NoteSeverity.WARNING:
+					contextForVariant.logWarning(`UserNote: ${interpollateTranslation(note.message)}`)
+					break
+				case NoteSeverity.INFO:
+				default:
+					contextForVariant.logInfo(`UserNote: ${interpollateTranslation(note.message)}`)
+					break
+			}
 		}
+
+		return adlibItem
 	} catch (err) {
 		logger.error(`Error in showStyleBlueprint.getShowStyleVariantId: ${stringifyError(err)}`)
 	}

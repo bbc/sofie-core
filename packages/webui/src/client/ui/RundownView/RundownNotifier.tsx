@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useContext } from 'react'
 import * as _ from 'underscore'
 import { Meteor } from 'meteor/meteor'
 import { Tracker } from 'meteor/tracker'
@@ -9,6 +9,7 @@ import {
 	Notification,
 	NoticeLevel,
 	getNoticeLevelForPieceStatus,
+	NotificationsSource,
 } from '../../lib/notifications/notifications'
 import { WithManagedTracker } from '../../lib/reactiveData/reactiveDataHelper'
 import { reactiveData } from '../../lib/reactiveData/reactiveData'
@@ -29,8 +30,8 @@ import { MeteorCall } from '../../lib/meteorApi'
 import { UIPieceContentStatus, UISegmentPartNote } from '@sofie-automation/meteor-lib/dist/api/rundownNotifications'
 import { isTranslatableMessage, translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { NoteSeverity, StatusCode } from '@sofie-automation/blueprints-integration'
-import { getAllowStudio, getIgnorePieceContentStatus } from '../../lib/localStorage'
-import { RundownPlaylists } from '../../collections'
+import { getIgnorePieceContentStatus } from '../../lib/localStorage'
+import { Notifications, RundownPlaylists } from '../../collections'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import {
 	PartId,
@@ -42,10 +43,14 @@ import {
 	SegmentId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
+import { UIPartInstances, UIPieceContentStatuses, UISegmentPartNotes } from '../Collections'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil'
 import { logger } from '../../lib/logging'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
+import { UserPermissionsContext, UserPermissions } from '../UserPermissions'
+import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
+import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 export const onRONotificationClick = new ReactiveVar<((e: RONotificationEvent) => void) | undefined>(undefined)
 export const reloadRundownPlaylistClick = new ReactiveVar<((e: any) => void) | undefined>(undefined)
@@ -76,6 +81,8 @@ function getNoticeLevelForNoteSeverity(type: NoteSeverity): NoticeLevel {
 }
 
 class RundownViewNotifier extends WithManagedTracker {
+	private readonly userPermissions: Readonly<UserPermissions>
+
 	private _notificationList: NotificationList
 	private _notifier: NotifierHandle
 
@@ -87,6 +94,9 @@ class RundownViewNotifier extends WithManagedTracker {
 
 	private _rundownStatus: Record<string, Notification | undefined> = {}
 	private _rundownStatusDep: Tracker.Dependency
+
+	private _dbNotifications: Record<string, Notification | undefined> = {}
+	private _dbNotificationsDep: Tracker.Dependency
 
 	private _deviceStatus: Record<string, Notification | undefined> = {}
 	private _deviceStatusDep: Tracker.Dependency
@@ -100,11 +110,14 @@ class RundownViewNotifier extends WithManagedTracker {
 	private _unsentExternalMessagesStatus: Notification | undefined = undefined
 	private _unsentExternalMessageStatusDep: Tracker.Dependency
 
-	constructor(playlistId: RundownPlaylistId | undefined, studio: UIStudio) {
+	constructor(playlistId: RundownPlaylistId | undefined, studio: UIStudio, userPermissions: Readonly<UserPermissions>) {
 		super()
+		this.userPermissions = userPermissions
+
 		this._notificationList = new NotificationList([])
 		this._mediaStatusDep = new Tracker.Dependency()
 		this._rundownStatusDep = new Tracker.Dependency()
+		this._dbNotificationsDep = new Tracker.Dependency()
 		this._deviceStatusDep = new Tracker.Dependency()
 		this._rundownImportVersionStatusDep = new Tracker.Dependency()
 		this._unsentExternalMessageStatusDep = new Tracker.Dependency()
@@ -118,6 +131,7 @@ class RundownViewNotifier extends WithManagedTracker {
 			if (playlistId) {
 				this.reactiveRundownStatus(playlistId)
 				this.reactiveVersionAndConfigStatus(playlistId)
+				this.reactiveDbNotifications(playlistId)
 
 				this.autorun(() => {
 					if (studio) {
@@ -145,6 +159,7 @@ class RundownViewNotifier extends WithManagedTracker {
 			this._mediaStatusDep.depend()
 			this._deviceStatusDep.depend()
 			this._rundownStatusDep.depend()
+			this._dbNotificationsDep.depend()
 			this._notesDep.depend()
 			this._rundownImportVersionStatusDep.depend()
 			this._unsentExternalMessageStatusDep.depend()
@@ -154,6 +169,7 @@ class RundownViewNotifier extends WithManagedTracker {
 				...Object.values<Notification | undefined>(this._deviceStatus),
 				...Object.values<Notification | undefined>(this._notes),
 				...Object.values<Notification | undefined>(this._rundownStatus),
+				...Object.values<Notification | undefined>(this._dbNotifications),
 				this._rundownImportVersionStatus,
 				this._rundownStudioConfigStatus,
 				...Object.values<Notification | undefined>(this._rundownShowStyleConfigStatuses),
@@ -190,6 +206,28 @@ class RundownViewNotifier extends WithManagedTracker {
 			const playlist = RundownPlaylists.findOne(playlistId)
 			const rundowns = rRundowns.get()
 
+			if (playlist?.notes) {
+				const playlistNotesId = playlist._id + '_playlistnotes_'
+				playlist.notes.forEach((note) => {
+					const noteId = playlistNotesId + note.origin.name + '_' + note.message + '_' + note.type
+					const notificationFromNote = new Notification(
+						noteId,
+						getNoticeLevelForNoteSeverity(note.type),
+						note.message,
+						'RundownPlaylist',
+						getCurrentTime(),
+						true,
+						[],
+						-1
+					)
+					if (!Notification.isEqual(this._rundownStatus[noteId], notificationFromNote)) {
+						this._rundownStatus[noteId] = notificationFromNote
+						this._rundownStatusDep.changed()
+					}
+					newNoteIds.push(noteId)
+				})
+			}
+
 			if (playlist && rundowns) {
 				rundowns.forEach((rundown) => {
 					const unsyncedId = rundown._id + '_unsynced'
@@ -213,7 +251,7 @@ class RundownViewNotifier extends WithManagedTracker {
 								{
 									label: t('Re-sync'),
 									type: 'primary',
-									disabled: !getAllowStudio(),
+									disabled: !this.userPermissions.studio,
 									action: () => {
 										doModalDialog({
 											title: t('Re-sync Rundown'),
@@ -230,7 +268,7 @@ class RundownViewNotifier extends WithManagedTracker {
 													(e, ts) => MeteorCall.userAction.resyncRundown(e, ts, rundown._id),
 													(err, reloadResult) => {
 														if (!err && reloadResult) {
-															handleRundownReloadResponse(t, rundown._id, reloadResult)
+															handleRundownReloadResponse(t, this.userPermissions, rundown._id, reloadResult)
 														}
 													}
 												)
@@ -288,6 +326,78 @@ class RundownViewNotifier extends WithManagedTracker {
 		})
 	}
 
+	private reactiveDbNotifications(playlistId: RundownPlaylistId) {
+		let oldNoteIds: Array<string> = []
+
+		const rRundowns = reactiveData.getRRundowns(playlistId, {
+			fields: {
+				_id: 1,
+			},
+		}) as ReactiveVar<Pick<Rundown, '_id'>[]>
+		this.autorun(() => {
+			const newNoteIds: Array<string> = []
+
+			const dbNotifications = Notifications.find({
+				$or: [
+					{
+						'relatedTo.rundownId': { $in: rRundowns.get().map((r) => r._id) },
+					},
+					{
+						'relatedTo.playlistId': playlistId,
+					},
+				],
+			}).fetch()
+
+			for (const dbNotification of dbNotifications) {
+				let source: NotificationsSource
+
+				const relatedTo = dbNotification.relatedTo
+				switch (relatedTo.type) {
+					case DBNotificationTargetType.RUNDOWN:
+						source = relatedTo.rundownId
+						break
+					case DBNotificationTargetType.PARTINSTANCE:
+					case DBNotificationTargetType.PIECEINSTANCE: {
+						const partInstanceDoc = UIPartInstances.findOne(relatedTo.partInstanceId, {
+							fields: { segmentId: 1 },
+						}) as Pick<PartInstance, 'segmentId'> | undefined
+						source = partInstanceDoc?.segmentId ?? relatedTo.rundownId
+						break
+					}
+					case DBNotificationTargetType.PLAYLIST:
+						// No mapping
+						source = undefined
+						break
+					default:
+						assertNever(relatedTo)
+						break
+				}
+
+				const id = `db_notification_${dbNotification._id}`
+				const uiNotification = new Notification(
+					id,
+					getNoticeLevelForNoteSeverity(dbNotification.severity),
+					dbNotification.message,
+					source,
+					dbNotification.created,
+					true,
+					[]
+				)
+				newNoteIds.push(id)
+
+				if (!Notification.isEqual(this._dbNotifications[id], uiNotification)) {
+					this._dbNotifications[id] = uiNotification
+					this._dbNotificationsDep.changed()
+				}
+			}
+			_.difference(oldNoteIds, newNoteIds).forEach((item) => {
+				delete this._dbNotifications[item]
+				this._dbNotificationsDep.changed()
+			})
+			oldNoteIds = newNoteIds
+		})
+	}
+
 	private reactivePeripheralDeviceStatus(studioId: StudioId | undefined) {
 		let oldDevItemIds: PeripheralDeviceId[] = []
 		let reactivePeripheralDevices:
@@ -329,7 +439,7 @@ class RundownViewNotifier extends WithManagedTracker {
 										{
 											label: t('Restart'),
 											type: 'primary',
-											disabled: !getAllowStudio(),
+											disabled: !this.userPermissions.studio,
 											action: () => {
 												doModalDialog({
 													title: t('Restart {{device}}', { device: parent.name }),
@@ -627,7 +737,7 @@ class RundownViewNotifier extends WithManagedTracker {
 									nrcsName: getRundownNrcsName(firstRundown),
 								}),
 								type: 'primary',
-								disabled: !getAllowStudio(),
+								disabled: !this.userPermissions.studio,
 								action: (e) => {
 									const reloadFunc = reloadRundownPlaylistClick.get()
 									if (reloadFunc) {
@@ -702,7 +812,7 @@ class RundownViewNotifier extends WithManagedTracker {
 	}
 }
 
-interface IProps {
+interface RundownNotifierProps {
 	// match?: {
 	// 	params: {
 	// 		rundownId?: RundownId
@@ -713,32 +823,16 @@ interface IProps {
 	studio: UIStudio
 }
 
-export const RundownNotifier = class RundownNotifier extends React.Component<IProps> {
-	private notifier: RundownViewNotifier
+export function RundownNotifier({ playlistId, studio }: RundownNotifierProps): JSX.Element | null {
+	const userPermissions = useContext(UserPermissionsContext)
 
-	constructor(props: IProps) {
-		super(props)
-		this.notifier = new RundownViewNotifier(props.playlistId, props.studio)
-	}
+	React.useEffect(() => {
+		const notifier = new RundownViewNotifier(playlistId, studio, userPermissions)
 
-	shouldComponentUpdate(nextProps: IProps): boolean {
-		if (this.props.playlistId === nextProps.playlistId && this.props.studio._id === nextProps.studio._id) {
-			return false
+		return () => {
+			notifier.stop()
 		}
-		return true
-	}
+	}, [playlistId, studio._id, userPermissions])
 
-	componentDidUpdate(): void {
-		this.notifier.stop()
-		this.notifier = new RundownViewNotifier(this.props.playlistId, this.props.studio)
-	}
-
-	componentWillUnmount(): void {
-		this.notifier.stop()
-	}
-
-	render(): React.ReactNode {
-		// this.props.connected
-		return null
-	}
+	return null
 }

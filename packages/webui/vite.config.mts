@@ -38,6 +38,13 @@ export default defineConfig({
 			// Commonjs monorepo dependencies
 			'@sofie-automation/blueprints-integration',
 		],
+		exclude: [
+			// Add all sofie paths, ensuring they use unix path syntax
+			...commonJsPaths.map((p) => p.replaceAll('\\', '/')),
+
+			// Commonjs monorepo dependencies
+			'@sofie-automation/blueprints-integration',
+		],
 	},
 	build: {
 		commonjsOptions: {
@@ -59,6 +66,10 @@ export default defineConfig({
 			'/api': 'http://127.0.0.1:3000',
 			'/site.webmanifest': 'http://127.0.0.1:3000',
 			'/meteor-runtime-config.js': 'http://127.0.0.1:3000',
+			'/websocket': {
+				target: `ws://127.0.0.1:3000`,
+				ws: true,
+			},
 		},
 	},
 

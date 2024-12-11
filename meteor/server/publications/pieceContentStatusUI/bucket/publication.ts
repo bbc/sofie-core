@@ -18,13 +18,9 @@ import {
 	meteorCustomPublish,
 	setUpCollectionOptimizedObserver,
 	TriggerUpdate,
+	SetupObserversResult,
 } from '../../../lib/customPublication'
-import { logger } from '../../../logging'
-import { resolveCredentials } from '../../../security/lib/credentials'
-import { NoSecurityReadAccess } from '../../../security/noSecurity'
 import { BucketContentCache, createReactiveContentCache } from './bucketContentCache'
-import { LiveQueryHandle } from '../../../lib/lib'
-import { StudioReadAccess } from '../../../security/studio'
 import { Bucket } from '@sofie-automation/meteor-lib/dist/collections/Buckets'
 import {
 	addItemsWithDependenciesChangesToChangedSet,
@@ -39,8 +35,8 @@ import {
 import { BucketContentObserver } from './bucketContentObserver'
 import { regenerateForBucketActionIds, regenerateForBucketAdLibIds } from './regenerateForItem'
 import { PieceContentStatusStudio } from '../checkPieceContentStatus'
-import { BucketSecurity } from '../../../security/buckets'
 import { check } from 'meteor/check'
+import { triggerWriteAccessBecauseNoCheckNecessary } from '../../../security/securityVerify'
 
 interface UIBucketContentStatusesArgs {
 	readonly studioId: StudioId
@@ -72,7 +68,7 @@ const bucketFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<Bucket, 
 async function setupUIBucketContentStatusesPublicationObservers(
 	args: ReadonlyDeep<UIBucketContentStatusesArgs>,
 	triggerUpdate: TriggerUpdate<UIBucketContentStatusesUpdateProps>
-): Promise<LiveQueryHandle[]> {
+): Promise<SetupObserversResult> {
 	const trackMediaObjectChange = (mediaId: string): Partial<UIBucketContentStatusesUpdateProps> => ({
 		invalidateMediaObjectMediaId: [mediaId],
 	})
@@ -103,7 +99,7 @@ async function setupUIBucketContentStatusesPublicationObservers(
 
 	// Set up observers:
 	return [
-		new BucketContentObserver(args.bucketId, contentCache),
+		BucketContentObserver.create(args.bucketId, contentCache),
 
 		contentCache.BucketAdLibs.find({}).observeChanges({
 			added: (id) => triggerUpdate(trackAdlibChange(protectString(id))),
@@ -250,30 +246,20 @@ meteorCustomPublish(
 		check(studioId, String)
 		check(bucketId, String)
 
-		const cred = await resolveCredentials({ userId: this.userId, token: undefined })
+		triggerWriteAccessBecauseNoCheckNecessary()
 
-		if (
-			NoSecurityReadAccess.any() ||
-			(studioId &&
-				bucketId &&
-				(await StudioReadAccess.studioContent(studioId, cred)) &&
-				(await BucketSecurity.allowReadAccess(cred, bucketId)))
-		) {
-			await setUpCollectionOptimizedObserver<
-				UIBucketContentStatus,
-				UIBucketContentStatusesArgs,
-				UIBucketContentStatusesState,
-				UIBucketContentStatusesUpdateProps
-			>(
-				`pub_${MeteorPubSub.uiBucketContentStatuses}_${studioId}_${bucketId}`,
-				{ studioId, bucketId },
-				setupUIBucketContentStatusesPublicationObservers,
-				manipulateUIBucketContentStatusesPublicationData,
-				pub,
-				100
-			)
-		} else {
-			logger.warn(`Pub.${CustomCollectionName.UIBucketContentStatuses}: Not allowed: "${studioId}" "${bucketId}"`)
-		}
+		await setUpCollectionOptimizedObserver<
+			UIBucketContentStatus,
+			UIBucketContentStatusesArgs,
+			UIBucketContentStatusesState,
+			UIBucketContentStatusesUpdateProps
+		>(
+			`pub_${MeteorPubSub.uiBucketContentStatuses}_${studioId}_${bucketId}`,
+			{ studioId, bucketId },
+			setupUIBucketContentStatusesPublicationObservers,
+			manipulateUIBucketContentStatusesPublicationData,
+			pub,
+			100
+		)
 	}
 )

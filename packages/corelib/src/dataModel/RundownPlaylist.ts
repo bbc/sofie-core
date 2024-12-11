@@ -10,6 +10,8 @@ import {
 	StudioId,
 	RundownId,
 } from './Ids'
+import { RundownPlaylistNote } from './Notes'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
 /** Details of an ab-session requested by the blueprints in onTimelineGenerate */
 export interface ABSessionInfo {
@@ -79,15 +81,6 @@ export type QuickLoopMarker =
 	| QuickLoopRundownMarker
 	| QuickLoopPlaylistMarker
 
-export enum ForceQuickLoopAutoNext {
-	/** Parts will auto-next only when explicitly set by the NRCS/blueprints */
-	DISABLED = 'disabled',
-	/** Parts will auto-next when the expected duration is set and within range */
-	ENABLED_WHEN_VALID_DURATION = 'enabled_when_valid_duration',
-	/** All parts will auto-next. If expected duration is undefined or low, the default display duration will be used */
-	ENABLED_FORCING_MIN_DURATION = 'enabled_forcing_min_duration',
-}
-
 export interface QuickLoopProps {
 	/** The Start marker */
 	start?: QuickLoopMarker
@@ -151,6 +144,9 @@ export interface DBRundownPlaylist {
 	 * In general this should only be set/cleared by a useraction, or during the take logic. This ensures that it isnt lost when doing manual set-next actions
 	 */
 	queuedSegmentId?: SegmentId
+
+	/** Holds notes (warnings / errors) thrown by the blueprints during creation */
+	notes?: Array<RundownPlaylistNote>
 
 	quickLoop?: QuickLoopProps
 
