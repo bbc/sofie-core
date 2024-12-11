@@ -116,11 +116,21 @@ const selectionReducer = (
 const defaultSelectionContext: SelectionContextType = {
 	isSelected: () => false,
 	listSelectedElements: () => [],
-	clearAndSetSelection: () => {},
-	toggleSelection: () => {},
-	addSelection: () => {},
-	removeSelection: () => {},
-	clearSelections: () => {},
+	clearAndSetSelection: () => {
+		throw new Error('Method "clearAndSetSelection" not implemented on default SelectedElementsContext')
+	},
+	toggleSelection: () => {
+		throw new Error('Method "toggleSelection" not implemented on default SelectedElementsContext')
+	},
+	addSelection: () => {
+		throw new Error('Method "addSelection" not implemented on default SelectedElementsContext')
+	},
+	removeSelection: () => {
+		throw new Error('Method "removeSelection" not implemented on default SelectedElementsContext')
+	},
+	clearSelections: () => {
+		throw new Error('Method "clearSelections" not implemented on default SelectedElementsContext')
+	},
 	getSelectedCount: () => 0,
 }
 
@@ -208,9 +218,9 @@ export function useSelectedElements(
 	useEffect(() => {
 		clearPendingChange() // element id changed so any pending change is for an old element
 
-		const pieceComputation = Tracker.nonreactive(() =>
+		const computation = Tracker.nonreactive(() =>
 			Tracker.autorun(() => {
-				const piece = Pieces.findOne(selectedElement.elementId)
+				const piece = Pieces.findOne(selectedElement?.elementId)
 				const part = UIParts.findOne({ _id: piece ? piece.startPartId : selectedElement?.elementId })
 				const segment = Segments.findOne({ _id: part ? part.segmentId : selectedElement?.elementId })
 
@@ -220,7 +230,7 @@ export function useSelectedElements(
 			})
 		)
 
-		return () => pieceComputation.stop()
+		return () => computation.stop()
 	}, [selectedElement?.elementId])
 
 	return {

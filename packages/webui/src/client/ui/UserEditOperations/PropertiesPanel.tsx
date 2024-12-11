@@ -190,7 +190,8 @@ export function PropertiesPanel(): JSX.Element {
 				<div className="propertiespanel-pop-up__footer">
 					<button
 						className="propertiespanel-pop-up__button start"
-						title={selectedElement.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
+						title={selectedElement?.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
+						disabled={!selectedElement}
 						onClick={handleRevertChanges}
 					>
 						<span className="svg">
@@ -202,7 +203,7 @@ export function PropertiesPanel(): JSX.Element {
 							</svg>
 						</span>
 						<span className="propertiespanel-pop-up__label">
-							{selectedElement.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
+							{selectedElement?.type === 'segment' ? t('Restore Segment from NRCS') : t('Restore Part from NRCS')}
 						</span>
 					</button>
 
@@ -339,7 +340,7 @@ function GlobalPropertiesEditor({
 	)
 
 	return (
-		<div className="properties-grid" style={{ color: 'white' }}>
+		<div className="properties-panel-pop-up__form styled-schema-form" style={{ color: 'white' }}>
 			{parsedSchema ? (
 				<SchemaFormWithState
 					key={(schema as any as string) ?? 'key'}

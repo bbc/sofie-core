@@ -31,13 +31,18 @@ jest.mock('react-i18next', () => ({
 		return {
 			t: (str: string) => str,
 			i18n: {
-				changeLanguage: () => new Promise(() => {}),
+				changeLanguage: () =>
+					new Promise(() => {
+						// satisfy linter - by making it uglier? ¯\_(ツ)_/¯
+					}),
 			},
 		}
 	},
 	initReactI18next: {
 		type: '3rdParty',
-		init: () => {},
+		init: () => {
+			// satisfy linter - by making it uglier? ¯\_(ツ)_/¯
+		},
 	},
 }))
 
@@ -164,6 +169,9 @@ jest.mock('../../../lib/meteorApi', () => ({
 jest.mock('../../../lib/forms/SchemaFormInPlace', () => ({
 	SchemaFormInPlace: () => <div data-testid="schema-form">Schema Form</div>,
 }))
+jest.mock('../../../lib/forms/SchemaFormWithState', () => ({
+	SchemaFormWithState: () => <div data-testid="schema-form">Schema Form</div>,
+}))
 
 describe('PropertiesPanel', () => {
 	const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -206,6 +214,18 @@ describe('PropertiesPanel', () => {
 				svgIcon: '<svg></svg>',
 			},
 		],
+		userEditProperties: {
+			operations: [
+				{
+					id: 'operation1',
+					label: { key: 'TEST_LABEL', namespaces: ['blueprint_main-showstyle'] },
+					type: UserEditingType.ACTION,
+					isActive: false,
+					svgIcon: '<svg></svg>',
+				},
+			],
+			translationNamespaces: ['blueprint_main-showstyle'],
+		},
 		isHidden: false,
 	})
 
@@ -230,7 +250,7 @@ describe('PropertiesPanel', () => {
 	test('renders empty when no element selected', () => {
 		const { container } = render(<PropertiesPanel />, { wrapper })
 		expect(container.querySelector('.properties-panel')).toBeTruthy()
-		expect(container.querySelector('.propertiespanel-pop-up__contents')).toBeFalsy()
+		expect(container.querySelector('.properties-panel-pop-up__form')).toBeFalsy()
 	})
 
 	test('renders segment properties when segment is selected', async () => {
@@ -308,8 +328,8 @@ describe('PropertiesPanel', () => {
 		})
 
 		// Wait for the switch button to be available
-		const { container } = renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
-		const switchButton = await waitFor(() => container.querySelector('.propertiespanel-pop-up__switchbutton'))
+		renderWithContext(<PropertiesPanel />, { ctxValue: result.current })
+		const switchButton = await waitFor(() => screen.getByText('TEST_LABEL'))
 		expect(switchButton).toBeTruthy()
 
 		if (!switchButton) return // above would have thrown - this is a type guard
@@ -318,7 +338,7 @@ describe('PropertiesPanel', () => {
 		await userEvent.click(switchButton)
 
 		// Check if commit button is enabled
-		const commitButton = screen.getByText('COMMIT CHANGES')
+		const commitButton = screen.getByText('Save')
 		expect(commitButton).toBeEnabled()
 
 		// Commit changes
@@ -366,7 +386,7 @@ describe('PropertiesPanel', () => {
 		})
 
 		// Click revert button
-		const revertButton = screen.getByText('REVERT CHANGES')
+		const revertButton = screen.getByText('Restore Segment from NRCS')
 		await act(async () => {
 			await userEvent.click(revertButton)
 		})
@@ -381,7 +401,7 @@ describe('PropertiesPanel', () => {
 				pieceExternalId: undefined,
 			},
 			{
-				id: 'revert-segment',
+				id: '__sofie-revert-segment',
 			}
 		)
 	})
@@ -407,6 +427,7 @@ describe('PropertiesPanel', () => {
 			await userEvent.click(closeButton!)
 		})
 
-		expect(container.querySelector('.propertiespanel-pop-up__contents')).toBeFalsy()
+		// expect(container.querySelector('.propertiespanel-pop-up__contents')).toBeFalsy()
+		expect(container.querySelector('.properties-panel-pop-up__form')).toBeFalsy()
 	})
 })
