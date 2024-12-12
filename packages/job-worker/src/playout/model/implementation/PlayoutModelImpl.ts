@@ -671,8 +671,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
 			this.#baselineHelper.saveAllToDatabase(),
-			this.context.saveRouteSetChanges(),
 			this.#notificationsHelper.saveAllToDatabase(),
+			this.context.saveRouteSetChanges(),
 		])
 
 		this.#playlistHasChanged = false

@@ -1,4 +1,4 @@
-import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
+import type { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import type { ITranslatableMessage } from './translations'
 import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import { SourceLayerType } from './content'

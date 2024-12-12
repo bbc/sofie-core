@@ -44,8 +44,8 @@ import {
 	TranslationsBundles,
 	PackageContainerStatuses,
 	TimelineDatastore,
-	SofieIngestDataCache,
 	Notifications,
+	SofieIngestDataCache,
 } from '../../collections'
 import { Collections } from '../../collections/lib'
 import { generateTranslationBundleOriginId } from '../translationsBundles'

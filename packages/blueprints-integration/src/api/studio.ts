@@ -90,17 +90,6 @@ export interface StudioBlueprintManifest<TRawConfig = IBlueprintConfig, TProcess
 	) => TProcessedConfig
 
 	/**
-	 * Process an ingest operation, to apply changes to the sofie interpretation of the ingest data
-	 */
-	processIngestData?: (
-		context: IProcessIngestDataContext,
-		mutableIngestRundown: MutableIngestRundown<any, any, any>,
-		nrcsIngestRundown: IngestRundown,
-		previousNrcsIngestRundown: IngestRundown | undefined,
-		changes: NrcsIngestChangeDetails | UserOperationChange
-	) => Promise<void>
-
-	/**
 	 * Optional method to validate the blueprint config passed to this blueprint according to the API schema.
 	 * Returns a list of messages to the caller that are used for logging or to throw if errors have been found.
 	 */
@@ -117,6 +106,17 @@ export interface StudioBlueprintManifest<TRawConfig = IBlueprintConfig, TProcess
 	 * If this method is not defined the config object will be used directly
 	 */
 	blueprintConfigToAPI?: (context: ICommonContext, config: TRawConfig) => object
+
+	/**
+	 * Process an ingest operation, to apply changes to the sofie interpretation of the ingest data
+	 */
+	processIngestData?: (
+		context: IProcessIngestDataContext,
+		mutableIngestRundown: MutableIngestRundown<any, any, any>,
+		nrcsIngestRundown: IngestRundown,
+		previousNrcsIngestRundown: IngestRundown | undefined,
+		changes: NrcsIngestChangeDetails | UserOperationChange
+	) => Promise<void>
 }
 
 export interface BlueprintResultStudioBaseline {

@@ -3583,38 +3583,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mos-connection/connector@npm:v4.2.0-alpha.1":
-  version: 4.2.0-alpha.1
-  resolution: "@mos-connection/connector@npm:4.2.0-alpha.1"
+"@mos-connection/connector@npm:v4.2.0":
+  version: 4.2.0
+  resolution: "@mos-connection/connector@npm:4.2.0"
   dependencies:
-    "@mos-connection/helper": 4.2.0-alpha.1
-    "@mos-connection/model": 4.2.0-alpha.1
+    "@mos-connection/helper": 4.2.0
+    "@mos-connection/model": 4.2.0
     eventemitter3: ^5.0.1
     iconv-lite: ^0.6.3
     tslib: ^2.5.3
     xml-js: ^1.6.11
     xmlbuilder: ^15.1.1
-  checksum: 9cecd2b0f631b1b9894a84db3fd6659d8afe11aa03acaac9798263568e35202d4f7da9694be8028c721c695e7365b2a56aa7243281b4834353e0e413d128df7a
+  checksum: e443fc08aa64dec0ad7d13b41ce9e0565f98f969a759b10e76b3961f8d5f2690e7b6fa321d2539e1cb16d88a4d05b439ab07fcf03c49bc7e10bfed69f9ff7081
   languageName: node
   linkType: hard
 
-"@mos-connection/helper@npm:4.2.0-alpha.1, @mos-connection/helper@npm:v4.2.0-alpha.1":
-  version: 4.2.0-alpha.1
-  resolution: "@mos-connection/helper@npm:4.2.0-alpha.1"
+"@mos-connection/helper@npm:4.2.0, @mos-connection/helper@npm:v4.2.0":
+  version: 4.2.0
+  resolution: "@mos-connection/helper@npm:4.2.0"
   dependencies:
-    "@mos-connection/model": 4.2.0-alpha.1
+    "@mos-connection/model": 4.2.0
     iconv-lite: ^0.6.3
     tslib: ^2.5.3
     xml-js: ^1.6.11
     xmlbuilder: ^15.1.1
-  checksum: ad809b542065b921e2d16e30f9ce04fba03d39c18a2944af2a440bfa33e05820954e0448cc6f38a3ed3d043b9b6c9b052cb24af0e6504d4c6723e5864c3df780
+  checksum: 2f0f049bb6b4323f6b3ff8ed10ed92bea3ad01b7b69ae18414a72bda00a3600ae40e73906663c1274ac3d380b9875b59c971a3aaa2b871114a516da4c7a510c8
   languageName: node
   linkType: hard
 
-"@mos-connection/model@npm:4.2.0-alpha.1, @mos-connection/model@npm:v4.2.0-alpha.1":
-  version: 4.2.0-alpha.1
-  resolution: "@mos-connection/model@npm:4.2.0-alpha.1"
-  checksum: d0bbbbe86254cf7d17f52a71d4a6b7241749ee784faf4c1d7079852bdce758562a7b2a7d1d92637dafd5d3de433bff6b04e8a969d426be65b384118028b0f6f8
+"@mos-connection/model@npm:4.2.0, @mos-connection/model@npm:v4.2.0":
+  version: 4.2.0
+  resolution: "@mos-connection/model@npm:4.2.0"
+  checksum: dda98d14d498c7680aefb2aa143bbe5506f89673e072d84076b77226671b01a4452313c8aed1194e06dbb3d3cbe6561615536c96bb2e34e6223ebd4ee8eb548f
   languageName: node
   linkType: hard
 
@@ -5240,7 +5240,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sofie-automation/meteor-lib@workspace:meteor-lib"
   dependencies:
-    "@mos-connection/helper": v4.2.0-alpha.1
+    "@mos-connection/helper": v4.2.0
     "@sofie-automation/blueprints-integration": 1.52.0-in-development
     "@sofie-automation/corelib": 1.52.0-in-development
     "@sofie-automation/shared-lib": 1.52.0-in-development
@@ -5287,7 +5287,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@sofie-automation/shared-lib@workspace:shared-lib"
   dependencies:
-    "@mos-connection/model": v4.2.0-alpha.1
+    "@mos-connection/model": v4.2.0
     timeline-state-resolver-types: 9.2.0-nightly-release52-20240923-122840-58cfbb259.0
     tslib: ^2.6.2
     type-fest: ^3.13.1
@@ -19641,7 +19641,7 @@ asn1@evs-broadcast/node-asn1:
   version: 0.0.0-use.local
   resolution: "mos-gateway@workspace:mos-gateway"
   dependencies:
-    "@mos-connection/connector": v4.2.0-alpha.1
+    "@mos-connection/connector": v4.2.0
     "@sofie-automation/server-core-integration": 1.52.0-in-development
     "@sofie-automation/shared-lib": 1.52.0-in-development
     tslib: ^2.6.2
@@ -19931,13 +19931,13 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "node-gyp-build@npm:^4.3.0":
-  version: 4.6.1
-  resolution: "node-gyp-build@npm:4.6.1"
+  version: 4.8.4
+  resolution: "node-gyp-build@npm:4.8.4"
   bin:
     node-gyp-build: bin.js
     node-gyp-build-optional: optional.js
     node-gyp-build-test: build-test.js
-  checksum: c3676d337b36803bc7792e35bf7fdcda7cdcb7e289b8f9855a5535702a82498eb976842fefcf487258c58005ca32ce3d537fbed91280b04409161dcd7232a882
+  checksum: 8b81ca8ffd5fa257ad8d067896d07908a36918bc84fb04647af09d92f58310def2d2b8614d8606d129d9cd9b48890a5d2bec18abe7fcff54818f72bedd3a7d74
   languageName: node
   linkType: hard
 
@@ -27351,12 +27351,12 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "utf-8-validate@npm:^6.0.4":
-  version: 6.0.4
-  resolution: "utf-8-validate@npm:6.0.4"
+  version: 6.0.5
+  resolution: "utf-8-validate@npm:6.0.5"
   dependencies:
     node-gyp: latest
     node-gyp-build: ^4.3.0
-  checksum: ccbfbceeed7cbad62282aed5420236d38006453ce583cf9021ad6225c2d15996a660a3b3bdd2b9344b4d3b5df5673fbaf9e70c3637628a2cd58824089d9d9153
+  checksum: ab6bd5b0db2241a990a9e1c434a29194900f9f8f715158b56d591306634cdd4f748e91b965d91a32fd459c86b082ec0a35d369bbc4efbb243b48f593c14448e8
   languageName: node
   linkType: hard
 

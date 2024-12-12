@@ -13,7 +13,7 @@ import {
 	handleMosSwapStories,
 } from '../mosStoryJobs'
 import { handleMosRundownData, handleMosRundownReadyToAir, handleMosRundownStatus } from '../mosRundownJobs'
-import { getMosIngestSegmentId, parseMosString } from '../lib'
+import { getMosIngestSegmentExternalId, parseMosString } from '../lib'
 import { MockJobContext, setupDefaultJobEnvironment } from '../../../__mocks__/context'
 import { setupMockIngestDevice, setupMockShowStyleCompound } from '../../../__mocks__/presetCollections'
 import { fixSnapshot } from '../../../__mocks__/helpers/snapshot'
@@ -543,9 +543,7 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: false,
 			})
 		).rejects.toThrow(
-			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
-				rundown.externalId
-			} not found`
+			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} in rundown ${rundown.externalId} not found`
 		)
 
 		expect(
@@ -571,9 +569,9 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: false,
 			})
 		).rejects.toThrow(
-			`Parts ${getMosIngestSegmentId(mosTypes.mosString128.stringify(newPartData.ID))} already exist in rundown ${
-				rundown.externalId
-			}`
+			`Parts ${getMosIngestSegmentExternalId(
+				mosTypes.mosString128.stringify(newPartData.ID)
+			)} already exist in rundown ${rundown.externalId}`
 		)
 	})
 
@@ -677,9 +675,7 @@ describe('Test recieved mos ingest payloads', () => {
 				replace: true,
 			})
 		).rejects.toThrow(
-			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
-				rundown.externalId
-			} not found`
+			`Part ${mosTypes.mosString128.stringify(beforeStoryId)} in rundown ${rundown.externalId} not found`
 		)
 
 		expect(
@@ -1083,7 +1079,7 @@ describe('Test recieved mos ingest payloads', () => {
 				stories,
 			})
 		).rejects.toThrow(
-			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+			`Part ${getMosIngestSegmentExternalId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
 				rundown.externalId
 			} not found`
 		)
@@ -1107,7 +1103,7 @@ describe('Test recieved mos ingest payloads', () => {
 				stories,
 			})
 		).rejects.toThrow(
-			`Part ${getMosIngestSegmentId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
+			`Part ${getMosIngestSegmentExternalId(mosTypes.mosString128.stringify(beforeStoryId))} in rundown ${
 				rundown.externalId
 			} not found`
 		)

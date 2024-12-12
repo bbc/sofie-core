@@ -5,20 +5,29 @@ import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataMo
 import { JSONBlobParse, UserEditingType, UserOperationTarget } from '@sofie-automation/blueprints-integration'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { MenuItem } from '@jstarpl/react-contextmenu'
-import { i18nTranslator } from '../i18n'
 import { doModalDialog } from '../../lib/ModalDialog'
 import { SchemaFormInPlace } from '../../lib/forms/SchemaFormInPlace'
 import { doUserAction, UserAction } from '../../lib/clientUserAction'
 import { MeteorCall } from '../../lib/meteorApi'
+import { useTranslation } from 'react-i18next'
 
-export function RenderUserEditOperations(
-	isFormEditable: boolean,
-	rundownId: RundownId,
-	_targetName: string,
-	userEditOperations: CoreUserEditingDefinition[] | undefined,
+interface UserEditOperationMenuItemsProps {
+	rundownId: RundownId
+	targetName: string
 	operationTarget: UserOperationTarget
-): React.JSX.Element | null {
-	const t = i18nTranslator
+	userEditOperations: CoreUserEditingDefinition[] | undefined
+	isFormEditable: boolean
+}
+
+export function UserEditOperationMenuItems({
+	rundownId,
+	targetName,
+	operationTarget,
+	userEditOperations,
+	isFormEditable,
+}: UserEditOperationMenuItemsProps): React.JSX.Element | null {
+	const { t } = useTranslation()
+
 	if (!userEditOperations || userEditOperations.length === 0) return null
 	return (
 		<>
@@ -27,43 +36,22 @@ export function RenderUserEditOperations(
 				switch (userEditOperation.type) {
 					case UserEditingType.ACTION:
 						return (
-							<>
-								{typeof userEditOperation.isActive == 'undefined' ? (
-									<MenuItem
-										key={`${userEditOperation.id}_${i}`}
-										onClick={(e) => {
-											doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-												MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
-													id: userEditOperation.id,
-												})
-											)
-										}}
-									>
-										{
-											// ToDo: use CSS to Style state instead of asterix
-											userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
-										}
-										<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
-									</MenuItem>
-								) : (
-									<MenuItem
-										key={`${userEditOperation.id}_${i}`}
-										onClick={(e) => {
-											doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
-												MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
-													id: userEditOperation.id,
-												})
-											)
-										}}
-									>
-										{
-											// ToDo: use CSS to Style state instead of asterix
-											userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
-										}
-										<span>{translateMessage(userEditOperation.label, i18nTranslator)}</span>
-									</MenuItem>
-								)}
-							</>
+							<MenuItem
+								key={`${userEditOperation.id}_${i}`}
+								onClick={(e) => {
+									doUserAction(t, e, UserAction.EXECUTE_USER_OPERATION, (e, ts) =>
+										MeteorCall.userAction.executeUserChangeOperation(e, ts, rundownId, operationTarget, {
+											id: userEditOperation.id,
+										})
+									)
+								}}
+							>
+								{
+									// ToDo: use CSS to Style state instead of asterix
+									userEditOperation.isActive ? <span className="action-protected">{'• '}</span> : null
+								}
+								<span>{translateMessage(userEditOperation.label, t)}</span>
+							</MenuItem>
 						)
 					case UserEditingType.FORM:
 						return (

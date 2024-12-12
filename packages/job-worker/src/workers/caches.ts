@@ -100,7 +100,15 @@ export class WorkerDataCacheWrapperImpl implements WorkerDataCacheWrapper {
  * This is a reusable cache of these properties
  */
 export interface WorkerDataCache {
+	/**
+	 * The Studio the cache belongs to
+	 * This has any ObjectWithOverrides in their original form
+	 */
 	rawStudio: ReadonlyDeep<DBStudio>
+	/**
+	 * The Studio the cache belongs to.
+	 * This has any ObjectWithOverrides in their computed/flattened form
+	 */
 	jobStudio: ReadonlyDeep<JobStudio>
 	studioBlueprint: ReadonlyDeep<WrappedStudioBlueprint>
 	studioBlueprintConfig: ProcessedStudioConfig | undefined

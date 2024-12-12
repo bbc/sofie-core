@@ -1,8 +1,8 @@
 import {
 	BlueprintMapping,
 	BlueprintMappings,
-	IStudioSettings,
 	BlueprintParentDeviceSettings,
+	IStudioSettings,
 	JSONBlobParse,
 	StudioRouteBehavior,
 	TSR,

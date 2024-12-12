@@ -243,11 +243,11 @@ export class MosHandler {
 
 				if (!this._coreHandler) throw Error('_coreHandler is undefined!')
 
-				const coreMosHandler = await this._coreHandler.registerMosDevice(
-					mosDevice,
-					this,
-					mosDevice.idSecondary ? this._openMediaHotStandby[mosDevice.idSecondary] : false
-				)
+				const coreMosHandler = await this._coreHandler.registerMosDevice(mosDevice, this, {
+					openMediaHotStandby: mosDevice.idSecondary
+						? this._openMediaHotStandby[mosDevice.idSecondary]
+						: false,
+				})
 				// this._logger.info('mosDevice registered -------------')
 				// Setup message flow between the devices:
 
@@ -489,7 +489,6 @@ export class MosHandler {
 			deviceOptions.primary.heartbeatInterval || DEFAULT_MOS_HEARTBEAT_INTERVAL
 
 		if (deviceOptions.secondary?.id && this._openMediaHotStandby[deviceOptions.secondary.id]) {
-			//@ts-expect-error  this is not yet added to the official mos-connection
 			deviceOptions.secondary.openMediaHotStandby = true
 		}
 

@@ -285,8 +285,8 @@ export function getMockCollections(): {
 			BucketAdLibPieces: new MockMongoCollection<BucketAdLib>(CollectionName.BucketAdLibPieces),
 			ExpectedMediaItems: new MockMongoCollection(CollectionName.ExpectedMediaItems),
 			ExpectedPlayoutItems: new MockMongoCollection<ExpectedPlayoutItem>(CollectionName.ExpectedPlayoutItems),
-			SofieIngestDataCache: new MockMongoCollection<SofieIngestDataCacheObj>(CollectionName.SofieIngestDataCache),
 			Notifications: new MockMongoCollection<DBNotificationObj>(CollectionName.Notifications),
+			SofieIngestDataCache: new MockMongoCollection<SofieIngestDataCacheObj>(CollectionName.SofieIngestDataCache),
 			NrcsIngestDataCache: new MockMongoCollection<NrcsIngestDataCacheObj>(CollectionName.NrcsIngestDataCache),
 			Parts: new MockMongoCollection<DBPart>(CollectionName.Parts),
 			PartInstances: new MockMongoCollection<DBPartInstance>(CollectionName.PartInstances),
@@ -343,8 +343,8 @@ export interface IMockCollections {
 	BucketAdLibPieces: MockMongoCollection<BucketAdLib>
 	ExpectedMediaItems: MockMongoCollection<ExpectedMediaItem>
 	ExpectedPlayoutItems: MockMongoCollection<ExpectedPlayoutItem>
-	SofieIngestDataCache: MockMongoCollection<SofieIngestDataCacheObj>
 	Notifications: MockMongoCollection<DBNotificationObj>
+	SofieIngestDataCache: MockMongoCollection<SofieIngestDataCacheObj>
 	NrcsIngestDataCache: MockMongoCollection<NrcsIngestDataCacheObj>
 	Parts: MockMongoCollection<DBPart>
 	PartInstances: MockMongoCollection<DBPartInstance>

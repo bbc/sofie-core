@@ -69,8 +69,8 @@ import {
 	UserActionsLog,
 	Workers,
 	WorkerThreadStatuses,
-	SofieIngestDataCache,
 	Notifications,
+	SofieIngestDataCache,
 } from '../collections'
 import { AsyncOnlyMongoCollection, AsyncOnlyReadOnlyMongoCollection } from '../collections/collection'
 import { getCollectionKey } from '../collections/lib'

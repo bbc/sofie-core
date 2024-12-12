@@ -103,20 +103,19 @@ function traceConnections() {
 	}, 1000)
 }
 
-Meteor.startup(() => {
+Meteor.startup(async () => {
 	// Reset the connection status of the devices
-	deferAsync(async () => {
-		await PeripheralDevices.updateAsync(
-			{
-				connected: true,
-				lastSeen: { $lt: getCurrentTime() - 60 * 1000 },
+
+	await PeripheralDevices.updateAsync(
+		{
+			connected: true,
+			lastSeen: { $lt: getCurrentTime() - 60 * 1000 },
+		},
+		{
+			$set: {
+				connected: false,
 			},
-			{
-				$set: {
-					connected: false,
-				},
-			},
-			{ multi: true }
-		)
-	})
+		},
+		{ multi: true }
+	)
 })

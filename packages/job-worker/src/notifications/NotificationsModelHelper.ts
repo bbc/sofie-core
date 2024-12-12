@@ -16,7 +16,6 @@ import { isEqual } from 'underscore'
 interface NotificationsLoadState {
 	dbNotifications: ReadonlyMap<string, DBNotificationObj> | null
 	updatedNotifications: Map<string, Omit<DBNotificationObj, 'created' | 'modified'> | null>
-	// createdTimestamps: Map<string, number>
 
 	removeAllMissing: boolean
 }
@@ -67,7 +66,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 	}
 
 	async getAllNotifications(category: string): Promise<INotificationWithTarget[]> {
-		const notificationsForCategory = this.#getOrCategoryEntry(category)
+		const notificationsForCategory = this.#getOrCreateCategoryEntry(category)
 
 		await this.#getAllNotificationsRaw(notificationsForCategory, category)
 
@@ -99,14 +98,14 @@ export class NotificationsModelHelper implements INotificationsModel {
 	}
 
 	clearNotification(category: string, notificationId: string): void {
-		const notificationsForCategory = this.#getOrCategoryEntry(category)
+		const notificationsForCategory = this.#getOrCreateCategoryEntry(category)
 
 		// The notification may or may not be loaded, but this indicates that to the saving that we intend to delete it
 		notificationsForCategory.updatedNotifications.set(notificationId, null)
 	}
 
 	setNotification(category: string, notification: INotificationWithTarget): void {
-		const notificationsForCategory = this.#getOrCategoryEntry(category)
+		const notificationsForCategory = this.#getOrCreateCategoryEntry(category)
 
 		const fullCategory = this.#getFullCategoryName(category)
 		notificationsForCategory.updatedNotifications.set(notification.id, {
@@ -120,7 +119,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 	}
 
 	clearAllNotifications(category: string): void {
-		const notificationsForCategory = this.#getOrCategoryEntry(category)
+		const notificationsForCategory = this.#getOrCreateCategoryEntry(category)
 
 		// Tell this store that any documents not in the `updatedNotifications` should be deleted
 		notificationsForCategory.removeAllMissing = true
@@ -129,7 +128,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 		notificationsForCategory.updatedNotifications.clear()
 	}
 
-	#getOrCategoryEntry(category: string): NotificationsLoadState {
+	#getOrCreateCategoryEntry(category: string): NotificationsLoadState {
 		let notificationsForCategory = this.#notificationsByCategory.get(category)
 		if (!notificationsForCategory) {
 			notificationsForCategory = {
@@ -199,9 +198,7 @@ export class NotificationsModelHelper implements INotificationsModel {
 							updates.push({
 								replaceOne: {
 									filter: {
-										category: this.#getFullCategoryName(category),
-										localId: localId,
-										'relatedTo.studioId': this.#context.studioId,
+										_id: updatedNotification._id,
 									},
 									replacement: {
 										...updatedNotification,
@@ -218,9 +215,9 @@ export class NotificationsModelHelper implements INotificationsModel {
 						updates.push({
 							deleteMany: {
 								filter: {
+									'relatedTo.studioId': this.#context.studioId,
 									category: this.#getFullCategoryName(category),
 									localId: { $nin: localIdsToKeep },
-									'relatedTo.studioId': this.#context.studioId,
 								},
 							},
 						})
@@ -229,9 +226,9 @@ export class NotificationsModelHelper implements INotificationsModel {
 						updates.push({
 							deleteMany: {
 								filter: {
+									'relatedTo.studioId': this.#context.studioId,
 									category: this.#getFullCategoryName(category),
 									localId: { $in: localIdsToDelete },
-									'relatedTo.studioId': this.#context.studioId,
 								},
 							},
 						})

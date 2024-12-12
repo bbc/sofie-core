@@ -32,8 +32,8 @@ import { createAsyncOnlyMongoCollection, createAsyncOnlyReadOnlyMongoCollection 
 import { ObserveChangesForHash } from './lib'
 import { logger } from '../logging'
 import { allowOnlyFields, rejectFields } from '../security/allowDeny'
-import type { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { checkUserIdHasOneOfPermissions } from '../security/auth'
+import type { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 export * from './bucket'
 export * from './packages-media'

@@ -19,7 +19,7 @@ import { ContentCache } from './reactiveContentCache'
 import { RundownContentObserver } from './RundownContentObserver'
 import { RundownsObserver } from './RundownsObserver'
 import { RundownPlaylists, Rundowns, ShowStyleBases } from '../../collections'
-import { PromiseDebounce } from '../../publications/lib/debounce'
+import { PromiseDebounce } from '../../publications/lib/PromiseDebounce'
 import { MinimalMongoCursor } from '../../collections/implementations/asyncCollection'
 
 type ChangedHandler = (showStyleBaseId: ShowStyleBaseId, cache: ContentCache) => () => void

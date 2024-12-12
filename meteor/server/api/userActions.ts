@@ -20,7 +20,6 @@ import { BucketsAPI } from './buckets'
 import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 import { AdLibActionCommon } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
-import { checkAccessToRundown } from '../security/check'
 import * as PackageManagerAPI from './packageManager'
 import { ServerPeripheralDeviceAPI } from './peripheralDevice'
 import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
@@ -49,6 +48,7 @@ import { runIngestOperation } from './ingest/lib'
 import { IngestJobs } from '@sofie-automation/corelib/dist/worker/ingest'
 import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 import { assertConnectionHasOneOfPermissions } from '../security/auth'
+import { checkAccessToRundown } from '../security/check'
 
 const PERMISSIONS_FOR_PLAYOUT_USERACTION: Array<keyof UserPermissions> = ['studio']
 const PERMISSIONS_FOR_BUCKET_MODIFICATION: Array<keyof UserPermissions> = ['studio']
@@ -1301,26 +1301,6 @@ class ServerUserActionAPI
 		)
 	}
 
-	async clearQuickLoop(
-		userEvent: string,
-		eventTime: number,
-		playlistId: RundownPlaylistId
-	): Promise<ClientAPI.ClientResponse<void>> {
-		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
-			this,
-			userEvent,
-			eventTime,
-			playlistId,
-			() => {
-				check(playlistId, String)
-			},
-			StudioJobs.ClearQuickLoopMarkers,
-			{
-				playlistId,
-			}
-		)
-	}
-
 	async executeUserChangeOperation(
 		userEvent: string,
 		eventTime: Time,
@@ -1342,6 +1322,25 @@ class ServerUserActionAPI
 					operationTarget,
 					operation,
 				})
+			}
+		)
+	}
+	async clearQuickLoop(
+		userEvent: string,
+		eventTime: number,
+		playlistId: RundownPlaylistId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this,
+			userEvent,
+			eventTime,
+			playlistId,
+			() => {
+				check(playlistId, String)
+			},
+			StudioJobs.ClearQuickLoopMarkers,
+			{
+				playlistId,
 			}
 		)
 	}

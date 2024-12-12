@@ -13,12 +13,12 @@ import type {
 	IngestRundown,
 } from '@sofie-automation/blueprints-integration'
 import { logger } from '../logging'
-import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { handleUpdatedRundown } from './ingestRundownJobs'
-import { runIngestUpdateOperation } from './runOperation'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { convertNoteToNotification } from '../notifications/util'
+import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { handleUpdatedRundown } from './ingestRundownJobs'
+import { runIngestUpdateOperation } from './runOperation'
 
 export async function handleCreateAdlibTestingRundownForShowStyleVariant(
 	context: JobContext,
@@ -64,6 +64,7 @@ export async function handleCreateAdlibTestingRundownForShowStyleVariant(
 			showStyleVariantId: showStyleVariant._id,
 		},
 	}
+
 	const createdRundownId = await runIngestUpdateOperation(context, updateData, (ingestRundown) =>
 		handleUpdatedRundown(context, updateData, ingestRundown)
 	)

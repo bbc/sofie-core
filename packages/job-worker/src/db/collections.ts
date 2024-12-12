@@ -99,8 +99,8 @@ export interface IDirectCollections {
 	BucketAdLibPieces: ICollection<BucketAdLib>
 	ExpectedMediaItems: ICollection<ExpectedMediaItem>
 	ExpectedPlayoutItems: ICollection<ExpectedPlayoutItem>
-	SofieIngestDataCache: ICollection<SofieIngestDataCacheObj>
 	Notifications: ICollection<DBNotificationObj>
+	SofieIngestDataCache: ICollection<SofieIngestDataCacheObj>
 	NrcsIngestDataCache: ICollection<NrcsIngestDataCacheObj>
 	Parts: ICollection<DBPart>
 	PartInstances: ICollection<DBPartInstance>
@@ -162,11 +162,11 @@ export function getMongoCollections(
 				database.collection(CollectionName.ExpectedPlayoutItems),
 				allowWatchers
 			),
+			Notifications: wrapMongoCollection(database.collection(CollectionName.Notifications), allowWatchers),
 			SofieIngestDataCache: wrapMongoCollection(
 				database.collection(CollectionName.SofieIngestDataCache),
 				allowWatchers
 			),
-			Notifications: wrapMongoCollection(database.collection(CollectionName.Notifications), allowWatchers),
 			NrcsIngestDataCache: wrapMongoCollection(
 				database.collection(CollectionName.NrcsIngestDataCache),
 				allowWatchers
