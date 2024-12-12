@@ -21,7 +21,6 @@ interface UserEditOperationMenuItemsProps {
 
 export function UserEditOperationMenuItems({
 	rundownId,
-	targetName,
 	operationTarget,
 	userEditOperations,
 	isFormEditable,
