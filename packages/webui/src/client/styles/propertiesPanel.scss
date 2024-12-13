@@ -47,8 +47,6 @@
 			background: #0a20ed;
 			color: #ddd;
 
-			// min-width: 2.5rem;
-			// height: 2.5rem;
 			max-width: 100%;
 
 			display: flex;
@@ -56,12 +54,6 @@
 			align-items: center;
 			gap: 0.2em;
 			align-self: stretch;
-
-			// text-align: left;
-			// padding-left: 1rem;
-			// display: flex;
-			// align-items: center;
-			// gap: 0.5rem;
 
 			text-shadow: 0.5px 0.5px 8px rgba(0, 0, 0, 0.8);
 			font-family: Roboto;
@@ -72,7 +64,6 @@
 			letter-spacing: 0.5px;
 
 			> .svg {
-				// filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
 				width: 1em;
 				height: 1.2em;
 				flex-shrink: 0;
@@ -105,18 +96,11 @@
 
 		> .propertiespanel-pop-up__footer {
 			flex: 1;
-			// position: absolute;
-			// left: 0;
-			// right: 0;
-			// bottom: 0;
 			flex: 0 0 0;
 			padding: 10px;
 			display: flex;
 			justify-content: space-between;
-			// align-items: center;
 			gap: 12px;
-
-			// margin-right: 50px;
 
 			> .propertiespanel-pop-up__button-group {
 				display: inherit;
