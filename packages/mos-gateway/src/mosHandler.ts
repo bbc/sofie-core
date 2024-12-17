@@ -38,7 +38,7 @@ import { MosGatewayConfig } from './generated/options'
 import { MosDeviceConfig } from './generated/devices'
 import { PeripheralDeviceForDevice } from '@sofie-automation/server-core-integration'
 import _ = require('underscore')
-import { MosStatusHandler } from './mosStatusHandler'
+import { MosStatusHandler } from './mosStatus/handler'
 import { isPromise } from 'util/types'
 
 export interface MosConfig {
