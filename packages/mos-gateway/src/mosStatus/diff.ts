@@ -105,13 +105,13 @@ export function diffStatuses(
 					? buildMosStatus(config, previousStatus.playbackStatus, previousReady, previousStatuses?.active)
 					: null
 
-			if (newMosStatus !== null && previousMosStatus !== newMosStatus) {
+			if ((newMosStatus !== null || previousMosStatus !== null) && previousMosStatus !== newMosStatus) {
 				statuses.push({
 					type: 'item',
 					rundownExternalId,
 					storyId,
 					itemId,
-					mosStatus: newMosStatus,
+					mosStatus: newMosStatus ?? MOS_STATUS_UNKNOWN,
 				})
 			}
 		}
