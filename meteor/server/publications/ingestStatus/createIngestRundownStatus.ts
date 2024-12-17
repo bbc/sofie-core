@@ -121,11 +121,13 @@ function createIngestPartStatus(
 
 	// Determine the ready status from the PartInstance or Part
 	const isReady = partInstance ? partInstance.part.ingestNotifyPartReady : part?.ingestNotifyPartReady
+	const itemsReady = partInstance ? partInstance.part.ingestNotifyItemsReady : part?.ingestNotifyItemsReady
 
 	return {
 		externalId: ingestPart.externalId,
 
 		isReady: isReady ?? null,
+		itemsReady: itemsReady ?? {},
 
 		playbackStatus,
 	}

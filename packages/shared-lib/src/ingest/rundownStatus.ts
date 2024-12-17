@@ -30,6 +30,8 @@ export interface IngestPartStatus {
 
 	isReady: boolean | null
 
+	itemsReady: Record<string, boolean | undefined>
+
 	playbackStatus: IngestPartPlaybackStatus
 }
 

@@ -64,6 +64,9 @@ export interface IBlueprintMutatablePart<TPrivateData = unknown, TPublicData = u
 	/** Whether part should be reported as ready to the ingest-device. Set to undefined/null to disable this reporting */
 	ingestNotifyPartReady?: boolean | null
 
+	/** Report items as ready to the ingest-device. Only named items will be reported, using the boolean value provided */
+	ingestNotifyItemsReady?: Record<string, boolean | undefined>
+
 	/** Classes to set on the TimelineGroupObj for this part */
 	classes?: string[]
 	/** Classes to set on the TimelineGroupObj for the following part */

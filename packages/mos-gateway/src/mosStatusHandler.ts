@@ -1,7 +1,15 @@
-import { getMosTypes, IMOSObjectStatus, IMOSStoryStatus, MosTypes, type IMOSDevice } from '@mos-connection/connector'
+import {
+	getMosTypes,
+	IMOSItemStatus,
+	IMOSObjectStatus,
+	IMOSStoryStatus,
+	MosTypes,
+	type IMOSDevice,
+} from '@mos-connection/connector'
 import type { MosDeviceStatusesConfig } from './generated/devices'
 import type { CoreMosDeviceHandler } from './CoreMosDeviceHandler'
 import {
+	assertNever,
 	type Observer,
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
@@ -99,22 +107,39 @@ export class MosStatusHandler {
 
 			this.#messageQueue
 				.putOnQueue(async () => {
-					const newStatus: IMOSStoryStatus = {
-						RunningOrderId: this.#mosTypes.mosString128.create(status.rundownExternalId),
-						ID: this.#mosTypes.mosString128.create(status.storyId),
-						Status: status.mosStatus,
-						Time: diffTime,
-					}
-					this.#logger.info(`Sending Story status: ${JSON.stringify(newStatus)}`)
-
 					if (this.#isDeviceConnected()) {
-						// Send status
-						await this.#mosDevice.sendStoryStatus(newStatus)
+						if (status.type === 'item') {
+							const newStatus: IMOSItemStatus = {
+								RunningOrderId: this.#mosTypes.mosString128.create(status.rundownExternalId),
+								StoryId: this.#mosTypes.mosString128.create(status.storyId),
+								ID: this.#mosTypes.mosString128.create(status.itemId),
+								Status: status.mosStatus,
+								Time: diffTime,
+							}
+							this.#logger.info(`Sending Story status: ${JSON.stringify(newStatus)}`)
+
+							// Send status
+							await this.#mosDevice.sendItemStatus(newStatus)
+						} else if (status.type === 'story') {
+							const newStatus: IMOSStoryStatus = {
+								RunningOrderId: this.#mosTypes.mosString128.create(status.rundownExternalId),
+								ID: this.#mosTypes.mosString128.create(status.storyId),
+								Status: status.mosStatus,
+								Time: diffTime,
+							}
+							this.#logger.info(`Sending Story status: ${JSON.stringify(newStatus)}`)
+
+							// Send status
+							await this.#mosDevice.sendStoryStatus(newStatus)
+						} else {
+							this.#logger.debug(`Discarding unknown queued status: ${JSON.stringify(status)}`)
+							assertNever(status)
+						}
 					} else if (this.#config.onlySendPlay) {
 						// No need to do anything.
-						this.#logger.info(`Not connected, skipping play status: ${JSON.stringify(newStatus)}`)
+						this.#logger.info(`Not connected, skipping play status: ${JSON.stringify(status)}`)
 					} else {
-						this.#logger.info(`Not connected, discarding status: ${JSON.stringify(newStatus)}`)
+						this.#logger.info(`Not connected, discarding status: ${JSON.stringify(status)}`)
 					}
 				})
 				.catch((e) => {
@@ -142,7 +167,18 @@ export class MosStatusHandler {
 	}
 }
 
-interface StoryStatusItem {
+type SomeStatusEntry = StoryStatusEntry | ItemStatusEntry
+
+interface ItemStatusEntry {
+	type: 'item'
+	rundownExternalId: string
+	storyId: string
+	itemId: string
+	mosStatus: IMOSObjectStatus
+}
+
+interface StoryStatusEntry {
+	type: 'story'
 	rundownExternalId: string
 	storyId: string
 	mosStatus: IMOSObjectStatus
@@ -152,25 +188,39 @@ function diffStatuses(
 	config: MosDeviceStatusesConfig,
 	previousStatuses: IngestRundownStatus | undefined,
 	newStatuses: IngestRundownStatus | undefined
-): StoryStatusItem[] {
+): SomeStatusEntry[] {
 	const rundownExternalId = previousStatuses?.externalId ?? newStatuses?.externalId
 
 	if ((!previousStatuses && !newStatuses) || !rundownExternalId) return []
 
-	const statuses: StoryStatusItem[] = []
+	const statuses: SomeStatusEntry[] = []
 
 	const previousStories = buildStoriesMap(previousStatuses)
 	const newStories = buildStoriesMap(newStatuses)
 
 	// Process any removed stories first
-	for (const storyId of previousStories.keys()) {
+	for (const [storyId, story] of previousStories) {
 		if (!newStories.has(storyId)) {
 			// The story has been removed
 			statuses.push({
+				type: 'story',
 				rundownExternalId,
 				storyId,
 				mosStatus: MOS_STATUS_UNKNOWN,
 			})
+
+			// Clear any items too
+			for (const [itemId, isReady] of Object.entries<boolean | undefined>(story.itemsReady)) {
+				if (isReady === undefined) continue
+
+				statuses.push({
+					type: 'item',
+					rundownExternalId,
+					storyId,
+					itemId: itemId,
+					mosStatus: MOS_STATUS_UNKNOWN,
+				})
+			}
 		}
 	}
 
@@ -178,16 +228,51 @@ function diffStatuses(
 	for (const [storyId, status] of newStories) {
 		const previousStatus = previousStories.get(storyId)
 
-		const newMosStatus = buildMosStatus(config, status, newStatuses?.active)
+		const newMosStatus = buildMosStatus(config, status.playbackStatus, status.isReady, newStatuses?.active)
 		if (
 			newMosStatus !== null &&
-			(!previousStatus || buildMosStatus(config, previousStatus, previousStatuses?.active) !== newMosStatus)
+			(!previousStatus ||
+				buildMosStatus(
+					config,
+					previousStatus.playbackStatus,
+					previousStatus.isReady,
+					previousStatuses?.active
+				) !== newMosStatus)
 		) {
 			statuses.push({
+				type: 'story',
 				rundownExternalId,
 				storyId,
 				mosStatus: newMosStatus,
 			})
+		}
+
+		// Diff each item in the story
+		const previousItemStatuses = previousStatus?.itemsReady ?? {}
+		const allItemIds = new Set<string>([...Object.keys(status.itemsReady), ...Object.keys(previousItemStatuses)])
+
+		for (const itemId of allItemIds) {
+			const newReady = status.itemsReady[itemId]
+			const previousReady = previousItemStatuses[itemId]
+
+			const newMosStatus =
+				newReady !== undefined
+					? buildMosStatus(config, status.playbackStatus, newReady, newStatuses?.active)
+					: null
+			const previousMosStatus =
+				previousReady !== undefined && previousStatus
+					? buildMosStatus(config, previousStatus.playbackStatus, previousReady, previousStatuses?.active)
+					: null
+
+			if (newMosStatus !== null && previousMosStatus !== newMosStatus) {
+				statuses.push({
+					type: 'item',
+					rundownExternalId,
+					storyId,
+					itemId,
+					mosStatus: newMosStatus,
+				})
+			}
 		}
 	}
 
@@ -210,19 +295,20 @@ function buildStoriesMap(state: IngestRundownStatus | undefined): Map<string, In
 
 function buildMosStatus(
 	config: MosDeviceStatusesConfig,
-	story: IngestPartStatus,
+	playbackStatus: IngestPartPlaybackStatus,
+	isReady: boolean | null | undefined,
 	active: IngestRundownStatus['active'] | undefined
 ): IMOSObjectStatus | null {
 	if (active === 'inactive') return MOS_STATUS_UNKNOWN
 	if (active === 'rehearsal' && !config.sendInRehearsal) return null
 
-	switch (story.playbackStatus) {
+	switch (playbackStatus) {
 		case IngestPartPlaybackStatus.PLAY:
 			return IMOSObjectStatus.PLAY
 		case IngestPartPlaybackStatus.STOP:
 			return IMOSObjectStatus.STOP
 		default:
-			switch (story.isReady) {
+			switch (isReady) {
 				case true:
 					return IMOSObjectStatus.READY
 				case false:
