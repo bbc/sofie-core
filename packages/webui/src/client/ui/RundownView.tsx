@@ -172,6 +172,7 @@ import * as RundownResolver from '../lib/RundownResolver'
 import { MAGIC_TIME_SCALE_FACTOR } from './SegmentTimeline/Constants'
 import { SelectedElementProvider, SelectedElementsContext } from './RundownView/SelectedElementsContext'
 import { PropertiesPanel } from './UserEditOperations/PropertiesPanel'
+import { DragContextProvider } from './RundownView/DragContextProvider'
 
 const REHEARSAL_MARGIN = 1 * 60 * 1000
 const HIDE_NOTIFICATIONS_AFTER_MOUNT: number | undefined = 5000
@@ -3018,6 +3019,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 			return (
 				<RundownTimingProvider playlist={playlist} defaultDuration={Settings.defaultDisplayDuration}>
 					<StudioContext.Provider value={studio}>
+						<DragContextProvider t={t}>
 						<SelectedElementProvider>
 							<SelectedElementsContext.Consumer>
 								{(selectionContext) => {
@@ -3267,6 +3269,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 								}
 							</SelectedElementsContext.Consumer>
 						</SelectedElementProvider>
+						</DragContextProvider>
 					</StudioContext.Provider>
 				</RundownTimingProvider>
 			)

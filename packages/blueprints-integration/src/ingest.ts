@@ -129,6 +129,7 @@ export enum DefaultUserOperationsTypes {
 	REVERT_PART = '__sofie-revert-part',
 	REVERT_RUNDOWN = '__sofie-revert-rundown',
 	UPDATE_PROPS = '__sofie-update-props',
+	RETIME_PIECE = '__sofie-retime-piece',
 }
 
 export interface DefaultUserOperationRevertRundown {
@@ -150,6 +151,17 @@ export interface DefaultUserOperationEditProperties {
 	payload: {
 		pieceTypeProperties: { type: string; value: Record<string, any> }
 		globalProperties: Record<string, any>
+	}
+}
+
+export type DefaultUserOperationRetimePiece = {
+	id: DefaultUserOperationsTypes.RETIME_PIECE
+	payload: {
+		segmentExternalId: string
+		partExternalId: string
+
+		inPoint: number
+		// note - at some point this could also include an updated duration
 	}
 }
 
