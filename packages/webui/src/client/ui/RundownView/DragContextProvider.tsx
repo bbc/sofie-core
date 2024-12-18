@@ -1,14 +1,18 @@
 import { PartInstanceId, PieceInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { PropsWithChildren, useRef, useState } from 'react'
-import { dragContext, IDragContext } from './DragContext'
-import { PieceUi } from '../SegmentContainer/withResolvedSegment'
-import { doUserAction, UserAction } from '../../lib/clientUserAction'
-import { MeteorCall } from '../../lib/meteorApi'
+import { PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
+import { dragContext, IDragContext } from './DragContext.js'
+import { PieceUi } from '../SegmentContainer/withResolvedSegment.js'
+import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
+import { MeteorCall } from '../../lib/meteorApi.js'
 import { TFunction } from 'i18next'
 import { UIParts } from '../Collections.js'
 import { Segments } from '../../collections/index.js'
 import { literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { DefaultUserOperationRetimePiece, DefaultUserOperationsTypes } from '@sofie-automation/blueprints-integration'
+import RundownViewEventBus, {
+	RundownViewEvents,
+	EditModeEvent,
+} from '@sofie-automation/meteor-lib/dist/triggers/RundownViewEventBus'
 
 const DRAG_TIMEOUT = 10000
 
@@ -20,6 +24,8 @@ interface Props {
 export function DragContextProvider({ t, children }: PropsWithChildren<Props>): JSX.Element {
 	const [pieceId, setPieceId] = useState<undefined | PieceInstanceId>(undefined)
 	const [piece, setPiece] = useState<undefined | PieceUi>(undefined)
+
+	const [enabled, setEnabled] = useState(false)
 
 	const partIdRef = useRef<undefined | PartInstanceId>(undefined)
 	const positionRef = useRef({ x: 0, y: 0 })
@@ -137,9 +143,26 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 		positionRef.current = pos
 	}
 
+	const onSetEditMode = useCallback((e: EditModeEvent) => {
+		if (e.state === 'toggle') {
+			setEnabled((s) => !s)
+		} else {
+			setEnabled(e.state)
+		}
+	}, [])
+
+	useEffect(() => {
+		RundownViewEventBus.on(RundownViewEvents.EDIT_MODE, onSetEditMode)
+		return () => {
+			RundownViewEventBus.off(RundownViewEvents.EDIT_MODE, onSetEditMode)
+		}
+	})
+
 	const ctx = literal<IDragContext>({
 		pieceId,
 		piece,
+
+		enabled,
 
 		startDrag,
 		setHoveredPart,
