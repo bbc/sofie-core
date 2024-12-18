@@ -179,6 +179,7 @@ export type DefaultUserOperations =
 	| DefaultUserOperationRevertPart
 	| DefaultUserOperationEditProperties
 	| DefaultUserOperationImportMOSItem
+	| DefaultUserOperationRetimePiece
 
 export interface UserOperationChange<TCustomBlueprintOperations extends { id: string } = never> {
 	/** Indicate that this change is from user operations */
