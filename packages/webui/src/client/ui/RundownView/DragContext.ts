@@ -27,6 +27,11 @@ export interface IDragContext {
 	setHoveredPart: (partId: PartInstanceId, segmentId: SegmentId, position: { x: number; y: number }) => void
 
 	/**
+	 * Whether dragging is allowed, i.e. edit mode is active
+	 */
+	enabled: boolean
+
+	/**
 	 * PieceId of the piece that is being dragged
 	 */
 	pieceId: undefined | PieceInstanceId
