@@ -1,6 +1,6 @@
 import { protectString, unprotectString } from '@sofie-automation/server-core-integration'
 import { makeMockLogger, makeMockSubscriber, makeTestParts, makeTestPlaylist, makeTestShowStyleBase } from './utils'
-import { AdLibsStatus, AdLibsTopic } from '../adLibsTopic'
+import { AdLibsTopic } from '../adLibsTopic'
 import { PlaylistHandler } from '../../collections/playlistHandler'
 import { ShowStyleBaseExt, ShowStyleBaseHandler } from '../../collections/showStyleBaseHandler'
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
@@ -8,6 +8,7 @@ import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataM
 import { AdLibActionsHandler } from '../../collections/adLibActionsHandler'
 import { GlobalAdLibActionsHandler } from '../../collections/globalAdLibActionsHandler'
 import { PartsHandler } from '../../collections/partsHandler'
+import { AdLibsEvent } from '@sofie-automation/live-status-gateway-api'
 
 function makeTestAdLibActions(): AdLibAction[] {
 	return [
@@ -77,7 +78,7 @@ describe('ActivePlaylistTopic', () => {
 
 		topic.addSubscriber(mockSubscriber)
 
-		const expectedStatus: AdLibsStatus = {
+		const expectedStatus: AdLibsEvent = {
 			event: 'adLibs',
 			rundownPlaylistId: unprotectString(playlist._id),
 			adLibs: [

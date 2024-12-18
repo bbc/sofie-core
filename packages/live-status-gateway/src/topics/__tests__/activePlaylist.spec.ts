@@ -1,4 +1,4 @@
-import { ActivePlaylistStatus, ActivePlaylistTopic } from '../activePlaylistTopic'
+import { ActivePlaylistTopic } from '../activePlaylistTopic'
 import { makeMockLogger, makeMockSubscriber, makeTestPlaylist, makeTestShowStyleBase } from './utils'
 import { PlaylistHandler } from '../../collections/playlistHandler'
 import { ShowStyleBaseExt, ShowStyleBaseHandler } from '../../collections/showStyleBaseHandler'
@@ -12,7 +12,11 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { SegmentHandler } from '../../collections/segmentHandler'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
-import { PlaylistTimingType } from '@sofie-automation/blueprints-integration'
+import {
+	ActivePlaylistEvent,
+	ActivePlaylistTimingMode,
+	SegmentCountdownType,
+} from '@sofie-automation/live-status-gateway-api'
 
 function makeEmptyTestPartInstances(): SelectedPartInstances {
 	return {
@@ -41,7 +45,7 @@ describe('ActivePlaylistTopic', () => {
 
 		topic.addSubscriber(mockSubscriber)
 
-		const expectedStatus: ActivePlaylistStatus = {
+		const expectedStatus: ActivePlaylistEvent = {
 			event: 'activePlaylist',
 			name: playlist.name,
 			id: unprotectString(playlist._id),
@@ -51,7 +55,7 @@ describe('ActivePlaylistTopic', () => {
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: undefined,
 			timing: {
-				timingMode: PlaylistTimingType.None,
+				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
 		}
@@ -117,7 +121,7 @@ describe('ActivePlaylistTopic', () => {
 
 		topic.addSubscriber(mockSubscriber)
 
-		const expectedStatus: ActivePlaylistStatus = {
+		const expectedStatus: ActivePlaylistEvent = {
 			event: 'activePlaylist',
 			name: playlist.name,
 			id: unprotectString(playlist._id),
@@ -141,7 +145,7 @@ describe('ActivePlaylistTopic', () => {
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: { a: 'b' },
 			timing: {
-				timingMode: PlaylistTimingType.None,
+				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
 		}
@@ -209,7 +213,7 @@ describe('ActivePlaylistTopic', () => {
 
 		topic.addSubscriber(mockSubscriber)
 
-		const expectedStatus: ActivePlaylistStatus = {
+		const expectedStatus: ActivePlaylistEvent = {
 			event: 'activePlaylist',
 			name: playlist.name,
 			id: unprotectString(playlist._id),
@@ -229,13 +233,13 @@ describe('ActivePlaylistTopic', () => {
 					expectedDurationMs: 10000,
 					budgetDurationMs: 12300,
 					projectedEndTime: 1600000072300,
-					countdownType: 'segment_budget_duration',
+					countdownType: SegmentCountdownType.SEGMENT_BUDGET_DURATION,
 				},
 			},
 			rundownIds: unprotectStringArray(playlist.rundownIdsInOrder),
 			publicData: { a: 'b' },
 			timing: {
-				timingMode: PlaylistTimingType.None,
+				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
 		}

@@ -12,7 +12,7 @@ import { AdLibActionsHandler } from '../collections/adLibActionsHandler'
 import { GlobalAdLibActionsHandler } from '../collections/globalAdLibActionsHandler'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { RundownBaselineAdLibItem } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibPiece'
-import { IBlueprintActionManifestDisplayContent } from '@sofie-automation/blueprints-integration'
+import { IBlueprintActionManifestDisplayContent, JSONBlob } from '@sofie-automation/blueprints-integration'
 import { ShowStyleBaseExt, ShowStyleBaseHandler } from '../collections/showStyleBaseHandler'
 import { interpollateTranslation } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { AdLibsHandler } from '../collections/adLibsHandler'
@@ -24,38 +24,9 @@ import { WithSortingMetadata, getRank, sortContent } from './helpers/contentSort
 import { isDeepStrictEqual } from 'util'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SegmentsHandler } from '../collections/segmentsHandler'
+import { AdLibsEvent, AdLibActionType, AdLibStatus, GlobalAdLibStatus } from '@sofie-automation/live-status-gateway-api'
 
 const THROTTLE_PERIOD_MS = 100
-
-export interface AdLibsStatus {
-	event: 'adLibs'
-	rundownPlaylistId: string | null
-	adLibs: AdLibStatus[]
-	globalAdLibs: GlobalAdLibStatus[]
-}
-
-interface AdLibActionType {
-	name: string
-	label: string
-}
-
-interface AdLibStatus extends AdLibStatusBase {
-	segmentId: string
-	partId: string
-}
-
-type GlobalAdLibStatus = AdLibStatusBase
-
-interface AdLibStatusBase {
-	id: string
-	name: string
-	sourceLayer: string
-	outputLayer: string
-	actionType: AdLibActionType[]
-	tags?: string[]
-	publicData: unknown
-	optionsSchema?: any
-}
 
 export class AdLibsTopic
 	extends WebSocketTopicBase
@@ -126,7 +97,7 @@ export class AdLibsTopic
 							actionType: triggerModes,
 							tags: action.display.tags,
 							publicData: action.publicData,
-							optionsSchema: action.userDataManifest.optionsSchema,
+							optionsSchema: unprotectJsonBlob(action.userDataManifest.optionsSchema),
 						},
 						id: unprotectString(action._id),
 						label: name,
@@ -195,7 +166,7 @@ export class AdLibsTopic
 							actionType: triggerModes,
 							tags: action.display.tags,
 							publicData: action.publicData,
-							optionsSchema: action.userDataManifest.optionsSchema,
+							optionsSchema: unprotectJsonBlob(action.userDataManifest.optionsSchema),
 						},
 						id: unprotectString(action._id),
 						label: name,
@@ -230,7 +201,7 @@ export class AdLibsTopic
 			)
 		}
 
-		const adLibsStatus: AdLibsStatus = this._activePlaylist
+		const adLibsStatus: AdLibsEvent = this._activePlaylist
 			? {
 					event: 'adLibs',
 					rundownPlaylistId: unprotectString(this._activePlaylist._id),
@@ -330,4 +301,8 @@ export class AdLibsTopic
 	private sendStatusToAll() {
 		this.sendStatus(this._subscribers)
 	}
+}
+
+function unprotectJsonBlob(blob: JSONBlob<any> | undefined): string | undefined {
+	return blob as string | undefined
 }
