@@ -122,6 +122,9 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 	const [rightAnchoredWidth, setRightAnchoredWidth] = useState<number>(0)
 
 	const dragCtx = useContext(dragContext)
+	const hasDraggableElement = !!piece.instance.piece.userEditOperations?.find(
+		(op) => op.type === UserEditingType.SOFIE && op.id === DefaultUserOperationsTypes.RETIME_PIECE
+	)
 
 	const state = {
 		highlight,
@@ -193,25 +196,11 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			e.preventDefault()
 			e.stopPropagation()
-			console.log(
-				'mousedown',
-				UserEditingType.SOFIE,
-				DefaultUserOperationsTypes,
-				piece.instance.piece.userEditOperations?.map(
-					(op) => op.type === UserEditingType.SOFIE && op.id === '__sofie-retime-piece'
-				)
-			)
 
-			if (
-				!piece.instance.piece.userEditOperations?.find(
-					// (op) => op.type === UserEditingType.SOFIE && op.id === DefaultUserOperationsTypes.RETIME_PIECE
-					(op) => op.type === UserEditingType.SOFIE && op.id === '__sofie-retime-piece'
-				)
-			)
-				return
+			if (!hasDraggableElement) return
 
 			const targetPos = (e.target as HTMLDivElement).getBoundingClientRect()
-			if (dragCtx)
+			if (dragCtx && dragCtx.enabled)
 				dragCtx.startDrag(
 					piece,
 					timeScale,
@@ -223,7 +212,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 					part.instance.segmentId
 				)
 		},
-		[piece, timeScale]
+		[piece, timeScale, dragCtx]
 	)
 	const itemMouseUp = useCallback((e: any) => {
 		const eM = e as MouseEvent
@@ -612,8 +601,10 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 					layer.type,
 					part.partId,
 					highlight,
-					elementWidth
+					elementWidth,
 					// this.state
+					undefined,
+					hasDraggableElement && dragCtx?.enabled
 				)}
 				data-obj-id={piece.instance._id}
 				ref={setRef}
