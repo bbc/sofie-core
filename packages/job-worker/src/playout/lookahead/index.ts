@@ -46,7 +46,7 @@ function getPrunedEndedPieceInstances(info: SelectedPartInstanceTimelineInfo) {
 	if (!info.partInstance.timings?.plannedStartedPlayback) {
 		return info.pieceInstances
 	} else {
-		return info.pieceInstances.filter((p) => !hasPieceInstanceDefinitelyEnded(p, info.nowInPart))
+		return info.pieceInstances.filter((p) => !hasPieceInstanceDefinitelyEnded(p, info.partTimes.nowInPart))
 	}
 }
 function removeInfiniteContinuations(info: PartInstanceAndPieceInstances): PartInstanceAndPieceInstances {
@@ -54,7 +54,20 @@ function removeInfiniteContinuations(info: PartInstanceAndPieceInstances): PartI
 	return {
 		...info,
 		// Ignore PieceInstances that continue from the previous part, as they will not need lookahead
-		allPieces: info.allPieces.filter((inst) => !inst.infinite || inst.piece.startPartId === partId),
+		allPieces: info.allPieces.filter((inst) => {
+			// Always include non infinite pieces
+			if (!inst.infinite) return true
+
+			// Include rundown owned pieces until they start playback
+			if (!inst.piece.startPartId) {
+				// TODO
+				// nocommit
+				return true
+			}
+
+			// Include infinite pieces in the part where they start
+			return inst.piece.startPartId === partId
+		}),
 	}
 }
 
@@ -95,7 +108,7 @@ export async function getLookeaheadObjects(
 			? removeInfiniteContinuations({
 					part: partInstancesInfo0.current.partInstance,
 					onTimeline: true,
-					nowInPart: partInstancesInfo0.current.nowInPart,
+					nowInPart: partInstancesInfo0.current.partTimes.nowInPart,
 					allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.current),
 					calculatedTimings: partInstancesInfo0.current.calculatedTimings,
 			  })
@@ -104,7 +117,7 @@ export async function getLookeaheadObjects(
 			? removeInfiniteContinuations({
 					part: partInstancesInfo0.next.partInstance,
 					onTimeline: !!partInstancesInfo0.current?.partInstance?.part?.autoNext, //TODO -QL
-					nowInPart: partInstancesInfo0.next.nowInPart,
+					nowInPart: partInstancesInfo0.next.partTimes.nowInPart,
 					allPieces: partInstancesInfo0.next.pieceInstances,
 					calculatedTimings: partInstancesInfo0.next.calculatedTimings,
 			  })
@@ -117,7 +130,7 @@ export async function getLookeaheadObjects(
 		previousPartInfo = removeInfiniteContinuations({
 			part: partInstancesInfo0.previous.partInstance,
 			onTimeline: true,
-			nowInPart: partInstancesInfo0.previous.nowInPart,
+			nowInPart: partInstancesInfo0.previous.partTimes.nowInPart,
 			allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.previous),
 			calculatedTimings: partInstancesInfo0.previous.calculatedTimings,
 		})
@@ -129,6 +142,9 @@ export async function getLookeaheadObjects(
 
 	const piecesByPart = new Map<PartId, Array<PieceInstance>>()
 	for (const piece of piecesToSearch) {
+		// Don't lookahead any rundown owned pieces, that should only happen once they become PieceInstances
+		if (!piece.startPartId) continue
+
 		const pieceInstance = wrapPieceToInstance(piece, protectString(''), protectString(''), true)
 		const existing = piecesByPart.get(piece.startPartId)
 		if (existing) {

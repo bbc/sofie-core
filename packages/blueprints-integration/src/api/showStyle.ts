@@ -35,6 +35,8 @@ import type {
 	IBlueprintSegment,
 	IBlueprintPiece,
 	IBlueprintPart,
+	IBlueprintRundownPiece,
+	IBlueprintRundownPieceDB,
 } from '../documents'
 import type { IBlueprintShowStyleVariant, IOutputLayer, ISourceLayer } from '../showStyle'
 import type { TSR, OnGenerateTimelineObj, TimelineObjectCoreExt } from '../timeline'
@@ -260,6 +262,7 @@ export interface BlueprintResultRundown {
 	rundown: IBlueprintRundown
 	globalAdLibPieces: IBlueprintAdLibPiece[]
 	globalActions: IBlueprintActionManifest[]
+	globalPieces: IBlueprintRundownPiece[]
 	baseline: BlueprintResultBaseline
 }
 export interface BlueprintResultSegment {
@@ -286,6 +289,11 @@ export interface BlueprintSyncIngestNewData {
 	actions: IBlueprintActionManifest[]
 	/** A list of adlibs that have pieceInstances in the partInstance in question */
 	referencedAdlibs: IBlueprintAdLibPieceDB[]
+	/**
+	 * The list of pieces which belong to the Rundown, and may be active
+	 * Note: Some of these may have played and been stopped before the current PartInstance
+	 */
+	rundownPieces: IBlueprintRundownPieceDB[]
 }
 
 // TODO: add something like this later?

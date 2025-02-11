@@ -11,6 +11,7 @@ import { WatchedPackagesHelper } from '../blueprints/context/watchedPackages'
 import {
 	postProcessAdLibPieces,
 	postProcessGlobalAdLibActions,
+	postProcessGlobalPieces,
 	postProcessRundownBaselineItems,
 } from '../blueprints/postProcess'
 import { logger } from '../logging'
@@ -293,6 +294,7 @@ export async function regenerateRundownAndBaselineFromIngestData(
 	logger.info(`... got ${rundownRes.baseline.timelineObjects.length} objects from baseline.`)
 	logger.info(`... got ${rundownRes.globalAdLibPieces.length} adLib objects from baseline.`)
 	logger.info(`... got ${(rundownRes.globalActions || []).length} adLib actions from baseline.`)
+	logger.info(`... got ${(rundownRes.globalPieces || []).length} global pieces from baseline.`)
 
 	const timelineObjectsBlob = serializePieceTimelineObjectsBlob(
 		postProcessRundownBaselineItems(showStyle.base.blueprintId, rundownRes.baseline.timelineObjects)
@@ -310,8 +312,14 @@ export async function regenerateRundownAndBaselineFromIngestData(
 		dbRundown._id,
 		rundownRes.globalActions || []
 	)
+	const globalPieces = postProcessGlobalPieces(
+		context,
+		rundownRes.globalPieces || [],
+		showStyle.base.blueprintId,
+		dbRundown._id
+	)
 
-	await ingestModel.setRundownBaseline(timelineObjectsBlob, adlibPieces, adlibActions)
+	await ingestModel.setRundownBaseline(timelineObjectsBlob, adlibPieces, adlibActions, globalPieces)
 
 	await updateExpectedPackagesForRundownBaseline(context, ingestModel, rundownRes.baseline)
 
