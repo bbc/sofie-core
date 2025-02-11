@@ -15,12 +15,12 @@ import { DBRundownPlaylist, RundownHoldState } from '@sofie-automation/corelib/d
 
 jest.mock('../findForLayer')
 type TfindLookaheadForLayer = jest.MockedFunction<typeof findLookaheadForLayer>
-import { findLookaheadForLayer } from '../findForLayer.js'
+import { findLookaheadForLayer, PartInstanceAndPieceInstancesInfos } from '../findForLayer.js'
 const findLookaheadForLayerMock = findLookaheadForLayer as TfindLookaheadForLayer
 
 jest.mock('../util')
 type TgetOrderedPartsAfterPlayhead = jest.MockedFunction<typeof getOrderedPartsAfterPlayhead>
-import { getOrderedPartsAfterPlayhead, PartAndPieces, PartInstanceAndPieceInstances } from '../util.js'
+import { getOrderedPartsAfterPlayhead, PartAndPieces } from '../util.js'
 import { LookaheadTimelineObject } from '../findObjects.js'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { createPartCurrentTimes } from '@sofie-automation/corelib/dist/playout/processAndPrune'
@@ -127,9 +127,8 @@ describe('Lookahead', () => {
 
 	async function expectLookaheadForLayerMock(
 		playlistId0: RundownPlaylistId,
-		partInstances: PartInstanceAndPieceInstances[],
-		previous: PartInstanceAndPieceInstances | undefined,
-		orderedPartsFollowingPlayhead: PartAndPieces[]
+		partInstancesInfo: PartInstanceAndPieceInstancesInfos,
+		orderedPartInfos: Array<PartAndPieces>
 	) {
 		const playlist = (await context.mockCollections.RundownPlaylists.findOne(playlistId0)) as DBRundownPlaylist
 		expect(playlist).toBeTruthy()
@@ -138,26 +137,24 @@ describe('Lookahead', () => {
 		expect(findLookaheadForLayerMock).toHaveBeenNthCalledWith(
 			1,
 			context,
-			playlist.currentPartInfo?.partInstanceId ?? null,
-			partInstances,
-			previous,
-			orderedPartsFollowingPlayhead,
+			partInstancesInfo,
+			orderedPartInfos,
 			'PRELOAD',
 			1,
 			LOOKAHEAD_DEFAULT_SEARCH_DISTANCE,
-			DEFAULT_PLAYOUT_STATE
+			DEFAULT_PLAYOUT_STATE,
+			undefined
 		)
 		expect(findLookaheadForLayerMock).toHaveBeenNthCalledWith(
 			2,
 			context,
-			playlist.currentPartInfo?.partInstanceId ?? null,
-			partInstances,
-			previous,
-			orderedPartsFollowingPlayhead,
+			partInstancesInfo,
+			orderedPartInfos,
 			'WHEN_CLEAR',
 			1,
 			LOOKAHEAD_DEFAULT_SEARCH_DISTANCE,
-			DEFAULT_PLAYOUT_STATE
+			DEFAULT_PLAYOUT_STATE,
+			undefined
 		)
 		findLookaheadForLayerMock.mockClear()
 	}
@@ -175,7 +172,7 @@ describe('Lookahead', () => {
 
 		expect(getOrderedPartsAfterPlayheadMock).toHaveBeenCalledTimes(1)
 		expect(getOrderedPartsAfterPlayheadMock).toHaveBeenCalledWith(context, expect.anything(), 10) // default distance
-		await expectLookaheadForLayerMock(playlistId, [], undefined, fakeParts)
+		await expectLookaheadForLayerMock(playlistId, {}, fakeParts)
 	})
 
 	function fakeResultObj(id: string, pieceId: string, layer: string): LookaheadTimelineObject {
@@ -194,22 +191,42 @@ describe('Lookahead', () => {
 		getOrderedPartsAfterPlayheadMock.mockReturnValueOnce(fakeParts.map((p) => p.part))
 
 		findLookaheadForLayerMock
-			.mockImplementationOnce((_context, _id, _parts, _prev, _parts2, layer) => ({
-				timed: [fakeResultObj('obj0', 'piece0', layer), fakeResultObj('obj1', 'piece1', layer)],
-				future: [
-					fakeResultObj('obj2', 'piece0', layer),
-					fakeResultObj('obj3', 'piece0', layer),
-					fakeResultObj('obj4', 'piece0', layer),
-				],
-			}))
-			.mockImplementationOnce((_context, _id, _parts, _prev, _parts2, layer) => ({
-				timed: [fakeResultObj('obj5', 'piece1', layer), fakeResultObj('obj6', 'piece0', layer)],
-				future: [
-					fakeResultObj('obj7', 'piece1', layer),
-					fakeResultObj('obj8', 'piece1', layer),
-					fakeResultObj('obj9', 'piece0', layer),
-				],
-			}))
+			.mockImplementationOnce(
+				(
+					_context,
+					_partInstancesInfo,
+					_orderedPartInfos,
+					layer,
+					_lookaheadTargetFutureObjects,
+					_lookaheadMaxSearchDistance,
+					_nextTimeOffset
+				) => ({
+					timed: [fakeResultObj('obj0', 'piece0', layer), fakeResultObj('obj1', 'piece1', layer)],
+					future: [
+						fakeResultObj('obj2', 'piece0', layer),
+						fakeResultObj('obj3', 'piece0', layer),
+						fakeResultObj('obj4', 'piece0', layer),
+					],
+				})
+			)
+			.mockImplementationOnce(
+				(
+					_context,
+					_partInstancesInfo,
+					_orderedPartInfos,
+					layer,
+					_lookaheadTargetFutureObjects,
+					_lookaheadMaxSearchDistance,
+					_nextTimeOffset
+				) => ({
+					timed: [fakeResultObj('obj5', 'piece1', layer), fakeResultObj('obj6', 'piece0', layer)],
+					future: [
+						fakeResultObj('obj7', 'piece1', layer),
+						fakeResultObj('obj8', 'piece1', layer),
+						fakeResultObj('obj9', 'piece0', layer),
+					],
+				})
+			)
 
 		const res = await runJobWithPlayoutModel(context, { playlistId }, null, async (playoutModel) =>
 			getLookeaheadObjects(context, playoutModel, partInstancesInfo)
@@ -218,7 +235,7 @@ describe('Lookahead', () => {
 
 		expect(getOrderedPartsAfterPlayheadMock).toHaveBeenCalledTimes(1)
 		expect(getOrderedPartsAfterPlayheadMock).toHaveBeenCalledWith(context, expect.anything(), 10) // default distance
-		await expectLookaheadForLayerMock(playlistId, [], undefined, fakeParts)
+		await expectLookaheadForLayerMock(playlistId, {}, fakeParts)
 	})
 
 	test('Different max distances', async () => {
@@ -294,7 +311,7 @@ describe('Lookahead', () => {
 		await runJobWithPlayoutModel(context, { playlistId }, null, async (playoutModel) =>
 			getLookeaheadObjects(context, playoutModel, partInstancesInfo)
 		)
-		await expectLookaheadForLayerMock(playlistId, [], expectedPrevious, fakeParts)
+		await expectLookaheadForLayerMock(playlistId, { previous: expectedPrevious }, fakeParts)
 
 		// Add a current
 		partInstancesInfo.current = {
@@ -314,7 +331,11 @@ describe('Lookahead', () => {
 		await runJobWithPlayoutModel(context, { playlistId }, null, async (playoutModel) =>
 			getLookeaheadObjects(context, playoutModel, partInstancesInfo)
 		)
-		await expectLookaheadForLayerMock(playlistId, [expectedCurrent], expectedPrevious, fakeParts)
+		await expectLookaheadForLayerMock(
+			playlistId,
+			{ current: expectedCurrent, previous: expectedPrevious },
+			fakeParts
+		)
 
 		// Add a next
 		partInstancesInfo.next = {
@@ -334,7 +355,11 @@ describe('Lookahead', () => {
 		await runJobWithPlayoutModel(context, { playlistId }, null, async (playoutModel) =>
 			getLookeaheadObjects(context, playoutModel, partInstancesInfo)
 		)
-		await expectLookaheadForLayerMock(playlistId, [expectedCurrent, expectedNext], expectedPrevious, fakeParts)
+		await expectLookaheadForLayerMock(
+			playlistId,
+			{ current: expectedCurrent, next: expectedNext, previous: expectedPrevious },
+			fakeParts
+		)
 
 		// current has autonext
 		;(partInstancesInfo.current.partInstance.part as DBPart).autoNext = true
@@ -342,7 +367,11 @@ describe('Lookahead', () => {
 		await runJobWithPlayoutModel(context, { playlistId }, null, async (playoutModel) =>
 			getLookeaheadObjects(context, playoutModel, partInstancesInfo)
 		)
-		await expectLookaheadForLayerMock(playlistId, [expectedCurrent, expectedNext], expectedPrevious, fakeParts)
+		await expectLookaheadForLayerMock(
+			playlistId,
+			{ current: expectedCurrent, next: expectedNext, previous: expectedPrevious },
+			fakeParts
+		)
 	})
 
 	test('Playlist state influences playoutState parameter', async () => {
@@ -358,14 +387,13 @@ describe('Lookahead', () => {
 
 		expect(findLookaheadForLayerMock).toHaveBeenCalledWith(
 			context,
-			null,
-			[],
-			undefined,
+			{},
 			fakeParts,
 			'PRELOAD',
 			1,
 			LOOKAHEAD_DEFAULT_SEARCH_DISTANCE,
-			{ isInHold: false, isRehearsal: true }
+			{ isInHold: false, isRehearsal: true },
+			undefined
 		)
 
 		findLookaheadForLayerMock.mockClear()
@@ -380,14 +408,13 @@ describe('Lookahead', () => {
 
 		expect(findLookaheadForLayerMock).toHaveBeenCalledWith(
 			context,
-			null,
-			[],
-			undefined,
+			{},
 			fakeParts,
 			'PRELOAD',
 			1,
 			LOOKAHEAD_DEFAULT_SEARCH_DISTANCE,
-			{ isInHold: true, isRehearsal: false }
+			{ isInHold: true, isRehearsal: false },
+			undefined
 		)
 
 		findLookaheadForLayerMock.mockClear()
@@ -402,14 +429,13 @@ describe('Lookahead', () => {
 
 		expect(findLookaheadForLayerMock).toHaveBeenCalledWith(
 			context,
-			null,
-			[],
-			undefined,
+			{},
 			fakeParts,
 			'PRELOAD',
 			1,
 			LOOKAHEAD_DEFAULT_SEARCH_DISTANCE,
-			{ isInHold: true, isRehearsal: true }
+			{ isInHold: true, isRehearsal: true },
+			undefined
 		)
 	})
 
