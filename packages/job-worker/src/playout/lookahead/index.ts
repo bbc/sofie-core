@@ -49,7 +49,10 @@ function getPrunedEndedPieceInstances(info: SelectedPartInstanceTimelineInfo) {
 		return info.pieceInstances.filter((p) => !hasPieceInstanceDefinitelyEnded(p, info.partTimes.nowInPart))
 	}
 }
-function removeInfiniteContinuations(info: PartInstanceAndPieceInstances): PartInstanceAndPieceInstances {
+function removeInfiniteContinuations(
+	info: PartInstanceAndPieceInstances,
+	isCurrentPart: boolean
+): PartInstanceAndPieceInstances {
 	const partId = info.part.part._id
 	return {
 		...info,
@@ -58,11 +61,9 @@ function removeInfiniteContinuations(info: PartInstanceAndPieceInstances): PartI
 			// Always include non infinite pieces
 			if (!inst.infinite) return true
 
-			// Include rundown owned pieces until they start playback
+			// Only include rundown owned pieces in the current part
 			if (!inst.piece.startPartId) {
-				// TODO
-				// nocommit
-				return true
+				return isCurrentPart
 			}
 
 			// Include infinite pieces in the part where they start
@@ -105,35 +106,44 @@ export async function getLookeaheadObjects(
 
 	const partInstancesInfo: PartInstanceAndPieceInstances[] = _.compact([
 		partInstancesInfo0.current
-			? removeInfiniteContinuations({
-					part: partInstancesInfo0.current.partInstance,
-					onTimeline: true,
-					nowInPart: partInstancesInfo0.current.partTimes.nowInPart,
-					allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.current),
-					calculatedTimings: partInstancesInfo0.current.calculatedTimings,
-			  })
+			? removeInfiniteContinuations(
+					{
+						part: partInstancesInfo0.current.partInstance,
+						onTimeline: true,
+						nowInPart: partInstancesInfo0.current.partTimes.nowInPart,
+						allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.current),
+						calculatedTimings: partInstancesInfo0.current.calculatedTimings,
+					},
+					true
+			  )
 			: undefined,
 		partInstancesInfo0.next
-			? removeInfiniteContinuations({
-					part: partInstancesInfo0.next.partInstance,
-					onTimeline: !!partInstancesInfo0.current?.partInstance?.part?.autoNext, //TODO -QL
-					nowInPart: partInstancesInfo0.next.partTimes.nowInPart,
-					allPieces: partInstancesInfo0.next.pieceInstances,
-					calculatedTimings: partInstancesInfo0.next.calculatedTimings,
-			  })
+			? removeInfiniteContinuations(
+					{
+						part: partInstancesInfo0.next.partInstance,
+						onTimeline: !!partInstancesInfo0.current?.partInstance?.part?.autoNext, //TODO -QL
+						nowInPart: partInstancesInfo0.next.partTimes.nowInPart,
+						allPieces: partInstancesInfo0.next.pieceInstances,
+						calculatedTimings: partInstancesInfo0.next.calculatedTimings,
+					},
+					false
+			  )
 			: undefined,
 	])
 
 	// Track the previous info for checking how the timeline will be built
 	let previousPartInfo: PartInstanceAndPieceInstances | undefined
 	if (partInstancesInfo0.previous) {
-		previousPartInfo = removeInfiniteContinuations({
-			part: partInstancesInfo0.previous.partInstance,
-			onTimeline: true,
-			nowInPart: partInstancesInfo0.previous.partTimes.nowInPart,
-			allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.previous),
-			calculatedTimings: partInstancesInfo0.previous.calculatedTimings,
-		})
+		previousPartInfo = removeInfiniteContinuations(
+			{
+				part: partInstancesInfo0.previous.partInstance,
+				onTimeline: true,
+				nowInPart: partInstancesInfo0.previous.partTimes.nowInPart,
+				allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.previous),
+				calculatedTimings: partInstancesInfo0.previous.calculatedTimings,
+			},
+			false
+		)
 	}
 
 	// TODO: Do we need to use processAndPrunePieceInstanceTimings on these pieces? In theory yes, but that gets messy and expensive.
