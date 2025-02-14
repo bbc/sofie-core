@@ -269,7 +269,7 @@ export const SegmentContextMenu = withTranslation()(
 			}
 		}
 
-		private onSetAsNextFromHere = (part: DBPart, e) => {
+		private onSetAsNextFromHere = (part: DBPart, e: React.MouseEvent | React.TouchEvent) => {
 			const offset = this.getTimePosition()
 			this.props.onSetNext(part, e, offset || 0)
 		}
