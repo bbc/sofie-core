@@ -16,8 +16,9 @@ import {
 	IBlueprintRundownPiece,
 } from '@sofie-automation/blueprints-integration'
 import {
-	AdLibActionId,
 	BlueprintId,
+	BucketAdLibActionId,
+	BucketAdLibId,
 	BucketId,
 	PartId,
 	PieceId,
@@ -162,7 +163,7 @@ function isNow(enable: TimelineObjectCoreExt<any>['enable']): boolean {
  * @param timelineUniqueIds Optional Set of ids that are not allowed. Ids of processed objects will be added to ths set
  */
 export function postProcessTimelineObjects(
-	pieceId: PieceId,
+	pieceId: PieceId | BucketAdLibId,
 	blueprintId: BlueprintId,
 	timelineObjects: TimelineObjectCoreExt<TSR.TSRTimelineContent>[],
 	timelineUniqueIds: Set<string> = new Set<string>()
@@ -335,7 +336,7 @@ export function postProcessAdLibActions(
 	return adlibActions.map((action) => {
 		if (!action.externalId)
 			throw new Error(
-				`Error in blueprint "${blueprintId}" externalId not set for adlib action in ${partId}! ("${action.display.label}")`
+				`Error in blueprint "${blueprintId}" externalId not set for adlib action in ${partId}! ("${typeof action.display.label === 'string' ? action.display.label : action.display.label.key}")`
 			)
 
 		const docId = getIdHash(
@@ -483,7 +484,7 @@ export function postProcessBucketAdLib(
 	name: string | undefined,
 	importVersions: RundownImportVersions
 ): BucketAdLib {
-	const id: PieceId = protectString(
+	const id: BucketAdLibId = protectString(
 		getHash(
 			`${showStyleCompound.showStyleVariantId}_${context.studioId}_${bucketId}_bucket_adlib_${ingestInfo.payload.externalId}`
 		)
@@ -534,7 +535,7 @@ export function postProcessBucketAction(
 	label: string | undefined,
 	importVersions: RundownImportVersions
 ): BucketAdLibAction {
-	const id: AdLibActionId = protectString(
+	const id: BucketAdLibActionId = protectString(
 		getHash(
 			`${showStyleCompound.showStyleVariantId}_${context.studioId}_${bucketId}_bucket_adlib_${ingestInfo.payload.externalId}`
 		)

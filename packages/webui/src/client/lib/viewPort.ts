@@ -32,7 +32,7 @@ export function maintainFocusOnPartInstance(
 	partInstanceId: PartInstanceId,
 	timeWindow: number,
 	forceScroll?: boolean,
-	noAnimation?: boolean
+	noAnimation?: boolean,
 ): void {
 	focusState.startTime = Date.now()
 
@@ -95,7 +95,7 @@ function quitFocusOnPart() {
 export async function scrollToPartInstance(
 	partInstanceId: PartInstanceId,
 	forceScroll?: boolean,
-	noAnimation?: boolean
+	noAnimation?: boolean,
 ): Promise<boolean> {
 	quitFocusOnPart()
 	const partInstance = UIPartInstances.findOne(partInstanceId)
@@ -109,7 +109,7 @@ export async function scrollToPart(
 	partId: PartId,
 	forceScroll?: boolean,
 	noAnimation?: boolean,
-	zoomInToFit?: boolean
+	zoomInToFit?: boolean,
 ): Promise<boolean> {
 	quitFocusOnPart()
 	const part = UIParts.findOne(partId)
@@ -132,7 +132,7 @@ let HEADER_HEIGHT: number | undefined = undefined
 export function getHeaderHeight(): number {
 	if (HEADER_HEIGHT === undefined) {
 		const root = document.querySelector(
-			'#render-target > .container-fluid-custom > .rundown-view > .rundown-header'
+			'#render-target > .container-fluid-custom > .rundown-view > .rundown-header',
 		)
 		if (!root) {
 			return FALLBACK_HEADER_HEIGHT
@@ -149,7 +149,7 @@ let currentScrollingElement: HTMLElement | undefined
 export async function scrollToSegment(
 	elementToScrollToOrSegmentId: HTMLElement | SegmentId,
 	forceScroll?: boolean,
-	noAnimation?: boolean
+	noAnimation?: boolean,
 ): Promise<boolean> {
 	const elementToScrollTo: HTMLElement | null = getElementToScrollTo(elementToScrollToOrSegmentId, false)
 	const historyTarget: HTMLElement | null = getElementToScrollTo(elementToScrollToOrSegmentId, true)
@@ -163,18 +163,18 @@ export async function scrollToSegment(
 		historyTarget,
 		forceScroll || !regionInViewport(historyTarget, elementToScrollTo),
 		noAnimation,
-		false
+		false,
 	)
 }
 
 function getElementToScrollTo(
 	elementToScrollToOrSegmentId: HTMLElement | SegmentId,
-	showHistory: boolean
+	showHistory: boolean,
 ): HTMLElement | null {
 	if (isProtectedString(elementToScrollToOrSegmentId)) {
 		// Get the current segment element
 		let targetElement = document.querySelector<HTMLElement>(
-			`#${SEGMENT_TIMELINE_ELEMENT_ID}${elementToScrollToOrSegmentId}`
+			`#${SEGMENT_TIMELINE_ELEMENT_ID}${elementToScrollToOrSegmentId}`,
 		)
 		if (showHistory && Settings.followOnAirSegmentsHistory && targetElement) {
 			let i = Settings.followOnAirSegmentsHistory
@@ -210,7 +210,7 @@ async function innerScrollToSegment(
 	elementToScrollTo: HTMLElement,
 	forceScroll?: boolean,
 	noAnimation?: boolean,
-	secondStage?: boolean
+	secondStage?: boolean,
 ): Promise<boolean> {
 	if (!secondStage) {
 		if (pendingFirstStageTimeout) {
@@ -264,7 +264,7 @@ async function innerScrollToSegment(
 			(error) => {
 				if (!error.toString().match(/another scroll/)) logger.error(error)
 				return false
-			}
+			},
 		)
 	}
 
@@ -342,7 +342,7 @@ export function lockPointer(): void {
 	if (pointerLockTurnstile === 0) {
 		// pointerLockTurnstile === 0 means that no requests for locking the pointer have been made
 		// since we last unlocked it
-		document.body.requestPointerLock()
+		document.body.requestPointerLock().catch((e) => console.error('Lock pointer failed', e))
 		// attach the event handlers only once. Once they are attached, we will track the
 		// locked state and act according to the turnstile
 		if (!pointerHandlerAttached) {

@@ -65,7 +65,7 @@ export interface LayoutDescriptor {
 }
 
 export interface CustomizableRegionSettingsManifest {
-	_id: string
+	_id: CustomizableRegions
 	title: string
 	layouts: Array<CustomizableRegionLayout>
 	navigationLink: (studioId: StudioId, layoutId: RundownLayoutId) => string

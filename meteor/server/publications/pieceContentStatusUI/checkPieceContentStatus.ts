@@ -48,6 +48,7 @@ import {
 import { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import { PieceContentStatusMessageFactory, PieceContentStatusMessageRequiredArgs } from './messageFactory'
 import { PackageStatusMessage } from '@sofie-automation/shared-lib/dist/packageStatusMessages'
+import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 
 const DEFAULT_MESSAGE_FACTORY = new PieceContentStatusMessageFactory(undefined)
 
@@ -192,7 +193,10 @@ export function getMediaObjectMediaId(
 	return undefined
 }
 
-export type PieceContentStatusPiece = Pick<PieceGeneric, '_id' | 'content' | 'expectedPackages' | 'name'> & {
+export type PieceContentStatusPiece = Pick<
+	PieceGeneric | BucketAdLib,
+	'_id' | 'content' | 'expectedPackages' | 'name'
+> & {
 	pieceInstanceId?: PieceInstanceId
 	/**
 	 * If this is an infinite continuation, check the previous PieceInstance to fill the gap when package-manager has not processed an adlibbed part
