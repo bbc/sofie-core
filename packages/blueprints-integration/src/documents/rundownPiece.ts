@@ -15,9 +15,6 @@ export interface IBlueprintRundownPiece<TPrivateData = unknown, TPublicData = un
 		isAbsolute: true
 	}
 
-	// /** Whether and how the piece is infinite */
-	// lifespan: PieceLifespan
-
 	/** Whether the piece is a real piece, or exists as a marker to stop an infinite piece. If virtual, it does not add any contents to the timeline */
 	virtual?: boolean
 
