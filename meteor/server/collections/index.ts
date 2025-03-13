@@ -62,6 +62,7 @@ export const CoreSystem = createAsyncOnlyMongoCollection<ICoreSystem>(Collection
 			'logo',
 			'blueprintId',
 			'settingsWithOverrides',
+			'enableMonitorBlockedThread',
 		])
 	},
 })

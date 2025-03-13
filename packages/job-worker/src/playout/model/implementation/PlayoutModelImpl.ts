@@ -701,14 +701,18 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		this.#playlistHasChanged = true
 	}
 
-	setOnTimelineGenerateResult(
-		persistentState: unknown | undefined,
+	setAbResolvingState(
 		assignedAbSessions: Record<string, ABSessionAssignments>,
 		trackedAbSessions: ABSessionInfo[]
 	): void {
-		this.playlistImpl.previousPersistentState = persistentState
 		this.playlistImpl.assignedAbSessions = assignedAbSessions
 		this.playlistImpl.trackedAbSessions = trackedAbSessions
+
+		this.#playlistHasChanged = true
+	}
+
+	setBlueprintPersistentState(persistentState: unknown | undefined): void {
+		this.playlistImpl.previousPersistentState = persistentState
 
 		this.#playlistHasChanged = true
 	}

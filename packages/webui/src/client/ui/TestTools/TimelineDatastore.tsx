@@ -1,14 +1,11 @@
 import { useSubscription, useTracker } from '../../lib/ReactMeteorData/react-meteor-data'
 import { StudioSelect } from './StudioSelect'
-import { Mongo } from 'meteor/mongo'
-import { DBTimelineDatastoreEntry } from '@sofie-automation/corelib/dist/dataModel/TimelineDatastore'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
-
-const TimelineDatastore = new Mongo.Collection<DBTimelineDatastoreEntry>('timelineDatastore')
+import { TimelineDatastore } from './collections'
 
 interface TimelineDatastoreViewRouteParams {
 	studioId: string

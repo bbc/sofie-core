@@ -488,7 +488,17 @@ export class MosHandler {
 						this._logger.info('Initializing new device: ' + deviceId)
 						devicesToAdd[deviceId] = device
 					} else {
-						if (!_.isEqual(oldDevice.deviceOptions, device.options)) {
+						// elsewhere the oldDevice.deviceOptions has been modified with defaults
+						const newOptionsWithDefaults = {
+							...device.options,
+							primary: {
+								...device.options.primary,
+								heartbeatInterval:
+									device.options.primary.heartbeatInterval || DEFAULT_MOS_HEARTBEAT_INTERVAL,
+								timeout: device.options.primary.timeout || DEFAULT_MOS_TIMEOUT_TIME,
+							},
+						}
+						if (!_.isEqual(oldDevice.deviceOptions, newOptionsWithDefaults)) {
 							this._logger.info('Re-initializing device: ' + deviceId)
 							devicesToRemove[deviceId] = true
 							devicesToAdd[deviceId] = device

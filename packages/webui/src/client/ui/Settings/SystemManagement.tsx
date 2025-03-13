@@ -30,6 +30,7 @@ import { WrappedOverridableItemNormal, useOverrideOpHelper } from './util/Overri
 import { CheckboxControl } from '../../lib/Components/Checkbox'
 import { CombinedMultiLineTextInputControl, MultiLineTextInputControl } from '../../lib/Components/MultiLineTextInput'
 import { TextInputControl } from '../../lib/Components/TextInput'
+import { createPrivateApiPath } from '../../url'
 
 interface WithCoreSystemProps {
 	coreSystem: ICoreSystem
@@ -215,7 +216,7 @@ function SystemManagementEvaluationsMessage({ coreSystem }: Readonly<WithCoreSys
 					label={t('Enabled')}
 					item={wrappedItem}
 					// @ts-expect-error deep property
-					itemKey={'evaluations.enabled'}
+					itemKey={'evaluationsMessage.enabled'}
 					overrideHelper={overrideHelper}
 				>
 					{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
@@ -225,7 +226,7 @@ function SystemManagementEvaluationsMessage({ coreSystem }: Readonly<WithCoreSys
 					label={t('Heading')}
 					item={wrappedItem}
 					// @ts-expect-error deep property
-					itemKey={'evaluations.heading'}
+					itemKey={'evaluationsMessage.heading'}
 					overrideHelper={overrideHelper}
 				>
 					{(value, handleUpdate) => (
@@ -242,7 +243,7 @@ function SystemManagementEvaluationsMessage({ coreSystem }: Readonly<WithCoreSys
 					label={t('Message')}
 					item={wrappedItem}
 					// @ts-expect-error deep property
-					itemKey={'evaluations.message'}
+					itemKey={'evaluationsMessage.message'}
 					overrideHelper={overrideHelper}
 					hint={t('Message shown to users in the Evaluations form')}
 				>
@@ -572,7 +573,11 @@ function SystemManagementHeapSnapshot() {
 					<>
 						<div>{t(`Are you sure? This will cause the whole Sofie system to be unresponsive several seconds!`)}</div>
 
-						<a className="btn btn-primary" href="/api/private/heapSnapshot/retrieve?areYouSure=yes" onClick={onConfirm}>
+						<a
+							className="btn btn-primary"
+							href={createPrivateApiPath('heapSnapshot/retrieve?areYouSure=yes')}
+							onClick={onConfirm}
+						>
 							{t(`Yes, Take and Download Memory Heap Snapshot`)}
 						</a>
 						<button className="btn btn-default" onClick={onReset}>
