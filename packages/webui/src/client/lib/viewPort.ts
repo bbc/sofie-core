@@ -17,6 +17,18 @@ const focusState = {
 	startTime: 0,
 }
 
+const viewPortScrollingState = {
+	isProgrammaticScrollInProgress: false,
+	lastProgrammaticScrollTime: 0,
+}
+
+export function getViewPortScrollingState(): {
+	isProgrammaticScrollInProgress: boolean
+	lastProgrammaticScrollTime: number
+} {
+	return viewPortScrollingState
+}
+
 export function maintainFocusOnPartInstance(
 	partInstanceId: PartInstanceId,
 	timeWindow: number,
@@ -280,11 +292,6 @@ function getRegionPosition(topElement: HTMLElement, bottomElement: HTMLElement):
 	bottom = Math.floor(bottom)
 
 	return { top, bottom }
-}
-
-export const viewPortScrollingState = {
-	isProgrammaticScrollInProgress: false,
-	lastProgrammaticScrollTime: 0,
 }
 
 export async function scrollToPosition(scrollPosition: number, noAnimation?: boolean): Promise<void> {
