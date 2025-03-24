@@ -71,6 +71,7 @@ export default defineConfig(({ command }) => ({
 	},
 
 	server: {
+		allowedHosts: true,
 		proxy: {
 			[basePath + '/api']: 'http://127.0.0.1:3000',
 			[basePath + '/site.webmanifest']: 'http://127.0.0.1:3000',
@@ -81,7 +82,6 @@ export default defineConfig(({ command }) => ({
 				ws: true,
 			},
 		},
-		allowedHosts: true,
 	},
 
 	// TODO: old meteor recompile instructions?

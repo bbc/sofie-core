@@ -15,6 +15,7 @@ import { calculateCurrentSegmentTiming } from './helpers/segmentTiming'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import _ = require('underscore')
 import { calculateCurrentPartTiming } from './helpers/partTiming'
+import { getCurrentSegmentParts } from './helpers/segmentParts'
 import { SelectedPieceInstances, PieceInstanceMin } from '../collections/pieceInstancesHandler'
 import { toPieceStatus } from './helpers/pieceStatus'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
@@ -95,6 +96,8 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 
 		const currentPart = this._currentPartInstance ? this._currentPartInstance.part : null
 		const nextPart = this._nextPartInstance ? this._nextPartInstance.part : null
+		const currentSegmentParts =
+			(currentPart && this._partsBySegmentId[unprotectString(currentPart.segmentId)]) ?? []
 
 		const message = this._activePlaylist
 			? literal<ActivePlaylistEvent>({
@@ -129,7 +132,11 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 										this._currentPartInstance,
 										this._firstInstanceInSegmentPlayout,
 										this._partInstancesInCurrentSegment,
-										this._partsBySegmentId[unprotectString(currentPart.segmentId)] ?? []
+										currentSegmentParts
+									),
+									parts: getCurrentSegmentParts(
+										this._partInstancesInCurrentSegment,
+										currentSegmentParts
 									),
 							  })
 							: null,

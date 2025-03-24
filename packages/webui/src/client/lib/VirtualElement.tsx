@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from 'react'
 import { InView } from 'react-intersection-observer'
+import { getViewPortScrollingState } from './viewPort'
 
 interface IElementMeasurements {
 	width: string | number
@@ -11,12 +12,14 @@ interface IElementMeasurements {
 	id: string | undefined
 }
 
-const OPTIMIZE_PERIOD = 5000
 const IDLE_CALLBACK_TIMEOUT = 100
+// Increased delay for Safari, as Safari doesn't have scroll time when using 'smooth' scroll
+const SAFARI_VISIBILITY_DELAY = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? 100 : 0
 
 /**
  * This is a component that allows optimizing the amount of elements present in the DOM through replacing them
  * with placeholders when they aren't visible in the viewport.
+ * Scroll timing issues, should be handled in viewPort.tsx where the scrolling state is tracked.
  *
  * @export
  * @param {(React.PropsWithChildren<{
@@ -65,6 +68,9 @@ export function VirtualElement({
 	const [ref, setRef] = useState<HTMLDivElement | null>(null)
 	const [childRef, setChildRef] = useState<HTMLElement | null>(null)
 
+	// Track the last visibility change to debounce
+	const lastVisibilityChangeRef = useRef<number>(0)
+
 	const isMeasured = !!measurements
 
 	const styleObj = useMemo<React.CSSProperties>(
@@ -75,13 +81,43 @@ export function VirtualElement({
 			marginLeft: measurements?.marginLeft,
 			marginRight: measurements?.marginRight,
 			marginBottom: measurements?.marginBottom,
+			// These properties are used to ensure that if a prior element is changed from
+			// placeHolder to element, the position of visible elements are not affected.
+			contentVisibility: 'auto',
+			containIntrinsicSize: `0 ${measurements?.clientHeight ?? placeholderHeight ?? '0'}px`,
+			contain: 'size layout',
 		}),
 		[width, measurements, placeholderHeight]
 	)
 
-	const onVisibleChanged = useCallback((visible: boolean) => {
-		setInView(visible)
-	}, [])
+	const onVisibleChanged = useCallback(
+		(visible: boolean) => {
+			const now = Date.now()
+
+			// Debounce visibility changes in Safari to prevent unnecessary recaconditions
+			if (SAFARI_VISIBILITY_DELAY > 0 && now - lastVisibilityChangeRef.current < SAFARI_VISIBILITY_DELAY) {
+				return
+			}
+
+			lastVisibilityChangeRef.current = now
+
+			setInView(visible)
+		},
+		[inView]
+	)
+
+	const isScrolling = (): boolean => {
+		// Don't do updates while scrolling:
+		if (getViewPortScrollingState().isProgrammaticScrollInProgress) {
+			return true
+		}
+		// And wait if a programmatic scroll was done recently:
+		const timeSinceLastProgrammaticScroll = Date.now() - getViewPortScrollingState().lastProgrammaticScrollTime
+		if (timeSinceLastProgrammaticScroll < 100) {
+			return true
+		}
+		return false
+	}
 
 	useEffect(() => {
 		if (inView === true) {
@@ -90,7 +126,20 @@ export function VirtualElement({
 		}
 
 		let idleCallback: number | undefined
-		const optimizeTimeout = window.setTimeout(() => {
+		let optimizeTimeout: number | undefined
+
+		const scheduleOptimization = () => {
+			if (optimizeTimeout) {
+				window.clearTimeout(optimizeTimeout)
+			}
+			// Don't proceed if we're scrolling
+			if (isScrolling()) {
+				// Reschedule for after the scroll should be complete
+				const scrollDelay = 400
+				window.clearTimeout(optimizeTimeout)
+				optimizeTimeout = window.setTimeout(scheduleOptimization, scrollDelay)
+				return
+			}
 			idleCallback = window.requestIdleCallback(
 				() => {
 					if (childRef) {
@@ -102,16 +151,20 @@ export function VirtualElement({
 					timeout: IDLE_CALLBACK_TIMEOUT,
 				}
 			)
-		}, OPTIMIZE_PERIOD)
+		}
+
+		// Schedule the optimization:
+		scheduleOptimization()
 
 		return () => {
 			if (idleCallback) {
 				window.cancelIdleCallback(idleCallback)
 			}
-
-			window.clearTimeout(optimizeTimeout)
+			if (optimizeTimeout) {
+				window.clearTimeout(optimizeTimeout)
+			}
 		}
-	}, [childRef, inView])
+	}, [childRef, inView, measurements])
 
 	const showPlaceholder = !isShowingChildren && (!initialShow || isMeasured)
 
@@ -127,7 +180,13 @@ export function VirtualElement({
 		const refreshSizingTimeout = window.setTimeout(() => {
 			idleCallback = window.requestIdleCallback(
 				() => {
-					setMeasurements(measureElement(el))
+					const newMeasurements = measureElement(el)
+					setMeasurements(newMeasurements)
+
+					// Set CSS variable for expected height on parent element
+					if (ref && newMeasurements) {
+						ref.style.setProperty('--expected-height', `${newMeasurements.clientHeight}px`)
+					}
 				},
 				{
 					timeout: IDLE_CALLBACK_TIMEOUT,
@@ -141,7 +200,7 @@ export function VirtualElement({
 			}
 			window.clearTimeout(refreshSizingTimeout)
 		}
-	}, [ref, showPlaceholder])
+	}, [ref, showPlaceholder, measurements])
 
 	return (
 		<InView
@@ -151,7 +210,17 @@ export function VirtualElement({
 			className={className}
 			as="div"
 		>
-			<div ref={setRef}>
+			<div
+				ref={setRef}
+				style={
+					// We need to set undefined if the height is not known, to allow the parent to calculate the height
+					measurements
+						? {
+								height: measurements.clientHeight + 'px',
+						  }
+						: undefined
+				}
+			>
 				{showPlaceholder ? (
 					<div
 						id={measurements?.id ?? id}
@@ -168,11 +237,26 @@ export function VirtualElement({
 
 function measureElement(el: HTMLElement): IElementMeasurements | null {
 	const style = window.getComputedStyle(el)
-	const clientRect = el.getBoundingClientRect()
+
+	// Get children to be measured
+	const segmentTimeline = el.querySelector('.segment-timeline')
+	const dashboardPanel = el.querySelector('.rundown-view-shelf.dashboard-panel')
+
+	if (!segmentTimeline) return null
+
+	// Segment height
+	const segmentRect = segmentTimeline.getBoundingClientRect()
+	let totalHeight = segmentRect.height
+
+	// Dashboard panel height if present
+	if (dashboardPanel) {
+		const panelRect = dashboardPanel.getBoundingClientRect()
+		totalHeight += panelRect.height
+	}
 
 	return {
 		width: style.width || 'auto',
-		clientHeight: clientRect.height,
+		clientHeight: totalHeight,
 		marginTop: style.marginTop || undefined,
 		marginBottom: style.marginBottom || undefined,
 		marginLeft: style.marginLeft || undefined,
