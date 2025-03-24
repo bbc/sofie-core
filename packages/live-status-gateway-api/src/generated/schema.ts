@@ -229,6 +229,7 @@ interface CurrentSegment {
    * Timing information about the current segment
    */
   'timing': CurrentSegmentTiming;
+  'parts': CurrentSegmentPart[];
 }
 
 /**
@@ -260,6 +261,30 @@ interface CurrentSegmentTiming {
 enum SegmentCountdownType {
   PART_EXPECTED_DURATION = "part_expected_duration",
   SEGMENT_BUDGET_DURATION = "segment_budget_duration",
+}
+
+interface CurrentSegmentPart {
+  /**
+   * Unique id of the part
+   */
+  'id': string;
+  /**
+   * User-presentable name of the part
+   */
+  'name': string;
+  /**
+   * If this part will progress to the next automatically
+   */
+  'autoNext'?: boolean;
+  'timing': CurrentSegmentPartTiming;
+}
+
+interface CurrentSegmentPartTiming {
+  /**
+   * Expected duration of the part
+   */
+  'expectedDurationMs'?: number;
+  'additionalProperties'?: Record<string, any>;
 }
 
 interface PartStatus {
@@ -684,4 +709,4 @@ interface BucketAdLibStatus {
   'additionalProperties'?: Record<string, any>;
 }
 
-export {Slash, PongEvent, HeartbeatEvent, SubscriptionStatusError, SubscriptionDetails, SubscriptionName, SubscriptionStatus, SubscriptionStatusSuccess, StudioEvent, PlaylistStatus, PlaylistActivationStatus, ActivePlaylistEvent, CurrentPartStatus, PieceStatus, CurrentPartTiming, CurrentSegment, CurrentSegmentTiming, SegmentCountdownType, PartStatus, ActivePlaylistTiming, ActivePlaylistTimingMode, ActivePlaylistQuickLoop, QuickLoopMarker, QuickLoopMarkerType, ActivePiecesEvent, SegmentsEvent, Segment, SegmentTiming, AdLibsEvent, AdLibStatus, AdLibActionType, GlobalAdLibStatus, PackagesEvent, PackageInfoStatus, PackageStatus, BucketsEvent, BucketStatus, BucketAdLibStatus};
+export {Slash, PongEvent, HeartbeatEvent, SubscriptionStatusError, SubscriptionDetails, SubscriptionName, SubscriptionStatus, SubscriptionStatusSuccess, StudioEvent, PlaylistStatus, PlaylistActivationStatus, ActivePlaylistEvent, CurrentPartStatus, PieceStatus, CurrentPartTiming, CurrentSegment, CurrentSegmentTiming, SegmentCountdownType, CurrentSegmentPart, CurrentSegmentPartTiming, PartStatus, ActivePlaylistTiming, ActivePlaylistTimingMode, ActivePlaylistQuickLoop, QuickLoopMarker, QuickLoopMarkerType, ActivePiecesEvent, SegmentsEvent, Segment, SegmentTiming, AdLibsEvent, AdLibStatus, AdLibActionType, GlobalAdLibStatus, PackagesEvent, PackageInfoStatus, PackageStatus, BucketsEvent, BucketStatus, BucketAdLibStatus};
