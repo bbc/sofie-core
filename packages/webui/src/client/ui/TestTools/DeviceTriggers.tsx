@@ -9,6 +9,9 @@ import { PeripheralDevices } from '../../collections'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { PeripheralDevicePubSub } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
 import { MountedTriggers, MountedTriggersPreviews } from './collections'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
 
 interface DeviceTriggersViewRouteParams {
 	peripheralDeviceId: string
@@ -19,16 +22,12 @@ const DeviceTriggersView: React.FC = function TimelineDatastoreView() {
 	const { peripheralDeviceId } = useParams<DeviceTriggersViewRouteParams>()
 
 	return (
-		<div className="mtl gutter">
-			<header className="mvs">
+		<div className="mx-5">
+			<header className="my-2">
 				<h1>{t('Device Triggers')}</h1>
 			</header>
-			<div className="mod mvl">
-				{peripheralDeviceId && (
-					<div>
-						<DeviceTriggersControls peripheralDeviceId={protectString(peripheralDeviceId)} />
-					</div>
-				)}
+			<div className="my-5">
+				{peripheralDeviceId && <DeviceTriggersControls peripheralDeviceId={protectString(peripheralDeviceId)} />}
 			</div>
 		</div>
 	)
@@ -65,18 +64,20 @@ function DeviceTriggersControls({ peripheralDeviceId }: Readonly<IDatastoreContr
 	)
 
 	return (
-		<div>
-			<label>
-				Device Ids:
-				<input
-					value={deviceIds.join(', ')}
-					onChange={(e) => {
-						setDeviceIds(e.target.value.split(/,\s*/))
-					}}
-				/>
-			</label>
-			<div>
-				<table className="testtools-timelinetable">
+		<Row>
+			<Col xs={12} className="mb-4">
+				<label>
+					Device Ids:&nbsp;
+					<Form.Control
+						value={deviceIds.join(', ')}
+						onChange={(e) => {
+							setDeviceIds(e.target.value.split(/,\s*/))
+						}}
+					/>
+				</label>
+			</Col>
+			<Col xs={12}>
+				<table className="testtools-datatable">
 					<tbody>
 						<tr>
 							<th></th>
@@ -98,7 +99,7 @@ function DeviceTriggersControls({ peripheralDeviceId }: Readonly<IDatastoreContr
 								</tr>
 								<tr>
 									<td colSpan={5}>
-										<ul className="mod mhn mvn">
+										<ul className="m-0">
 											{mountedTriggersPreviews
 												.filter((preview) => preview.actionId === entry.actionId)
 												.map((preview) => (
@@ -115,8 +116,8 @@ function DeviceTriggersControls({ peripheralDeviceId }: Readonly<IDatastoreContr
 						))}
 					</tbody>
 				</table>
-			</div>
-		</div>
+			</Col>
+		</Row>
 	)
 }
 

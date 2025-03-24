@@ -142,6 +142,7 @@ const StudioScreenSaverContent = withTranslation()(
 		componentDidMount(): void {
 			if (this.props.ownBackground) {
 				document.body.classList.add('dark', 'xdark')
+				document.body.setAttribute('data-bs-theme', 'dark')
 			}
 
 			window.addEventListener('resize', this.measureElement)
@@ -162,6 +163,7 @@ const StudioScreenSaverContent = withTranslation()(
 		componentWillUnmount(): void {
 			if (this.props.ownBackground) {
 				document.body.classList.remove('dark', 'xdark')
+				document.body.removeAttribute('data-bs-theme')
 			}
 
 			this._nextAnimationFrameRequest && window.cancelAnimationFrame(this._nextAnimationFrameRequest)

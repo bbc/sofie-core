@@ -9,6 +9,8 @@ import { LookaheadMode, TSR } from '@sofie-automation/blueprints-integration'
 import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
 import { StudioMappings } from './collections'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 
 interface IMappingsViewProps {
 	match?: {
@@ -21,16 +23,12 @@ function MappingsView(props: Readonly<IMappingsViewProps>): JSX.Element {
 	const { t } = useTranslation()
 
 	return (
-		<div className="mtl gutter">
-			<header className="mvs">
+		<div className="mx-5">
+			<header className="my-2">
 				<h1>{t('Routed Mappings')}</h1>
 			</header>
-			<div className="mod mvl">
-				{props.match && props.match.params && (
-					<div>
-						<ComponentMappingsTable studioId={props.match.params.studioId} />
-					</div>
-				)}
+			<div className="my-5">
+				{props.match && props.match.params && <ComponentMappingsTable studioId={props.match.params.studioId} />}
 			</div>
 		</div>
 	)
@@ -53,27 +51,25 @@ function ComponentMappingsTable({ studioId }: Readonly<ComponentMappingsTablePro
 	const mappingsItems = mappingsObj ? _.sortBy(Object.entries<MappingExt>(mappingsObj.mappings), (o) => o[0]) : []
 
 	return (
-		<div>
-			<div>
-				<div>
-					<table className="testtools-timelinetable">
-						<tbody>
-							<tr>
-								<th>Mapping</th>
-								<th>DeviceId</th>
-								<th>Type</th>
-								<th>Name</th>
-								<th>Lookahead</th>
-								<th>Data</th>
-							</tr>
-							{mappingsItems.map(([id, obj]) => (
-								<ComponentMappingsTableRow key={id} id={id} obj={obj} />
-							))}
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
+		<Row>
+			<Col xs={12}>
+				<table className="testtools-datatable">
+					<tbody>
+						<tr>
+							<th>Mapping</th>
+							<th>DeviceId</th>
+							<th>Type</th>
+							<th>Name</th>
+							<th>Lookahead</th>
+							<th>Data</th>
+						</tr>
+						{mappingsItems.map(([id, obj]) => (
+							<ComponentMappingsTableRow key={id} id={id} obj={obj} />
+						))}
+					</tbody>
+				</table>
+			</Col>
+		</Row>
 	)
 }
 

@@ -6,6 +6,8 @@ import { useParams } from 'react-router-dom'
 import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { TimelineDatastore } from './collections'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 
 interface TimelineDatastoreViewRouteParams {
 	studioId: string
@@ -16,17 +18,11 @@ function TimelineDatastoreView(): JSX.Element {
 	const { studioId } = useParams<TimelineDatastoreViewRouteParams>()
 
 	return (
-		<div className="mtl gutter">
-			<header className="mvs">
+		<div className="mx-5">
+			<header className="my-2">
 				<h1>{t('Timeline Datastore')}</h1>
 			</header>
-			<div className="mod mvl">
-				{studioId && (
-					<div>
-						<ComponentDatastoreControls studioId={protectString(studioId)} />
-					</div>
-				)}
-			</div>
+			<div className="my-5">{studioId && <ComponentDatastoreControls studioId={protectString(studioId)} />}</div>
 		</div>
 	)
 }
@@ -40,9 +36,9 @@ function ComponentDatastoreControls({ studioId }: Readonly<IDatastoreControlsPro
 	const datastore = useTracker(() => TimelineDatastore.find().fetch(), [studioId])
 
 	return (
-		<div>
-			<div>
-				<table className="testtools-timelinetable">
+		<Row>
+			<Col xs={12}>
+				<table className="testtools-datatable">
 					<tbody>
 						<tr>
 							<th>Key</th>
@@ -62,8 +58,8 @@ function ComponentDatastoreControls({ studioId }: Readonly<IDatastoreControlsPro
 						))}
 					</tbody>
 				</table>
-			</div>
-		</div>
+			</Col>
+		</Row>
 	)
 }
 
