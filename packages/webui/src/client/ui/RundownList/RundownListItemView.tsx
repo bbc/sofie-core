@@ -184,21 +184,20 @@ export default React.memo(function RundownListItemView({
 			<span className="rundown-list-item__text" role="gridcell">
 				<DisplayFormattedTime displayTimestamp={rundown.modified} t={t} />
 			</span>
-			{rundownLayouts.some(
-				(l) =>
-					(RundownLayoutsAPI.isLayoutForShelf(l) && l.exposeAsStandalone) ||
-					(RundownLayoutsAPI.isLayoutForRundownView(l) && l.exposeAsSelectableLayout)
-			) && (
-				<span className="rundown-list-item__text" role="gridcell">
-					{isOnlyRundownInPlaylist && (
+			<span className="rundown-list-item__text" role="gridcell">
+				{rundownLayouts.some(
+					(l) =>
+						(RundownLayoutsAPI.isLayoutForShelf(l) && l.exposeAsStandalone) ||
+						(RundownLayoutsAPI.isLayoutForRundownView(l) && l.exposeAsSelectableLayout)
+				) &&
+					isOnlyRundownInPlaylist && (
 						<RundownViewLayoutSelection
 							rundowns={[rundown]}
 							rundownLayouts={rundownLayouts}
 							playlistId={rundown.playlistId}
 						/>
 					)}
-				</span>
-			)}
+			</span>
 			<span className="rundown-list-item__actions" role="gridcell">
 				{confirmReSyncRundownHandler ? (
 					<Tooltip

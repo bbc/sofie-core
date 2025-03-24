@@ -3428,8 +3428,11 @@ svg.icon {
 		left: 0;
 		right: 0;
 		text-align: center;
-		font-size: 3em;
 		transform: translateY(-50%);
+
+		.summary {
+			font-size: 3em;
+		}
 
 		> p {
 			margin: 20px auto;

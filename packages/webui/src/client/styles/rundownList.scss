@@ -20,7 +20,7 @@
 	--statusBarWidth: 2.1rem; //  the width of the floating right status bar
 	--componentWidth: calc(100% - var(--statusBarWidth));
 	--dragHandleWidth: calc(var(--defaultSpacing) + 1rem);
-	--nameColumnWidth: calc(var(--componentWidth) * var(--nameColumnSize));
+	--nameColumnWidth: calc(var(--componentWidth) * var(--nameColumnSize) - var(--dragHandleWidth));
 	--showStyleColumnWidth: calc(var(--componentWidth) * var(--showStyleColumnSize));
 	--airTimeColumnWidth: calc(var(--componentWidth) * var(--standardColumnSize));
 	--durationColumnWidth: calc(var(--componentWidth) * var(--standardColumnSize));
@@ -48,6 +48,7 @@
 		color: #fff;
 		padding: 5px var(--defaultSpacing) 7px;
 		vertical-align: middle;
+		font-weight: inherit;
 	}
 
 	.rundown-list-item__draghandle {

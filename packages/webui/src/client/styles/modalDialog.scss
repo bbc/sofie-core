@@ -3,23 +3,25 @@
 	padding-bottom: 10em;
 
 	.modal-header {
-		//
-
 		&.modal-header-info {
 			background-color: var(--bs-primary);
 			color: var(--bs-light);
+		}
+		&.modal-header-danger {
+			background-color: var(--bs-danger);
+			color: var(--bs-light);
+		}
 
-			.modal-title {
-				text-transform: none;
+		.modal-title {
+			text-transform: none;
 
-				.action-btn {
-					color: inherit;
-				}
+			.action-btn {
+				color: inherit;
+			}
 
-				h2 {
-					color: inherit;
-					margin: 0;
-				}
+			h2 {
+				color: inherit;
+				margin: 0;
 			}
 		}
 	}
@@ -73,16 +75,16 @@
 // 	border-style: solid;
 // }
 
-// .btn.btn-primary.btn-warn {
-// 	background: #e62421;
-// 	border-color: #e62421;
-// 	color: #ffffff;
-// 	border: #ffffff;
-// 	border-width: 1px;
-// 	border-style: solid;
-// }
+.btn.btn-primary.btn-warn {
+	background: #e62421;
+	border-color: #e62421;
+	color: #ffffff;
+	border: #ffffff;
+	border-width: 1px;
+	border-style: solid;
+}
 
-// .btn.btn-secondary.btn-warn {
-// 	border-color: #e62421;
-// 	color: #e62421;
-// }
+.btn.btn-secondary.btn-warn {
+	border-color: #e62421;
+	color: #e62421;
+}

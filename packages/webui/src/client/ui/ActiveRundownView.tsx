@@ -65,7 +65,7 @@ function NotFoundMessage({ message }: Readonly<{ message: string }>) {
 	return (
 		<div className="rundown-view rundown-view--unpublished">
 			<div className="rundown-view__label">
-				<p>{message}</p>
+				<p className="summary">{message}</p>
 				<p>
 					<NavLink to="/rundowns" className="btn btn-primary">
 						{t('Return to list')}

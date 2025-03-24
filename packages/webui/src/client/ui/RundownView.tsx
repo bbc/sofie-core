@@ -3439,7 +3439,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady, IState, ITracke
 			return (
 				<div className="rundown-view rundown-view--unpublished">
 					<div className="rundown-view__label">
-						<p>
+						<p className="summary">
 							{!this.props.playlist
 								? t('This rundown has been unpublished from Sofie.')
 								: !this.props.studio

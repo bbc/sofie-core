@@ -479,7 +479,7 @@ export class PrompterViewContent extends React.Component<Translated<IProps & ITr
 		return (
 			<div className="rundown-view rundown-view--unpublished">
 				<div className="rundown-view__label">
-					<p>{message}</p>
+					<p className="summary">{message}</p>
 					<p>
 						<Route
 							render={({ history }) => (

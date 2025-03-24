@@ -152,7 +152,7 @@ export function ModalDialog({
 						className={className}
 						scrollable
 					>
-						<Modal.Header className={warning ? 'modal-header-warn' : 'modal-header-info'}>
+						<Modal.Header className={warning ? 'modal-header-danger' : 'modal-header-info'}>
 							<Modal.Title className={'grid-buttons-right w-100'}>
 								<h2>{title}</h2>
 
@@ -198,7 +198,7 @@ export function ModalDialog({
 							>
 								{secondaryText && (
 									<Button
-										variant={discardAsPrimary ? (warning ? 'warn' : 'primary') : 'outline-secondary'}
+										variant={discardAsPrimary ? (warning ? 'danger' : 'primary') : 'outline-secondary'}
 										className={'discard-btn'}
 										autoFocus={discardAsPrimary}
 										onClick={handleSecondary}
@@ -225,7 +225,7 @@ export function ModalDialog({
 									)
 								})}
 								<Button
-									variant={!discardAsPrimary ? (warning ? 'warn' : 'primary') : 'outline-secondary'}
+									variant={!discardAsPrimary ? (warning ? 'danger' : 'primary') : 'outline-secondary'}
 									className={ClassNames({
 										right: secondaryText !== undefined,
 									})}

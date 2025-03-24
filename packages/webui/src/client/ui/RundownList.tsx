@@ -165,11 +165,7 @@ export function RundownList(): JSX.Element {
 							<span role="columnheader">{t('Show Style')}</span>
 							<span role="columnheader">{t('On Air Start Time')}</span>
 							<span role="columnheader">{t('Duration')}</span>
-							{rundownPlaylists.some(
-								(p) =>
-									!!PlaylistTiming.getExpectedEnd(p.timing) ||
-									p.rundowns.some((r) => PlaylistTiming.getExpectedEnd(r.timing))
-							) && <span role="columnheader">{t('Expected End Time')}</span>}
+							<span role="columnheader">{t('Expected End Time')}</span>
 							<span role="columnheader">{t('Last updated')}</span>
 							{rundownLayouts.some(
 								(l) =>

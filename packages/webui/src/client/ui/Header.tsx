@@ -128,7 +128,7 @@ class Header extends React.Component<Translated<IPropsHeader & ITrackedPropsHead
 					</div>
 				</ErrorBoundary>
 				<Navbar data-bs-theme="dark" fixed="top" expand className="bg-body-tertiary">
-					<Container fluid>
+					<Container fluid className="mx-5">
 						<Navbar.Brand>
 							<Link className="badge-sofie" to="/">
 								<div className="media-elem me-2 sofie-logo" />
