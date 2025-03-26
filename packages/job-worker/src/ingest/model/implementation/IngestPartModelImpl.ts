@@ -7,7 +7,6 @@ import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import { ExpectedPackageFromRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { ExpectedPackagesStore } from './ExpectedPackagesStore'
 import {
@@ -17,13 +16,15 @@ import {
 	getDocumentChanges,
 	setValuesAndTrackChanges,
 } from './utils'
+import { IngestExpectedPackage } from '../IngestExpectedPackage'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export class IngestPartModelImpl implements IngestPartModel {
 	readonly partImpl: DBPart
 	readonly #pieces: Piece[]
 	readonly #adLibPieces: AdLibPiece[]
 	readonly #adLibActions: AdLibAction[]
-	readonly expectedPackagesStore: ExpectedPackagesStore<ExpectedPackageFromRundown>
+	readonly expectedPackagesStore: ExpectedPackagesStore
 
 	#setPartValue<T extends keyof DBPart>(key: T, newValue: DBPart[T]): void {
 		if (newValue === undefined) {
@@ -90,7 +91,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 	get expectedPlayoutItems(): ReadonlyDeep<ExpectedPlayoutItemRundown>[] {
 		return [...this.expectedPackagesStore.expectedPlayoutItems]
 	}
-	get expectedPackages(): ReadonlyDeep<ExpectedPackageFromRundown>[] {
+	get expectedPackages(): ReadonlyDeep<IngestExpectedPackage>[] {
 		return [...this.expectedPackagesStore.expectedPackages]
 	}
 
@@ -140,7 +141,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 		adLibActions: AdLibAction[],
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
-		expectedPackages: ExpectedPackageFromRundown[]
+		expectedPackages: ExpectedPackageDBNew[]
 	) {
 		this.partImpl = part
 		this.#pieces = pieces
@@ -234,8 +235,8 @@ export class IngestPartModelImpl implements IngestPartModel {
 	setExpectedMediaItems(expectedMediaItems: ExpectedMediaItemRundown[]): void {
 		this.expectedPackagesStore.setExpectedMediaItems(expectedMediaItems)
 	}
-	setExpectedPackages(expectedPackages: ExpectedPackageFromRundown[]): void {
-		// Future: should these be here, or held as part of each adlib/piece?
-		this.expectedPackagesStore.setExpectedPackages(expectedPackages)
-	}
+	// setExpectedPackages(expectedPackages: ExpectedPackageFromRundown[]): void {
+	// 	// Future: should these be here, or held as part of each adlib/piece?
+	// 	this.expectedPackagesStore.setExpectedPackages(expectedPackages)
+	// }
 }

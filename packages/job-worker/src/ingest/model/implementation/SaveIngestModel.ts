@@ -1,9 +1,8 @@
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { ExpectedMediaItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
@@ -15,7 +14,7 @@ import { logger } from '../../../logging'
 import { ProtectedString } from '@sofie-automation/corelib/dist/protectedString'
 
 export class SaveIngestModelHelper {
-	#expectedPackages = new DocumentChangeTracker<ExpectedPackageDB>()
+	#expectedPackages = new DocumentChangeTracker<ExpectedPackageDBNew>()
 	#expectedPlayoutItems = new DocumentChangeTracker<ExpectedPlayoutItem>()
 	#expectedMediaItems = new DocumentChangeTracker<ExpectedMediaItem>()
 
@@ -25,10 +24,7 @@ export class SaveIngestModelHelper {
 	#adLibPieces = new DocumentChangeTracker<AdLibPiece>()
 	#adLibActions = new DocumentChangeTracker<AdLibAction>()
 
-	addExpectedPackagesStore(
-		store: ExpectedPackagesStore<ExpectedPackageDB & { rundownId: RundownId }>,
-		deleteAll?: boolean
-	): void {
+	addExpectedPackagesStore(store: ExpectedPackagesStore, deleteAll?: boolean): void {
 		this.#expectedPackages.addChanges(store.expectedPackagesChanges, deleteAll ?? false)
 		this.#expectedPlayoutItems.addChanges(store.expectedPlayoutItemsChanges, deleteAll ?? false)
 		this.#expectedMediaItems.addChanges(store.expectedMediaItemsChanges, deleteAll ?? false)
