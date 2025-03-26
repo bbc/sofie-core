@@ -2,21 +2,12 @@ import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/Buck
 import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 import {
 	ExpectedPackageDBType,
-	ExpectedPackageDBFromBucketAdLib,
-	ExpectedPackageDBFromBucketAdLibAction,
-	ExpectedPackageDBBase,
 	getContentVersionHash,
-	getExpectedPackageId,
+	ExpectedPackageDBNew,
+	getExpectedPackageIdFromIngestSource,
+	ExpectedPackageIngestSource,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
-import {
-	RundownId,
-	AdLibActionId,
-	PieceId,
-	RundownBaselineAdLibActionId,
-	BucketAdLibActionId,
-	BucketAdLibId,
-	StudioId,
-} from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { AdLibActionId, PieceId, BucketId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { saveIntoDb } from '../db/changes'
 import { PlayoutModel } from '../playout/model/PlayoutModel'
 import { StudioPlayoutModel } from '../studio/model/StudioPlayoutModel'
@@ -47,72 +38,73 @@ export async function updateExpectedMediaAndPlayoutItemsForRundownBaseline(
 	await updateExpectedPlayoutItemsForRundownBaseline(context, ingestModel, baseline)
 }
 
-function generateExpectedPackagesForBucketAdlib(studio: ReadonlyDeep<JobStudio>, adlibs: BucketAdLib[]) {
-	const packages: ExpectedPackageDBFromBucketAdLib[] = []
-	for (const adlib of adlibs) {
-		if (adlib.expectedPackages) {
-			const bases = generateExpectedPackageBases(studio, adlib._id, adlib.expectedPackages)
-			for (const base of bases) {
-				packages.push({
-					...base,
-					bucketId: adlib.bucketId,
+function generateExpectedPackagesForBucketAdlib(studio: ReadonlyDeep<JobStudio>, adlib: BucketAdLib) {
+	const packages: ExpectedPackageDBNew[] = []
+
+	if (adlib.expectedPackages) {
+		packages.push(
+			...generateBucketExpectedPackages(
+				studio,
+				adlib.bucketId,
+				{
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB,
 					pieceId: adlib._id,
 					pieceExternalId: adlib.externalId,
-					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB,
-				})
-			}
-		}
+				},
+				adlib.expectedPackages
+			)
+		)
 	}
+
 	return packages
 }
-function generateExpectedPackagesForBucketAdlibAction(
-	studio: ReadonlyDeep<JobStudio>,
-	adlibActions: BucketAdLibAction[]
-) {
-	const packages: ExpectedPackageDBFromBucketAdLibAction[] = []
-	for (const action of adlibActions) {
-		if (action.expectedPackages) {
-			const bases = generateExpectedPackageBases(studio, action._id, action.expectedPackages)
-			for (const base of bases) {
-				packages.push({
-					...base,
-					bucketId: action.bucketId,
+function generateExpectedPackagesForBucketAdlibAction(studio: ReadonlyDeep<JobStudio>, action: BucketAdLibAction) {
+	const packages: ExpectedPackageDBNew[] = []
+
+	if (action.expectedPackages) {
+		packages.push(
+			...generateBucketExpectedPackages(
+				studio,
+				action.bucketId,
+				{
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION,
 					pieceId: action._id,
 					pieceExternalId: action.externalId,
-					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION,
-				})
-			}
-		}
+				},
+				action.expectedPackages
+			)
+		)
 	}
+
 	return packages
 }
-function generateExpectedPackageBases(
+function generateBucketExpectedPackages(
 	studio: ReadonlyDeep<JobStudio>,
-	ownerId:
-		| PieceId
-		| AdLibActionId
-		| RundownBaselineAdLibActionId
-		| BucketAdLibId
-		| BucketAdLibActionId
-		| RundownId
-		| StudioId,
+	bucketId: BucketId,
+	source: ExpectedPackageIngestSource,
 	expectedPackages: ReadonlyDeep<ExpectedPackage.Any[]>
-) {
-	const bases: Omit<ExpectedPackageDBBase, 'pieceId' | 'fromPieceType'>[] = []
+): ExpectedPackageDBNew[] {
+	const bases: ExpectedPackageDBNew[] = []
 
 	for (let i = 0; i < expectedPackages.length; i++) {
 		const expectedPackage = expectedPackages[i]
 		const id = expectedPackage._id || '__unnamed' + i
 
 		bases.push({
-			...clone<ExpectedPackage.Any>(expectedPackage),
-			_id: getExpectedPackageId(ownerId, id),
-			blueprintPackageId: id,
+			_id: getExpectedPackageIdFromIngestSource(bucketId, source, id),
+			package: {
+				...clone<ExpectedPackage.Any>(expectedPackage),
+				_id: id,
+			},
 			contentVersionHash: getContentVersionHash(expectedPackage),
 			studioId: studio._id,
-			created: Date.now(),
+			rundownId: null,
+			bucketId: bucketId,
+			created: Date.now(), // This will be preserved during the `saveIntoDb`
+			ingestSources: [source],
 		})
 	}
+
 	return bases
 }
 
@@ -120,24 +112,78 @@ export async function updateExpectedPackagesForBucketAdLibPiece(
 	context: JobContext,
 	adlib: BucketAdLib
 ): Promise<void> {
-	const packages = generateExpectedPackagesForBucketAdlib(context.studio, [adlib])
+	const packages = generateExpectedPackagesForBucketAdlib(context.studio, adlib)
 
-	await saveIntoDb(context, context.directCollections.ExpectedPackages, { pieceId: adlib._id }, packages)
+	await saveIntoDb(
+		context,
+		context.directCollections.ExpectedPackages,
+		{
+			studioId: context.studioId,
+			bucketId: adlib.bucketId,
+			// Note: This assumes that there is only one ingest source for each piece
+			ingestSources: {
+				$elemMatch: {
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB,
+					pieceId: adlib._id,
+				},
+			},
+		},
+		packages,
+		{
+			beforeDiff: (obj, oldObj) => {
+				return {
+					...obj,
+					// Preserve old created timestamp
+					created: oldObj.created,
+				}
+			},
+		}
+	)
 }
 
 export async function updateExpectedPackagesForBucketAdLibAction(
 	context: JobContext,
 	action: BucketAdLibAction
 ): Promise<void> {
-	const packages = generateExpectedPackagesForBucketAdlibAction(context.studio, [action])
+	const packages = generateExpectedPackagesForBucketAdlibAction(context.studio, action)
 
-	await saveIntoDb(context, context.directCollections.ExpectedPackages, { pieceId: action._id }, packages)
+	await saveIntoDb(
+		context,
+		context.directCollections.ExpectedPackages,
+		{
+			studioId: context.studioId,
+			bucketId: action.bucketId,
+			// Note: This assumes that there is only one ingest source for each piece
+			ingestSources: {
+				$elemMatch: {
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION,
+					pieceId: action._id,
+				},
+			},
+		},
+		packages,
+		{
+			beforeDiff: (obj, oldObj) => {
+				return {
+					...obj,
+					// Preserve old created timestamp
+					created: oldObj.created,
+				}
+			},
+		}
+	)
 }
+
 export async function cleanUpExpectedPackagesForBucketAdLibs(context: JobContext, adLibIds: PieceId[]): Promise<void> {
 	if (adLibIds.length > 0) {
 		await context.directCollections.ExpectedPackages.remove({
-			pieceId: {
-				$in: adLibIds,
+			studioId: context.studioId,
+			// Note: This assumes that there is only one ingest source for each piece
+			ingestSources: {
+				$elemMatch: {
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB,
+					pieceId: { $in: adLibIds },
+				},
 			},
 		})
 	}
@@ -148,8 +194,13 @@ export async function cleanUpExpectedPackagesForBucketAdLibsActions(
 ): Promise<void> {
 	if (adLibIds.length > 0) {
 		await context.directCollections.ExpectedPackages.remove({
-			pieceId: {
-				$in: adLibIds,
+			studioId: context.studioId,
+			// Note: This assumes that there is only one ingest source for each piece
+			ingestSources: {
+				$elemMatch: {
+					fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB,
+					pieceId: { $in: adLibIds },
+				},
 			},
 		})
 	}

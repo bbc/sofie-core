@@ -79,6 +79,8 @@ export async function handleUpdatedPackageInfoForRundown(
 						regenerateRundownBaseline = true
 						break
 					case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+					case ExpectedPackageDBType.BUCKET_ADLIB:
+					case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
 						// Ignore
 						break
 					default:

@@ -5,6 +5,7 @@ import {
 	AdLibActionId,
 	BucketAdLibActionId,
 	BucketAdLibId,
+	BucketId,
 	ExpectedPackageId,
 	PartId,
 	PieceId,
@@ -71,8 +72,10 @@ export interface ExpectedPackageDBNew {
 	/** The studio of the Rundown of the Piece this package belongs to */
 	studioId: StudioId
 
-	/** The rundown this package belongs to, if any */
+	/** The rundown this package belongs to, if any. Must not be set when bucketId is set */
 	rundownId: RundownId | null
+	/** The bucket this package belongs to, if any. Must not be set when rundownId is set */
+	bucketId: BucketId | null
 
 	/** Hash that changes whenever the content or version changes. See getContentVersionHash() */
 	contentVersionHash: string
@@ -88,6 +91,21 @@ export interface ExpectedPackageDBNew {
 	// 	/** Any playout PieceInstance. This is limited to the current and next partInstances */ // nocommit - verify this
 	// 	pieceInstanceIds: PieceInstanceId[]
 	// }
+}
+
+export interface ExpectedPackageIngestSourceBucketPiece {
+	fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB
+	/** The Bucket adlib this package belongs to */
+	pieceId: BucketAdLibId
+	/** The `externalId` of the Bucket adlib this package belongs to */
+	pieceExternalId: string
+}
+export interface ExpectedPackageIngestSourceBucketAdlibAction {
+	fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION
+	/** The Bucket adlib-action this package belongs to */
+	pieceId: BucketAdLibActionId
+	/** The `externalId` of the Bucket adlib-action this package belongs to */
+	pieceExternalId: string
 }
 
 export interface ExpectedPackageIngestSourcePiece {
@@ -123,10 +141,15 @@ export interface ExpectedPackageIngestSourceBaselineObjects {
 }
 
 export interface ExpectedPackageIngestSourceStudioBaseline {
+	// Future: Technically this is a playout source, but for now it needs to be treated as an ingest source
 	fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS
 }
 
 export type ExpectedPackageIngestSourcePart = ExpectedPackageIngestSourcePiece | ExpectedPackageIngestSourceAdlibAction
+
+export type ExpectedPackageIngestSourceBucket =
+	| ExpectedPackageIngestSourceBucketPiece
+	| ExpectedPackageIngestSourceBucketAdlibAction
 
 export type ExpectedPackageIngestSourceRundownBaseline =
 	| ExpectedPackageIngestSourceBaselineAdlibPiece
@@ -136,24 +159,8 @@ export type ExpectedPackageIngestSourceRundownBaseline =
 export type ExpectedPackageIngestSource =
 	| ExpectedPackageIngestSourcePart
 	| ExpectedPackageIngestSourceRundownBaseline
+	| ExpectedPackageIngestSourceBucket
 	| ExpectedPackageIngestSourceStudioBaseline
-
-// export interface ExpectedPackageDBFromBucketAdLib extends ExpectedPackageDBBase {
-// 	fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB
-// 	bucketId: BucketId
-// 	/** The Bucket adlib this package belongs to */
-// 	pieceId: BucketAdLibId
-// 	/** The `externalId` of the Bucket adlib this package belongs to */
-// 	pieceExternalId: string
-// }
-// export interface ExpectedPackageDBFromBucketAdLibAction extends ExpectedPackageDBBase {
-// 	fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION
-// 	bucketId: BucketId
-// 	/** The Bucket adlib-action this package belongs to */
-// 	pieceId: BucketAdLibActionId
-// 	/** The `externalId` of the Bucket adlib-action this package belongs to */
-// 	pieceExternalId: string
-// }
 
 export function getContentVersionHash(expectedPackage: ReadonlyDeep<Omit<ExpectedPackage.Any, '_id'>>): string {
 	return hashObj({
@@ -180,28 +187,28 @@ export function getExpectedPackageId(
 	return protectString(`${ownerId}_${getHash(localExpectedPackageId)}`)
 }
 
-export function getExpectedPackageIdTmp(
-	/** Preferably a RundownId, but StudioId is allowed when not owned by a rundown */
-	parentId: RundownId | StudioId,
-	owner: ExpectedPackageIngestSource,
+export function getExpectedPackageIdFromIngestSource(
+	/** Preferably a RundownId or BucketId, but StudioId is allowed when not owned by a rundown or bucket */
+	parentId: RundownId | StudioId | BucketId,
+	source: ExpectedPackageIngestSource,
 	/** The locally unique id of the expectedPackage */
 	localExpectedPackageId: ExpectedPackage.Base['_id']
 ): ExpectedPackageId {
 	let ownerId: string
-	const ownerPieceType = owner.fromPieceType
-	switch (owner.fromPieceType) {
+	const ownerPieceType = source.fromPieceType
+	switch (source.fromPieceType) {
 		case ExpectedPackageDBType.PIECE:
 		case ExpectedPackageDBType.ADLIB_PIECE:
-			ownerId = unprotectString(owner.pieceId)
+			ownerId = unprotectString(source.pieceId)
 			break
 		case ExpectedPackageDBType.ADLIB_ACTION:
-			ownerId = unprotectString(owner.pieceId)
+			ownerId = unprotectString(source.pieceId)
 			break
 		case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
-			ownerId = unprotectString(owner.pieceId)
+			ownerId = unprotectString(source.pieceId)
 			break
 		case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
-			ownerId = unprotectString(owner.pieceId)
+			ownerId = unprotectString(source.pieceId)
 			break
 		case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
 			ownerId = 'rundownBaselineObjects'
@@ -210,7 +217,7 @@ export function getExpectedPackageIdTmp(
 			ownerId = 'studioBaseline'
 			break
 		default:
-			assertNever(owner)
+			assertNever(source)
 			throw new Error(`Unknown fromPieceType "${ownerPieceType}"`)
 	}
 	return protectString(`${parentId}_${ownerId}_${getHash(localExpectedPackageId)}`)

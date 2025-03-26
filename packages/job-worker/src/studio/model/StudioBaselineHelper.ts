@@ -4,7 +4,7 @@ import {
 	ExpectedPackageDBType,
 	ExpectedPackageIngestSource,
 	getContentVersionHash,
-	getExpectedPackageIdTmp,
+	getExpectedPackageIdFromIngestSource,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { saveIntoDb } from '../../db/changes'
@@ -28,7 +28,7 @@ export class StudioBaselineHelper {
 	setExpectedPackages(packages: ReadonlyDeep<ExpectedPackage.Any>[]): void {
 		const source: ExpectedPackageIngestSource = { fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS }
 		this.#pendingExpectedPackages = packages.map((expectedPackage) => ({
-			_id: getExpectedPackageIdTmp(this.#context.studioId, source, expectedPackage._id),
+			_id: getExpectedPackageIdFromIngestSource(this.#context.studioId, source, expectedPackage._id),
 
 			studioId: this.#context.studioId,
 			rundownId: null,
@@ -63,6 +63,7 @@ export class StudioBaselineHelper {
 						{
 							studioId: this.#context.studioId,
 							rundownId: null,
+							bucketId: null,
 						},
 						this.#pendingExpectedPackages,
 						{

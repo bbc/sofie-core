@@ -1,9 +1,8 @@
 import {
 	ExpectedPackageDBType,
-	ExpectedPackageIngestSourcePart,
 	ExpectedPackageIngestSourceRundownBaseline,
 	getContentVersionHash,
-	getExpectedPackageIdTmp,
+	getExpectedPackageIdFromIngestSource,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { BlueprintId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownNote } from '@sofie-automation/corelib/dist/dataModel/Notes'
@@ -354,7 +353,7 @@ function generateExpectedPackagesForBaseline(
 		source: ExpectedPackageIngestSourceRundownBaseline
 	): IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline> => {
 		return {
-			_id: getExpectedPackageIdTmp(rundownId, source, expectedPackage._id),
+			_id: getExpectedPackageIdFromIngestSource(rundownId, source, expectedPackage._id),
 
 			contentVersionHash: getContentVersionHash(expectedPackage),
 

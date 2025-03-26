@@ -15,7 +15,7 @@ import { getPartId } from '../../lib'
 import {
 	getContentVersionHash,
 	ExpectedPackageDBType,
-	getExpectedPackageIdTmp,
+	getExpectedPackageIdFromIngestSource,
 	ExpectedPackageIngestSourcePart,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import type { ExpectedPackage } from '@sofie-automation/blueprints-integration'
@@ -276,7 +276,7 @@ function generateExpectedPackagesForPart(
 		source: ExpectedPackageIngestSourcePart
 	): IngestExpectedPackage<ExpectedPackageIngestSourcePart> => {
 		return {
-			_id: getExpectedPackageIdTmp(rundownId, source, expectedPackage._id),
+			_id: getExpectedPackageIdFromIngestSource(rundownId, source, expectedPackage._id),
 
 			contentVersionHash: getContentVersionHash(expectedPackage),
 
