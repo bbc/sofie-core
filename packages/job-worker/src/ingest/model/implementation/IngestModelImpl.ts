@@ -183,7 +183,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 				false,
 				this.rundownId,
 				undefined,
-				undefined,
 				groupedExpectedMediaItems.get(undefined) ?? [],
 				groupedExpectedPlayoutItems.get(undefined) ?? [],
 				baselineExpectedPackages
@@ -234,7 +233,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 			this.#rundownBaselineExpectedPackagesStore = new ExpectedPackagesStore(
 				true,
 				this.rundownId,
-				undefined,
 				undefined,
 				[],
 				[],

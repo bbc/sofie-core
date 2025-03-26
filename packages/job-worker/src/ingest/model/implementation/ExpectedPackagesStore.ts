@@ -6,7 +6,6 @@ import {
 	ExpectedPlayoutItemId,
 	PartId,
 	RundownId,
-	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import {
@@ -75,20 +74,17 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 	}
 
 	#rundownId: RundownId
-	#segmentId: SegmentId | undefined
 	#partId: PartId | undefined
 
 	constructor(
 		isBeingCreated: boolean,
 		rundownId: RundownId,
-		segmentId: SegmentId | undefined,
 		partId: PartId | undefined,
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
 		expectedPackages: IngestExpectedPackage<TPackageSource>[]
 	) {
 		this.#rundownId = rundownId
-		this.#segmentId = segmentId
 		this.#partId = partId
 
 		this.#expectedMediaItems = expectedMediaItems
@@ -111,12 +107,10 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 
 	setOwnerIds(
 		rundownId: RundownId,
-		segmentId: SegmentId | undefined,
 		partId: PartId | undefined,
 		updatePackageSource: (source: TPackageSource) => boolean
 	): void {
 		this.#rundownId = rundownId
-		this.#segmentId = segmentId
 		this.#partId = partId
 
 		setValuesAndTrackChanges(this.#expectedPlayoutItemsWithChanges, this.#expectedPlayoutItems, {

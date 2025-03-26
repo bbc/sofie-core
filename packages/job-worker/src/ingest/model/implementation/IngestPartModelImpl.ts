@@ -165,7 +165,6 @@ export class IngestPartModelImpl implements IngestPartModel {
 		this.expectedPackagesStore = new ExpectedPackagesStore(
 			isBeingCreated,
 			part.rundownId,
-			part.segmentId,
 			part._id,
 			expectedMediaItems,
 			expectedPlayoutItems,
@@ -212,7 +211,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 		this.#compareAndSetPartValue('segmentId', segmentId)
 		this.#compareAndSetPartValue('rundownId', rundownId)
 
-		this.expectedPackagesStore.setOwnerIds(rundownId, segmentId, this.part._id, (pkgSource) => {
+		this.expectedPackagesStore.setOwnerIds(rundownId, this.part._id, (pkgSource) => {
 			if (pkgSource.partId !== this.part._id || pkgSource.segmentId !== segmentId) {
 				pkgSource.partId = this.part._id
 				pkgSource.segmentId = segmentId
