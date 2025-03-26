@@ -19,7 +19,7 @@ import { MediaWorkFlowStep } from '@sofie-automation/shared-lib/dist/core/model/
 import { Bucket } from '@sofie-automation/corelib/dist/dataModel/Bucket'
 import { ICoreSystem, SYSTEM_ID } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
 import { Evaluation } from '@sofie-automation/meteor-lib/dist/collections/Evaluations'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { createSyncMongoCollection, createSyncReadOnlyMongoCollection } from './lib'
 import { PeripheralDevice } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { RundownLayoutBase } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
@@ -61,7 +61,7 @@ export const CoreSystem = createSyncMongoCollection<ICoreSystem>(CollectionName.
 
 export const Evaluations = createSyncReadOnlyMongoCollection<Evaluation>(CollectionName.Evaluations)
 
-export const ExpectedPackages = createSyncReadOnlyMongoCollection<ExpectedPackageDB>(CollectionName.ExpectedPackages)
+export const ExpectedPackages = createSyncReadOnlyMongoCollection<ExpectedPackageDBNew>(CollectionName.ExpectedPackages)
 
 export const ExpectedPackageWorkStatuses = createSyncReadOnlyMongoCollection<ExpectedPackageWorkStatus>(
 	CollectionName.ExpectedPackageWorkStatuses

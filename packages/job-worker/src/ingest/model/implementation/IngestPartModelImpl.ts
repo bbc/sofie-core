@@ -16,8 +16,7 @@ import {
 	getDocumentChanges,
 	setValuesAndTrackChanges,
 } from './utils'
-import { IngestExpectedPackage } from '../IngestExpectedPackage'
-import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import type { IngestExpectedPackage } from '../IngestExpectedPackage'
 
 export class IngestPartModelImpl implements IngestPartModel {
 	readonly partImpl: DBPart
@@ -141,7 +140,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 		adLibActions: AdLibAction[],
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
-		expectedPackages: ExpectedPackageDBNew[]
+		expectedPackages: IngestExpectedPackage[]
 	) {
 		this.partImpl = part
 		this.#pieces = pieces

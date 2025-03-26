@@ -36,7 +36,7 @@ import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/Sho
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { TimelineComplete } from '@sofie-automation/corelib/dist/dataModel/Timeline'
 import { DBTimelineDatastoreEntry } from '@sofie-automation/corelib/dist/dataModel/TimelineDatastore'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { PackageInfoDB } from '@sofie-automation/corelib/dist/dataModel/PackageInfos'
 import { ProtectedString } from '@sofie-automation/corelib/dist/protectedString'
 import { literal } from '@sofie-automation/corelib/dist/lib'
@@ -120,7 +120,7 @@ export interface IDirectCollections {
 	Timelines: ICollection<TimelineComplete>
 	TimelineDatastores: ICollection<DBTimelineDatastoreEntry>
 
-	ExpectedPackages: ICollection<ExpectedPackageDB>
+	ExpectedPackages: ICollection<ExpectedPackageDBNew>
 	PackageInfos: IReadOnlyCollection<PackageInfoDB>
 
 	ExternalMessageQueue: ICollection<ExternalMessageQueueObj>

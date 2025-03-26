@@ -1,16 +1,20 @@
 import { JobContext } from '../../jobs'
 import {
-	ExpectedPackageDB,
-	ExpectedPackageDBFromStudioBaselineObjects,
+	ExpectedPackageDBNew,
 	ExpectedPackageDBType,
+	ExpectedPackageIngestSource,
+	getContentVersionHash,
+	getExpectedPackageIdTmp,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { saveIntoDb } from '../../db/changes'
+import { ReadonlyDeep } from 'type-fest'
+import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
 
 export class StudioBaselineHelper {
 	readonly #context: JobContext
 
-	#pendingExpectedPackages: ExpectedPackageDBFromStudioBaselineObjects[] | undefined
+	#pendingExpectedPackages: ExpectedPackageDBNew[] | undefined
 	#pendingExpectedPlayoutItems: ExpectedPlayoutItemStudio[] | undefined
 
 	constructor(context: JobContext) {
@@ -21,8 +25,22 @@ export class StudioBaselineHelper {
 		return !!this.#pendingExpectedPackages || !!this.#pendingExpectedPlayoutItems
 	}
 
-	setExpectedPackages(packages: ExpectedPackageDBFromStudioBaselineObjects[]): void {
-		this.#pendingExpectedPackages = packages
+	setExpectedPackages(packages: ReadonlyDeep<ExpectedPackage.Any>[]): void {
+		const source: ExpectedPackageIngestSource = { fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS }
+		this.#pendingExpectedPackages = packages.map((expectedPackage) => ({
+			_id: getExpectedPackageIdTmp(this.#context.studioId, source, expectedPackage._id),
+
+			studioId: this.#context.studioId,
+			rundownId: null,
+
+			contentVersionHash: getContentVersionHash(expectedPackage),
+
+			created: Date.now(), // nocommit - avoid churn on this?
+
+			package: expectedPackage,
+
+			ingestSources: [source],
+		}))
 	}
 	setExpectedPlayoutItems(playoutItems: ExpectedPlayoutItemStudio[]): void {
 		this.#pendingExpectedPlayoutItems = playoutItems
@@ -39,14 +57,17 @@ export class StudioBaselineHelper {
 				  )
 				: undefined,
 			this.#pendingExpectedPackages
-				? saveIntoDb<ExpectedPackageDB>(
+				? saveIntoDb<ExpectedPackageDBNew>(
 						this.#context,
 						this.#context.directCollections.ExpectedPackages,
 						{
 							studioId: this.#context.studioId,
-							fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS,
+							rundownId: null,
 						},
-						this.#pendingExpectedPackages
+						this.#pendingExpectedPackages,
+						{
+							// nocommit - preserve created timestamps
+						}
 				  )
 				: undefined,
 		])

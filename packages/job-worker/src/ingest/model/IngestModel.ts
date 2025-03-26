@@ -1,8 +1,5 @@
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
-import {
-	ExpectedPackageDBNew,
-	ExpectedPackageIngestSource,
-} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import type { ExpectedPackageIngestSource } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import {
 	ExpectedPackageId,
@@ -243,7 +240,7 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 		timelineObjectsBlob: PieceTimelineObjectsBlob,
 		adlibPieces: RundownBaselineAdLibItem[],
 		adlibActions: RundownBaselineAdLibAction[],
-		expectedPackages: ExpectedPackageDBNew[]
+		expectedPackages: IngestExpectedPackage[]
 	): Promise<void>
 
 	/**

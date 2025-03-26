@@ -1,5 +1,11 @@
-import { ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
-import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import {
+	ExpectedPackageDBType,
+	ExpectedPackageIngestSourcePart,
+	ExpectedPackageIngestSourceRundownBaseline,
+	getContentVersionHash,
+	getExpectedPackageIdTmp,
+} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { BlueprintId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownNote } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { serializePieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { DBRundown, RundownSource } from '@sofie-automation/corelib/dist/dataModel/Rundown'
@@ -22,11 +28,18 @@ import { CommitIngestData } from './lock'
 import { SelectedShowStyleVariant, selectShowStyleVariant } from './selectShowStyleVariant'
 import { updateExpectedPackagesForRundownBaseline } from './expectedPackages'
 import { ReadonlyDeep } from 'type-fest'
-import { BlueprintResultRundown, ExtendedIngestRundown } from '@sofie-automation/blueprints-integration'
+import {
+	BlueprintResultRundown,
+	ExpectedPackage,
+	ExtendedIngestRundown,
+} from '@sofie-automation/blueprints-integration'
 import { wrapTranslatableMessageFromBlueprints } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { convertRundownToBlueprintSegmentRundown, translateUserEditsFromBlueprint } from '../blueprints/context/lib'
 import { calculateSegmentsAndRemovalsFromIngestData } from './generationSegment'
 import { SofieIngestRundownWithSource } from '@sofie-automation/corelib/dist/dataModel/SofieIngestDataCache'
+import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
+import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
+import { IngestExpectedPackage } from './model/IngestExpectedPackage'
 
 export enum GenerateRundownMode {
 	Create = 'create',
@@ -313,9 +326,77 @@ export async function regenerateRundownAndBaselineFromIngestData(
 		rundownRes.globalActions || []
 	)
 
-	await ingestModel.setRundownBaseline(timelineObjectsBlob, adlibPieces, adlibActions)
+	const expectedPackages = generateExpectedPackagesForBaseline(
+		dbRundown._id,
+		adlibPieces,
+		adlibActions,
+		rundownRes.baseline.expectedPackages ?? []
+	)
+
+	await ingestModel.setRundownBaseline(timelineObjectsBlob, adlibPieces, adlibActions, expectedPackages)
 
 	await updateExpectedPackagesForRundownBaseline(context, ingestModel, rundownRes.baseline)
 
 	return dbRundown
+}
+
+function generateExpectedPackagesForBaseline(
+	rundownId: RundownId,
+	adLibPieces: AdLibPiece[],
+	adLibActions: RundownBaselineAdLibAction[],
+	expectedPackages: ExpectedPackage.Any[]
+): IngestExpectedPackage[] {
+	const packages: IngestExpectedPackage[] = []
+
+	const wrapPackage = (
+		expectedPackage: ReadonlyDeep<ExpectedPackage.Any>,
+		source: ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline
+	): IngestExpectedPackage => {
+		return {
+			_id: getExpectedPackageIdTmp(rundownId, source, expectedPackage._id),
+
+			contentVersionHash: getContentVersionHash(expectedPackage),
+
+			created: Date.now(), // nocommit - avoid churn on this?
+
+			package: expectedPackage,
+
+			ingestSources: [source],
+		}
+	}
+
+	// Future: this will need to deduplicate packages with the same content
+	// For now, we just generate a package for each expectedPackage
+
+	for (const expectedPackage of expectedPackages) {
+		packages.push(
+			wrapPackage(expectedPackage, {
+				fromPieceType: ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS,
+			})
+		)
+	}
+
+	// Populate the ingestSources
+	for (const piece of adLibPieces) {
+		for (const expectedPackage of piece.expectedPackages || []) {
+			packages.push(
+				wrapPackage(expectedPackage, {
+					fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_PIECE,
+					pieceId: piece._id,
+				})
+			)
+		}
+	}
+	for (const piece of adLibActions) {
+		for (const expectedPackage of piece.expectedPackages || []) {
+			packages.push(
+				wrapPackage(expectedPackage, {
+					fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_ACTION,
+					pieceId: piece._id,
+				})
+			)
+		}
+	}
+
+	return packages
 }

@@ -1,6 +1,6 @@
 import { ExpectedPackage, Time } from '@sofie-automation/blueprints-integration'
-import { protectString } from '../protectedString'
-import { getHash, hashObj } from '../lib'
+import { protectString, unprotectString } from '../protectedString'
+import { assertNever, getHash, hashObj } from '../lib'
 import {
 	AdLibActionId,
 	BucketAdLibActionId,
@@ -74,8 +74,8 @@ export interface ExpectedPackageDBNew {
 	/** The studio of the Rundown of the Piece this package belongs to */
 	studioId: StudioId
 
-	/** The rundown of the Piece this package belongs to */
-	rundownId: RundownId
+	/** The rundown this package belongs to, if any */
+	rundownId: RundownId | null
 
 	/** Hash that changes whenever the content or version changes. See getContentVersionHash() */
 	contentVersionHash: string
@@ -85,7 +85,7 @@ export interface ExpectedPackageDBNew {
 	package: ReadonlyDeep<ExpectedPackage.Any>
 
 	// HACK: This should be ExpectedPackageIngestSource[], but for the first iteration this is limited to a single source
-	ingestSources: [ExpectedPackageIngestSource] | never[]
+	ingestSources: [ExpectedPackageIngestSource]
 
 	// playoutSources: {
 	// 	/** Any playout PieceInstance. This is limited to the current and next partInstances */ // nocommit - verify this
@@ -125,6 +125,10 @@ export interface ExpectedPackageIngestSourceBaselineObjects {
 	fromPieceType: ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS
 }
 
+export interface ExpectedPackageIngestSourceStudioBaseline {
+	fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS
+}
+
 export type ExpectedPackageIngestSourcePart = ExpectedPackageIngestSourcePiece | ExpectedPackageIngestSourceAdlibAction
 
 export type ExpectedPackageIngestSourceRundownBaseline =
@@ -132,12 +136,10 @@ export type ExpectedPackageIngestSourceRundownBaseline =
 	| ExpectedPackageIngestSourceBaselineAdlibAction
 	| ExpectedPackageIngestSourceBaselineObjects
 
-export type ExpectedPackageIngestSource = ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline
-
-// export interface ExpectedPackageDBFromStudioBaselineObjects extends ExpectedPackageDBBase {
-// 	fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS
-// 	pieceId: null
-// }
+export type ExpectedPackageIngestSource =
+	| ExpectedPackageIngestSourcePart
+	| ExpectedPackageIngestSourceRundownBaseline
+	| ExpectedPackageIngestSourceStudioBaseline
 
 // export interface ExpectedPackageDBFromBucketAdLib extends ExpectedPackageDBBase {
 // 	fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB
@@ -181,17 +183,53 @@ export function getExpectedPackageId(
 	return protectString(`${ownerId}_${getHash(localExpectedPackageId)}`)
 }
 
-export function getExpectedPackageIdNew(
-	/** _id of the rundown*/
-	rundownId: RundownId,
+export function getExpectedPackageIdTmp(
+	/** Preferably a RundownId, but StudioId is allowed when not owned by a rundown */
+	parentId: RundownId | StudioId,
+	owner: ExpectedPackageIngestSource,
 	/** The locally unique id of the expectedPackage */
-	expectedPackage: ReadonlyDeep<ExpectedPackage.Any>
+	localExpectedPackageId: ExpectedPackage.Base['_id']
 ): ExpectedPackageId {
-	// This may be too agressive, but we don't know how to merge some of the properties
-	const objHash = hashObj({
-		...expectedPackage,
-		listenToPackageInfoUpdates: false, // Not relevant for the hash
-	} satisfies ReadonlyDeep<ExpectedPackage.Any>)
-
-	return protectString(`${rundownId}_${getHash(objHash)}`)
+	let ownerId: string
+	const ownerPieceType = owner.fromPieceType
+	switch (owner.fromPieceType) {
+		case ExpectedPackageDBType.PIECE:
+		case ExpectedPackageDBType.ADLIB_PIECE:
+			ownerId = unprotectString(owner.pieceId)
+			break
+		case ExpectedPackageDBType.ADLIB_ACTION:
+			ownerId = unprotectString(owner.pieceId)
+			break
+		case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
+			ownerId = unprotectString(owner.pieceId)
+			break
+		case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
+			ownerId = unprotectString(owner.pieceId)
+			break
+		case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
+			ownerId = 'rundownBaselineObjects'
+			break
+		case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+			ownerId = 'studioBaseline'
+			break
+		default:
+			assertNever(owner)
+			throw new Error(`Unknown fromPieceType "${ownerPieceType}"`)
+	}
+	return protectString(`${parentId}_${ownerId}_${getHash(localExpectedPackageId)}`)
 }
+
+// export function getExpectedPackageIdNew(
+// 	/** _id of the rundown*/
+// 	rundownId: RundownId,
+// 	/** The locally unique id of the expectedPackage */
+// 	expectedPackage: ReadonlyDeep<ExpectedPackage.Any>
+// ): ExpectedPackageId {
+// 	// This may be too agressive, but we don't know how to merge some of the properties
+// 	const objHash = hashObj({
+// 		...expectedPackage,
+// 		listenToPackageInfoUpdates: false, // Not relevant for the hash
+// 	} satisfies ReadonlyDeep<ExpectedPackage.Any>)
+
+// 	return protectString(`${rundownId}_${getHash(objHash)}`)
+// }

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'
 import { assertNever, unprotectString } from '../../../lib/tempLib'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import Tooltip from 'rc-tooltip'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons'
@@ -17,14 +17,14 @@ import { PeripheralDevice } from '@sofie-automation/corelib/dist/dataModel/Perip
 const WORKING_TIMEOUT = 2000
 
 export const PackageStatus: React.FC<{
-	package: ExpectedPackageDB
+	package: ExpectedPackageDBNew
 	statuses: ExpectedPackageWorkStatus[]
 	device: PeripheralDevice | undefined
 }> = function PackageStatus(props) {
 	const { t } = useTranslation()
 
 	const getPackageName = useCallback((): string => {
-		const p2: ExpectedPackage.Any = props.package as any
+		const p2 = props.package.package
 		if (p2.type === ExpectedPackage.PackageType.MEDIA_FILE) {
 			return p2.content.filePath || unprotectString(props.package._id)
 		} else if (p2.type === ExpectedPackage.PackageType.QUANTEL_CLIP) {

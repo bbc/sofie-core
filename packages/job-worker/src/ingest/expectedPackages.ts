@@ -12,7 +12,6 @@ import {
 	ExpectedPackageDBFromBucketAdLibAction,
 	ExpectedPackageDBBase,
 	ExpectedPackageDBFromRundownBaselineObjects,
-	ExpectedPackageDBFromStudioBaselineObjects,
 	getContentVersionHash,
 	getExpectedPackageId,
 	ExpectedPackageFromRundown,
@@ -368,16 +367,7 @@ export function updateBaselineExpectedPackagesOnStudio(
 	// Fill in ids of unnamed expectedPackages
 	setDefaultIdOnExpectedPackages(baseline.expectedPackages)
 
-	const bases = generateExpectedPackageBases(context.studio, context.studio._id, baseline.expectedPackages ?? [])
-	playoutModel.setExpectedPackagesForStudioBaseline(
-		bases.map((item): ExpectedPackageDBFromStudioBaselineObjects => {
-			return {
-				...item,
-				fromPieceType: ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS,
-				pieceId: null,
-			}
-		})
-	)
+	playoutModel.setExpectedPackagesForStudioBaseline(baseline.expectedPackages ?? [])
 }
 
 export function setDefaultIdOnExpectedPackages(expectedPackages: ExpectedPackage.Any[] | undefined): void {

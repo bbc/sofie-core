@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { useSubscription, useTracker } from '../../../lib/ReactMeteorData/react-meteor-data'
 import { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'
 import { normalizeArrayToMap, unprotectString } from '../../../lib/tempLib'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { MeteorCall } from '../../../lib/meteorApi'
 import { doUserAction, UserAction } from '../../../lib/clientUserAction'
 import { Meteor } from 'meteor/meteor'
@@ -66,14 +66,14 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		)
 	}
 	function renderExpectedPackageStatuses() {
-		const packageRef: { [packageId: string]: ExpectedPackageDB } = {}
+		const packageRef: { [packageId: string]: ExpectedPackageDBNew } = {}
 		for (const expPackage of expectedPackages) {
 			packageRef[unprotectString(expPackage._id)] = expPackage
 		}
 
 		const packagesWithWorkStatuses: {
 			[packageId: string]: {
-				package: ExpectedPackageDB | undefined
+				package: ExpectedPackageDBNew | undefined
 				statuses: ExpectedPackageWorkStatus[]
 				device: PeripheralDevice | undefined
 			}
