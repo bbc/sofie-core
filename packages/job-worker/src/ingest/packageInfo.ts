@@ -8,7 +8,10 @@ import { logger } from '../logging'
 import { JobContext } from '../jobs'
 import { regenerateSegmentsFromIngestData } from './generationSegment'
 import { runWithRundownLock } from './lock'
-import { updateExpectedPackagesForPartModel, updateExpectedPackagesForRundownBaseline } from './expectedPackages'
+import {
+	updateExpectedMediaAndPlayoutItemsForPartModel,
+	updateExpectedMediaAndPlayoutItemsForRundownBaseline,
+} from './expectedPackages'
 import { loadIngestModelFromRundown } from './model/implementation/LoadIngestModel'
 import { runCustomIngestUpdateOperation } from './runOperation'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
@@ -25,11 +28,13 @@ export async function handleExpectedPackagesRegenerate(
 
 		const ingestModel = await loadIngestModelFromRundown(context, rundownLock, rundown)
 
+		// nocommit reimplement this for packages
+
 		for (const part of ingestModel.getAllOrderedParts()) {
-			updateExpectedPackagesForPartModel(context, part)
+			updateExpectedMediaAndPlayoutItemsForPartModel(context, part)
 		}
 
-		await updateExpectedPackagesForRundownBaseline(context, ingestModel, undefined, true)
+		await updateExpectedMediaAndPlayoutItemsForRundownBaseline(context, ingestModel, undefined)
 
 		await ingestModel.saveAllToDatabase()
 	})
@@ -72,6 +77,9 @@ export async function handleUpdatedPackageInfoForRundown(
 					case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
 					case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
 						regenerateRundownBaseline = true
+						break
+					case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+						// Ignore
 						break
 					default:
 						assertNever(source)

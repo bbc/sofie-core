@@ -58,7 +58,7 @@ import { generateWriteOpsForLazyDocuments } from './DocumentChangeTracker'
 import { IS_PRODUCTION } from '../../../environment'
 import { logger } from '../../../logging'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper'
-import { IngestExpectedPackage } from '../IngestExpectedPackage'
+import { IngestExpectedPackage, stripExpectedPackageDBToIngestExpectedPackage } from '../IngestExpectedPackage'
 
 export interface IngestModelImplExistingData {
 	rundown: DBRundown
@@ -710,10 +710,7 @@ function groupExpectedPackages(expectedPackages: ExpectedPackageDBNew[]) {
 			case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
 			case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
 				baselineExpectedPackages.push({
-					_id: expectedPackage._id,
-					contentVersionHash: expectedPackage.contentVersionHash,
-					created: expectedPackage.created,
-					package: expectedPackage.package,
+					...stripExpectedPackageDBToIngestExpectedPackage(expectedPackage),
 					ingestSources: [src],
 				})
 				break
@@ -722,10 +719,7 @@ function groupExpectedPackages(expectedPackages: ExpectedPackageDBNew[]) {
 			case ExpectedPackageDBType.ADLIB_ACTION: {
 				const partPackages = groupedExpectedPackagesByPart.get(src.partId) ?? []
 				partPackages.push({
-					_id: expectedPackage._id,
-					contentVersionHash: expectedPackage.contentVersionHash,
-					created: expectedPackage.created,
-					package: expectedPackage.package,
+					...stripExpectedPackageDBToIngestExpectedPackage(expectedPackage),
 					ingestSources: [src],
 				})
 				groupedExpectedPackagesByPart.set(src.partId, partPackages)

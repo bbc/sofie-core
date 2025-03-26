@@ -1,5 +1,6 @@
 import type { ExpectedPackage, Time } from '@sofie-automation/blueprints-integration'
 import type {
+	ExpectedPackageDBNew,
 	ExpectedPackageIngestSourcePart,
 	ExpectedPackageIngestSourceRundownBaseline,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
@@ -16,5 +17,18 @@ export interface IngestExpectedPackage {
 
 	package: ReadonlyDeep<ExpectedPackage.Any>
 
-	ingestSources: Array<ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline>
+	// HACK: Temporary single item
+	ingestSources: [ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline]
+}
+
+export function stripExpectedPackageDBToIngestExpectedPackage(
+	expectedPackage: ExpectedPackageDBNew
+): IngestExpectedPackage {
+	return {
+		_id: expectedPackage._id,
+		contentVersionHash: expectedPackage.contentVersionHash,
+		created: expectedPackage.created,
+		package: expectedPackage.package,
+		ingestSources: expectedPackage.ingestSources as any, // nocommit - avoid this cast?
+	}
 }

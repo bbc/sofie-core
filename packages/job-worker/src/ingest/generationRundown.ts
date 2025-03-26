@@ -26,7 +26,7 @@ import { extendIngestRundownCore, canRundownBeUpdated } from './lib'
 import { JobContext } from '../jobs'
 import { CommitIngestData } from './lock'
 import { SelectedShowStyleVariant, selectShowStyleVariant } from './selectShowStyleVariant'
-import { updateExpectedPackagesForRundownBaseline } from './expectedPackages'
+import { updateExpectedMediaAndPlayoutItemsForRundownBaseline } from './expectedPackages'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	BlueprintResultRundown,
@@ -335,7 +335,7 @@ export async function regenerateRundownAndBaselineFromIngestData(
 
 	await ingestModel.setRundownBaseline(timelineObjectsBlob, adlibPieces, adlibActions, expectedPackages)
 
-	await updateExpectedPackagesForRundownBaseline(context, ingestModel, rundownRes.baseline)
+	await updateExpectedMediaAndPlayoutItemsForRundownBaseline(context, ingestModel, rundownRes.baseline)
 
 	return dbRundown
 }

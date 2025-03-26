@@ -1,25 +1,25 @@
-import {
-	ExpectedPackageDB,
-	ExpectedPackageDBBase,
-	ExpectedPackageFromRundown,
-} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { PackageInfoDB } from '@sofie-automation/corelib/dist/dataModel/PackageInfos'
 import { JobContext } from '../../jobs'
 import { ExpectedPackageId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Filter as FilterQuery } from 'mongodb'
 import { PackageInfo } from '@sofie-automation/blueprints-integration'
 import { unprotectObjectArray } from '@sofie-automation/corelib/dist/protectedString'
-import { ExpectedPackageForIngestModel, IngestModelReadonly } from '../../ingest/model/IngestModel'
+import { IngestModelReadonly } from '../../ingest/model/IngestModel'
 import { ReadonlyDeep } from 'type-fest'
+import {
+	stripExpectedPackageDBToIngestExpectedPackage,
+	type IngestExpectedPackage,
+} from '../../ingest/model/IngestExpectedPackage'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 /**
  * This is a helper class to simplify exposing packageInfo to various places in the blueprints
  */
 export class WatchedPackagesHelper {
-	private readonly packages = new Map<ExpectedPackageId, ReadonlyDeep<ExpectedPackageDB>>()
+	private readonly packages = new Map<ExpectedPackageId, ReadonlyDeep<IngestExpectedPackage>>()
 
 	private constructor(
-		packages: ReadonlyDeep<ExpectedPackageDB[]>,
+		packages: ReadonlyDeep<IngestExpectedPackage[]>,
 		private readonly packageInfos: ReadonlyDeep<PackageInfoDB[]>
 	) {
 		for (const pkg of packages) {
@@ -39,21 +39,25 @@ export class WatchedPackagesHelper {
 	 * @param studioId The studio this is for
 	 * @param filter A mongo query to specify the packages that should be included
 	 */
-	static async create<T extends ExpectedPackageDBBase = ExpectedPackageDBBase>(
+	static async create(
 		context: JobContext,
-		filter: FilterQuery<Omit<T, 'studioId'>>
+		filter: FilterQuery<Omit<ExpectedPackageDBNew, 'studioId'>>
 	): Promise<WatchedPackagesHelper> {
 		// Load all the packages and the infos that are watched
 		const watchedPackages = await context.directCollections.ExpectedPackages.findFetch({
 			...filter,
 			studioId: context.studioId,
-		} as any) // TODO: don't use any here
+		})
 		const watchedPackageInfos = await context.directCollections.PackageInfos.findFetch({
 			studioId: context.studioId,
 			packageId: { $in: watchedPackages.map((p) => p._id) },
 		})
 
-		return new WatchedPackagesHelper(watchedPackages, watchedPackageInfos)
+		const watchedIngestPackages: IngestExpectedPackage[] = watchedPackages.map(
+			stripExpectedPackageDBToIngestExpectedPackage
+		)
+
+		return new WatchedPackagesHelper(watchedIngestPackages, watchedPackageInfos)
 	}
 
 	/**
@@ -65,7 +69,7 @@ export class WatchedPackagesHelper {
 		context: JobContext,
 		ingestModel: IngestModelReadonly
 	): Promise<WatchedPackagesHelper> {
-		const packages: ReadonlyDeep<ExpectedPackageForIngestModel>[] = []
+		const packages: ReadonlyDeep<IngestExpectedPackage>[] = []
 
 		packages.push(...ingestModel.expectedPackagesForRundownBaseline)
 
@@ -77,7 +81,7 @@ export class WatchedPackagesHelper {
 
 		return this.#createFromPackages(
 			context,
-			packages.filter((pkg) => !!pkg.listenToPackageInfoUpdates)
+			packages.filter((pkg) => !!pkg.package.listenToPackageInfoUpdates)
 		)
 	}
 
@@ -92,7 +96,7 @@ export class WatchedPackagesHelper {
 		ingestModel: IngestModelReadonly,
 		segmentExternalIds: string[]
 	): Promise<WatchedPackagesHelper> {
-		const packages: ReadonlyDeep<ExpectedPackageFromRundown>[] = []
+		const packages: ReadonlyDeep<IngestExpectedPackage>[] = []
 
 		for (const externalId of segmentExternalIds) {
 			const segment = ingestModel.getSegmentByExternalId(externalId)
@@ -105,11 +109,11 @@ export class WatchedPackagesHelper {
 
 		return this.#createFromPackages(
 			context,
-			packages.filter((pkg) => !!pkg.listenToPackageInfoUpdates)
+			packages.filter((pkg) => !!pkg.package.listenToPackageInfoUpdates)
 		)
 	}
 
-	static async #createFromPackages(context: JobContext, packages: ReadonlyDeep<ExpectedPackageDB>[]) {
+	static async #createFromPackages(context: JobContext, packages: ReadonlyDeep<IngestExpectedPackage>[]) {
 		// Load all the packages and the infos that are watched
 		const watchedPackageInfos =
 			packages.length > 0
@@ -127,8 +131,8 @@ export class WatchedPackagesHelper {
 	 * This is useful so that all the data for a rundown can be loaded at the start of an ingest operation, and then subsets can be taken for particular blueprint methods without needing to do more db operations.
 	 * @param func A filter to check if each package should be included
 	 */
-	filter(_context: JobContext, func: (pkg: ReadonlyDeep<ExpectedPackageDB>) => boolean): WatchedPackagesHelper {
-		const watchedPackages: ReadonlyDeep<ExpectedPackageDB>[] = []
+	filter(_context: JobContext, func: (pkg: ReadonlyDeep<IngestExpectedPackage>) => boolean): WatchedPackagesHelper {
+		const watchedPackages: ReadonlyDeep<IngestExpectedPackage>[] = []
 		for (const pkg of this.packages.values()) {
 			if (func(pkg)) watchedPackages.push(pkg)
 		}
@@ -139,7 +143,7 @@ export class WatchedPackagesHelper {
 		return new WatchedPackagesHelper(watchedPackages, watchedPackageInfos)
 	}
 
-	getPackage(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageDB> | undefined {
+	getPackage(packageId: ExpectedPackageId): ReadonlyDeep<IngestExpectedPackage> | undefined {
 		return this.packages.get(packageId)
 	}
 
