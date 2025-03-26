@@ -8,7 +8,7 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Timeline'
 import { BaseModel } from '../../modelBase'
 import { ReadonlyDeep } from 'type-fest'
-import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 
 export interface StudioPlayoutModelBaseReadonly {
@@ -33,7 +33,7 @@ export interface StudioPlayoutModelBase extends StudioPlayoutModelBaseReadonly {
 	 * Update the ExpectedPackages for the StudioBaseline of the current Studio
 	 * @param packages ExpectedPackages to store
 	 */
-	setExpectedPackagesForStudioBaseline(packages: ExpectedPackageDBFromStudioBaselineObjects[]): void
+	setExpectedPackagesForStudioBaseline(packages: ExpectedPackageDBNew[]): void
 	/**
 	 * Update the ExpectedPlayoutItems for the StudioBaseline of the current Studio
 	 * @param playoutItems ExpectedPlayoutItems to store

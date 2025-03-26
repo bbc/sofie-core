@@ -1,6 +1,6 @@
 import { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
 import { ExpectedMediaItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { PackageContainerPackageStatusDB } from '@sofie-automation/corelib/dist/dataModel/PackageContainerPackageStatus'
@@ -27,20 +27,18 @@ registerIndex(ExpectedMediaItems, {
 	rundownId: 1,
 })
 
-export const ExpectedPackages = createAsyncOnlyReadOnlyMongoCollection<ExpectedPackageDB>(
+export const ExpectedPackages = createAsyncOnlyReadOnlyMongoCollection<ExpectedPackageDBNew>(
 	CollectionName.ExpectedPackages
 )
 registerIndex(ExpectedPackages, {
 	studioId: 1,
-	fromPieceType: 1,
 })
 registerIndex(ExpectedPackages, {
 	studioId: 1,
-	pieceId: 1,
+	rundownId: 1,
 })
 registerIndex(ExpectedPackages, {
 	rundownId: 1,
-	pieceId: 1,
 })
 
 export const ExpectedPackageWorkStatuses = createAsyncOnlyMongoCollection<ExpectedPackageWorkStatus>(

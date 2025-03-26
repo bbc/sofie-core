@@ -12,6 +12,7 @@ import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { calculatePartExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
 import { clone } from '@sofie-automation/corelib/dist/lib'
 import { getPartId } from '../../lib'
+import { JobContext } from '../../../jobs'
 
 /**
  * A light wrapper around the IngestPartModel, so that we can track the deletions while still accessing the contents
@@ -22,6 +23,8 @@ interface PartWrapper {
 }
 
 export class IngestSegmentModelImpl implements IngestSegmentModel {
+	readonly #context: JobContext
+
 	readonly segmentImpl: DBSegment
 	readonly partsImpl: Map<PartId, PartWrapper>
 
@@ -105,11 +108,14 @@ export class IngestSegmentModelImpl implements IngestSegmentModel {
 	}
 
 	constructor(
+		context: JobContext,
 		isBeingCreated: boolean,
 		segment: DBSegment,
 		currentParts: IngestPartModelImpl[],
 		previousSegment?: IngestSegmentModelImpl
 	) {
+		this.#context = context
+
 		currentParts.sort((a, b) => a.part._rank - b.part._rank)
 
 		this.#segmentHasChanges = isBeingCreated

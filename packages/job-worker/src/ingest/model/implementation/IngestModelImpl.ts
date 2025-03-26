@@ -2,9 +2,11 @@ import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibActio
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
 import {
-	ExpectedPackageDB,
+	ExpectedPackageDBNew,
 	ExpectedPackageDBType,
-	ExpectedPackageFromRundown,
+	ExpectedPackageIngestSource,
+	ExpectedPackageIngestSourcePart,
+	ExpectedPackageIngestSourceRundownBaseline,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import {
@@ -33,23 +35,20 @@ import { IngestSegmentModel } from '../IngestSegmentModel'
 import { IngestSegmentModelImpl } from './IngestSegmentModelImpl'
 import { IngestPartModel } from '../IngestPartModel'
 import {
+	assertNever,
 	clone,
 	Complete,
 	deleteAllUndefinedProperties,
 	getRandomId,
 	groupByToMap,
+	groupByToMapFunc,
 	literal,
 } from '@sofie-automation/corelib/dist/lib'
 import { IngestPartModelImpl } from './IngestPartModelImpl'
 import { DatabasePersistedModel } from '../../../modelBase'
 import { ExpectedPackagesStore } from './ExpectedPackagesStore'
 import { ReadonlyDeep } from 'type-fest'
-import {
-	ExpectedPackageForIngestModel,
-	ExpectedPackageForIngestModelBaseline,
-	IngestModel,
-	IngestReplaceSegmentType,
-} from '../IngestModel'
+import { IngestModel, IngestReplaceSegmentType } from '../IngestModel'
 import { RundownNote } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { diffAndReturnLatestObjects } from './utils'
 import _ = require('underscore')
@@ -62,6 +61,7 @@ import { generateWriteOpsForLazyDocuments } from './DocumentChangeTracker'
 import { IS_PRODUCTION } from '../../../environment'
 import { logger } from '../../../logging'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper'
+import { IngestExpectedPackage } from '../IngestExpectedPackage'
 
 export interface IngestModelImplExistingData {
 	rundown: DBRundown
@@ -72,7 +72,7 @@ export interface IngestModelImplExistingData {
 	adLibActions: AdLibAction[]
 	expectedMediaItems: ExpectedMediaItemRundown[]
 	expectedPlayoutItems: ExpectedPlayoutItemRundown[]
-	expectedPackages: ExpectedPackageDB[]
+	expectedPackages: ExpectedPackageDBNew[]
 }
 
 /**
@@ -117,7 +117,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 
 	protected readonly segmentsImpl: Map<SegmentId, SegmentWrapper>
 
-	readonly #rundownBaselineExpectedPackagesStore: ExpectedPackagesStore<ExpectedPackageForIngestModelBaseline>
+	readonly #rundownBaselineExpectedPackagesStore: ExpectedPackagesStore
 
 	get rundownBaselineTimelineObjects(): LazyInitialiseReadonly<PieceTimelineObjectsBlob> {
 		// Return a simplified view of what we store, of just `timelineObjectsString`
@@ -149,7 +149,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 	get expectedPlayoutItemsForRundownBaseline(): ReadonlyDeep<ExpectedPlayoutItemRundown>[] {
 		return [...this.#rundownBaselineExpectedPackagesStore.expectedPlayoutItems]
 	}
-	get expectedPackagesForRundownBaseline(): ReadonlyDeep<ExpectedPackageForIngestModelBaseline>[] {
+	get expectedPackagesForRundownBaseline(): ReadonlyDeep<IngestExpectedPackage>[] {
 		return [...this.#rundownBaselineExpectedPackagesStore.expectedPackages]
 	}
 
@@ -176,18 +176,8 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 			const groupedExpectedMediaItems = groupByToMap(existingData.expectedMediaItems, 'partId')
 			const groupedExpectedPlayoutItems = groupByToMap(existingData.expectedPlayoutItems, 'partId')
 
-			const rundownExpectedPackages = existingData.expectedPackages.filter(
-				(pkg): pkg is ExpectedPackageFromRundown =>
-					pkg.fromPieceType === ExpectedPackageDBType.PIECE ||
-					pkg.fromPieceType === ExpectedPackageDBType.ADLIB_PIECE ||
-					pkg.fromPieceType === ExpectedPackageDBType.ADLIB_ACTION
-			)
-			const groupedExpectedPackages = groupByToMap(rundownExpectedPackages, 'partId')
-			const baselineExpectedPackages = existingData.expectedPackages.filter(
-				(pkg): pkg is ExpectedPackageForIngestModelBaseline =>
-					pkg.fromPieceType === ExpectedPackageDBType.BASELINE_ADLIB_ACTION ||
-					pkg.fromPieceType === ExpectedPackageDBType.BASELINE_ADLIB_PIECE ||
-					pkg.fromPieceType === ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS
+			const { baselineExpectedPackages, groupedExpectedPackagesByPart } = groupExpectedPackages(
+				existingData.expectedPackages
 			)
 
 			this.#rundownBaselineExpectedPackagesStore = new ExpectedPackagesStore(
@@ -215,7 +205,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 							groupedAdLibActions.get(part._id) ?? [],
 							groupedExpectedMediaItems.get(part._id) ?? [],
 							groupedExpectedPlayoutItems.get(part._id) ?? [],
-							groupedExpectedPackages.get(part._id) ?? []
+							groupedExpectedPackagesByPart.get(part._id) ?? []
 						)
 				)
 				this.segmentsImpl.set(segment._id, {
@@ -352,7 +342,9 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		return undefined
 	}
 
-	findExpectedPackage(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageForIngestModel> | undefined {
+	findExpectedPackageIngestSources(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageIngestSource>[] {
+		const sources: ReadonlyDeep<ExpectedPackageIngestSource>[] = []
+
 		const baselinePackage = this.#rundownBaselineExpectedPackagesStore.expectedPackages.find(
 			(pkg) => pkg._id === packageId
 		)
@@ -360,10 +352,10 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 
 		for (const part of this.getAllOrderedParts()) {
 			const partPackage = part.expectedPackages.find((pkg) => pkg._id === packageId)
-			if (partPackage) return partPackage
+			if (partPackage) sources.push(...partPackage.ingestSources)
 		}
 
-		return undefined
+		return sources
 	}
 
 	removeSegment(id: SegmentId): void {
@@ -381,7 +373,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		}
 		const oldSegment = this.segmentsImpl.get(segment._id)
 
-		const newSegment = new IngestSegmentModelImpl(true, segment, [], oldSegment?.segmentModel)
+		const newSegment = new IngestSegmentModelImpl(this.context, true, segment, [], oldSegment?.segmentModel)
 		this.segmentsImpl.set(segment._id, {
 			segmentModel: newSegment,
 			deleted: false,
@@ -400,7 +392,12 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 
 		this.segmentsImpl.set(oldId, {
 			// Make a minimal clone of the old segment, the reference is needed to issue a mongo delete
-			segmentModel: new IngestSegmentModelImpl(false, clone<DBSegment>(existingSegment.segmentModel.segment), []),
+			segmentModel: new IngestSegmentModelImpl(
+				this.context,
+				false,
+				clone<DBSegment>(existingSegment.segmentModel.segment),
+				[]
+			),
 			deleted: true,
 		})
 
@@ -416,10 +413,10 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 	setExpectedMediaItemsForRundownBaseline(expectedMediaItems: ExpectedMediaItemRundown[]): void {
 		this.#rundownBaselineExpectedPackagesStore.setExpectedMediaItems(expectedMediaItems)
 	}
-	setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void {
-		// Future: should these be here, or held as part of each adlib?
-		this.#rundownBaselineExpectedPackagesStore.setExpectedPackages(expectedPackages)
-	}
+	// setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void {
+	// 	// Future: should these be here, or held as part of each adlib?
+	// 	this.#rundownBaselineExpectedPackagesStore.setExpectedPackages(expectedPackages)
+	// }
 
 	setRundownData(
 		rundownData: IBlueprintRundown,
@@ -477,7 +474,8 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 	async setRundownBaseline(
 		timelineObjectsBlob: PieceTimelineObjectsBlob,
 		adlibPieces: RundownBaselineAdLibItem[],
-		adlibActions: RundownBaselineAdLibAction[]
+		adlibActions: RundownBaselineAdLibAction[],
+		expectedPackages: ExpectedPackageDBNew[]
 	): Promise<void> {
 		const [loadedRundownBaselineObjs, loadedRundownBaselineAdLibPieces, loadedRundownBaselineAdLibActions] =
 			await Promise.all([
@@ -525,6 +523,9 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 				newAdlibActions
 			)
 		)
+
+		// Future: should these be here, or held as part of each adlib?
+		this.#rundownBaselineExpectedPackagesStore.setExpectedPackages(expectedPackages)
 	}
 
 	setRundownOrphaned(orphaned: RundownOrphanedReason | undefined): void {
@@ -702,5 +703,55 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		this.#rundownHasChanged = false
 
 		span?.end()
+	}
+}
+
+function groupExpectedPackages(expectedPackages: ExpectedPackageDBNew[]) {
+	const baselineExpectedPackages: ExpectedPackageDBNew[] = []
+	const groupedExpectedPackagesByPart = new Map<PartId, ExpectedPackageDBNew[]>()
+
+	for (const expectedPackage of expectedPackages) {
+		const baselineIngestSources: ExpectedPackageIngestSourceRundownBaseline[] = []
+		const rundownIngestSources: ExpectedPackageIngestSourcePart[] = []
+
+		for (const src of expectedPackage.ingestSources) {
+			switch (src.fromPieceType) {
+				case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
+				case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
+				case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
+					baselineIngestSources.push(src)
+					break
+				case ExpectedPackageDBType.PIECE:
+				case ExpectedPackageDBType.ADLIB_PIECE:
+				case ExpectedPackageDBType.ADLIB_ACTION:
+					rundownIngestSources.push(src)
+					break
+				default:
+					assertNever(src)
+					break
+			}
+		}
+
+		if (baselineIngestSources.length > 0) {
+			baselineExpectedPackages.push({
+				...expectedPackage,
+				ingestSources: baselineIngestSources,
+			})
+		}
+
+		const sourcesByPartId = groupByToMapFunc(rundownIngestSources, (src) => src.partId)
+		for (const [partId, sources] of sourcesByPartId.entries()) {
+			const partPackages = groupedExpectedPackagesByPart.get(partId) ?? []
+			partPackages.push({
+				...expectedPackage,
+				ingestSources: sources,
+			})
+			groupedExpectedPackagesByPart.set(partId, partPackages)
+		}
+	}
+
+	return {
+		baselineExpectedPackages,
+		groupedExpectedPackagesByPart,
 	}
 }

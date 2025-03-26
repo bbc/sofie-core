@@ -1,11 +1,4 @@
-import {
-	ExpectedPackageDBFromBucketAdLib,
-	ExpectedPackageDBFromBucketAdLibAction,
-	ExpectedPackageDBFromStudioBaselineObjects,
-	ExpectedPackageDBType,
-	ExpectedPackageFromRundown,
-	ExpectedPackageFromRundownBaseline,
-} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBType, ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { PackageInfoDB } from '@sofie-automation/corelib/dist/dataModel/PackageInfos'
 import { ExpectedPackages, Rundowns } from '../../collections'
 import { assertNever } from '../../lib/tempLib'
@@ -107,9 +100,7 @@ async function onUpdatedPackageInfoForRundown(
 	})
 }
 
-function onUpdatedPackageInfoForBucketItemDebounce(
-	pkg: ExpectedPackageDBFromBucketAdLib | ExpectedPackageDBFromBucketAdLibAction
-) {
+function onUpdatedPackageInfoForBucketItemDebounce(pkg: ExpectedPackageDBNew) {
 	lazyIgnore(
 		`onUpdatedPackageInfoForBucket_${pkg.studioId}_${pkg.bucketId}_${pkg.pieceExternalId}`,
 		() => {

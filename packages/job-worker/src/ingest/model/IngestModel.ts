@@ -1,9 +1,7 @@
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
 import {
-	ExpectedPackageDBFromBaselineAdLibAction,
-	ExpectedPackageDBFromBaselineAdLibPiece,
-	ExpectedPackageDBFromRundownBaselineObjects,
-	ExpectedPackageFromRundown,
+	ExpectedPackageDBNew,
+	ExpectedPackageIngestSource,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import {
@@ -32,12 +30,7 @@ import { ProcessedShowStyleBase, ProcessedShowStyleVariant } from '../../jobs/sh
 import { WrappedShowStyleBlueprint } from '../../blueprints/cache'
 import { IBlueprintRundown } from '@sofie-automation/blueprints-integration'
 import type { INotificationsModel } from '../../notifications/NotificationsModel'
-
-export type ExpectedPackageForIngestModelBaseline =
-	| ExpectedPackageDBFromBaselineAdLibAction
-	| ExpectedPackageDBFromBaselineAdLibPiece
-	| ExpectedPackageDBFromRundownBaselineObjects
-export type ExpectedPackageForIngestModel = ExpectedPackageFromRundown | ExpectedPackageForIngestModelBaseline
+import type { IngestExpectedPackage } from './IngestExpectedPackage'
 
 export interface IngestModelReadonly {
 	/**
@@ -66,7 +59,7 @@ export interface IngestModelReadonly {
 	/**
 	 * The ExpectedPackages for the baseline of this Rundown
 	 */
-	readonly expectedPackagesForRundownBaseline: ReadonlyDeep<ExpectedPackageForIngestModelBaseline>[]
+	readonly expectedPackagesForRundownBaseline: ReadonlyDeep<IngestExpectedPackage>[]
 
 	/**
 	 * The baseline Timeline objects of this Rundown
@@ -146,7 +139,7 @@ export interface IngestModelReadonly {
 	 * Search for an ExpectedPackage through the whole Rundown
 	 * @param id Id of the ExpectedPackage
 	 */
-	findExpectedPackage(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageForIngestModel> | undefined
+	findExpectedPackageIngestSources(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageIngestSource>[]
 }
 
 export interface IngestModel extends IngestModelReadonly, BaseModel, INotificationsModel {
@@ -214,11 +207,11 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 	 */
 	setExpectedMediaItemsForRundownBaseline(expectedMediaItems: ExpectedMediaItemRundown[]): void
 
-	/**
-	 * Set the ExpectedPackages for the baseline of this Rundown
-	 * @param expectedPackages The new ExpectedPackages
-	 */
-	setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void
+	// /**
+	//  * Set the ExpectedPackages for the baseline of this Rundown
+	//  * @param expectedPackages The new ExpectedPackages
+	//  */
+	// setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void
 
 	/**
 	 * Set the data for this Rundown.
@@ -249,7 +242,8 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 	setRundownBaseline(
 		timelineObjectsBlob: PieceTimelineObjectsBlob,
 		adlibPieces: RundownBaselineAdLibItem[],
-		adlibActions: RundownBaselineAdLibAction[]
+		adlibActions: RundownBaselineAdLibAction[],
+		expectedPackages: ExpectedPackageDBNew[]
 	): Promise<void>
 
 	/**
