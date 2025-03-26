@@ -19,7 +19,7 @@ import { BucketAdLibAction } from './dataModel/BucketAdLibAction'
 import { BucketAdLib } from './dataModel/BucketAdLibPiece'
 import { ExpectedMediaItem } from './dataModel/ExpectedMediaItem'
 import { ExpectedPackageWorkStatus } from './dataModel/ExpectedPackageWorkStatuses'
-import { ExpectedPackageDBBase } from './dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from './dataModel/ExpectedPackages'
 import { ExternalMessageQueueObj } from './dataModel/ExternalMessageQueue'
 import { PackageContainerStatusDB } from './dataModel/PackageContainerStatus'
 import { PeripheralDevice } from './dataModel/PeripheralDevice'
@@ -344,7 +344,7 @@ export type CorelibPubSubCollections = {
 	[CollectionName.BucketAdLibActions]: BucketAdLibAction
 	[CollectionName.BucketAdLibPieces]: BucketAdLib
 	[CollectionName.ExpectedMediaItems]: ExpectedMediaItem
-	[CollectionName.ExpectedPackages]: ExpectedPackageDBBase
+	[CollectionName.ExpectedPackages]: ExpectedPackageDBNew
 	[CollectionName.ExpectedPackageWorkStatuses]: ExpectedPackageWorkStatus
 	[CollectionName.ExternalMessageQueue]: ExternalMessageQueueObj
 	[CollectionName.NrcsIngestDataCache]: NrcsIngestDataCacheObj

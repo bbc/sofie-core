@@ -68,9 +68,6 @@ export enum ExpectedPackageDBType {
 export interface ExpectedPackageDBNew {
 	_id: ExpectedPackageId // derived from rundownId and hash of `package`
 
-	// /** The local package id - as given by the blueprints */
-	// blueprintPackageId: string // TODO - remove this?
-
 	/** The studio of the Rundown of the Piece this package belongs to */
 	studioId: StudioId
 

@@ -5,6 +5,8 @@ import {
 	ExpectedPackageDBNew,
 	ExpectedPackageDBType,
 	ExpectedPackageIngestSource,
+	ExpectedPackageIngestSourcePart,
+	ExpectedPackageIngestSourceRundownBaseline,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import {
@@ -114,7 +116,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 
 	protected readonly segmentsImpl: Map<SegmentId, SegmentWrapper>
 
-	readonly #rundownBaselineExpectedPackagesStore: ExpectedPackagesStore
+	readonly #rundownBaselineExpectedPackagesStore: ExpectedPackagesStore<ExpectedPackageIngestSourceRundownBaseline>
 
 	get rundownBaselineTimelineObjects(): LazyInitialiseReadonly<PieceTimelineObjectsBlob> {
 		// Return a simplified view of what we store, of just `timelineObjectsString`
@@ -467,7 +469,7 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		timelineObjectsBlob: PieceTimelineObjectsBlob,
 		adlibPieces: RundownBaselineAdLibItem[],
 		adlibActions: RundownBaselineAdLibAction[],
-		expectedPackages: IngestExpectedPackage[]
+		expectedPackages: IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[]
 	): Promise<void> {
 		const [loadedRundownBaselineObjs, loadedRundownBaselineAdLibPieces, loadedRundownBaselineAdLibActions] =
 			await Promise.all([
@@ -699,8 +701,8 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 }
 
 function groupExpectedPackages(expectedPackages: ExpectedPackageDBNew[]) {
-	const baselineExpectedPackages: IngestExpectedPackage[] = []
-	const groupedExpectedPackagesByPart = new Map<PartId, IngestExpectedPackage[]>()
+	const baselineExpectedPackages: IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[] = []
+	const groupedExpectedPackagesByPart = new Map<PartId, IngestExpectedPackage<ExpectedPackageIngestSourcePart>[]>()
 
 	for (const expectedPackage of expectedPackages) {
 		// Future: this is a temporary flow for a single owner

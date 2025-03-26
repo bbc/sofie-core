@@ -1,7 +1,7 @@
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { ExpectedMediaItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
-import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew, ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
@@ -24,7 +24,10 @@ export class SaveIngestModelHelper {
 	#adLibPieces = new DocumentChangeTracker<AdLibPiece>()
 	#adLibActions = new DocumentChangeTracker<AdLibAction>()
 
-	addExpectedPackagesStore(store: ExpectedPackagesStore, deleteAll?: boolean): void {
+	addExpectedPackagesStore<TPackageSource extends { fromPieceType: ExpectedPackageDBType }>(
+		store: ExpectedPackagesStore<TPackageSource>,
+		deleteAll?: boolean
+	): void {
 		this.#expectedPackages.addChanges(store.expectedPackagesChanges, deleteAll ?? false)
 		this.#expectedPlayoutItems.addChanges(store.expectedPlayoutItemsChanges, deleteAll ?? false)
 		this.#expectedMediaItems.addChanges(store.expectedMediaItemsChanges, deleteAll ?? false)

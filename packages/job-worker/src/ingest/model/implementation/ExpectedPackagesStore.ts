@@ -9,10 +9,20 @@ import {
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
-import { diffAndReturnLatestObjects, DocumentChanges, getDocumentChanges, setValuesAndTrackChanges } from './utils'
+import {
+	diffAndReturnLatestObjects,
+	DocumentChanges,
+	getDocumentChanges,
+	setValuesAndTrackChanges,
+	setValuesAndTrackChangesFunc,
+} from './utils'
 import type { IngestExpectedPackage } from '../IngestExpectedPackage'
+import { ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
-function mutateExpectedPackage(oldObj: IngestExpectedPackage, newObj: IngestExpectedPackage): IngestExpectedPackage {
+function mutateExpectedPackage<TPackageSource extends { fromPieceType: ExpectedPackageDBType }>(
+	oldObj: IngestExpectedPackage<TPackageSource>,
+	newObj: IngestExpectedPackage<TPackageSource>
+): IngestExpectedPackage<TPackageSource> {
 	return {
 		...newObj,
 		// Retain the created property
@@ -20,10 +30,10 @@ function mutateExpectedPackage(oldObj: IngestExpectedPackage, newObj: IngestExpe
 	}
 }
 
-export class ExpectedPackagesStore {
+export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: ExpectedPackageDBType }> {
 	#expectedMediaItems: ExpectedMediaItemRundown[]
 	#expectedPlayoutItems: ExpectedPlayoutItemRundown[]
-	#expectedPackages: IngestExpectedPackage[]
+	#expectedPackages: IngestExpectedPackage<TPackageSource>[]
 
 	#expectedMediaItemsWithChanges = new Set<ExpectedMediaItemId>()
 	#expectedPlayoutItemsWithChanges = new Set<ExpectedPlayoutItemId>()
@@ -35,8 +45,9 @@ export class ExpectedPackagesStore {
 	get expectedPlayoutItems(): ReadonlyDeep<ExpectedPlayoutItemRundown[]> {
 		return this.#expectedPlayoutItems
 	}
-	get expectedPackages(): ReadonlyDeep<IngestExpectedPackage[]> {
-		return this.#expectedPackages
+	get expectedPackages(): ReadonlyDeep<IngestExpectedPackage<TPackageSource>[]> {
+		// Typescript is not happy because of the generic
+		return this.#expectedPackages as any
 	}
 
 	get hasChanges(): boolean {
@@ -53,7 +64,7 @@ export class ExpectedPackagesStore {
 	get expectedPlayoutItemsChanges(): DocumentChanges<ExpectedPlayoutItemRundown> {
 		return getDocumentChanges(this.#expectedPlayoutItemsWithChanges, this.#expectedPlayoutItems)
 	}
-	get expectedPackagesChanges(): DocumentChanges<IngestExpectedPackage> {
+	get expectedPackagesChanges(): DocumentChanges<IngestExpectedPackage<TPackageSource>> {
 		return getDocumentChanges(this.#expectedPackagesWithChanges, this.#expectedPackages)
 	}
 
@@ -74,7 +85,7 @@ export class ExpectedPackagesStore {
 		partId: PartId | undefined,
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
-		expectedPackages: IngestExpectedPackage[]
+		expectedPackages: IngestExpectedPackage<TPackageSource>[]
 	) {
 		this.#rundownId = rundownId
 		this.#segmentId = segmentId
@@ -98,7 +109,12 @@ export class ExpectedPackagesStore {
 		}
 	}
 
-	setOwnerIds(rundownId: RundownId, segmentId: SegmentId | undefined, partId: PartId | undefined): void {
+	setOwnerIds(
+		rundownId: RundownId,
+		segmentId: SegmentId | undefined,
+		partId: PartId | undefined,
+		updatePackageSource: (source: TPackageSource) => boolean
+	): void {
 		this.#rundownId = rundownId
 		this.#segmentId = segmentId
 		this.#partId = partId
@@ -111,16 +127,19 @@ export class ExpectedPackagesStore {
 			rundownId,
 			partId,
 		})
-		// nocommit - reimplement
-		// setValuesAndTrackChanges(this.#expectedPackagesWithChanges, this.#expectedPackages, {
-		// 	rundownId,
-		// 	// @ts-expect-error Not all ExpectedPackage types have this property
-		// 	segmentId,
-		// 	partId,
-		// })
+		setValuesAndTrackChangesFunc(this.#expectedPackagesWithChanges, this.#expectedPackages, (pkg) => {
+			let changed = false
+
+			for (const source of pkg.ingestSources) {
+				const sourceChanged = updatePackageSource(source)
+				changed = changed || sourceChanged
+			}
+
+			return changed
+		})
 	}
 
-	compareToPreviousData(oldStore: ExpectedPackagesStore): void {
+	compareToPreviousData(oldStore: ExpectedPackagesStore<TPackageSource>): void {
 		// Diff the objects, but don't update the stored copies
 		diffAndReturnLatestObjects(
 			this.#expectedPlayoutItemsWithChanges,
@@ -166,19 +185,12 @@ export class ExpectedPackagesStore {
 			newExpectedMediaItems
 		)
 	}
-	setExpectedPackages(expectedPackages: IngestExpectedPackage[]): void {
-		// nocommit - the whole packages flow needs reimplementing
-		// const newExpectedPackages: IngestExpectedPackage[] = expectedPackages.map((pkg) => ({
-		// 	...pkg,
-		// 	partId: this.#partId,
-		// 	segmentId: this.#segmentId,
-		// 	rundownId: this.#rundownId,
-		// }))
-		// this.#expectedPackages = diffAndReturnLatestObjects(
-		// 	this.#expectedPackagesWithChanges,
-		// 	this.#expectedPackages,
-		// 	newExpectedPackages,
-		// 	mutateExpectedPackage
-		// )
+	setExpectedPackages(expectedPackages: IngestExpectedPackage<TPackageSource>[]): void {
+		this.#expectedPackages = diffAndReturnLatestObjects(
+			this.#expectedPackagesWithChanges,
+			this.#expectedPackages,
+			expectedPackages,
+			mutateExpectedPackage
+		)
 	}
 }

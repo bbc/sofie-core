@@ -17,13 +17,14 @@ import {
 	setValuesAndTrackChanges,
 } from './utils'
 import type { IngestExpectedPackage } from '../IngestExpectedPackage'
+import { ExpectedPackageIngestSourcePart } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export class IngestPartModelImpl implements IngestPartModel {
 	readonly partImpl: DBPart
 	readonly #pieces: Piece[]
 	readonly #adLibPieces: AdLibPiece[]
 	readonly #adLibActions: AdLibAction[]
-	readonly expectedPackagesStore: ExpectedPackagesStore
+	readonly expectedPackagesStore: ExpectedPackagesStore<ExpectedPackageIngestSourcePart>
 
 	#setPartValue<T extends keyof DBPart>(key: T, newValue: DBPart[T]): void {
 		if (newValue === undefined) {
@@ -140,7 +141,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 		adLibActions: AdLibAction[],
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
-		expectedPackages: IngestExpectedPackage[]
+		expectedPackages: IngestExpectedPackage<ExpectedPackageIngestSourcePart>[]
 	) {
 		this.partImpl = part
 		this.#pieces = pieces
@@ -211,7 +212,14 @@ export class IngestPartModelImpl implements IngestPartModel {
 		this.#compareAndSetPartValue('segmentId', segmentId)
 		this.#compareAndSetPartValue('rundownId', rundownId)
 
-		this.expectedPackagesStore.setOwnerIds(rundownId, segmentId, this.part._id)
+		this.expectedPackagesStore.setOwnerIds(rundownId, segmentId, this.part._id, (pkgSource) => {
+			if (pkgSource.partId !== this.part._id || pkgSource.segmentId !== segmentId) {
+				pkgSource.partId = this.part._id
+				pkgSource.segmentId = segmentId
+				return true
+			}
+			return false
+		})
 
 		setValuesAndTrackChanges(this.#piecesWithChanges, this.#pieces, {
 			startRundownId: rundownId,
@@ -234,8 +242,4 @@ export class IngestPartModelImpl implements IngestPartModel {
 	setExpectedMediaItems(expectedMediaItems: ExpectedMediaItemRundown[]): void {
 		this.expectedPackagesStore.setExpectedMediaItems(expectedMediaItems)
 	}
-	// setExpectedPackages(expectedPackages: ExpectedPackageFromRundown[]): void {
-	// 	// Future: should these be here, or held as part of each adlib/piece?
-	// 	this.expectedPackagesStore.setExpectedPackages(expectedPackages)
-	// }
 }

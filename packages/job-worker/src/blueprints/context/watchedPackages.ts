@@ -149,7 +149,7 @@ export class WatchedPackagesHelper {
 
 	getPackageInfo(packageId: string): Readonly<Array<PackageInfo.Any>> {
 		for (const pkg of this.packages.values()) {
-			if (pkg.blueprintPackageId === packageId) {
+			if (pkg.package._id === packageId) {
 				const info = this.packageInfos.filter((p) => p.packageId === pkg._id)
 				return unprotectObjectArray(info)
 			}

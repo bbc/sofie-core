@@ -4,7 +4,7 @@ import { Blueprint } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
 import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
 import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
 import { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { ExpectedPackageDBNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { NrcsIngestDataCacheObj } from '@sofie-automation/corelib/dist/dataModel/NrcsIngestDataCache'
 import { SofieIngestDataCacheObj } from '@sofie-automation/corelib/dist/dataModel/SofieIngestDataCache'
@@ -310,7 +310,7 @@ export function getMockCollections(): {
 			Timelines: new MockMongoCollection<TimelineComplete>(CollectionName.Timelines),
 			TimelineDatastores: new MockMongoCollection<DBTimelineDatastoreEntry>(CollectionName.TimelineDatastore),
 
-			ExpectedPackages: new MockMongoCollection<ExpectedPackageDB>(CollectionName.ExpectedPackages),
+			ExpectedPackages: new MockMongoCollection<ExpectedPackageDBNew>(CollectionName.ExpectedPackages),
 			PackageInfos: new MockMongoCollection(CollectionName.PackageInfos),
 
 			ExternalMessageQueue: new MockMongoCollection(CollectionName.ExternalMessageQueue),
@@ -364,7 +364,7 @@ export interface IMockCollections {
 	Timelines: MockMongoCollection<TimelineComplete>
 	TimelineDatastores: MockMongoCollection<DBTimelineDatastoreEntry>
 
-	ExpectedPackages: MockMongoCollection<ExpectedPackageDB>
+	ExpectedPackages: MockMongoCollection<ExpectedPackageDBNew>
 	PackageInfos: MockMongoCollection<PackageInfoDB>
 
 	ExternalMessageQueue: MockMongoCollection<ExternalMessageQueueObj>

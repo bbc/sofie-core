@@ -216,11 +216,12 @@ export async function regenerateRundownAndBaselineFromIngestData(
 	allRundownWatchedPackages: WatchedPackagesHelper,
 	extraRundownNotes: RundownNote[]
 ): Promise<ReadonlyDeep<DBRundown> | null> {
-	const rundownBaselinePackages = allRundownWatchedPackages.filter(
-		context,
-		(pkg) =>
-			pkg.fromPieceType === ExpectedPackageDBType.BASELINE_ADLIB_ACTION ||
-			pkg.fromPieceType === ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS
+	const rundownBaselinePackages = allRundownWatchedPackages.filter(context, (pkg) =>
+		pkg.ingestSources.some(
+			(source) =>
+				source.fromPieceType === ExpectedPackageDBType.BASELINE_ADLIB_ACTION ||
+				source.fromPieceType === ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS
+		)
 	)
 
 	const blueprintContext = new GetRundownContext(
@@ -345,19 +346,19 @@ function generateExpectedPackagesForBaseline(
 	adLibPieces: AdLibPiece[],
 	adLibActions: RundownBaselineAdLibAction[],
 	expectedPackages: ExpectedPackage.Any[]
-): IngestExpectedPackage[] {
-	const packages: IngestExpectedPackage[] = []
+): IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[] {
+	const packages: IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[] = []
 
 	const wrapPackage = (
 		expectedPackage: ReadonlyDeep<ExpectedPackage.Any>,
-		source: ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline
-	): IngestExpectedPackage => {
+		source: ExpectedPackageIngestSourceRundownBaseline
+	): IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline> => {
 		return {
 			_id: getExpectedPackageIdTmp(rundownId, source, expectedPackage._id),
 
 			contentVersionHash: getContentVersionHash(expectedPackage),
 
-			created: Date.now(), // nocommit - avoid churn on this?
+			created: null,
 
 			package: expectedPackage,
 

@@ -16,7 +16,6 @@ import {
 	getContentVersionHash,
 	ExpectedPackageDBType,
 	getExpectedPackageIdTmp,
-	ExpectedPackageIngestSourceRundownBaseline,
 	ExpectedPackageIngestSourcePart,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import type { ExpectedPackage } from '@sofie-automation/blueprints-integration'
@@ -269,19 +268,19 @@ function generateExpectedPackagesForPart(
 	pieces: Piece[],
 	adLibPieces: AdLibPiece[],
 	adLibActions: AdLibAction[]
-): IngestExpectedPackage[] {
-	const packages: IngestExpectedPackage[] = []
+): IngestExpectedPackage<ExpectedPackageIngestSourcePart>[] {
+	const packages: IngestExpectedPackage<ExpectedPackageIngestSourcePart>[] = []
 
 	const wrapPackage = (
 		expectedPackage: ReadonlyDeep<ExpectedPackage.Any>,
-		source: ExpectedPackageIngestSourcePart | ExpectedPackageIngestSourceRundownBaseline
-	): IngestExpectedPackage => {
+		source: ExpectedPackageIngestSourcePart
+	): IngestExpectedPackage<ExpectedPackageIngestSourcePart> => {
 		return {
 			_id: getExpectedPackageIdTmp(rundownId, source, expectedPackage._id),
 
 			contentVersionHash: getContentVersionHash(expectedPackage),
 
-			created: Date.now(), // nocommit - avoid churn on this?
+			created: null,
 
 			package: expectedPackage,
 
