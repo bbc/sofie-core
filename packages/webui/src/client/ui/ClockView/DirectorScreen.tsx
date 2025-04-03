@@ -5,42 +5,46 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { withTiming, WithTiming } from '../RundownView/RundownTiming/withTiming'
 import { useSubscription, useSubscriptions, useTracker, withTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
-import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { getCurrentTime } from '../../lib/systemTime'
 import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
-import { PieceIconContainer } from '../PieceIcons/PieceIcon'
-import { PieceNameContainer } from '../PieceIcons/PieceName'
+import { PieceIconContainer } from './ClockViewPieceIcons/ClockViewPieceIcon'
+import { PieceNameContainer } from './ClockViewPieceIcons/ClockViewPieceName'
 import { Timediff } from './Timediff'
 import { RundownUtils } from '../../lib/rundown'
 import { PieceLifespan } from '@sofie-automation/blueprints-integration'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { PieceCountdownContainer } from '../PieceIcons/PieceCountdown'
+import { PieceFreezeContainer } from './ClockViewPieceIcons/ClockViewFreezeCount'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
-import { DashboardLayout, RundownLayoutBase } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
 import {
 	RundownId,
-	RundownLayoutId,
 	RundownPlaylistId,
 	ShowStyleBaseId,
 	ShowStyleVariantId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
-import { RundownLayoutsAPI } from '../../lib/rundownLayouts'
-import { ShelfDashboardLayout } from '../Shelf/ShelfDashboardLayout'
-import { parse as queryStringParse } from 'query-string'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
 import { getPlaylistTimingDiff } from '../../lib/rundownTiming'
 import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { UIShowStyleBases, UIStudios } from '../Collections'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
-import { PieceInstances, RundownLayouts, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../collections'
+import { PieceInstances, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../collections'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
-import { useSetDocumentClass, useSetDocumentDarkTheme } from '../util/useSetDocumentClass'
+import { useSetDocumentClass } from '../util/useSetDocumentClass'
 import { useRundownAndShowStyleIdsForPlaylist } from '../util/useRundownAndShowStyleIdsForPlaylist'
 import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil'
+import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownTiming/CurrentPartOrSegmentRemaining'
+import {
+	OverUnderClockComponent,
+	PlannedEndComponent,
+	TimeSincePlannedEndComponent,
+	TimeToPlannedEndComponent,
+} from '../../lib/Components/CounterComponents'
+import { AdjustLabelFit } from '../util/AdjustLabelFit'
+import { AutoNextStatus } from '../RundownView/RundownTiming/AutoNextStatus'
+import { useTranslation } from 'react-i18next'
 
 interface SegmentUi extends DBSegment {
 	items: Array<PartUi>
@@ -50,12 +54,12 @@ interface TimeMap {
 	[key: string]: number
 }
 
-interface PresenterScreenProps {
+interface DirectorScreenProps {
 	studioId: StudioId
 	playlistId: RundownPlaylistId
 	segmentLiveDurations?: TimeMap
 }
-export interface PresenterScreenTrackedProps {
+export interface DirectorScreenTrackedProps {
 	studio: UIStudio | undefined
 	playlist: DBRundownPlaylist | undefined
 	rundowns: Rundown[]
@@ -71,8 +75,6 @@ export interface PresenterScreenTrackedProps {
 	nextShowStyleBaseId: ShowStyleBaseId | undefined
 	showStyleBaseIds: ShowStyleBaseId[]
 	rundownIds: RundownId[]
-	rundownLayouts?: Array<RundownLayoutBase>
-	presenterLayoutId: RundownLayoutId | undefined
 }
 
 function getShowStyleBaseIdSegmentPartUi(
@@ -157,7 +159,7 @@ function getShowStyleBaseIdSegmentPartUi(
 	}
 }
 
-export const getPresenterScreenReactive = (props: PresenterScreenProps): PresenterScreenTrackedProps => {
+const getDirectorScreenReactive = (props: DirectorScreenProps): DirectorScreenTrackedProps => {
 	const studio = UIStudios.findOne(props.studioId)
 
 	let playlist: DBRundownPlaylist | undefined
@@ -188,9 +190,6 @@ export const getPresenterScreenReactive = (props: PresenterScreenProps): Present
 	let nextSegment: SegmentUi | undefined = undefined
 	let nextPartInstanceUi: PartUi | undefined = undefined
 	let nextShowStyleBaseId: ShowStyleBaseId | undefined = undefined
-
-	const params = queryStringParse(location.search)
-	const presenterLayoutId = protectString((params['presenterLayout'] as string) || '')
 
 	if (playlist) {
 		rundowns = RundownPlaylistCollectionUtil.getRundownsOrdered(playlist)
@@ -269,60 +268,10 @@ export const getPresenterScreenReactive = (props: PresenterScreenProps): Present
 		nextSegment,
 		nextPartInstance: nextPartInstanceUi,
 		nextShowStyleBaseId,
-		rundownLayouts:
-			rundowns.length > 0 ? RundownLayouts.find({ showStyleBaseId: rundowns[0].showStyleBaseId }).fetch() : undefined,
-		presenterLayoutId,
 	}
 }
 
-function PresenterScreenContent(props: WithTiming<PresenterScreenProps & PresenterScreenTrackedProps>): JSX.Element {
-	usePresenterScreenSubscriptions(props)
-
-	let selectedPresenterLayout: RundownLayoutBase | undefined = undefined
-
-	if (props.rundownLayouts) {
-		// first try to use the one selected by the user
-		if (props.presenterLayoutId) {
-			selectedPresenterLayout = props.rundownLayouts.find((i) => i._id === props.presenterLayoutId)
-		}
-
-		// if couldn't find based on id, try matching part of the name
-		if (props.presenterLayoutId && !selectedPresenterLayout) {
-			selectedPresenterLayout = props.rundownLayouts.find(
-				(i) => i.name.indexOf(unprotectString(props.presenterLayoutId!)) >= 0
-			)
-		}
-
-		// if still not found, use the first one
-		if (!selectedPresenterLayout) {
-			selectedPresenterLayout = props.rundownLayouts.find((i) => RundownLayoutsAPI.isLayoutForPresenterView(i))
-		}
-	}
-
-	const presenterLayout =
-		selectedPresenterLayout && RundownLayoutsAPI.isLayoutForPresenterView(selectedPresenterLayout)
-			? selectedPresenterLayout
-			: undefined
-
-	useSetDocumentClass('dark', 'xdark')
-	useSetDocumentDarkTheme()
-
-	if (presenterLayout && RundownLayoutsAPI.isDashboardLayout(presenterLayout)) {
-		return (
-			<PresenterScreenContentDashboardLayout
-				studio={props.studio}
-				playlist={props.playlist}
-				currentShowStyleBase={props.currentShowStyleBase}
-				currentShowStyleVariant={props.currentShowStyleVariant}
-				layout={presenterLayout}
-			/>
-		)
-	} else {
-		return <PresenterScreenContentDefaultLayout {...props} />
-	}
-}
-
-export function usePresenterScreenSubscriptions(props: PresenterScreenProps): void {
+function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 	useSubscription(MeteorPubSub.uiStudio, props.studioId)
 
 	const playlist = useTracker(
@@ -377,41 +326,15 @@ export function usePresenterScreenSubscriptions(props: PresenterScreenProps): vo
 	])
 }
 
-interface PresenterScreenContentDashboardLayoutProps {
-	studio: UIStudio | undefined
-	playlist: DBRundownPlaylist | undefined
-	currentShowStyleBase: UIShowStyleBase | undefined
-	currentShowStyleVariant: DBShowStyleVariant | undefined
+function DirectorScreenWithSubscription(
+	props: WithTiming<DirectorScreenProps & DirectorScreenTrackedProps>
+): JSX.Element {
+	useDirectorScreenSubscriptions(props)
 
-	layout: DashboardLayout
-}
-function PresenterScreenContentDashboardLayout({
-	studio,
-	playlist,
-	currentShowStyleBase,
-	currentShowStyleVariant,
-	layout,
-}: Readonly<PresenterScreenContentDashboardLayoutProps>) {
-	if (studio && playlist && currentShowStyleBase && currentShowStyleVariant) {
-		return (
-			<div className="presenter-screen">
-				<ShelfDashboardLayout
-					rundownLayout={layout}
-					playlist={playlist}
-					showStyleBase={currentShowStyleBase}
-					showStyleVariant={currentShowStyleVariant}
-					studio={studio}
-					studioMode={false}
-					shouldQueue={false}
-					selectedPiece={undefined}
-				/>
-			</div>
-		)
-	}
-	return null
+	return <DirectorScreenRender {...props} />
 }
 
-function PresenterScreenContentDefaultLayout({
+function DirectorScreenRender({
 	playlist,
 	segments,
 	currentShowStyleBaseId,
@@ -423,117 +346,222 @@ function PresenterScreenContentDefaultLayout({
 	nextPartInstance,
 	nextSegment,
 	rundownIds,
-}: Readonly<WithTiming<PresenterScreenProps & PresenterScreenTrackedProps>>) {
-	if (playlist && playlistId && segments) {
-		const currentPartOrSegmentCountdown =
-			timingDurations.remainingBudgetOnCurrentSegment ?? timingDurations.remainingTimeOnCurrentPart ?? 0
+}: Readonly<WithTiming<DirectorScreenProps & DirectorScreenTrackedProps>>) {
+	useSetDocumentClass('dark', 'xdark')
+	const { t } = useTranslation()
 
-		const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
+	if (playlist && playlistId && segments) {
+		const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing) || 0
+		const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
+		const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing) || 0
+		const now = timingDurations.currentTime ?? getCurrentTime()
+
 		const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 
 		return (
-			<div className="presenter-screen">
-				<div className="presenter-screen__part presenter-screen__part--current-part">
-					<div
-						className={ClassNames('presenter-screen__segment-name', {
-							live: currentSegment !== undefined,
-						})}
-					>
-						{currentSegment?.name}
-					</div>
-					{currentPartInstance && currentShowStyleBaseId ? (
-						<>
-							<div className="presenter-screen__part__piece-icon">
-								<PieceIconContainer
-									partInstanceId={currentPartInstance.instance._id}
-									showStyleBaseId={currentShowStyleBaseId}
-									rundownIds={rundownIds}
-									playlistActivationId={playlist?.activationId}
-								/>
+			<div className="director-screen">
+				<div className="director-screen__top">
+					{expectedEnd ? (
+						<div className="director-screen__top__planned-end">
+							<div>
+								<PlannedEndComponent value={expectedEnd} />
 							</div>
-							<div className="presenter-screen__part__piece-name">
-								<PieceNameContainer
-									partName={currentPartInstance.instance.part.title}
-									partInstanceId={currentPartInstance.instance._id}
-									showStyleBaseId={currentShowStyleBaseId}
-									rundownIds={rundownIds}
-									playlistActivationId={playlist?.activationId}
-								/>
-							</div>
-							<div className="presenter-screen__part__piece-countdown">
-								<PieceCountdownContainer
-									partInstanceId={currentPartInstance.instance._id}
-									showStyleBaseId={currentShowStyleBaseId}
-									rundownIds={rundownIds}
-									partAutoNext={currentPartInstance.instance.part.autoNext || false}
-									partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
-										currentPartInstance.instance
-									)}
-									partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
-									playlistActivationId={playlist?.activationId}
-								/>
-							</div>
-							<div className="presenter-screen__part__part-countdown">
-								<Timediff time={currentPartOrSegmentCountdown} />
-							</div>
-						</>
-					) : expectedStart ? (
-						<div className="presenter-screen__rundown-countdown">
-							<Timediff time={expectedStart - getCurrentTime()} />
+							PLANNED END
 						</div>
 					) : null}
-				</div>
-				<div className="presenter-screen__part presenter-screen__part--next-part">
-					<div
-						className={ClassNames('presenter-screen__segment-name', {
-							next: nextSegment !== undefined && nextSegment?._id !== currentSegment?._id,
-						})}
-					>
-						{nextSegment?._id !== currentSegment?._id ? nextSegment?.name : undefined}
-					</div>
-					{nextPartInstance && nextShowStyleBaseId ? (
-						<>
-							<div className="presenter-screen__part__piece-icon">
-								<PieceIconContainer
-									partInstanceId={nextPartInstance.instance._id}
-									showStyleBaseId={nextShowStyleBaseId}
-									rundownIds={rundownIds}
-									playlistActivationId={playlist?.activationId}
-								/>
+					{expectedEnd ? (
+						<div>
+							<div>
+								<TimeToPlannedEndComponent value={now - expectedEnd} />
 							</div>
-							<div className="presenter-screen__part__piece-name">
-								{currentPartInstance && currentPartInstance.instance.part.autoNext ? (
-									<img
-										className="presenter-screen__part__auto-next-icon"
-										src="/icons/auto-presenter-screen.svg"
-										alt="Autonext"
+							<span className="director-screen__top__planned-to">TIME TO PLANNED END</span>
+						</div>
+					) : (
+						<div>
+							<div>
+								<TimeSincePlannedEndComponent value={getCurrentTime() - (expectedStart + expectedDuration)} />
+								<span className="director-screen__top__planned-since">TIME SINCE PLANNED END</span>
+							</div>
+						</div>
+					)}
+					<div>
+						<div>
+							<OverUnderClockComponent value={overUnderClock} />
+						</div>
+						<span className="director-screen__top__over-under">OVER/UNDER</span>
+					</div>
+				</div>
+				<div className="director-screen__body">
+					{
+						// Current Part:
+					}
+					<div className="director-screen__body__part">
+						<div
+							className={ClassNames('director-screen__body__segment-name', {
+								live: currentSegment !== undefined,
+							})}
+						>
+							<AdjustLabelFit
+								label={currentSegment?.name || ''}
+								width={'80vw'}
+								fontFamily="Roboto Flex"
+								fontSize="0.9em"
+								minFontWidth={70}
+								defaultWidth={100}
+								defaultOpticalSize={120}
+								useLetterSpacing={false}
+								hardCutText={true}
+							/>
+							{playlist.currentPartInfo?.partInstanceId ? (
+								<span className="director-screen__body__segment__countdown">
+									<CurrentPartOrSegmentRemaining
+										currentPartInstanceId={playlist.currentPartInfo?.partInstanceId || null}
+										heavyClassName="overtime"
+										preferSegmentTime={true}
 									/>
-								) : null}
-								{nextPartInstance && nextShowStyleBaseId && nextPartInstance.instance.part.title ? (
-									<PieceNameContainer
-										partName={nextPartInstance.instance.part.title}
+								</span>
+							) : null}
+						</div>
+						{currentPartInstance && currentShowStyleBaseId ? (
+							<>
+								<div className="director-screen__body__part__piece-icon">
+									<PieceIconContainer
+										partInstanceId={currentPartInstance.instance._id}
+										showStyleBaseId={currentShowStyleBaseId}
+										rundownIds={rundownIds}
+										playlistActivationId={playlist?.activationId}
+									/>
+								</div>
+								<div className="director-screen__body__part__piece-content">
+									<div className="director-screen__body__part__piece-name">
+										<PieceNameContainer
+											partName={currentPartInstance.instance.part.title}
+											partInstanceId={currentPartInstance.instance._id}
+											showStyleBaseId={currentShowStyleBaseId}
+											rundownIds={rundownIds}
+											playlistActivationId={playlist?.activationId}
+											autowidth={{
+												label: '',
+												width: '90vw',
+												fontFamily: 'Roboto Flex',
+												fontSize: '1.5em',
+												minFontWidth: 55,
+												defaultWidth: 120,
+												useLetterSpacing: false,
+												defaultOpticalSize: 120,
+											}}
+										/>
+									</div>
+									<div className="director-screen__body__part__piece-countdown">
+										<CurrentPartOrSegmentRemaining
+											currentPartInstanceId={playlist.currentPartInfo?.partInstanceId ?? null}
+											heavyClassName="overtime"
+										/>
+										<span className="auto-next-status">
+											<AutoNextStatus />
+										</span>{' '}
+										<span className="freeze-counter">
+											<PieceFreezeContainer
+												partInstanceId={currentPartInstance.instance._id}
+												showStyleBaseId={currentShowStyleBaseId}
+												rundownIds={rundownIds}
+												partAutoNext={currentPartInstance.instance.part.autoNext || false}
+												partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
+													currentPartInstance.instance
+												)}
+												partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
+												playlistActivationId={playlist?.activationId}
+											/>
+										</span>
+									</div>
+								</div>
+							</>
+						) : expectedStart ? (
+							<div className="director-screen__body__rundown-countdown">
+								<Timediff time={expectedStart - getCurrentTime()} />
+							</div>
+						) : null}
+					</div>
+					{
+						// Next Part:
+					}
+					<div className="director-screen__body__part director-screen__body__part--next-part">
+						<div
+							className={ClassNames('director-screen__body__segment-name', {
+								next: nextSegment !== undefined && nextSegment?._id !== currentSegment?._id,
+								notext: nextSegment === undefined || nextSegment?._id === currentSegment?._id,
+							})}
+						>
+							{nextSegment?._id !== currentSegment?._id ? (
+								<AdjustLabelFit
+									label={nextSegment?.name || ''}
+									width={'80vw'}
+									fontFamily="Roboto Flex"
+									fontSize="0.9em"
+									minFontWidth={70}
+									defaultWidth={90}
+									defaultOpticalSize={120}
+									useLetterSpacing={false}
+									hardCutText={true}
+								/>
+							) : undefined}
+						</div>
+						{nextPartInstance && nextShowStyleBaseId ? (
+							<>
+								{currentPartInstance && currentPartInstance.instance.part.autoNext ? (
+									<span
+										className={ClassNames('director-screen__body__part__auto-icon', {
+											'director-screen__body__part__auto-icon--notext':
+												nextSegment === undefined || nextSegment?._id === currentSegment?._id,
+										})}
+									>
+										{t('Auto')}
+									</span>
+								) : (
+									<span
+										className={ClassNames('director-screen__body__part__next-icon', {
+											'director-screen__body__part__next-icon--notext':
+												nextSegment === undefined || nextSegment?._id === currentSegment?._id,
+										})}
+									>
+										{t('Next')}
+									</span>
+								)}
+								<div className="director-screen__body__part__piece-icon">
+									<PieceIconContainer
 										partInstanceId={nextPartInstance.instance._id}
 										showStyleBaseId={nextShowStyleBaseId}
 										rundownIds={rundownIds}
 										playlistActivationId={playlist?.activationId}
 									/>
-								) : (
-									'_'
-								)}
-							</div>
-						</>
-					) : null}
-				</div>
-				<div className="presenter-screen__rundown-status-bar">
-					<div className="presenter-screen__rundown-status-bar__rundown-name">
-						{playlist ? playlist.name : 'UNKNOWN'}
-					</div>
-					<div
-						className={ClassNames('presenter-screen__rundown-status-bar__countdown', {
-							over: Math.floor(overUnderClock / 1000) >= 0,
-						})}
-					>
-						{RundownUtils.formatDiffToTimecode(overUnderClock, true, false, true, true, true, undefined, true, true)}
+								</div>
+								<div className="director-screen__body__part__piece-content">
+									<div className="director-screen__body__part__piece-name">
+										{nextPartInstance && nextShowStyleBaseId && nextPartInstance.instance.part.title ? (
+											<PieceNameContainer
+												partName={nextPartInstance.instance.part.title}
+												partInstanceId={nextPartInstance.instance._id}
+												showStyleBaseId={nextShowStyleBaseId}
+												rundownIds={rundownIds}
+												playlistActivationId={playlist?.activationId}
+												autowidth={{
+													label: '',
+													width: '90vw',
+													fontFamily: 'Roboto Flex',
+													fontSize: '1.5em',
+													minFontWidth: 55,
+													defaultWidth: 120,
+													useLetterSpacing: false,
+													defaultOpticalSize: 120,
+												}}
+											/>
+										) : (
+											'_'
+										)}
+									</div>
+								</div>
+							</>
+						) : null}
 					</div>
 				</div>
 			</div>
@@ -543,8 +571,8 @@ function PresenterScreenContentDefaultLayout({
 }
 
 /**
- * This component renders a Countdown screen for a given playlist
+ * This component renders the Director screen for a given playlist
  */
-export const PresenterScreen = withTracker<PresenterScreenProps, {}, PresenterScreenTrackedProps>(
-	getPresenterScreenReactive
-)(withTiming<PresenterScreenProps & PresenterScreenTrackedProps, {}>()(PresenterScreenContent))
+export const DirectorScreen = withTracker<DirectorScreenProps, {}, DirectorScreenTrackedProps>(
+	getDirectorScreenReactive
+)(withTiming<DirectorScreenProps & DirectorScreenTrackedProps, {}>()(DirectorScreenWithSubscription))
