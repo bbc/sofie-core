@@ -75,6 +75,8 @@
 		"@hyperjump/json-schema-core@^0.28.0": "patch:@hyperjump/json-schema-core@npm%3A0.28.5#./.yarn/patches/@hyperjump-json-schema-core-npm-0.28.5-e8b590eb0d.patch",
 		"@hyperjump/json-pointer@^0.9.4": "patch:@hyperjump/json-pointer@npm%3A0.9.8#./.yarn/patches/@hyperjump-json-pointer-npm-0.9.8-edc0d22296.patch",
 		"@hyperjump/json-pointer@^0.9.2": "patch:@hyperjump/json-pointer@npm%3A0.9.8#./.yarn/patches/@hyperjump-json-pointer-npm-0.9.8-edc0d22296.patch",
-		"@hyperjump/pact@^0.2.3": "patch:@hyperjump/pact@npm%3A0.2.5#./.yarn/patches/@hyperjump-pact-npm-0.2.5-a816d03fba.patch"
+		"@hyperjump/pact@^0.2.3": "patch:@hyperjump/pact@npm%3A0.2.5#./.yarn/patches/@hyperjump-pact-npm-0.2.5-a816d03fba.patch",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.4.1"
 	}
 }
