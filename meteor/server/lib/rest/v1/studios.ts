@@ -222,5 +222,6 @@ export interface APIStudioSettings {
 	allowPieceDirectPlay?: boolean
 	enableBuckets?: boolean
 	enableEvaluationForm?: boolean
+	mockPieceContentStatus?: boolean
 	rundownGlobalPiecesPrepareTime?: number
 }
