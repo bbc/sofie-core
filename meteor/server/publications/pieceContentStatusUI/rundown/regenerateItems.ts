@@ -45,6 +45,7 @@ async function regenerateGenericPiece(
 	if (part && segment && sourceLayer) {
 		const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 			uiStudio,
+			part.rundownId,
 			messageFactory,
 			pieceDoc,
 			sourceLayer
@@ -169,6 +170,7 @@ export async function regenerateForPieceInstanceIds(
 			if (partInstance && segment && sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					pieceDoc.rundownId,
 					messageFactories.get(pieceDoc.rundownId),
 					{
 						...pieceDoc.piece,
@@ -367,6 +369,7 @@ export async function regenerateForBaselineAdLibPieceIds(
 			if (sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					pieceDoc.rundownId,
 					messageFactories.get(pieceDoc.rundownId),
 					pieceDoc,
 					sourceLayer
@@ -447,6 +450,7 @@ export async function regenerateForBaselineAdLibActionIds(
 			if (sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.rundownId,
 					messageFactories.get(actionDoc.rundownId),
 					fakedPiece,
 					sourceLayer

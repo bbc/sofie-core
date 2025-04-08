@@ -161,7 +161,13 @@ async function regenerateBucketItemFromIngestInfo(
 		if (!showStyleCompound)
 			throw new Error(`Unable to create a ShowStyleCompound for ${showStyleBase._id}, ${showStyleVariant._id} `)
 
-		const rawAdlib = await generateBucketAdlibForVariant(context, blueprint, showStyleCompound, ingestInfo.payload)
+		const rawAdlib = await generateBucketAdlibForVariant(
+			context,
+			blueprint,
+			showStyleCompound,
+			bucketId,
+			ingestInfo.payload
+		)
 
 		if (rawAdlib) {
 			const importVersions: RundownImportVersions = {
@@ -238,7 +244,7 @@ async function regenerateBucketItemFromIngestInfo(
 
 		ps.push(
 			cleanUpExpectedMediaItemForBucketAdLibPiece(context, adlibIdsToRemoveArray),
-			cleanUpExpectedPackagesForBucketAdLibs(context, adlibIdsToRemoveArray),
+			cleanUpExpectedPackagesForBucketAdLibs(context, bucketId, adlibIdsToRemoveArray),
 			context.directCollections.BucketAdLibPieces.remove({ _id: { $in: adlibIdsToRemoveArray } })
 		)
 	}
@@ -247,7 +253,7 @@ async function regenerateBucketItemFromIngestInfo(
 
 		ps.push(
 			cleanUpExpectedMediaItemForBucketAdLibActions(context, actionIdsToRemoveArray),
-			cleanUpExpectedPackagesForBucketAdLibsActions(context, actionIdsToRemoveArray),
+			cleanUpExpectedPackagesForBucketAdLibsActions(context, bucketId, actionIdsToRemoveArray),
 			context.directCollections.BucketAdLibActions.remove({ _id: { $in: actionIdsToRemoveArray } })
 		)
 	}
@@ -258,17 +264,18 @@ async function generateBucketAdlibForVariant(
 	context: JobContext,
 	blueprint: ReadonlyDeep<WrappedShowStyleBlueprint>,
 	showStyleCompound: ReadonlyDeep<ProcessedShowStyleCompound>,
+	bucketId: BucketId,
 	// pieceId: BucketAdLibId | BucketAdLibActionId,
 	payload: IngestAdlib
 ): Promise<IBlueprintAdLibPiece | IBlueprintActionManifest | null> {
 	if (!blueprint.blueprint.getAdlibItem) return null
 
-	const watchedPackages = await WatchedPackagesHelper.create(context, {
-		// We don't know what the `pieceId` will be, but we do know the `externalId`
-		pieceExternalId: payload.externalId,
+	const watchedPackages = await WatchedPackagesHelper.create(context, null, bucketId, {
 		fromPieceType: {
 			$in: [ExpectedPackageDBType.BUCKET_ADLIB, ExpectedPackageDBType.BUCKET_ADLIB_ACTION],
 		},
+		// We don't know what the `pieceId` will be, but we do know the `externalId`
+		pieceExternalId: payload.externalId,
 	})
 
 	const contextForVariant = new ShowStyleUserContext(
