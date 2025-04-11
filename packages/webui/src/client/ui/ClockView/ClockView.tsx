@@ -12,9 +12,11 @@ import { RundownPlaylists } from '../../collections'
 import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { CameraScreen } from './CameraScreen'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
+import { useTranslation } from 'react-i18next'
 
 export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.Element {
 	useSubscription(MeteorPubSub.rundownPlaylistForStudio, studioId, true)
+	const { t } = useTranslation()
 
 	const playlist = useTracker(
 		() =>
@@ -33,7 +35,7 @@ export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.E
 						<PresenterScreen playlistId={playlist._id} studioId={studioId} />
 					</RundownTimingProvider>
 				) : (
-					<StudioScreenSaver studioId={studioId} ownBackground={true} />
+					<StudioScreenSaver studioId={studioId} ownBackground={true} screenName={t('Presenter Screen')} />
 				)}
 			</Route>
 			<Route path="/countdowns/:studioId/director">

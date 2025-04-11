@@ -19,7 +19,7 @@ import { relativeToSiteRootUrl } from '../../url'
 interface IProps {
 	// the studio to be displayed in the screen saver
 	studioId: StudioId
-
+	screenName?: string
 	ownBackground?: boolean
 }
 
@@ -360,6 +360,9 @@ const StudioScreenSaverContent = withTranslation()(
 							this.props.studio?.name && (
 								<div className="studio-screen-saver__info__rundown">{this.props.studio?.name}</div>
 							)
+						)}
+						{this.props.screenName && (
+							<div className="studio-screen-saver__info__screen-name">{this.props.screenName}</div>
 						)}
 					</div>
 				</div>
