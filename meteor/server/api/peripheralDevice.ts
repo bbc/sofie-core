@@ -456,7 +456,7 @@ export namespace ServerPeripheralDeviceAPI {
 
 		// Fetch the relevant studio
 		const studioForDevice = (await Studios.findOneAsync(peripheralDevice.studioAndConfigId.studioId, {
-			fields: {
+			projection: {
 				peripheralDeviceSettings: 1,
 			},
 		})) as Pick<DBStudio, 'peripheralDeviceSettings'> | undefined
@@ -580,7 +580,7 @@ export namespace ServerPeripheralDeviceAPI {
 				timelineHash: timelineHash,
 			},
 			{
-				fields: {
+				projection: {
 					timelineGenerated: 1,
 				},
 			}
