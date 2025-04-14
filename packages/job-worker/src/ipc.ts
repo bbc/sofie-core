@@ -4,6 +4,7 @@ import { FastTrackTimelineFunc, JobSpec, JobWorkerBase } from './main.js'
 import { JobManager, JobStream } from './manager.js'
 import { WorkerId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { getPrometheusMetricsString, setupPrometheusMetrics } from '@sofie-automation/corelib/dist/prometheus'
+import type { QueueJobOptions } from './jobs'
 
 /**
  * A very simple implementation of JobManager, that is designed to work via threadedClass over IPC
@@ -17,7 +18,12 @@ class IpcJobManager implements JobManager {
 			error: any,
 			result: any
 		) => Promise<void>,
-		public readonly queueJob: (queueName: string, jobName: string, jobData: unknown) => Promise<void>,
+		public readonly queueJob: (
+			queueName: string,
+			jobName: string,
+			jobData: unknown,
+			options: QueueJobOptions | undefined
+		) => Promise<void>,
 		private readonly interruptJobStream: (queueName: string) => Promise<void>,
 		private readonly waitForNextJob: (queueName: string) => Promise<void>,
 		private readonly getNextJob: (queueName: string) => Promise<JobSpec | null>
@@ -47,7 +53,12 @@ export class IpcJobWorker extends JobWorkerBase {
 		interruptJobStream: (queueName: string) => Promise<void>,
 		waitForNextJob: (queueName: string) => Promise<void>,
 		getNextJob: (queueName: string) => Promise<JobSpec | null>,
-		queueJob: (queueName: string, jobName: string, jobData: unknown) => Promise<void>,
+		queueJob: (
+			queueName: string,
+			jobName: string,
+			jobData: unknown,
+			options: QueueJobOptions | undefined
+		) => Promise<void>,
 		logLine: (msg: LogEntry) => Promise<void>,
 		fastTrackTimeline: FastTrackTimelineFunc,
 		enableFreezeLimit: boolean
