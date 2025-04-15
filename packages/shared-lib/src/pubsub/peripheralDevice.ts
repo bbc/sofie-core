@@ -125,7 +125,7 @@ export interface PeripheralDevicePubSubTypes {
 
 	[PeripheralDevicePubSub.ingestDeviceRundownStatus]: (
 		deviceId: PeripheralDeviceId,
-		token?: string | undefined
+		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
 }
 

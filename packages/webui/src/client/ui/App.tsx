@@ -40,7 +40,6 @@ import { catchError, firstIfArray, isRunningInPWA } from '../lib/lib.js'
 import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { useUserPermissions, UserPermissionsContext } from './UserPermissions.js'
 import { relativeToSiteRootUrl, ROOT_URL_PATH_PREFIX } from '../url.js'
-import Container from 'react-bootstrap/Container'
 
 const NullComponent = () => null
 
