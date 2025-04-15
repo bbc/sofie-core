@@ -155,7 +155,7 @@ export type ExpectedPackageIngestSource =
  * Generate the expectedPackageId for the given expectedPackage.
  * This is a stable id derived from the package and its parent. This document is expected to be owned by multiple sources.
  */
-export function getExpectedPackageIdNew(
+export function getExpectedPackageId(
 	/** Preferably a RundownId or BucketId, but StudioId is allowed when not owned by a rundown or bucket */
 	parentId: RundownId | StudioId | BucketId,
 	/** The locally unique id of the expectedPackage */

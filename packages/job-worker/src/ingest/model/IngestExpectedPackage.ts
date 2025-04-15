@@ -1,6 +1,6 @@
 import type { ExpectedPackage } from '@sofie-automation/blueprints-integration'
 import {
-	getExpectedPackageIdNew,
+	getExpectedPackageId,
 	type ExpectedPackageDBType,
 	type ExpectedPackageIngestSourcePart,
 	type ExpectedPackageIngestSourceRundownBaseline,
@@ -38,7 +38,7 @@ export class ExpectedPackageCollector<TSource extends { fromPieceType: ExpectedP
 	): void => {
 		const insertedPackagesForSource = new Set<string>()
 		for (const expectedPackage of expectedPackages) {
-			const id = getExpectedPackageIdNew(this.#parentId, expectedPackage)
+			const id = getExpectedPackageId(this.#parentId, expectedPackage)
 
 			// Deduplicate with an id including the blueprintPackageId.
 			// This is to ensure the blueprints can reference the package with that id still

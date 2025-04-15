@@ -10,7 +10,7 @@ import {
 	SourceLayerType,
 	VTContent,
 } from '@sofie-automation/blueprints-integration'
-import { getExpectedPackageIdNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { getExpectedPackageId } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	BucketId,
 	ExpectedPackageId,
@@ -690,7 +690,7 @@ async function checkPieceContentExpectedPackageStatus(
 				const fileName = getExpectedPackageFileName(expectedPackage) ?? ''
 				const containerLabel = matchedPackageContainer[1].container.label
 
-				const candidatePackageId = getExpectedPackageIdNew(packageOwnerId, expectedPackage)
+				const candidatePackageId = getExpectedPackageId(packageOwnerId, expectedPackage)
 				const packageOnPackageContainer = await getPackageContainerPackageStatus(
 					matchedPackageContainer[0],
 					candidatePackageId

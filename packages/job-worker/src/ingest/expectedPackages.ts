@@ -4,7 +4,7 @@ import {
 	ExpectedPackageDBType,
 	ExpectedPackageDB,
 	ExpectedPackageIngestSource,
-	getExpectedPackageIdNew,
+	getExpectedPackageId,
 	ExpectedPackageIngestSourceBucketAdlibAction,
 	ExpectedPackageIngestSourceBucketAdlibPiece,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
@@ -99,7 +99,7 @@ function generateBucketExpectedPackages<TSource = never>(
 		}
 
 		bases.push({
-			_id: getExpectedPackageIdNew(bucketId, fullPackage),
+			_id: getExpectedPackageId(bucketId, fullPackage),
 			package: fullPackage,
 			studioId: studio._id,
 			rundownId: null,
