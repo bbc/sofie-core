@@ -93,6 +93,7 @@ export class PlayoutPieceInstanceModelImpl implements PlayoutPieceInstanceModel 
 				pieceInstance.rundownId,
 				pieceInstance.piece.expectedPackages
 			)
+			this.PieceInstanceImpl.neededExpectedPackageIds = Array.from(this.updatedExpectedPackages.keys())
 		} else {
 			this.updatedExpectedPackages = null
 		}
