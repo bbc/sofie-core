@@ -191,10 +191,10 @@ async function checkIfSegmentReferencesUnloadedPackageInfos(
 	// check if there are any updates right away?
 	for (const part of segmentModel.parts) {
 		for (const expectedPackage of part.expectedPackages) {
-			if (expectedPackage.package.listenToPackageInfoUpdates) {
-				if (!segmentWatchedPackages.hasPackage(expectedPackage._id)) {
+			if (expectedPackage.source.listenToPackageInfoUpdates) {
+				if (!segmentWatchedPackages.hasPackage(expectedPackage.packageId)) {
 					// The package didn't exist prior to the blueprint running
-					expectedPackageIdsToCheck.add(expectedPackage._id)
+					expectedPackageIdsToCheck.add(expectedPackage.packageId)
 				}
 			}
 		}

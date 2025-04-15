@@ -10,7 +10,6 @@ import {
 } from '@sofie-automation/corelib/dist/worker/ingest'
 import {
 	cleanUpExpectedPackagesForBucketAdLibs,
-	cleanUpExpectedPackagesForBucketAdLibsActions,
 	updateExpectedPackagesForBucketAdLibPiece,
 	updateExpectedPackagesForBucketAdLibAction,
 } from '../expectedPackages.js'
@@ -59,7 +58,7 @@ export async function handleBucketRemoveAdlibAction(
 	await Promise.all([
 		context.directCollections.BucketAdLibActions.remove({ _id: { $in: idsToUpdate } }),
 		cleanUpExpectedMediaItemForBucketAdLibActions(context, idsToUpdate),
-		cleanUpExpectedPackagesForBucketAdLibsActions(context, action.bucketId, idsToUpdate),
+		cleanUpExpectedPackagesForBucketAdLibs(context, action.bucketId, idsToUpdate),
 	])
 }
 

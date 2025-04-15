@@ -350,14 +350,14 @@ export class IngestModelImpl implements IngestModel, IngestDatabasePersistedMode
 	findExpectedPackageIngestSources(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageIngestSource>[] {
 		const sources: ReadonlyDeep<ExpectedPackageIngestSource>[] = []
 
-		const baselinePackage = this.#rundownBaselineExpectedPackagesStore.expectedPackages.find(
-			(pkg) => pkg._id === packageId
-		)
-		if (baselinePackage) sources.push(baselinePackage.source)
+		for (const baselinePackage of this.#rundownBaselineExpectedPackagesStore.expectedPackages) {
+			if (baselinePackage.packageId === packageId) sources.push(baselinePackage.source)
+		}
 
 		for (const part of this.getAllOrderedParts()) {
-			const partPackage = part.expectedPackages.find((pkg) => pkg._id === packageId)
-			if (partPackage) sources.push(partPackage.source)
+			for (const partPackage of part.expectedPackages) {
+				if (partPackage.packageId === packageId) sources.push(partPackage.source)
+			}
 		}
 
 		return sources
@@ -745,78 +745,40 @@ function groupExpectedPackages(expectedPackages: ExpectedPackageDB[]) {
 	const groupedExpectedPackagesByPart = new Map<PartId, IngestExpectedPackage<ExpectedPackageIngestSourcePart>[]>()
 
 	for (const expectedPackage of expectedPackages) {
-		// Future: this is a temporary flow for a single owner
-		const src = expectedPackage.ingestSources[0]
-		switch (src.fromPieceType) {
-			case ExpectedPackageDBType.BASELINE_PIECE:
-			case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
-			case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
-			case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
-				baselineExpectedPackages.push({
-					_id: expectedPackage._id,
-					package: expectedPackage.package,
-					source: src,
-				})
-				break
-			case ExpectedPackageDBType.PIECE:
-			case ExpectedPackageDBType.ADLIB_PIECE:
-			case ExpectedPackageDBType.ADLIB_ACTION: {
-				const partPackages = groupedExpectedPackagesByPart.get(src.partId) ?? []
-				partPackages.push({
-					_id: expectedPackage._id,
-					package: expectedPackage.package,
-					source: src,
-				})
-				groupedExpectedPackagesByPart.set(src.partId, partPackages)
-				break
+		for (const source of expectedPackage.ingestSources) {
+			switch (source.fromPieceType) {
+				case ExpectedPackageDBType.BASELINE_PIECE:
+				case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
+				case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
+				case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
+					baselineExpectedPackages.push({
+						packageId: expectedPackage._id,
+						package: expectedPackage.package,
+						source: source,
+					})
+					break
+				case ExpectedPackageDBType.PIECE:
+				case ExpectedPackageDBType.ADLIB_PIECE:
+				case ExpectedPackageDBType.ADLIB_ACTION: {
+					const partPackages = groupedExpectedPackagesByPart.get(source.partId) ?? []
+					partPackages.push({
+						packageId: expectedPackage._id,
+						package: expectedPackage.package,
+						source: source,
+					})
+					groupedExpectedPackagesByPart.set(source.partId, partPackages)
+					break
+				}
+				case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+				case ExpectedPackageDBType.BUCKET_ADLIB:
+				case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
+					// Ignore
+					break
+				default:
+					assertNever(source)
+					break
 			}
-			case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
-			case ExpectedPackageDBType.BUCKET_ADLIB:
-			case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
-				// Ignore
-				break
-			default:
-				assertNever(src)
-				break
 		}
-
-		// Future: once this supports multiple owners
-		// const baselineIngestSources: ExpectedPackageIngestSourceRundownBaseline[] = []
-		// const rundownIngestSources: ExpectedPackageIngestSourcePart[] = []
-		// for (const src of expectedPackage.ingestSources) {
-		// 	switch (src.fromPieceType) {
-		// 		case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
-		// 		case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
-		// 		case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
-		// 			baselineIngestSources.push(src)
-		// 			break
-		// 		case ExpectedPackageDBType.PIECE:
-		// 		case ExpectedPackageDBType.ADLIB_PIECE:
-		// 		case ExpectedPackageDBType.ADLIB_ACTION:
-		// 			rundownIngestSources.push(src)
-		// 			break
-		// 		default:
-		// 			assertNever(src)
-		// 			break
-		// 	}
-		// }
-
-		// if (baselineIngestSources.length > 0) {
-		// 	baselineExpectedPackages.push({
-		// 		...expectedPackage,
-		// 		ingestSources: baselineIngestSources,
-		// 	})
-		// }
-
-		// const sourcesByPartId = groupByToMapFunc(rundownIngestSources, (src) => src.partId)
-		// for (const [partId, sources] of sourcesByPartId.entries()) {
-		// 	const partPackages = groupedExpectedPackagesByPart.get(partId) ?? []
-		// 	partPackages.push({
-		// 		...expectedPackage,
-		// 		ingestSources: sources,
-		// 	})
-		// 	groupedExpectedPackagesByPart.set(partId, partPackages)
-		// }
 	}
 
 	return {
