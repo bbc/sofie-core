@@ -150,9 +150,7 @@ export const App: React.FC = function App() {
 	return (
 		<UserPermissionsContext.Provider value={roles}>
 			<Router getUserConfirmation={onNavigationUserConfirmation} basename={ROOT_URL_PATH_PREFIX}>
-				<Container
-					fluid
-					className="header-clear"
+				<div
 					style={{
 						// @ts-expect-error custom variable
 						'--sofie-logo-url': `url(${relativeToSiteRootUrl('/images/sofie-logo.svg')})`,
@@ -240,7 +238,7 @@ export const App: React.FC = function App() {
 					<ErrorBoundary>
 						<ModalDialogGlobalContainer />
 					</ErrorBoundary>
-				</Container>
+				</div>
 			</Router>
 		</UserPermissionsContext.Provider>
 	)
