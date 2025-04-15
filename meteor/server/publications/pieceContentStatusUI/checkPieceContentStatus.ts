@@ -687,59 +687,54 @@ async function checkPieceContentExpectedPackageStatus(
 
 				checkedPackageContainers.add(matchedPackageContainer[0])
 
-				// nocommit - strip out array
-				const expectedPackageIds = [getExpectedPackageIdNew(packageOwnerId, expectedPackage)]
-
-				let warningMessage: ContentMessageLight | null = null
-				let matchedExpectedPackageId: ExpectedPackageId | null = null
-				for (const expectedPackageId of expectedPackageIds) {
-					const packageOnPackageContainer = await getPackageContainerPackageStatus(
-						matchedPackageContainer[0],
-						expectedPackageId
-					)
-					if (!packageOnPackageContainer) continue
-
-					matchedExpectedPackageId = expectedPackageId
-
-					if (!thumbnailUrl) {
-						const sideEffect = getSideEffect(expectedPackage, studio)
-
-						thumbnailUrl = await getAssetUrlFromPackageContainerStatus(
-							studio.packageContainers,
-							getPackageContainerPackageStatus,
-							expectedPackageId,
-							sideEffect.thumbnailContainerId,
-							sideEffect.thumbnailPackageSettings?.path
-						)
-					}
-
-					if (!previewUrl) {
-						const sideEffect = getSideEffect(expectedPackage, studio)
-
-						previewUrl = await getAssetUrlFromPackageContainerStatus(
-							studio.packageContainers,
-							getPackageContainerPackageStatus,
-							expectedPackageId,
-							sideEffect.previewContainerId,
-							sideEffect.previewPackageSettings?.path
-						)
-					}
-
-					warningMessage = getPackageWarningMessage(packageOnPackageContainer.status)
-
-					progress = getPackageProgress(packageOnPackageContainer.status) ?? undefined
-
-					// Found a packageOnPackageContainer
-					break
-				}
-
 				const fileName = getExpectedPackageFileName(expectedPackage) ?? ''
 				const containerLabel = matchedPackageContainer[1].container.label
 
-				if (!matchedExpectedPackageId || warningMessage) {
+				const candidatePackageId = getExpectedPackageIdNew(packageOwnerId, expectedPackage)
+				const packageOnPackageContainer = await getPackageContainerPackageStatus(
+					matchedPackageContainer[0],
+					candidatePackageId
+				)
+				if (!packageOnPackageContainer) {
 					// If no package matched, we must have a warning
-					warningMessage = warningMessage ?? getPackageSourceMissingWarning()
 
+					pushOrMergeMessage({
+						...getPackageSourceMissingWarning(),
+						fileName: fileName,
+						packageContainers: [containerLabel],
+					})
+
+					continue
+				}
+
+				if (!thumbnailUrl) {
+					const sideEffect = getSideEffect(expectedPackage, studio)
+
+					thumbnailUrl = await getAssetUrlFromPackageContainerStatus(
+						studio.packageContainers,
+						getPackageContainerPackageStatus,
+						candidatePackageId,
+						sideEffect.thumbnailContainerId,
+						sideEffect.thumbnailPackageSettings?.path
+					)
+				}
+
+				if (!previewUrl) {
+					const sideEffect = getSideEffect(expectedPackage, studio)
+
+					previewUrl = await getAssetUrlFromPackageContainerStatus(
+						studio.packageContainers,
+						getPackageContainerPackageStatus,
+						candidatePackageId,
+						sideEffect.previewContainerId,
+						sideEffect.previewPackageSettings?.path
+					)
+				}
+
+				progress = getPackageProgress(packageOnPackageContainer.status) ?? undefined
+
+				const warningMessage = getPackageWarningMessage(packageOnPackageContainer.status)
+				if (warningMessage) {
 					pushOrMergeMessage({
 						...warningMessage,
 						fileName: fileName,
@@ -754,7 +749,7 @@ async function checkPieceContentExpectedPackageStatus(
 						containerLabel,
 					}
 					// Fetch scan-info about the package:
-					const dbPackageInfos = await getPackageInfos(matchedExpectedPackageId)
+					const dbPackageInfos = await getPackageInfos(candidatePackageId)
 					for (const packageInfo of dbPackageInfos) {
 						if (packageInfo.type === PackageInfo.Type.SCAN) {
 							packageInfos[expectedPackage._id].scan = packageInfo.payload
