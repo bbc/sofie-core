@@ -23,8 +23,8 @@ import {
 } from '@mos-connection/connector'
 
 import * as Winston from 'winston'
-import { CoreHandler } from './coreHandler'
-import { CoreMosDeviceHandler } from './CoreMosDeviceHandler'
+import { CoreHandler } from './coreHandler.js'
+import { CoreMosDeviceHandler } from './CoreMosDeviceHandler.js'
 import {
 	Observer,
 	PeripheralDevicePubSubCollectionsNames,
@@ -37,8 +37,8 @@ import {
 import { MosGatewayConfig } from '@sofie-automation/shared-lib/dist/generated/MosGatewayOptionsTypes'
 import { MosDeviceConfig } from '@sofie-automation/shared-lib/dist/generated/MosGatewayDevicesTypes'
 import { PeripheralDeviceForDevice } from '@sofie-automation/server-core-integration'
-import _ = require('underscore')
-import { MosStatusHandler } from './mosStatus/handler'
+import _ from 'underscore'
+import { MosStatusHandler } from './mosStatus/handler.js'
 import { isPromise } from 'util/types'
 
 export interface MosConfig {

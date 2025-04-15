@@ -29,17 +29,23 @@ export function findPartPosition(
 }
 
 export function stringsToIndexLookup(strings: string[]): Record<string, number> {
-	return strings.reduce((result, str, index) => {
-		result[str] = index
-		return result
-	}, {} as Record<string, number>)
+	return strings.reduce(
+		(result, str, index) => {
+			result[str] = index
+			return result
+		},
+		{} as Record<string, number>
+	)
 }
 
 export function extractRanks(docs: { _id: ProtectedString<any>; _rank: number }[]): Record<string, number> {
-	return docs.reduce((result, doc) => {
-		result[doc._id as unknown as string] = doc._rank
-		return result
-	}, {} as Record<string, number>)
+	return docs.reduce(
+		(result, doc) => {
+			result[doc._id as unknown as string] = doc._rank
+			return result
+		},
+		{} as Record<string, number>
+	)
 }
 
 export function modifyPartForQuickLoop(
@@ -126,7 +132,7 @@ export function findMarkerPosition(
 ): MarkerPosition {
 	const part =
 		marker.type === QuickLoopMarkerType.PART
-			? partCache.partInstances?.findOne({ 'part._id': marker.id })?.part ?? partCache.parts?.findOne(marker.id)
+			? (partCache.partInstances?.findOne({ 'part._id': marker.id })?.part ?? partCache.parts?.findOne(marker.id))
 			: undefined
 	const partRank = part?._rank ?? fallback
 

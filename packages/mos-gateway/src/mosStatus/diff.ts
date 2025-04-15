@@ -115,7 +115,7 @@ export function diffStatuses(
 							previousStatus.playbackStatus,
 							previousItemStatus.ready,
 							previousStatuses?.active
-					  )
+						)
 					: null
 
 			if ((newMosStatus !== null || previousMosStatus !== null) && previousMosStatus !== newMosStatus) {

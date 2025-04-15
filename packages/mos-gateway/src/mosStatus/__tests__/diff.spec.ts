@@ -4,7 +4,7 @@ import {
 	IngestRundownActiveStatus,
 	IngestRundownStatus,
 } from '@sofie-automation/shared-lib/dist/ingest/rundownStatus'
-import { diffStatuses, ItemStatusEntry, MOS_STATUS_UNKNOWN, StoryStatusEntry } from '../diff'
+import { diffStatuses, ItemStatusEntry, MOS_STATUS_UNKNOWN, StoryStatusEntry } from '../diff.js'
 import type { MosDeviceStatusesConfig } from '@sofie-automation/shared-lib/dist/generated/MosGatewayDevicesTypes'
 import { IMOSObjectStatus } from '@mos-connection/connector'
 
