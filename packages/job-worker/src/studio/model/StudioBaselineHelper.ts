@@ -3,7 +3,7 @@ import {
 	ExpectedPackageDB,
 	ExpectedPackageDBType,
 	ExpectedPackageIngestSourceStudioBaseline,
-	getExpectedPackageIdNew,
+	getExpectedPackageId,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { saveIntoDb } from '../../db/changes.js'
@@ -35,7 +35,7 @@ export class StudioBaselineHelper {
 		// Using a map here is a bit excessive, but it makes it easier to remove duplicates
 		this.#pendingExpectedPackages = new Map()
 		for (const expectedPackage of packages) {
-			const id = getExpectedPackageIdNew(this.#context.studioId, expectedPackage)
+			const id = getExpectedPackageId(this.#context.studioId, expectedPackage)
 
 			this.#pendingExpectedPackages.set(id, {
 				packageId: id,

@@ -86,7 +86,7 @@ export const PackageStatus: React.FC<{
 
 			return 0
 		})
-	}, props.statuses)
+	}, [props.statuses])
 
 	let offlineReasonMessage: string | undefined = undefined
 	let connected = true
