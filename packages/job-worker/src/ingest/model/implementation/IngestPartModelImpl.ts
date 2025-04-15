@@ -178,7 +178,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 
 	/**
 	 * This IngestPartModel replaces an existing one.
-	 * Run some comparisons to ensure that
+	 * Run some comparisons to ensure that the changed flags are set correctly
 	 * @param previousModel
 	 */
 	compareToPreviousModel(previousModel: IngestPartModelImpl): void {

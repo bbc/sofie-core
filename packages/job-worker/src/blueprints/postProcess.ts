@@ -41,7 +41,7 @@ import {
 	interpollateTranslation,
 	wrapTranslatableMessageFromBlueprints,
 } from '@sofie-automation/corelib/dist/TranslatableMessage'
-import { setDefaultIdOnExpectedPackages } from '../ingest/expectedPackages.js'
+import { sanitiseExpectedPackages } from '../ingest/expectedPackages.js'
 import { logger } from '../logging.js'
 import { validateTimeline } from 'superfly-timeline'
 import { ReadonlyDeep } from 'type-fest'
@@ -137,7 +137,7 @@ export function postProcessPieces(
 		piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
 
 		// Fill in ids of unnamed expectedPackages
-		setDefaultIdOnExpectedPackages(piece.expectedPackages)
+		sanitiseExpectedPackages(piece.expectedPackages)
 
 		return piece
 	})
@@ -267,7 +267,7 @@ export function postProcessAdLibPieces(
 		piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
 
 		// Fill in ids of unnamed expectedPackages
-		setDefaultIdOnExpectedPackages(piece.expectedPackages)
+		sanitiseExpectedPackages(piece.expectedPackages)
 
 		return piece
 	})
@@ -304,7 +304,7 @@ export function postProcessGlobalAdLibActions(
 		)
 
 		// Fill in ids of unnamed expectedPackages
-		setDefaultIdOnExpectedPackages(action.expectedPackages)
+		sanitiseExpectedPackages(action.expectedPackages)
 
 		return literal<RundownBaselineAdLibAction>({
 			...action,
@@ -345,7 +345,7 @@ export function postProcessAdLibActions(
 		)
 
 		// Fill in ids of unnamed expectedPackages
-		setDefaultIdOnExpectedPackages(action.expectedPackages)
+		sanitiseExpectedPackages(action.expectedPackages)
 
 		return literal<AdLibAction>({
 			...action,
@@ -425,7 +425,7 @@ export function postProcessBucketAdLib(
 		timelineObjectsString: EmptyPieceTimelineObjectsBlob,
 	}
 	// Fill in ids of unnamed expectedPackages
-	setDefaultIdOnExpectedPackages(piece.expectedPackages)
+	sanitiseExpectedPackages(piece.expectedPackages)
 
 	const timelineObjects = postProcessTimelineObjects(piece._id, blueprintId, itemOrig.content.timelineObjects)
 	piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
@@ -474,7 +474,7 @@ export function postProcessBucketAction(
 	}
 
 	// Fill in ids of unnamed expectedPackages
-	setDefaultIdOnExpectedPackages(action.expectedPackages)
+	sanitiseExpectedPackages(action.expectedPackages)
 
 	return action
 }
