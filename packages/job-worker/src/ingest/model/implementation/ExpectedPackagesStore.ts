@@ -1,18 +1,7 @@
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import {
-	ExpectedPackageId,
-	ExpectedPlayoutItemId,
-	PartId,
-	RundownId,
-} from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { ExpectedPlayoutItemId, PartId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
-import {
-	diffAndReturnLatestObjects,
-	DocumentChanges,
-	getDocumentChanges,
-	setValuesAndTrackChanges,
-	setValuesAndTrackChangesFunc,
-} from './utils.js'
+import { diffAndReturnLatestObjects, DocumentChanges, getDocumentChanges, setValuesAndTrackChanges } from './utils.js'
 import type { IngestExpectedPackage } from '../IngestExpectedPackage.js'
 import { ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
@@ -21,7 +10,7 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 	#expectedPackages: IngestExpectedPackage<TPackageSource>[]
 
 	#expectedPlayoutItemsWithChanges = new Set<ExpectedPlayoutItemId>()
-	#expectedPackagesWithChanges = new Set<ExpectedPackageId>()
+	#expectedPackagesHasChanges = false
 
 	get expectedPlayoutItems(): ReadonlyDeep<ExpectedPlayoutItemRundown[]> {
 		return this.#expectedPlayoutItems
@@ -32,19 +21,16 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 	}
 
 	get hasChanges(): boolean {
-		return this.#expectedPlayoutItemsWithChanges.size > 0 || this.#expectedPackagesWithChanges.size > 0
+		return this.#expectedPlayoutItemsWithChanges.size > 0 || this.#expectedPackagesHasChanges
 	}
 
 	get expectedPlayoutItemsChanges(): DocumentChanges<ExpectedPlayoutItemRundown> {
 		return getDocumentChanges(this.#expectedPlayoutItemsWithChanges, this.#expectedPlayoutItems)
 	}
-	get expectedPackagesChanges(): DocumentChanges<IngestExpectedPackage<TPackageSource>> {
-		return getDocumentChanges(this.#expectedPackagesWithChanges, this.#expectedPackages)
-	}
 
 	clearChangedFlags(): void {
 		this.#expectedPlayoutItemsWithChanges.clear()
-		this.#expectedPackagesWithChanges.clear()
+		this.#expectedPackagesHasChanges = false
 	}
 
 	#rundownId: RundownId
@@ -68,9 +54,7 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 			for (const expectedPlayoutItem of this.#expectedPlayoutItems) {
 				this.#expectedPlayoutItemsWithChanges.add(expectedPlayoutItem._id)
 			}
-			for (const expectedPackage of this.#expectedPackages) {
-				this.#expectedPackagesWithChanges.add(expectedPackage._id)
-			}
+			this.#expectedPackagesHasChanges = true
 		}
 	}
 
@@ -86,9 +70,12 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 			rundownId,
 			partId,
 		})
-		setValuesAndTrackChangesFunc(this.#expectedPackagesWithChanges, this.#expectedPackages, (pkg) =>
-			updatePackageSource(pkg.source)
-		)
+		for (const expectedPackage of this.#expectedPackages) {
+			const mutatorChanged = updatePackageSource(expectedPackage.source)
+
+			// The doc changed, track it as such
+			if (mutatorChanged) this.#expectedPackagesHasChanges = true
+		}
 	}
 
 	compareToPreviousData(oldStore: ExpectedPackagesStore<TPackageSource>): void {
@@ -98,11 +85,7 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 			oldStore.#expectedPlayoutItems,
 			this.#expectedPlayoutItems
 		)
-		diffAndReturnLatestObjects(
-			this.#expectedPackagesWithChanges,
-			oldStore.#expectedPackages,
-			this.#expectedPackages
-		)
+		this.#expectedPackagesHasChanges = true
 	}
 
 	setExpectedPlayoutItems(expectedPlayoutItems: ExpectedPlayoutItemRundown[]): void {
@@ -119,10 +102,7 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 		)
 	}
 	setExpectedPackages(expectedPackages: IngestExpectedPackage<TPackageSource>[]): void {
-		this.#expectedPackages = diffAndReturnLatestObjects(
-			this.#expectedPackagesWithChanges,
-			this.#expectedPackages,
-			expectedPackages
-		)
+		this.#expectedPackagesHasChanges = true
+		this.#expectedPackages = [...expectedPackages]
 	}
 }

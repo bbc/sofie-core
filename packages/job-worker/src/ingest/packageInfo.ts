@@ -33,6 +33,9 @@ export async function handleUpdatedPackageInfoForRundown(
 		for (const packageId of data.packageIds) {
 			const pkgIngestSources = ingestModel.findExpectedPackageIngestSources(packageId)
 			for (const source of pkgIngestSources) {
+				// Only consider sources that are marked to listen to package info updates
+				if (!source.listenToPackageInfoUpdates) continue
+
 				switch (source.fromPieceType) {
 					case ExpectedPackageDBType.PIECE:
 					case ExpectedPackageDBType.ADLIB_PIECE:

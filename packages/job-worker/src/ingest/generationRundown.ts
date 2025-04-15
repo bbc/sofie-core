@@ -1,7 +1,10 @@
 import {
 	ExpectedPackageDBType,
+	ExpectedPackageIngestSourceBaselineAdlibAction,
+	ExpectedPackageIngestSourceBaselineAdlibPiece,
+	ExpectedPackageIngestSourceBaselineObjects,
+	ExpectedPackageIngestSourceBaselinePiece,
 	ExpectedPackageIngestSourceRundownBaseline,
-	getExpectedPackageIdFromIngestSource,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { BlueprintId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownNote } from '@sofie-automation/corelib/dist/dataModel/Notes'
@@ -38,7 +41,7 @@ import { calculateSegmentsAndRemovalsFromIngestData } from './generationSegment.
 import { SofieIngestRundownWithSource } from '@sofie-automation/corelib/dist/dataModel/SofieIngestDataCache'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
-import { IngestExpectedPackage } from './model/IngestExpectedPackage.js'
+import { ExpectedPackageCollector, IngestExpectedPackage } from './model/IngestExpectedPackage.js'
 
 export enum GenerateRundownMode {
 	Create = 'create',
@@ -354,63 +357,37 @@ function generateExpectedPackagesForBaseline(
 	globalPieces: Piece[],
 	expectedPackages: ExpectedPackage.Any[]
 ): IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[] {
-	const packages: IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline>[] = []
+	const collector = new ExpectedPackageCollector<ExpectedPackageIngestSourceRundownBaseline>(rundownId)
 
-	const wrapPackage = (
-		expectedPackage: ReadonlyDeep<ExpectedPackage.Any>,
-		source: ExpectedPackageIngestSourceRundownBaseline
-	): IngestExpectedPackage<ExpectedPackageIngestSourceRundownBaseline> => {
-		return {
-			_id: getExpectedPackageIdFromIngestSource(rundownId, source, expectedPackage._id),
+	// This expects to generate multiple documents with the same packageId, these get deduplicated during saving.
+	// This should only concern itself with avoiding duplicates with the same source
 
-			package: expectedPackage,
-
-			source: source,
-		}
-	}
-
-	// Future: this will need to deduplicate packages with the same content
-	// For now, we just generate a package for each expectedPackage
-
-	for (const expectedPackage of expectedPackages) {
-		packages.push(
-			wrapPackage(expectedPackage, {
-				fromPieceType: ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS,
-			})
-		)
-	}
+	collector.addPackagesWithSource<ExpectedPackageIngestSourceBaselineObjects>(expectedPackages, {
+		fromPieceType: ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS,
+	})
 
 	// Populate the ingestSources
 	for (const piece of adLibPieces) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_PIECE,
-					pieceId: piece._id,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourceBaselineAdlibPiece>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_PIECE,
+				pieceId: piece._id,
+			})
 	}
 	for (const piece of adLibActions) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_ACTION,
-					pieceId: piece._id,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourceBaselineAdlibAction>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.BASELINE_ADLIB_ACTION,
+				pieceId: piece._id,
+			})
 	}
 	for (const piece of globalPieces) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.BASELINE_PIECE,
-					pieceId: piece._id,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourceBaselinePiece>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.BASELINE_PIECE,
+				pieceId: piece._id,
+			})
 	}
 
-	return packages
+	return collector.finish()
 }

@@ -12,7 +12,6 @@ import { getSystemVersion } from '../../lib/index.js'
 import { BucketItemImportProps, BucketItemRegenerateProps } from '@sofie-automation/corelib/dist/worker/ingest'
 import {
 	cleanUpExpectedPackagesForBucketAdLibs,
-	cleanUpExpectedPackagesForBucketAdLibsActions,
 	updateExpectedPackagesForBucketAdLibPiece,
 	updateExpectedPackagesForBucketAdLibAction,
 } from '../expectedPackages.js'
@@ -243,7 +242,7 @@ async function regenerateBucketItemFromIngestInfo(
 		const actionIdsToRemoveArray = Array.from(actionIdsToRemove)
 
 		ps.push(
-			cleanUpExpectedPackagesForBucketAdLibsActions(context, bucketId, actionIdsToRemoveArray),
+			cleanUpExpectedPackagesForBucketAdLibs(context, bucketId, actionIdsToRemoveArray),
 			context.directCollections.BucketAdLibActions.remove({ _id: { $in: actionIdsToRemoveArray } })
 		)
 	}
