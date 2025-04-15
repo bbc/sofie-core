@@ -2,7 +2,7 @@ import {
 	ExpectedPackageDB,
 	ExpectedPackageDBType,
 	ExpectedPackageIngestSource,
-	getExpectedPackageIdFromIngestSource,
+	getExpectedPackageIdNew,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	AdLibActionId,
@@ -30,7 +30,7 @@ import { CoreRundownPlaylistSnapshot } from '@sofie-automation/corelib/dist/snap
 import { unprotectString, ProtectedString, protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { saveIntoDb } from '../db/changes.js'
 import { getPartId, getSegmentId } from '../ingest/lib.js'
-import { assertNever, getRandomId, literal, omit } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, getHash, getRandomId, literal, omit } from '@sofie-automation/corelib/dist/lib'
 import { logger } from '../logging.js'
 import { JSONBlobParse, JSONBlobStringify } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -371,6 +371,8 @@ export async function handleRestorePlaylistSnapshot(
 							expectedPackage.segmentId,
 							`expectedPackage.segmentId=${expectedPackage.segmentId}`
 						),
+						blueprintPackageId: expectedPackage.blueprintPackageId,
+						listenToPackageInfoUpdates: expectedPackage.listenToPackageInfoUpdates,
 					}
 
 					break
@@ -382,6 +384,8 @@ export async function handleRestorePlaylistSnapshot(
 							expectedPackage.pieceId,
 							`expectedPackage.pieceId=${expectedPackage.pieceId}`
 						) as any,
+						blueprintPackageId: expectedPackage.blueprintPackageId,
+						listenToPackageInfoUpdates: expectedPackage.listenToPackageInfoUpdates,
 					}
 
 					break
@@ -390,6 +394,8 @@ export async function handleRestorePlaylistSnapshot(
 				case PackagesPreR53.ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS: {
 					source = {
 						fromPieceType: expectedPackage.fromPieceType,
+						blueprintPackageId: expectedPackage.blueprintPackageId,
+						listenToPackageInfoUpdates: expectedPackage.listenToPackageInfoUpdates,
 					}
 					break
 				}
@@ -414,6 +420,8 @@ export async function handleRestorePlaylistSnapshot(
 					pieceId: protectString('fakePiece'),
 					partId: protectString('fakePart'),
 					segmentId: protectString('fakeSegment'),
+					blueprintPackageId: expectedPackage.blueprintPackageId,
+					listenToPackageInfoUpdates: expectedPackage.listenToPackageInfoUpdates,
 				}
 			}
 
@@ -424,10 +432,40 @@ export async function handleRestorePlaylistSnapshot(
 							`expectedPackage.rundownId=${expectedPackage.rundownId}`
 						)
 					: null
-			const newPackageId = getExpectedPackageIdFromIngestSource(
-				packageRundownId || context.studioId,
-				source,
-				expectedPackage.blueprintPackageId
+
+			// Generate a unique id for the package.
+			// This is done differently to ensure we don't have id collisions that the documents arent expecting
+			// Note: maybe this should do the work to generate in the new deduplicated form, but that likely has no benefit
+			let packageOwnerId: string
+			const ownerPieceType = source.fromPieceType
+			switch (source.fromPieceType) {
+				case ExpectedPackageDBType.PIECE:
+				case ExpectedPackageDBType.ADLIB_PIECE:
+				case ExpectedPackageDBType.ADLIB_ACTION:
+				case ExpectedPackageDBType.BASELINE_PIECE:
+				case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
+				case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
+					packageOwnerId = unprotectString(source.pieceId)
+					break
+				case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
+					packageOwnerId = 'rundownBaselineObjects'
+					break
+				case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+					packageOwnerId = 'studioBaseline'
+					break
+				case ExpectedPackageDBType.BUCKET_ADLIB:
+				case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
+					packageOwnerId = unprotectString(source.pieceId)
+					break
+
+				default:
+					assertNever(source)
+					throw new Error(`Unknown fromPieceType "${ownerPieceType}"`)
+			}
+			const newPackageId = protectString<ExpectedPackageId>(
+				`${packageRundownId || context.studioId}_${packageOwnerId}_${getHash(
+					expectedPackage.blueprintPackageId
+				)}`
 			)
 
 			const newExpectedPackage: ExpectedPackageDB = {
@@ -510,10 +548,9 @@ export async function handleRestorePlaylistSnapshot(
 			}
 
 			// Regenerate the ID from the new rundownId and packageId
-			expectedPackage._id = getExpectedPackageIdFromIngestSource(
+			expectedPackage._id = getExpectedPackageIdNew(
 				expectedPackage.rundownId || expectedPackage.studioId,
-				expectedPackage.ingestSources[0],
-				expectedPackage.package._id
+				expectedPackage.package
 			)
 
 			expectedPackageIdMap.set(oldId, expectedPackage._id)

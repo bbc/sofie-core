@@ -48,12 +48,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: {
-						_id: 'package1',
-						listenToPackageInfoUpdates: true,
-					} as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -94,10 +96,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: null,
 					bucketId: bucketId,
-					package: {
-						_id: 'package1',
-						listenToPackageInfoUpdates: true,
-					} as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
@@ -124,7 +123,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
@@ -139,7 +138,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package2', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package2' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece2') } as any,
 					],
@@ -167,7 +166,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece2') } as any,
@@ -189,6 +188,99 @@ describe('WatchedPackagesHelper', () => {
 			})
 			expect(helper2.hasPackage(packageId)).toBe(true)
 		})
+
+		it('does not return package info for packages with listenToPackageInfoUpdates: false', async () => {
+			const context = setupDefaultJobEnvironment()
+			const rundownId = protectString<RundownId>('rundown1')
+			const packageId = protectString<ExpectedPackageId>('pkg1')
+
+			await context.mockCollections.ExpectedPackages.insertOne(
+				literal<ExpectedPackageDB>({
+					_id: packageId,
+					studioId: context.studioId,
+					rundownId: rundownId,
+					bucketId: null,
+					package: { _id: 'package1' } as any,
+					ingestSources: [
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: false,
+						} as any,
+					],
+					created: 1000,
+				})
+			)
+
+			await context.mockCollections.PackageInfos.insertOne(
+				literal<PackageInfoDB>({
+					_id: protectString('info1'),
+					studioId: context.studioId,
+					packageId: packageId,
+					deviceId: mockDeviceId,
+					type: PackageInfo.Type.SCAN,
+					expectedContentVersionHash: 'abc123',
+					actualContentVersionHash: 'abc123',
+					payload: {} as any,
+				})
+			)
+
+			const helper = await WatchedPackagesHelper.create(context, rundownId, null, {
+				fromPieceType: ExpectedPackageDBType.PIECE,
+				pieceId: protectString('piece1'),
+			})
+
+			// Package should still be found (create doesn't filter by listenToPackageInfoUpdates)
+			expect(helper.hasPackage(packageId)).toBe(true)
+			// And package info should be available
+			expect(helper.getPackageInfo('package1')).toHaveLength(1)
+		})
+
+		it('handles packages with mixed listenToPackageInfoUpdates in sources', async () => {
+			const context = setupDefaultJobEnvironment()
+			const rundownId = protectString<RundownId>('rundown1')
+			const packageId = protectString<ExpectedPackageId>('pkg1')
+
+			await context.mockCollections.ExpectedPackages.insertOne(
+				literal<ExpectedPackageDB>({
+					_id: packageId,
+					studioId: context.studioId,
+					rundownId: rundownId,
+					bucketId: null,
+					package: { _id: 'package1' } as any,
+					ingestSources: [
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece2'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: false,
+						} as any,
+					],
+					created: 1000,
+				})
+			)
+
+			// Helper with source that listens to updates should include the package
+			const helper1 = await WatchedPackagesHelper.create(context, rundownId, null, {
+				fromPieceType: ExpectedPackageDBType.PIECE,
+				pieceId: protectString('piece1'),
+			})
+			expect(helper1.hasPackage(packageId)).toBe(true)
+
+			// Helper with source that doesn't listen to updates should also include it
+			const helper2 = await WatchedPackagesHelper.create(context, rundownId, null, {
+				fromPieceType: ExpectedPackageDBType.PIECE,
+				pieceId: protectString('piece2'),
+			})
+			expect(helper2.hasPackage(packageId)).toBe(true)
+		})
 	})
 
 	describe('filter', () => {
@@ -203,9 +295,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -217,9 +314,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package2', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package2' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package2',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -231,7 +333,7 @@ describe('WatchedPackagesHelper', () => {
 			})
 
 			// Filter to only keep pkg1
-			const filtered = helper.filter(context, (pkg) => pkg._id === protectString('pkg1'))
+			const filtered = helper.filter(context, (pkg) => pkg.packageId === protectString('pkg1'))
 
 			expect(filtered.hasPackage(protectString('pkg1'))).toBe(true)
 			expect(filtered.hasPackage(protectString('pkg2'))).toBe(false)
@@ -247,9 +349,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -261,9 +368,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package2', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package2' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package2',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -300,7 +412,7 @@ describe('WatchedPackagesHelper', () => {
 				pieceId: protectString('piece1'),
 			})
 
-			const filtered = helper.filter(context, (pkg) => pkg._id === protectString('pkg1'))
+			const filtered = helper.filter(context, (pkg) => pkg.packageId === protectString('pkg1'))
 
 			// Should only have info for pkg1
 			expect(filtered.getPackageInfo('package1')).toHaveLength(1)
@@ -320,7 +432,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
@@ -371,9 +483,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -413,9 +530,14 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
-						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
+						{
+							fromPieceType: ExpectedPackageDBType.PIECE,
+							pieceId: protectString('piece1'),
+							blueprintPackageId: 'package1',
+							listenToPackageInfoUpdates: true,
+						} as any,
 					],
 					created: 1000,
 				})
@@ -469,7 +591,7 @@ describe('WatchedPackagesHelper', () => {
 					studioId: context.studioId,
 					rundownId: rundownId,
 					bucketId: null,
-					package: { _id: 'package1', listenToPackageInfoUpdates: true } as any,
+					package: { _id: 'package1' } as any,
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],

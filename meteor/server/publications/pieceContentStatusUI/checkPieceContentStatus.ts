@@ -10,7 +10,10 @@ import {
 	SourceLayerType,
 	VTContent,
 } from '@sofie-automation/blueprints-integration'
-import { getExpectedPackageIdForPieceInstance } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import {
+	getExpectedPackageIdForPieceInstance,
+	getExpectedPackageIdNew,
+} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	BucketId,
 	ExpectedPackageId,
@@ -33,7 +36,7 @@ import {
 	StudioPackageContainer,
 	StudioRouteSet,
 } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { literal, Complete, assertNever, omit, getHash } from '@sofie-automation/corelib/dist/lib'
+import { literal, Complete, assertNever, omit } from '@sofie-automation/corelib/dist/lib'
 import { ReadonlyDeep } from 'type-fest'
 import _ from 'underscore'
 import {
@@ -42,7 +45,7 @@ import {
 } from '@sofie-automation/meteor-lib/dist/collections/ExpectedPackages'
 import { getActiveRoutes, getRoutedMappings } from '@sofie-automation/meteor-lib/dist/collections/Studios'
 import { ensureHasTrailingSlash } from '@sofie-automation/corelib/dist/lib'
-import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
+import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { MediaObjects, PackageContainerPackageStatuses, PackageInfos } from '../../collections'
 import {
 	mediaObjectFieldSpecifier,
@@ -667,11 +670,7 @@ async function checkPieceContentExpectedPackageStatus(
 
 				checkedPackageContainers.add(matchedPackageContainer[0])
 
-				const expectedPackageIds = [
-					// Synthesize the expected packageId from the piece
-					// Note: this needs to match the output of getExpectedPackageIdFromIngestSource, but will be reworked properly as part of shared ownership
-					protectString(`${packageOwnerId}_${piece._id}_${getHash(expectedPackage._id)}`),
-				]
+				const expectedPackageIds = [getExpectedPackageIdNew(packageOwnerId, expectedPackage)]
 				if (piece.pieceInstanceId) {
 					// If this is a PieceInstance, try looking up the PieceInstance first
 					expectedPackageIds.unshift(
