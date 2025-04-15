@@ -55,6 +55,8 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 							pieceId: pkg.pieceId,
 							partId: pkg.partId,
 							segmentId: pkg.segmentId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.ADLIB_ACTION:
@@ -64,6 +66,8 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 							pieceId: pkg.pieceId,
 							partId: pkg.partId,
 							segmentId: pkg.segmentId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
@@ -71,6 +75,8 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 						ingestSource = {
 							fromPieceType: pkg.fromPieceType,
 							pieceId: pkg.pieceId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
@@ -78,12 +84,16 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 						ingestSource = {
 							fromPieceType: pkg.fromPieceType,
 							pieceId: pkg.pieceId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
 						rundownId = pkg.rundownId
 						ingestSource = {
 							fromPieceType: pkg.fromPieceType,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.BUCKET_ADLIB:
@@ -92,6 +102,8 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 							fromPieceType: pkg.fromPieceType,
 							pieceId: pkg.pieceId,
 							pieceExternalId: pkg.pieceExternalId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
@@ -100,11 +112,15 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 							fromPieceType: pkg.fromPieceType,
 							pieceId: pkg.pieceId,
 							pieceExternalId: pkg.pieceExternalId,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					case PackagesPreR53.ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
 						ingestSource = {
 							fromPieceType: pkg.fromPieceType,
+							blueprintPackageId: pkg.blueprintPackageId,
+							listenToPackageInfoUpdates: pkg.listenToPackageInfoUpdates,
 						}
 						break
 					default:
