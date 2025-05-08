@@ -16,7 +16,7 @@ function StatusMenu() {
 	const { t } = useTranslation()
 
 	return (
-		<div className="tight-xs htight-xs text-s">
+		<div className="tight-xs htight-xs">
 			<NavLink
 				activeClassName="selectable-selected"
 				className="testTools-menu__testTools-menu-item selectable clickable"
