@@ -94,7 +94,7 @@ export function getPlayheadTrackingInfinitesForPart(
 	partsToReceiveOnSegmentEndFromSet: Set<PartId>,
 	segmentsToReceiveOnRundownEndFromSet: Set<SegmentId>,
 	rundownsToReceiveOnShowStyleEndFrom: RundownId[],
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowstyles: ReadonlyMap<RundownId, ShowStyleBaseId>,
 	currentPartInstance: ReadonlyDeep<DBPartInstance>,
 	playingSegment: ReadonlyDeep<Pick<DBSegment, '_id' | 'orphaned'>>,
 	currentPartPieceInstances: ReadonlyDeep<PieceInstance[]>,
@@ -282,7 +282,7 @@ export function isPiecePotentiallyActiveInPart(
 	partsToReceiveOnSegmentEndFrom: Set<PartId>,
 	segmentsToReceiveOnRundownEndFrom: Set<SegmentId>,
 	rundownsToReceiveOnShowStyleEndFrom: RundownId[],
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowstyles: ReadonlyMap<RundownId, ShowStyleBaseId>,
 	rundown: ReadonlyDeep<Pick<DBRundown, '_id' | 'showStyleBaseId'>>,
 	part: ReadonlyDeep<DBPart>,
 	pieceToCheck: ReadonlyDeep<Piece>
@@ -386,7 +386,7 @@ export function getPieceInstancesForPart(
 	partsToReceiveOnSegmentEndFromSet: Set<PartId>,
 	segmentsToReceiveOnRundownEndFromSet: Set<SegmentId>,
 	rundownsToReceiveOnShowStyleEndFrom: RundownId[],
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowstyles: ReadonlyMap<RundownId, ShowStyleBaseId>,
 	possiblePieces: ReadonlyDeep<Piece>[],
 	orderedPartIds: PartId[],
 	newInstanceId: PartInstanceId,
@@ -597,7 +597,7 @@ export function isCandidateBetterToBeContinued(
 
 function continueShowStyleEndInfinites(
 	rundownsToReceiveOnShowStyleEndFrom: RundownId[],
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowstyles: ReadonlyMap<RundownId, ShowStyleBaseId>,
 	previousRundownId: RundownId,
 	targetRundown: ReadonlyDeep<Pick<DBRundown, '_id' | 'showStyleBaseId'>>
 ): boolean {
