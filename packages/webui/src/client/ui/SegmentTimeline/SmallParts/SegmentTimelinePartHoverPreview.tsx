@@ -59,81 +59,87 @@ export const SegmentTimelinePartHoverPreview = ({
 		setTimeToPixelRatio(width / previewWindowDuration)
 	}, [inspectorRef, previewWindowDuration])
 
-	return showMiniInspector ? (
-		<div
-			className="segment-timeline__mini-inspector segment-timeline__mini-inspector--small-parts"
-			ref={setInspectorRef}
-		>
-			<div className="segment-timeline__mini-inspector--small-parts__duration">
-				<span className="segment-timeline__mini-inspector--small-parts__duration__label">{t('Parts Duration')}</span>
-				{RundownUtils.formatDiffToTimecode(actualPartsDuration, false, false, true, false, true)}
-			</div>
-			<div className="segment-timeline__mini-inspector__mini-timeline">
-				{parts.map((part, index) => {
-					return (
-						<SegmentTimelinePart
-							key={unprotectString(part.instance._id)}
-							segment={segment}
-							playlist={playlist}
-							studio={studio}
-							collapsedOutputs={collapsedOutputs}
-							scrollLeft={0}
-							timeToPixelRatio={timeToPixelRatio}
-							autoNextPart={autoNextPart}
-							followLiveLine={false}
-							liveLineHistorySize={liveLineHistorySize}
-							livePosition={0}
-							totalSegmentDuration={previewWindowDuration}
-							scrollWidth={Number.POSITIVE_INFINITY}
-							isLastSegment={isLastSegment}
-							isLastInSegment={isLastInSegment && !followingPart && parts.length - 1 === index}
-							isAfterLastValidInSegmentAndItsLive={false}
-							part={part}
-							isPreview={true}
-							isBudgetGap={false}
-							showDurationSourceLayers={showDurationSourceLayers}
-							isLiveSegment={undefined}
-							anyPriorPartWasLive={undefined}
-							livePartStartsAt={undefined}
-							livePartDisplayDuration={undefined}
-							budgetDuration={undefined}
-							firstPartInSegment={parts[0]}
-						/>
-					)
-				})}
-				{followingPart && (
-					<SegmentTimelinePart
-						key={unprotectString(followingPart.instance._id)}
-						className="segment-timeline__part--shaded"
-						segment={segment}
-						playlist={playlist}
-						studio={studio}
-						collapsedOutputs={collapsedOutputs}
-						scrollLeft={0}
-						timeToPixelRatio={timeToPixelRatio}
-						autoNextPart={autoNextPart}
-						followLiveLine={false}
-						liveLineHistorySize={liveLineHistorySize}
-						livePosition={0}
-						totalSegmentDuration={previewWindowDuration}
-						scrollWidth={Number.POSITIVE_INFINITY}
-						isLastSegment={isLastSegment}
-						isLastInSegment={false}
-						isAfterLastValidInSegmentAndItsLive={false}
-						part={followingPart}
-						isPreview={true}
-						cropDuration={followingPartPreviewDuration}
-						isBudgetGap={false}
-						showDurationSourceLayers={showDurationSourceLayers}
-						isLiveSegment={undefined}
-						anyPriorPartWasLive={undefined}
-						livePartStartsAt={undefined}
-						livePartDisplayDuration={undefined}
-						budgetDuration={undefined}
-						firstPartInSegment={parts[0]}
-					/>
-				)}
-			</div>
-		</div>
-	) : null
+	return (
+		<>
+			{showMiniInspector && (
+				<div
+					className="segment-timeline__mini-inspector segment-timeline__mini-inspector--small-parts"
+					ref={setInspectorRef}
+				>
+					<div className="segment-timeline__mini-inspector--small-parts__duration">
+						<span className="segment-timeline__mini-inspector--small-parts__duration__label">
+							{t('Parts Duration')}
+						</span>
+						{RundownUtils.formatDiffToTimecode(actualPartsDuration, false, false, true, false, true)}
+					</div>
+					<div className="segment-timeline__mini-inspector__mini-timeline">
+						{parts.map((part, index) => {
+							return (
+								<SegmentTimelinePart
+									key={unprotectString(part.instance._id)}
+									segment={segment}
+									playlist={playlist}
+									studio={studio}
+									collapsedOutputs={collapsedOutputs}
+									scrollLeft={0}
+									timeToPixelRatio={timeToPixelRatio}
+									autoNextPart={autoNextPart}
+									followLiveLine={false}
+									liveLineHistorySize={liveLineHistorySize}
+									livePosition={0}
+									totalSegmentDuration={previewWindowDuration}
+									scrollWidth={Number.POSITIVE_INFINITY}
+									isLastSegment={isLastSegment}
+									isLastInSegment={isLastInSegment && !followingPart && parts.length - 1 === index}
+									isAfterLastValidInSegmentAndItsLive={false}
+									part={part}
+									isPreview={true}
+									isBudgetGap={false}
+									showDurationSourceLayers={showDurationSourceLayers}
+									isLiveSegment={undefined}
+									anyPriorPartWasLive={undefined}
+									livePartStartsAt={undefined}
+									livePartDisplayDuration={undefined}
+									budgetDuration={undefined}
+									firstPartInSegment={parts[0]}
+								/>
+							)
+						})}
+						{followingPart && (
+							<SegmentTimelinePart
+								key={unprotectString(followingPart.instance._id)}
+								className="segment-timeline__part--shaded"
+								segment={segment}
+								playlist={playlist}
+								studio={studio}
+								collapsedOutputs={collapsedOutputs}
+								scrollLeft={0}
+								timeToPixelRatio={timeToPixelRatio}
+								autoNextPart={autoNextPart}
+								followLiveLine={false}
+								liveLineHistorySize={liveLineHistorySize}
+								livePosition={0}
+								totalSegmentDuration={previewWindowDuration}
+								scrollWidth={Number.POSITIVE_INFINITY}
+								isLastSegment={isLastSegment}
+								isLastInSegment={false}
+								isAfterLastValidInSegmentAndItsLive={false}
+								part={followingPart}
+								isPreview={true}
+								cropDuration={followingPartPreviewDuration}
+								isBudgetGap={false}
+								showDurationSourceLayers={showDurationSourceLayers}
+								isLiveSegment={undefined}
+								anyPriorPartWasLive={undefined}
+								livePartStartsAt={undefined}
+								livePartDisplayDuration={undefined}
+								budgetDuration={undefined}
+								firstPartInSegment={parts[0]}
+							/>
+						)}
+					</div>
+				</div>
+			)}
+		</>
+	)
 }
