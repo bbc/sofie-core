@@ -52,6 +52,7 @@ import {
 	RundownLayoutRundownHeader,
 	RundownLayoutFilterBase,
 } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
+import { VirtualElement } from '../lib/VirtualElement.js'
 import { SEGMENT_TIMELINE_ELEMENT_ID } from './SegmentTimeline/SegmentTimeline.js'
 import { OffsetPosition } from '../utils/positions.js'
 import { MeteorCall } from '../lib/meteorApi.js'
@@ -932,6 +933,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 				return null
 			}
 
+			let globalIndex = 0
 			const rundowns = this.props.matchedSegments.map((m) => m.rundown._id)
 
 			return this.props.matchedSegments.map((rundownAndSegments, rundownIndex, rundownArray) => {
@@ -975,7 +977,18 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 
 								return (
 									<ErrorBoundary key={unprotectString(segment._id)}>
-										<div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px' }}>
+										<VirtualElement
+											className={ClassNames({
+												'segment-timeline-wrapper--hidden': segment.isHidden,
+												'segment-timeline-wrapper--shelf': segment.showShelf,
+											})}
+											id={SEGMENT_TIMELINE_ELEMENT_ID + segment._id}
+											margin={'100% 0px 100% 0px'}
+											initialShow={globalIndex++ < window.innerHeight / 260}
+											placeholderHeight={260}
+											placeholderClassName="placeholder-shimmer-element segment-timeline-placeholder"
+											width="auto"
+										>
 											{this.renderSegmentComponent(
 												segment,
 												segmentIndex,
@@ -990,7 +1003,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 												rundownAndSegments.segmentIdsBeforeEachSegment[segmentIndex],
 												rundownIdsBefore
 											)}
-										</div>
+										</VirtualElement>
 									</ErrorBoundary>
 								)
 							}
