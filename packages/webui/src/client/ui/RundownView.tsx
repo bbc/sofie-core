@@ -284,6 +284,7 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 		partInstances?.currentPartInstance
 	)
 
+	// This is a hack, as the VirtualElement is not releasing its memory properly:
 	useEffect(() => {
 		const detachedNodes = new Set<Element>()
 
