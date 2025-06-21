@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor'
-import React, { useContext, useMemo } from 'react'
+import React, { useContext, useEffect, useMemo } from 'react'
 import { ParsedQuery, parse as queryStringParse } from 'query-string'
 import { Translated, translateWithTracker, useTracker } from '../lib/ReactMeteorData/react-meteor-data.js'
 import { VTContent, NoteSeverity, ISourceLayer } from '@sofie-automation/blueprints-integration'
@@ -283,6 +283,360 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 		selectedRundownLayouts.selectedMiniShelfLayout,
 		partInstances?.currentPartInstance
 	)
+
+	useEffect(() => {
+		const detachedNodes = new Set<Element>()
+
+		// Set up observer to catch nodes when they get removed
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				mutation.removedNodes.forEach((node) => {
+					if (node instanceof Element) {
+						detachedNodes.add(node)
+					}
+				})
+			})
+		})
+
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+		})
+
+		function cleanupDetachedNodesFromMemory(): number {
+			let removedCount = 0
+			// Delay the cleanup to allow stabilize after mutations:
+			setTimeout(() => {
+				detachedNodes.forEach((node) => {
+					if (!document.contains(node)) {
+						// Recursively clean up the entire subtree
+						cleanupNodeAndChildren(node)
+						detachedNodes.delete(node)
+						removedCount++
+					}
+				})
+			}, 100)
+
+			return removedCount
+		}
+
+		function cleanupNodeAndChildren(node: any): void {
+			// Recursively clean up all children:
+			if (node.children && node.children.length > 0) {
+				Array.from(node.children).forEach((child: any) => {
+					cleanupNodeAndChildren(child)
+				})
+			}
+
+			// Also handle text nodes and other node types
+			if (node.childNodes && node.childNodes.length > 0) {
+				Array.from(node.childNodes).forEach((child: any) => {
+					if (child.nodeType === Node.ELEMENT_NODE) {
+						cleanupNodeAndChildren(child)
+					}
+					// Clear text nodes and other node types
+					clearNodeReferences(child)
+				})
+			}
+
+			// Clear the current node
+			clearNodeReferences(node)
+		}
+
+		function clearNodeReferences(node: any): void {
+			if (!node) return
+
+			try {
+				if (node._reactRootContainer) {
+					// This is a React root, skip it as it's still active
+					return
+				}
+
+				// First, recursively destroy all children
+				if (node.childNodes) {
+					Array.from(node.childNodes).forEach((child: any) => {
+						clearNodeReferences(child)
+					})
+				}
+
+				// Force remove from parent if still attached
+				if (node.parentNode && !document.contains(node)) {
+					node.parentNode.removeChild(node)
+				}
+
+				// Enhanced canvas cleanup - clear any stored references
+				if (node.tagName === 'CANVAS') {
+					const canvas = node as HTMLCanvasElement
+					// Clear any custom properties that might hold references
+					Object.keys(canvas).forEach((key) => {
+						if (!key.startsWith('__react') && typeof (canvas as any)[key] === 'object') {
+							//@ts-expect-error node[key] = null
+							canvas[key] = null
+						}
+					})
+				}
+
+				// More aggressive React Context Menu cleanup
+				if (node.classList?.contains('react-contextmenu-wrapper')) {
+					// Remove from any global registry
+					const menuId =
+						node.getAttribute('data-menu-id') || node.querySelector('[data-menu-id]')?.getAttribute('data-menu-id')
+					if (menuId && (window as any).__reactContextMenus) {
+						delete (window as any).__reactContextMenus[menuId]
+					}
+					// React context menu components often have special cleanup needs
+					try {
+						if (node._reactInternalFiber) {
+							node._reactInternalFiber = null
+						}
+						if (node.__reactEventHandlers) {
+							node.__reactEventHandlers = null
+						}
+					} catch (e) {
+						// Ignore cleanup errors
+						console.warn('Failed to clean up React context menu:', e)
+					}
+				}
+
+				// Clear any transform or style-based animations that might hold references
+				if (node.style) {
+					node.style.transform = ''
+					node.style.transition = ''
+					node.style.animation = ''
+				}
+
+				// Break all React references
+				const reactKeys = Object.keys(node).filter(
+					(key) =>
+						key.startsWith('__react') ||
+						key.startsWith('_react') ||
+						key.includes('react') ||
+						key.includes('React') ||
+						key.startsWith('__fiber') ||
+						key === '_owner' ||
+						key === '_store'
+				)
+
+				reactKeys.forEach((key) => {
+					try {
+						const value = node[key]
+						// Clear any circular references in React objects
+						if (value && typeof value === 'object') {
+							if (value.stateNode === node) {
+								value.stateNode = null
+							}
+							if (value.child) value.child = null
+							if (value.sibling) value.sibling = null
+							if (value.return) value.return = null
+						}
+						node[key] = null
+						delete node[key]
+					} catch (e) {
+						// Some properties might be non-configurable
+						console.warn(`Failed to clear React property ${key} on node:`, e)
+					}
+				})
+
+				// Remove all event listeners
+				if (node.removeEventListener) {
+					// Common React event types
+					// Add missing ones that we use but not on the list:
+
+					const eventTypes = [
+						'click',
+						'mousedown',
+						'mouseup',
+						'mouseover',
+						'mouseout',
+						'focus',
+						'blur',
+						'change',
+						'input',
+						'keydown',
+						'keyup',
+						'touchstart',
+						'touchend',
+						'touchmove',
+					]
+
+					eventTypes.forEach((eventType) => {
+						try {
+							// Remove all listeners:
+							const listeners = node.getEventListeners?.(eventType) || []
+							listeners.forEach((listener: any) => {
+								node.removeEventListener(eventType, listener.listener)
+							})
+						} catch (e) {
+							// getEventListeners might not be available
+							console.warn(`Failed to remove event listeners for ${eventType}:`, e)
+						}
+					})
+				}
+
+				// Add this section for ARIA cleanup
+				const ariaReferenceAttrs = [
+					'aria-labelledby',
+					'aria-describedby',
+					'aria-controls',
+					'aria-owns',
+					'aria-flowto',
+					'aria-activedescendant',
+				]
+
+				ariaReferenceAttrs.forEach((attr) => {
+					if (node.hasAttribute?.(attr)) {
+						const referencedIds = node.getAttribute(attr)?.split(' ') || []
+						referencedIds.forEach((id: any) => {
+							// Clear any cached references to these elements
+							const referencedEl = document.getElementById(id)
+							if (referencedEl && referencedEl !== node) {
+								// Clear back-references if any
+								Object.keys(referencedEl as any).forEach((key) => {
+									if ((referencedEl as any)[key] === node) {
+										delete (referencedEl as any)[key]
+									}
+								})
+							}
+						})
+						node.removeAttribute(attr)
+					}
+				})
+
+				// Enhanced canvas cleanup
+				if (node.tagName === 'CANVAS') {
+					const canvas = node as HTMLCanvasElement
+					// Get all possible contexts
+					;['2d', 'webgl', 'webgl2', 'bitmaprenderer'].forEach((contextType) => {
+						try {
+							const ctx = canvas.getContext(contextType as any)
+							if (ctx) {
+								if (contextType === '2d' && ctx) {
+									;(ctx as CanvasRenderingContext2D).clearRect(0, 0, canvas.width, canvas.height)
+									// Reset transform and clear path
+									;(ctx as CanvasRenderingContext2D).setTransform(1, 0, 0, 1, 0, 0)
+									;(ctx as CanvasRenderingContext2D).beginPath()
+								}
+								// Clear the context reference
+								if ('loseContext' in ctx) {
+									;(ctx as any).loseContext()
+								}
+							}
+						} catch (e) {
+							// Some contexts might not be available or supported
+							console.warn(`Failed to clear canvas context ${contextType}:`, e)
+						}
+					})
+					// Clear size to free memory
+					canvas.width = 0
+					canvas.height = 0
+				}
+
+				// Clear React Context Menu global listeners
+				if (node.classList?.contains('react-contextmenu-wrapper')) {
+					// React context menu often uses global document listeners
+					if ((window as any).ReactContextMenu) {
+						try {
+							;(window as any).ReactContextMenu.hideAll()
+						} catch (e) {
+							// If ReactContextMenu is not available, ignore
+							console.warn('Failed to hide React Context Menu:', e)
+						}
+					}
+
+					// Clear any menu state
+					node.classList.remove('react-contextmenu-wrapper--visible')
+					node.classList.remove('react-contextmenu-wrapper--active')
+				}
+
+				// Clear focus/blur related registrations
+				if (node.tabIndex !== undefined && node.tabIndex >= 0) {
+					node.tabIndex = -1
+					node.blur?.()
+				}
+
+				// Clear custom event listeners that might be using delegation
+				const customDataAttrs = [
+					'data-obj-id',
+					'data-part-id',
+					'data-layer-id',
+					'data-source-id',
+					'data-output-id',
+					'data-identifier',
+				]
+				customDataAttrs.forEach((attr) => {
+					if (node.hasAttribute?.(attr)) {
+						const value = node.getAttribute(attr)
+						// These might be used as keys in event delegation maps
+						node.removeAttribute(attr)
+
+						// Check for global event delegation systems
+						if ((window as any).__eventDelegation) {
+							delete (window as any).__eventDelegation[value]
+						}
+					}
+				})
+
+				// Clear intersection/resize/mutation observers
+				if ((window as any).IntersectionObserver) {
+					// Some libraries attach observer instances to elements
+					const observerKeys = Object.keys(node).filter((key) => key.includes('observer') || key.includes('Observer'))
+					observerKeys.forEach((key) => {
+						try {
+							if (node[key] && typeof node[key].disconnect === 'function') {
+								node[key].disconnect()
+							}
+							delete node[key]
+						} catch (e) {
+							// Ignore errors if the property is not a valid observer
+							console.warn(`Failed to disconnect observer ${key}:`, e)
+						}
+					})
+				}
+
+				// Clear any animation frame callbacks
+				if (node.__rafId) {
+					cancelAnimationFrame(node.__rafId)
+					delete node.__rafId
+				}
+
+				// Clear any pending timers stored on the element
+				;['__timeoutId', '__intervalId', '_timer', '_timeout'].forEach((prop) => {
+					if (node[prop]) {
+						clearTimeout(node[prop])
+						clearInterval(node[prop])
+						delete node[prop]
+					}
+				})
+
+				// Clear any jQuery data if present
+				if (typeof window !== 'undefined' && (window as any).jQuery) {
+					try {
+						;(window as any).jQuery(node).off()
+						;(window as any).jQuery.removeData(node)
+					} catch (e) {
+						// If jQuery is not available or node is not a jQuery object, ignore
+						console.warn('Failed to clear jQuery data:', e)
+					}
+				}
+
+				// Don't clear innerHTML for React nodes - it can break cleanup
+				// Instead, remove child nodes properly
+				while (node.firstChild) {
+					node.removeChild(node.firstChild)
+				}
+			} catch (error) {
+				// Continue cleanup even if individual operations fail
+				console.warn('Error during node cleanup:', error)
+			}
+		}
+
+		setInterval(
+			() => {
+				cleanupDetachedNodesFromMemory()
+			},
+			1 * 60 * 1000
+		)
+	}, [])
 
 	return (
 		<div className="container-fluid header-clear">
