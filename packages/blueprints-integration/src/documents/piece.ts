@@ -41,6 +41,7 @@ export interface IBlueprintPiece<TPrivateData = unknown, TPublicData = unknown>
 	 * it will trigger a user edit operation of type DefaultUserOperationEditProperties
 	 */
 	userEditProperties?: UserEditingProperties
+
 	/**
 	 * Whether to stop this piece before the 'keepalive' period of the part
 	 */

@@ -29,10 +29,10 @@ import { SourceLayers, OutputLayers } from '@sofie-automation/corelib/dist/dataM
 import { RundownPlaylistCollectionUtil } from '../../../../collections/rundownPlaylistUtil.js'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { UIPartInstances, UIParts } from '../../../Collections.js'
+import { createPrivateApiPath } from '../../../../url.js'
 import Form from 'react-bootstrap/esm/Form'
 import Button from 'react-bootstrap/esm/Button'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
-import { createPrivateApiPath } from '../../../../url.js'
 
 export interface PreviewContext {
 	rundownPlaylist: DBRundownPlaylist | null

@@ -21,12 +21,12 @@ meteorPublish(MeteorPubSub.coreSystem, async function (_token: string | undefine
 			blueprintId: 1,
 			logo: 1,
 			settingsWithOverrides: 1,
+			enableMonitorBlockedThread: 1,
 		},
 	})
 })
 
 meteorPublish(MeteorPubSub.notificationsForRundown, async function (studioId: StudioId, rundownId: RundownId) {
-	// HACK: This should do real auth
 	triggerWriteAccessBecauseNoCheckNecessary()
 
 	check(studioId, String)
@@ -42,7 +42,6 @@ meteorPublish(MeteorPubSub.notificationsForRundown, async function (studioId: St
 meteorPublish(
 	MeteorPubSub.notificationsForRundownPlaylist,
 	async function (studioId: StudioId, playlistId: RundownPlaylistId) {
-		// HACK: This should do real auth
 		triggerWriteAccessBecauseNoCheckNecessary()
 
 		check(studioId, String)

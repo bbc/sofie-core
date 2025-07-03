@@ -58,6 +58,7 @@ import { postProcessPieces, postProcessTimelineObjects } from '../../../postProc
 import { ActionPartChange, PartAndPieceInstanceActionService } from '../PartAndPieceInstanceActionService.js'
 import { mock } from 'jest-mock-extended'
 import { QuickLoopService } from '../../../../playout/model/services/QuickLoopService.js'
+import { SelectedPartInstance } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 const { postProcessPieces: postProcessPiecesOrig, postProcessTimelineObjects: postProcessTimelineObjectsOrig } =
 	jest.requireActual('../../../postProcess')
 
@@ -238,7 +239,9 @@ describe('Test blueprint api context', () => {
 		nextPartInstance: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | undefined | null,
 		previousPartInstance?: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null
 	) {
-		const convertInfo = (info: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null) => {
+		const convertInfo = (
+			info: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null
+		): SelectedPartInstance | null => {
 			if (!info) {
 				return null
 			} else if ('partInstanceId' in info) {

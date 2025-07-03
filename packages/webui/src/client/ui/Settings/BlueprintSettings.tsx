@@ -20,10 +20,10 @@ import { MeteorCall } from '../../lib/meteorApi.js'
 import { BlueprintId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Blueprints, CoreSystem, ShowStyleBases, Studios } from '../../collections/index.js'
 import { LabelActual } from '../../lib/Components/LabelAndOverrides.js'
+import { createPrivateApiPath } from '../../url.js'
 import Button from 'react-bootstrap/esm/Button'
 import { useTranslation } from 'react-i18next'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
-import { createPrivateApiPath } from '../../url.js'
 
 interface IProps {
 	blueprintId: BlueprintId

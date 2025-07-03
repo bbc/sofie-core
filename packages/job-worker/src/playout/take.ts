@@ -22,7 +22,10 @@ import { WrappedShowStyleBlueprint } from '../blueprints/cache.js'
 import { innerStopPieces } from './adlibUtils.js'
 import { reportPartInstanceHasStarted, reportPartInstanceHasStopped } from './timings/partPlayback.js'
 import { convertPartInstanceToBlueprints, convertResolvedPieceInstanceToBlueprints } from '../blueprints/context/lib.js'
-import { processAndPrunePieceInstanceTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
+import {
+	createPartCurrentTimes,
+	processAndPrunePieceInstanceTimings,
+} from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { TakeNextPartProps } from '@sofie-automation/corelib/dist/worker/studio'
 import { runJobWithPlayoutModel } from './lock.js'
 import _ from 'underscore'
@@ -542,10 +545,11 @@ export function updatePartInstanceOnTake(
 	}
 
 	// calculate and cache playout timing properties, so that we don't depend on the previousPartInstance:
+	const partTimes = createPartCurrentTimes(getCurrentTime(), null)
 	const tmpTakePieces = processAndPrunePieceInstanceTimings(
 		showStyle.sourceLayers,
 		takePartInstance.pieceInstances.map((p) => p.pieceInstance),
-		0
+		partTimes
 	)
 	const partPlayoutTimings = playoutModel.calculatePartTimings(currentPartInstance, takePartInstance, tmpTakePieces)
 
@@ -555,15 +559,13 @@ export function updatePartInstanceOnTake(
 export async function afterTake(
 	context: JobContext,
 	playoutModel: PlayoutModel,
-	takePartInstance: PlayoutPartInstanceModel
+	_takePartInstance: PlayoutPartInstanceModel
 ): Promise<void> {
 	const span = context.startSpan('afterTake')
 	// This function should be called at the end of a "take" event (when the Parts have been updated)
 	// or after a new part has started playing
 
 	await updateTimeline(context, playoutModel)
-
-	playoutModel.queueNotifyCurrentlyPlayingPartEvent(takePartInstance.partInstance.rundownId, takePartInstance)
 
 	if (span) span.end()
 }

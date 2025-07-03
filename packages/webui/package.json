@@ -14,7 +14,7 @@
 	},
 	"homepage": "https://github.com/nrkno/sofie-core/blob/master/packages/webui#readme",
 	"scripts": {
-		"dev": "vite --port=3005",
+		"dev": "vite --port=3005 --force",
 		"build": "tsc -b && vite build",
 		"build:main": "tsc -p tsconfig.app.json --noEmit",
 		"check-types": "tsc -p tsconfig.app.json --noEmit",
@@ -38,7 +38,7 @@
 		"@fortawesome/fontawesome-svg-core": "^6.7.2",
 		"@fortawesome/free-solid-svg-icons": "^6.7.2",
 		"@fortawesome/react-fontawesome": "^0.2.2",
-		"@jstarpl/react-contextmenu": "^2.15.0",
+		"@jstarpl/react-contextmenu": "^2.15.1",
 		"@nrk/core-icons": "^9.6.0",
 		"@popperjs/core": "^2.11.8",
 		"@sofie-automation/blueprints-integration": "1.53.0-in-development",

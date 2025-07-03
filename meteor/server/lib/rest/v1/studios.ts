@@ -223,4 +223,5 @@ export interface APIStudioSettings {
 	enableBuckets?: boolean
 	enableEvaluationForm?: boolean
 	mockPieceContentStatus?: boolean
+	rundownGlobalPiecesPrepareTime?: number
 }

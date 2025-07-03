@@ -67,6 +67,6 @@ export function convertStudioToJobStudio(studio: DBStudio): JobStudio {
 		routeSetExclusivityGroups: studio.routeSetExclusivityGroupsWithOverrides
 			? applyAndValidateOverrides(studio.routeSetExclusivityGroupsWithOverrides).obj
 			: (studio as any).routeSetExclusivityGroups || {},
-		// packageContainers: studio.packageContainersWithOverrides ? applyAndValidateOverrides(studio.packageContainersWithOverrides).obj : (studio as any).packageContainers || {},
+		// packageContainers: applyAndValidateOverrides(studio.packageContainersWithOverrides).obj,
 	}
 }

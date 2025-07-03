@@ -19,10 +19,10 @@ import { Snapshots, Studios } from '../../collections/index.js'
 import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
 import { hashSingleUseToken } from '../../lib/lib.js'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
+import { createPrivateApiPath } from '../../url.js'
 import { useTranslation, withTranslation } from 'react-i18next'
 import Button from 'react-bootstrap/esm/Button'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
-import { createPrivateApiPath } from '../../url.js'
 
 interface IProps {
 	match: {
