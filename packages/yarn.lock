@@ -4177,9 +4177,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jstarpl/react-contextmenu@npm:^2.15.0":
-  version: 2.15.0
-  resolution: "@jstarpl/react-contextmenu@npm:2.15.0"
+"@jstarpl/react-contextmenu@npm:^2.15.1":
+  version: 2.15.1
+  resolution: "@jstarpl/react-contextmenu@npm:2.15.1"
   dependencies:
     classnames: "npm:^2.2.5"
     object-assign: "npm:^4.1.0"
@@ -4187,7 +4187,7 @@ __metadata:
     prop-types: ^15.0.0
     react: ^0.14.0 || ^15.0.0 || ^16.0.1 || ^17 || ^18
     react-dom: ^0.14.0 || ^15.0.0 || ^16.0.1 || ^17 || ^18
-  checksum: 10/d64141890d7d75175f87dc8f5b3a3626afc518c7a8e1b059565c5cbcfc1182d8e7418791a84e9fdb34366abefaa11d3c6f36f04df5dcec4eef75aca7235597ab
+  checksum: 10/b0195bf013fdc325f2cca4eb263d4da8f805ae52b827f52af39e8d6b913d7f6d4eaba4461efd0dd4395f78ad342ed366a50b85f5ca341917db32045bbb028804
   languageName: node
   linkType: hard
 
@@ -6396,7 +6396,7 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": "npm:^6.7.2"
     "@fortawesome/free-solid-svg-icons": "npm:^6.7.2"
     "@fortawesome/react-fontawesome": "npm:^0.2.2"
-    "@jstarpl/react-contextmenu": "npm:^2.15.0"
+    "@jstarpl/react-contextmenu": "npm:^2.15.1"
     "@nrk/core-icons": "npm:^9.6.0"
     "@popperjs/core": "npm:^2.11.8"
     "@sofie-automation/blueprints-integration": "npm:1.53.0-in-development"
