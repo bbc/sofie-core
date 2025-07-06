@@ -75,7 +75,10 @@ services:
   spreadsheet-gateway:
     image: superflytv/sofie-spreadsheet-gateway:latest
     restart: always
-    command: yarn start -host core -port 3000 -id spreadsheetGateway0
+    environment:
+      DEVICE_ID: spreadsheetGateway0
+      CORE_HOST: core
+      CORE_PORT: '3000'
     networks:
       - sofie
     depends_on:
@@ -86,10 +89,13 @@ services:
     image: sofietv/tv-automation-mos-gateway:release51
     restart: always
     ports:
-      - "10540:10540" # MOS Lower port
-      - "10541:10541" # MOS Upper port
+      - '10540:10540' # MOS Lower port
+      - '10541:10541' # MOS Upper port
       # - "10542:10542" # MOS query port - not used
-    command: yarn start -host core -port 3000 -id mosGateway0
+    environment:
+      DEVICE_ID: mosGateway0
+      CORE_HOST: core
+      CORE_PORT: '3000'
     networks:
       - sofie
     depends_on:

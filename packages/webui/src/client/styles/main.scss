@@ -125,6 +125,12 @@ body {
 	letter-spacing: 0.5px;
 }
 
+// By default an a-tag has underlined text - and Link components are rendered as a-tags
+// So the default behaviour set to none, and then we can override it in the components that need it:
+a {
+	text-decoration: none;
+}
+
 :fullscreen ::-webkit-scrollbar {
 	background: #252627;
 }
