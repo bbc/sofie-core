@@ -44,6 +44,7 @@ import { PartId, PieceId, RundownId, SegmentId, ShowStyleBaseId } from '@sofie-a
 import { PieceInstances, Segments } from '../collections/index.js'
 import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { assertNever } from '@sofie-automation/shared-lib/dist/lib/lib'
+import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownPlaylistClientUtil } from './rundownPlaylistUtil.js'
@@ -269,6 +270,7 @@ export namespace RundownUtils {
 	 *
 	 * @export
 	 * @param {ShowStyleBase} showStyleBase
+	 * @param {UIStudio} studio
 	 * @param {DBRundownPlaylist} playlist
 	 * @param {DBSegment} segment
 	 * @param {Set<SegmentId>} segmentsToReceiveOnRundownEndFromSet
@@ -285,6 +287,7 @@ export namespace RundownUtils {
 	 */
 	export function getResolvedSegment(
 		showStyleBase: UIShowStyleBase,
+		studio: UIStudio | undefined,
 		playlist: DBRundownPlaylist,
 		rundown: Pick<Rundown, '_id' | 'showStyleBaseId'>,
 		segment: DBSegment,
@@ -495,6 +498,7 @@ export namespace RundownUtils {
 								pieceInstanceFieldOptions
 							).fetch()
 						: undefined,
+					studio?.settings.allowTestingAdlibsToPersist ?? false,
 					undefined,
 					pieceInstanceFieldOptions,
 					pieceInstanceSimulation

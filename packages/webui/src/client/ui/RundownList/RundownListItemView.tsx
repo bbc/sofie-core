@@ -98,33 +98,31 @@ export default React.memo(function RundownListItemView({
 				<span></span>
 			)}
 			<span className="rundown-list-item__name" role="rowheader">
-				<div className="grid-buttons-right">
-					<span className="rundown-name">{rundownNameContent}</span>
-					{rundown.description ? (
-						<Tooltip overlay={rundown.description} trigger={['hover']} placement="right">
-							<span className="rundown-list-description__icon">
-								<PathIcon />
-							</span>
+				<span className="rundown-name">{rundownNameContent}</span>
+				{rundown.description ? (
+					<Tooltip overlay={rundown.description} trigger={['hover']} placement="right">
+						<span className="rundown-list-description__icon">
+							<PathIcon />
+						</span>
+					</Tooltip>
+				) : null}
+
+				<span className="rundown-list-item__indicator">
+					{isActive === true ? (
+						<Tooltip
+							overlay={t('This rundown is currently active')}
+							mouseEnterDelay={TOOLTIP_DEFAULT_DELAY}
+							placement="bottom"
+						>
+							<div className="origo-pulse small me-2">
+								<div className="pulse-marker">
+									<div className="pulse-rays"></div>
+									<div className="pulse-rays delay"></div>
+								</div>
+							</div>
 						</Tooltip>
 					) : null}
-
-					<div>
-						{isActive === true ? (
-							<Tooltip
-								overlay={t('This rundown is currently active')}
-								mouseEnterDelay={TOOLTIP_DEFAULT_DELAY}
-								placement="bottom"
-							>
-								<div className="origo-pulse small me-2">
-									<div className="pulse-marker">
-										<div className="pulse-rays"></div>
-										<div className="pulse-rays delay"></div>
-									</div>
-								</div>
-							</Tooltip>
-						) : null}
-					</div>
-				</div>
+				</span>
 			</span>
 			{/* <RundownListItemProblems warnings={warnings} errors={errors} /> */}
 			<span className="rundown-list-item__text" role="gridcell">
