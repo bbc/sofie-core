@@ -80,7 +80,10 @@ export const PreviewPopUp = React.forwardRef<
 					x,
 					anchor?.getBoundingClientRect().y ?? 0
 				)
-				if (update) update().catch((e) => console.error(e))
+				// If update is available, call it to reposition the popper:
+				if (updateRef.current) {
+					updateRef.current().catch((e) => console.error(e))
+				}
 			}
 			document.addEventListener('mousemove', listener)
 
@@ -88,7 +91,7 @@ export const PreviewPopUp = React.forwardRef<
 				document.removeEventListener('mousemove', listener)
 			}
 		}
-	}, [update, anchor])
+	}, [trackMouse, anchor])
 
 	useImperativeHandle(ref, () => {
 		return {
