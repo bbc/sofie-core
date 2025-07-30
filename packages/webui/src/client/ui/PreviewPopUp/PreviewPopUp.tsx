@@ -73,7 +73,9 @@ export const PreviewPopUp = React.forwardRef<
 
 	useEffect(() => {
 		updateRef.current = update
+	}, [update])
 
+	useEffect(() => {
 		if (trackMouse) {
 			const listener = ({ clientX: x }: MouseEvent) => {
 				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(
