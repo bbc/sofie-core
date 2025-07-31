@@ -493,15 +493,11 @@ function DirectorScreenRender({
 
 		const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 
-		// Precompute conditional blocks to satisfy linting rules (avoid nested ternaries)
-		let expectedStartCountdown: JSX.Element | null = null
-		if (!(currentPartInstance && currentShowStyleBaseId) && expectedStart) {
-			expectedStartCountdown = (
-				<div className="director-screen__body__rundown-countdown">
-					<Timediff time={expectedStart - getCurrentTime()} />
-				</div>
-			)
-		}
+		// Show countdown if it is the first segment and the current part is untimed:
+		const currentSegmentIsFirst = currentSegment?._rank === 0
+		const isFirstPieceAndNoDuration =
+			(currentSegmentIsFirst && currentPartInstance?.instance.part.untimed) ||
+			(currentSegment === undefined && nextPartInstance?.instance.part.untimed)
 
 		// Precompute player icon elements to avoid nested ternaries in JSX
 		let currentPlayerEl: JSX.Element | null = null
@@ -588,89 +584,102 @@ function DirectorScreenRender({
 						// Current Part:
 					}
 					<div className="director-screen__body__part">
-						<div
-							className={ClassNames('director-screen__body__segment-name', {
-								live: currentSegment !== undefined,
-							})}
-						>
-							<AdjustLabelFit
-								label={currentSegment?.name || ''}
-								width={'80vw'}
-								fontFamily="Roboto Flex"
-								fontSize="0.9em"
-								minFontWidth={70}
-								defaultWidth={100}
-								defaultOpticalSize={100}
-								useLetterSpacing={false}
-								hardCutText={true}
-							/>
-							{playlist.currentPartInfo?.partInstanceId ? (
-								<span className="director-screen__body__segment__countdown">
-									<CurrentPartOrSegmentRemaining
-										currentPartInstanceId={playlist.currentPartInfo?.partInstanceId || null}
-										heavyClassName="overtime"
-										preferSegmentTime={true}
-									/>
-								</span>
-							) : null}
-						</div>
-						{currentPartInstance && currentShowStyleBaseId ? (
+						{!isFirstPieceAndNoDuration ? (
 							<>
-								<div className="director-screen__body__part__piece-icon">
-									<PieceIconContainer
-										partInstanceId={currentPartInstance.instance._id}
-										showStyleBaseId={currentShowStyleBaseId}
-										rundownIds={rundownIds}
-										playlistActivationId={playlist?.activationId}
+								<div
+									className={ClassNames('director-screen__body__segment-name', {
+										live: currentSegment !== undefined,
+									})}
+								>
+									<AdjustLabelFit
+										label={currentSegment?.name || ''}
+										width={'80vw'}
+										fontFamily="Roboto Flex"
+										fontSize="0.9em"
+										minFontWidth={70}
+										defaultWidth={100}
+										defaultOpticalSize={100}
+										useLetterSpacing={false}
+										hardCutText={true}
 									/>
+									{playlist.currentPartInfo?.partInstanceId ? (
+										<span className="director-screen__body__segment__countdown">
+											<CurrentPartOrSegmentRemaining
+												currentPartInstanceId={playlist.currentPartInfo?.partInstanceId || null}
+												heavyClassName="overtime"
+												preferSegmentTime={true}
+											/>
+										</span>
+									) : null}
 								</div>
-								<div className="director-screen__body__part__piece-content">
-									<div className="director-screen__body__part__piece-name">
-										<PieceNameContainer
-											partName={currentPartInstance.instance.part.title}
-											partInstanceId={currentPartInstance.instance._id}
-											showStyleBaseId={currentShowStyleBaseId}
-											rundownIds={rundownIds}
-											playlistActivationId={playlist?.activationId}
-											autowidth={{
-												label: '',
-												width: '90vw',
-												fontFamily: 'Roboto Flex',
-												fontSize: '1.5em',
-												minFontWidth: 55,
-												defaultWidth: 100,
-												useLetterSpacing: false,
-												defaultOpticalSize: 100,
-											}}
-										/>
-										{currentPlayerEl}
-									</div>
-									<div className="director-screen__body__part__piece-countdown">
-										<CurrentPartOrSegmentRemaining
-											currentPartInstanceId={playlist.currentPartInfo?.partInstanceId ?? null}
-											heavyClassName="overtime"
-										/>
-										<span className="auto-next-status">
-											<AutoNextStatus />
-										</span>{' '}
-										<span className="freeze-counter">
-											<PieceFreezeContainer
+
+								{currentPartInstance && currentShowStyleBaseId && (
+									<>
+										<div className="director-screen__body__part__piece-icon">
+											<PieceIconContainer
 												partInstanceId={currentPartInstance.instance._id}
 												showStyleBaseId={currentShowStyleBaseId}
 												rundownIds={rundownIds}
-												partAutoNext={currentPartInstance.instance.part.autoNext || false}
-												partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
-													currentPartInstance.instance
-												)}
-												partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
 												playlistActivationId={playlist?.activationId}
 											/>
-										</span>
-									</div>
-								</div>
+										</div>
+										<div className="director-screen__body__part__piece-content">
+											<div className="director-screen__body__part__piece-name">
+												<PieceNameContainer
+													partName={currentPartInstance.instance.part.title}
+													partInstanceId={currentPartInstance.instance._id}
+													showStyleBaseId={currentShowStyleBaseId}
+													rundownIds={rundownIds}
+													playlistActivationId={playlist?.activationId}
+													autowidth={{
+														label: '',
+														width: '90vw',
+														fontFamily: 'Roboto Flex',
+														fontSize: '1.5em',
+														minFontWidth: 55,
+														defaultWidth: 100,
+														useLetterSpacing: false,
+														defaultOpticalSize: 100,
+													}}
+												/>
+												{currentPlayerEl}
+											</div>
+											<div className="director-screen__body__part__piece-countdown">
+												<CurrentPartOrSegmentRemaining
+													currentPartInstanceId={playlist.currentPartInfo?.partInstanceId ?? null}
+													heavyClassName="overtime"
+												/>
+												<span className="auto-next-status">
+													<AutoNextStatus />
+												</span>{' '}
+												<span className="freeze-counter">
+													<PieceFreezeContainer
+														partInstanceId={currentPartInstance.instance._id}
+														showStyleBaseId={currentShowStyleBaseId}
+														rundownIds={rundownIds}
+														partAutoNext={currentPartInstance.instance.part.autoNext || false}
+														partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
+															currentPartInstance.instance
+														)}
+														partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
+														playlistActivationId={playlist?.activationId}
+													/>
+												</span>
+											</div>
+										</div>
+									</>
+								)}
 							</>
-						) : null}
-						{expectedStartCountdown}
+						) : (
+							expectedStart && (
+								<div className="director-screen__body__part__timeto-content">
+									<div className="director-screen__body__part__timeto-countdown">
+										<Timediff time={expectedStart - getCurrentTime()} />
+									</div>
+									<div className="director-screen__body__part__timeto-name">Time to planned start</div>
+								</div>
+							)
+						)}
 					</div>
 					{
 						// Next Part:
