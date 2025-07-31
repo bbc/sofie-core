@@ -367,6 +367,11 @@ function DirectorScreenRender({
 
 		const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 
+		const currentSegmentIsFirst = currentSegment?._rank === 0
+		const firstPieceNoDuration =
+			(currentSegmentIsFirst && currentPartInstance?.instance.part.untimed) ||
+			(currentSegment === undefined && nextPartInstance?.instance.part.untimed)
+
 		return (
 			<div className="director-screen">
 				<div className="director-screen__top">
@@ -379,7 +384,7 @@ function DirectorScreenRender({
 						</div>
 					) : null}
 					{expectedEnd ? (
-						<div>
+						<div className="director-screen__top__time-to">
 							<div>
 								<TimeToPlannedEndComponent value={now - expectedEnd} />
 							</div>
@@ -486,8 +491,12 @@ function DirectorScreenRender({
 								</div>
 							</>
 						) : expectedStart ? (
-							<div className="director-screen__body__rundown-countdown">
-								<Timediff time={expectedStart - getCurrentTime()} />
+							<div className="director-screen__body__part__timeto-content">
+								<div className="director-screen__body__part__timeto-countdown">
+									{/* <Timediff time={expectedStart - getCurrentTime()} /> */}
+									<Timediff time={100000} />
+								</div>
+								<div className="director-screen__body__part__timeto-name">Time to planned start</div>
 							</div>
 						) : null}
 					</div>
