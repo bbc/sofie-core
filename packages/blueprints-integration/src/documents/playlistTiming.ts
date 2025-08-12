@@ -8,24 +8,24 @@ export enum PlaylistTimingType {
 
 export interface PlaylistTimingBase {
 	type: PlaylistTimingType
-}
-
-export interface PlaylistTimingNone {
-	type: PlaylistTimingType.None
 	/** Expected duration of the rundown playlist
 	 *  If set, the over/under diff will be calculated based on this value. Otherwise it will be planned content duration - played out duration.
 	 */
 	expectedDuration?: number
+	/** rehearsalStartTime is used to calculate expected rehearsal end timing
+	 * 	If set the time to rehearsal end will be calculated based on this value.
+	 */
+	rehearsalStartTime?: Time
+}
+
+export interface PlaylistTimingNone extends PlaylistTimingBase {
+	type: PlaylistTimingType.None
 }
 
 export interface PlaylistTimingForwardTime extends PlaylistTimingBase {
 	type: PlaylistTimingType.ForwardTime
 	/** Expected start should be set to the expected time this rundown playlist should run on air */
 	expectedStart: Time
-	/** Expected duration of the rundown playlist
-	 *  If set, the over/under diff will be calculated based on this value. Otherwise it will be planned content duration - played out duration.
-	 */
-	expectedDuration?: number
 	/** Expected end time of the rundown playlist
 	 *  In this timing mode this is only for display before the show starts as an "expected" end time,
 	 *  during the show this display value will be calculated from expected start + remaining playlist duration.
@@ -41,10 +41,6 @@ export interface PlaylistTimingBackTime extends PlaylistTimingBase {
 	 *  during the show this display will be set to when the show actually started.
 	 */
 	expectedStart?: Time
-	/** Expected duration of the rundown playlist
-	 *  If set, the over/under diff will be calculated based on this value. Otherwise it will be planned content duration - played out duration.
-	 */
-	expectedDuration?: number
 	/** Expected end time of the rundown playlist */
 	expectedEnd: Time
 }
