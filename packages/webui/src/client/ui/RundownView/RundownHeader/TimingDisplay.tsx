@@ -31,8 +31,8 @@ export function TimingDisplay({
 
 	if (!rundownPlaylist) return null
 
-	const expectedStart = PlaylistTiming.getExpectedStart(rundownPlaylist.timing)
-	const expectedEnd = PlaylistTiming.getExpectedEnd(rundownPlaylist.timing)
+	const expectedStart = PlaylistTiming.getExpectedStart(rundownPlaylist.timing, rundownPlaylist.rehearsal)
+	const expectedEnd = PlaylistTiming.getExpectedEnd(rundownPlaylist.timing, rundownPlaylist.rehearsal)
 	const expectedDuration = PlaylistTiming.getExpectedDuration(rundownPlaylist.timing)
 	const showEndTiming =
 		!timingDurations.rundownsBeforeNextBreak ||

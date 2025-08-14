@@ -34,7 +34,10 @@ export namespace PlaylistTiming {
 		return timing.type === PlaylistTimingType.BackTime
 	}
 
-	export function getExpectedStart(timing: RundownPlaylistTiming): number | undefined {
+	export function getExpectedStart(timing: RundownPlaylistTiming, useRehearsalTime?: boolean): number | undefined {
+		if (useRehearsalTime && timing.rehearsalStartTime) {
+			return timing.rehearsalStartTime
+		}
 		if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
 			return timing.expectedStart
 		} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
@@ -47,7 +50,10 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getExpectedEnd(timing: RundownPlaylistTiming): number | undefined {
+	export function getExpectedEnd(timing: RundownPlaylistTiming, isRehearsalTime?: boolean): number | undefined {
+		if (isRehearsalTime && timing.rehearsalStartTime) {
+			return timing.expectedDuration ? timing.rehearsalStartTime + timing.expectedDuration : undefined
+		}
 		if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
 			return timing.expectedEnd
 		} else if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {

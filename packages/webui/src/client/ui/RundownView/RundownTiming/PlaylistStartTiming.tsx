@@ -22,8 +22,8 @@ export function PlaylistStartTiming({
 }: IStartTimingProps): JSX.Element {
 	const { t } = useTranslation()
 
-	const playlistExpectedStart = PlaylistTiming.getExpectedStart(rundownPlaylist.timing)
-	const playlistExpectedEnd = PlaylistTiming.getExpectedEnd(rundownPlaylist.timing)
+	const playlistExpectedStart = PlaylistTiming.getExpectedStart(rundownPlaylist.timing, rundownPlaylist.rehearsal)
+	const playlistExpectedEnd = PlaylistTiming.getExpectedEnd(rundownPlaylist.timing, rundownPlaylist.rehearsal)
 	const playlistExpectedDuration = PlaylistTiming.getExpectedDuration(rundownPlaylist.timing)
 	const expectedStart = playlistExpectedStart
 		? playlistExpectedStart
