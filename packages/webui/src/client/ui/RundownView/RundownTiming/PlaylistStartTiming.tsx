@@ -41,7 +41,9 @@ export function PlaylistStartTiming({
 					</span>
 				) : playlistExpectedStart ? (
 					<span className="timing-clock plan-start left" role="timer">
-						<span className="timing-clock-label left">{plannedStartText || t('Planned Start')}</span>
+						<span className="timing-clock-label left">
+							{plannedStartText || !rundownPlaylist.rehearsal ? t('Planned Start') : t('Rehearsal Start')}
+						</span>
 						<Moment interval={0} format="HH:mm:ss" date={playlistExpectedStart} />
 					</span>
 				) : playlistExpectedEnd && playlistExpectedDuration ? (

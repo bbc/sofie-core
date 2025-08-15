@@ -519,6 +519,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		}
 
 		this.clearSelectedPartInstances()
+		this.playlistImpl.rehearsal = false
+		this.clearPlaylistRehearsalStartTime()
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedPropsByClearingMarkers()
 
 		this.#playlistHasChanged = true
@@ -723,6 +725,18 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	setHoldState(newState: RundownHoldState): void {
 		this.playlistImpl.holdState = newState
+
+		this.#playlistHasChanged = true
+	}
+
+	setPlaylistRehearsalStartTime(time: number): void {
+		this.playlistImpl.timing.rehearsalStartTime = time
+
+		this.#playlistHasChanged = true
+	}
+
+	clearPlaylistRehearsalStartTime(): void {
+		this.playlistImpl.timing.rehearsalStartTime = undefined
 
 		this.#playlistHasChanged = true
 	}

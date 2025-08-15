@@ -76,7 +76,11 @@ export function PlaylistEndTiming({
 				expectedEnd ? (
 					!rundownPlaylist.startedPlayback ? (
 						<span className="timing-clock plan-end visual-last-child" role="timer">
-							{!hidePlannedEndLabel && <span className="timing-clock-label right">{endLabel ?? t('Planned End')}</span>}
+							{!hidePlannedEndLabel && (
+								<span className="timing-clock-label right">
+									{endLabel ?? (!rundownPlaylist.rehearsal ? t('Planned End') : t('Rehearsal End'))}
+								</span>
+							)}
 							<Moment interval={0} format="HH:mm:ss" date={expectedEnd} />
 						</span>
 					) : (

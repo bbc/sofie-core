@@ -209,8 +209,16 @@ export async function performTakeToNextedPart(
 	takePartInstance.setPlannedStartedPlayback(undefined)
 	takePartInstance.setPlannedStoppedPlayback(undefined)
 
-	// it is only a first take if the Playlist has no startedPlayback and the taken PartInstance is not untimed
-	const isFirstTake = !playoutModel.playlist.startedPlayback && !takePartInstance.partInstance.part.untimed
+	// Check if this is the first take:
+	const firstPartRank = playoutModel.nextPartInstance.partInstance.part._rank
+	const firstSegmentRank =
+		playoutModel.findSegment(playoutModel.nextPartInstance.partInstance.segmentId)?.segment._rank || 0
+	const isFirstTake = firstPartRank === 0 && firstSegmentRank === 0
+
+	if (isFirstTake && playoutModel.playlist.rehearsal) {
+		// If this is the first take and we are in rehearsal, we need to set the rehearsal start time
+		playoutModel.setPlaylistRehearsalStartTime(getCurrentTime())
+	}
 
 	clearQueuedSegmentId(playoutModel, takePartInstance.partInstance, playoutModel.playlist.nextPartInfo)
 
@@ -441,6 +449,7 @@ async function afterTakeUpdateTimingsAndEvents(
 			: undefined
 
 		if (isFirstTake && takeRundown) {
+			console.log('This is first take')
 			if (blueprint.blueprint.onRundownFirstTake) {
 				const span = context.startSpan('blueprint.onRundownFirstTake')
 				try {

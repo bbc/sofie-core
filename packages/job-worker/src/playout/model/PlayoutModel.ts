@@ -318,6 +318,17 @@ export interface PlayoutModel extends PlayoutModelReadonly, StudioPlayoutModelBa
 	setHoldState(newState: RundownHoldState): void
 
 	/**
+	 * Set the rehearsal start time for the RundownPlaylist
+	 * @param time The rehearsal start timestamp
+	 */
+	setPlaylistRehearsalStartTime(time: number): void
+
+	/**
+	 * Clear the rehearsal start time for the RundownPlaylist
+	 */
+	clearPlaylistRehearsalStartTime(): void
+
+	/**
 	 * Store the persistent results of the AB playback resolving
 	 * @param assignedAbSessions The applied AB sessions
 	 * @param trackedAbSessions The known AB sessions
