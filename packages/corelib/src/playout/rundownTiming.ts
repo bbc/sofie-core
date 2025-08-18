@@ -50,8 +50,8 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getExpectedEnd(timing: RundownPlaylistTiming, isRehearsalTime?: boolean): number | undefined {
-		if (isRehearsalTime && timing.rehearsalStartTime) {
+	export function getExpectedEnd(timing: RundownPlaylistTiming, useRehearsalTime?: boolean): number | undefined {
+		if (useRehearsalTime && timing.rehearsalStartTime) {
 			return timing.expectedDuration ? timing.rehearsalStartTime + timing.expectedDuration : undefined
 		}
 		if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
@@ -66,7 +66,10 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getExpectedDuration(timing: RundownPlaylistTiming): number | undefined {
+	export function getExpectedDuration(timing: RundownPlaylistTiming, useRehearsalTime?: boolean): number | undefined {
+		if (useRehearsalTime && timing.rehearsalStartTime) {
+			return timing.expectedDuration ? timing.rehearsalStartTime + timing.expectedDuration : undefined
+		}
 		if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
 			return timing.expectedDuration
 		} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {

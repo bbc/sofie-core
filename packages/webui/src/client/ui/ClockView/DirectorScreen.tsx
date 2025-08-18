@@ -361,8 +361,8 @@ function DirectorScreenRender({
 
 	if (playlist && playlistId && segments) {
 		const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing) || 0
-		const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
-		const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing) || 0
+		const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing, playlist.rehearsal)
+		const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing, playlist.rehearsal) || 0
 		const now = timingDurations.currentTime ?? getCurrentTime()
 
 		const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
@@ -381,7 +381,7 @@ function DirectorScreenRender({
 							<div>
 								<PlannedEndComponent value={expectedEnd} />
 							</div>
-							{t('Planned End')}
+							{playlist.rehearsal ? t('Rehearsal End') : t('Planned End')}
 						</div>
 					) : null}
 					{expectedEnd ? (
@@ -389,7 +389,9 @@ function DirectorScreenRender({
 							<div>
 								<TimeToPlannedEndComponent value={now - expectedEnd} />
 							</div>
-							<span className="director-screen__top__planned-to">{t('Time to planned end')}</span>
+							<span className="director-screen__top__planned-to">
+								{playlist.rehearsal ? t('Time to rehearsal end') : t('Time to planned end')}
+							</span>
 						</div>
 					) : (
 						<div>
