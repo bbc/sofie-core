@@ -36,20 +36,18 @@ import {
 	RoutedTimeline,
 	TimelineObjGeneric,
 } from '@sofie-automation/shared-lib/dist/core/model/Timeline'
-import { PLAYOUT_DEVICE_CONFIG } from './configManifest.js'
 import { PlayoutGatewayConfig } from '@sofie-automation/shared-lib/dist/generated/PlayoutGatewayConfigTypes'
 import {
 	assertNever,
 	getSchemaDefaultValues,
-	JSONBlobParse,
 	PeripheralDeviceAPI,
 	PeripheralDeviceForDevice,
 	protectString,
-	SubdeviceManifest,
 	unprotectObject,
 	unprotectString,
 } from '@sofie-automation/server-core-integration'
 import { BaseRemoteDeviceIntegration } from 'timeline-state-resolver/dist/service/remoteDeviceInstance'
+import { TSRDeviceRegistry } from './tsrDeviceRegistry.js'
 
 const debug = Debug('playout-gateway')
 
@@ -85,7 +83,6 @@ export class TSRHandler {
 	private _triggerUpdateDevicesCheckAgain = false
 	private _triggerUpdateDevicesTimeout: NodeJS.Timeout | undefined
 
-	private defaultDeviceOptions: { [deviceType: string]: Record<string, any> } = {}
 	private _debugStates: Map<string, object> = new Map()
 
 	constructor(logger: Logger) {
@@ -112,9 +109,9 @@ export class TSRHandler {
 			multiThreadedResolver: settings.multiThreadedResolver === true,
 			useCacheWhenResolving: settings.useCacheWhenResolving === true,
 			proActiveResolve: true,
-		}
 
-		this.defaultDeviceOptions = this.loadSubdeviceConfigurations()
+			devicesRegistry: TSRDeviceRegistry,
+		}
 
 		this.tsr = new Conductor(c)
 		this._triggerupdateTimelineAndMappings('TSRHandler.init()')
@@ -392,19 +389,6 @@ export class TSRHandler {
 		this.tsr.connectionManager.on('connectionEvent:timeTrace', (_id, trace) => {
 			sendTrace(trace)
 		})
-	}
-
-	private loadSubdeviceConfigurations(): { [deviceType: string]: Record<string, any> } {
-		const defaultDeviceOptions: { [deviceType: string]: Record<string, any> } = {}
-
-		for (const [deviceType, deviceManifest] of Object.entries<SubdeviceManifest[0]>(
-			PLAYOUT_DEVICE_CONFIG.subdeviceManifest
-		)) {
-			const schema = JSONBlobParse(deviceManifest.configSchema)
-			defaultDeviceOptions[deviceType] = getSchemaDefaultValues(schema)
-		}
-
-		return defaultDeviceOptions
 	}
 
 	private setupObservers(): void {
@@ -689,11 +673,21 @@ export class TSRHandler {
 	}
 
 	private populateDefaultValuesIfMissing(deviceOptions: DeviceOptionsAny): DeviceOptionsAny {
-		const options = Object.fromEntries<any>(
-			Object.entries<any>({ ...deviceOptions.options }).filter(([_key, value]) => value !== '')
-		)
-		deviceOptions.options = { ...this.defaultDeviceOptions[deviceOptions.type], ...options }
-		return deviceOptions
+		const schema = TSRDeviceRegistry.manifest.subdevices[deviceOptions.type]?.configSchema
+		if (!schema) return deviceOptions
+
+		try {
+			const defaultValues = getSchemaDefaultValues(JSON.parse(schema))
+
+			const options = Object.fromEntries<any>(
+				Object.entries<any>({ ...deviceOptions.options }).filter(([_key, value]) => value !== '')
+			)
+			deviceOptions.options = { ...defaultValues, ...options }
+			return deviceOptions
+		} catch (e) {
+			this.logger.warn(`Failed to populate default values for device ${deviceOptions.type}: ${stringifyError(e)}`)
+			return deviceOptions
+		}
 	}
 	/**
 	 * This function is a quick and dirty solution to load a still to the atem mixers.

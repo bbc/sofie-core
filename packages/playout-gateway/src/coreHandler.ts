@@ -19,7 +19,7 @@ import { TSRHandler } from './tsrHandler.js'
 import { Logger } from 'winston'
 // eslint-disable-next-line n/no-extraneous-import
 import { MemUsageReport as ThreadMemUsageReport } from 'threadedclass'
-import { PLAYOUT_DEVICE_CONFIG } from './configManifest.js'
+import { compilePlayoutGatewayConfigManifest } from './configManifest.js'
 import { BaseRemoteDeviceIntegration } from 'timeline-state-resolver/dist/service/remoteDeviceInstance'
 import { getVersions } from './versions.js'
 import { CoreConnectionChild } from '@sofie-automation/server-core-integration/dist/lib/CoreConnectionChild'
@@ -156,7 +156,7 @@ export class CoreHandler {
 			deviceName: 'Playout gateway',
 			watchDog: this._coreConfig ? this._coreConfig.watchdog : true,
 
-			configManifest: PLAYOUT_DEVICE_CONFIG,
+			configManifest: compilePlayoutGatewayConfigManifest(),
 
 			versions: getVersions(this.logger),
 
@@ -557,6 +557,6 @@ export class CoreTSRDeviceHandler {
 		this._coreParentHandler.logger.info(`Exec ${actionId} on ${this._deviceId}`)
 		const device = this._device.device
 
-		return device.executeAction(actionId, payload)
+		return device.executeAction(actionId, payload || {})
 	}
 }
