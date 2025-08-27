@@ -22,8 +22,8 @@ export function OverUnderTimer({ rundownPlaylist, style }: IProps): JSX.Element 
 		<span
 			style={style}
 			className={ClassNames('prompter-timing-clock heavy-light', {
-				heavy: Math.floor(overUnderClock / 1000) < 0,
-				light: Math.floor(overUnderClock / 1000) >= 0,
+				light: Math.floor(overUnderClock / 1000) < 0,
+				heavy: Math.floor(overUnderClock / 1000) >= 0,
 			})}
 		>
 			{RundownUtils.formatDiffToTimecode(overUnderClock, true, false, true, true, true, undefined, true, true)}
