@@ -6,7 +6,7 @@ import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyE
 
 export function evalBlueprint(blueprint: Pick<Blueprint, '_id' | 'name' | 'code'>): SomeBlueprintManifest {
 	const blueprintPath = `db:///blueprint/${blueprint.name || blueprint._id}-bundle.js`
-	const context = vm.createContext({ process: process }, {})
+	const context = vm.createContext({}, {})
 	const script = new vm.Script(
 		`__run_result = ${blueprint.code}
 __run_result || blueprint`,
