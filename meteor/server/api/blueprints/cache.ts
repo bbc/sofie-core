@@ -19,7 +19,7 @@ __run_result || blueprint`,
 	try {
 		entry = script.runInContext(context)
 	} catch (e) {
-		console.error(`Error evaluating Blueprint .runInContext "${blueprint._id}": "${stringifyError(e)}"`)
+		logger.error(`Error evaluating Blueprint .runInContext "${blueprint._id}": "${stringifyError(e)}"`)
 	}
 
 	const manifest: SomeBlueprintManifest = entry.default
