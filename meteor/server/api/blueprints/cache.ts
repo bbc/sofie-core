@@ -6,7 +6,7 @@ import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyE
 
 export function evalBlueprint(blueprint: Pick<Blueprint, '_id' | 'name' | 'code'>): SomeBlueprintManifest {
 	const blueprintPath = `db:///blueprint/${blueprint.name || blueprint._id}-bundle.js`
-	const context = vm.createContext({}, {})
+	const context = vm.createContext({ process: process }, {})
 	const script = new vm.Script(
 		`__run_result = ${blueprint.code}
 __run_result || blueprint`,
@@ -14,7 +14,13 @@ __run_result || blueprint`,
 			filename: blueprintPath,
 		}
 	)
-	const entry = script.runInContext(context)
+
+	let entry: any
+	try {
+		entry = script.runInContext(context)
+	} catch (e) {
+		console.error(`Error evaluating Blueprint .runInContext "${blueprint._id}": "${stringifyError(e)}"`)
+	}
 
 	const manifest: SomeBlueprintManifest = entry.default
 
