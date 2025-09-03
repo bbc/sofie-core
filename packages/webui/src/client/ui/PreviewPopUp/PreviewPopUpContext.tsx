@@ -6,6 +6,7 @@ import {
 	JSONBlobParse,
 	NoraPayload,
 	PieceLifespan,
+	PreviewContent,
 	PreviewType,
 	ScriptContent,
 	SourceLayerType,
@@ -33,11 +34,11 @@ export function convertSourceLayerItemToPreview(
 	item: ReadonlyObjectDeep<PieceInstancePiece> | IAdLibListItem,
 	contentStatus?: ReadonlyObjectDeep<PieceContentStatusObj>,
 	timeAsRendered?: { in?: number | null; dur?: number | null }
-): { contents: PreviewContent[]; options: Readonly<Partial<PreviewRequestOptions>> } {
+): { contents: PreviewContentUI[]; options: Readonly<Partial<PreviewRequestOptions>> } {
 	// first try to read the popup preview
 	if (item.content.popUpPreview) {
 		const popupPreview = item.content.popUpPreview
-		const contents: PreviewContent[] = []
+		const contents: PreviewContentUI[] = []
 		const options: Partial<PreviewRequestOptions> = {}
 
 		if (popupPreview.name) {
@@ -122,8 +123,12 @@ export function convertSourceLayerItemToPreview(
 			}
 		}
 
+		item.content.additionalPreviewContent?.forEach((content) => {
+			contents.push(content as PreviewContentUI)
+		})
+
 		if (popupPreview.warnings) {
-			contents.push(...popupPreview.warnings.map((w): PreviewContent => ({ type: 'warning', content: w.reason })))
+			contents.push(...popupPreview.warnings.map((w): PreviewContentUI => ({ type: 'warning', content: w.reason })))
 		}
 
 		return { contents, options }
@@ -136,7 +141,7 @@ export function convertSourceLayerItemToPreview(
 		const content = item.content as VTContent
 
 		return {
-			contents: _.compact<(PreviewContent | undefined)[]>([
+			contents: _.compact<(PreviewContentUI | undefined)[]>([
 				{
 					type: 'title',
 					content: content.fileName,
@@ -159,11 +164,11 @@ export function convertSourceLayerItemToPreview(
 								src: contentStatus.thumbnailUrl,
 							}
 						: undefined,
-				...(contentStatus?.messages?.map<PreviewContent>((m) => ({
+				...(contentStatus?.messages?.map<PreviewContentUI>((m) => ({
 					type: 'warning',
 					content: m as any,
 				})) || []),
-			]) as PreviewContent[],
+			]) as PreviewContentUI[],
 			options: {
 				size: contentStatus?.previewUrl ? 'large' : undefined,
 			},
@@ -220,7 +225,7 @@ export function convertSourceLayerItemToPreview(
 						current: item.content.step.current,
 						count: item.content.step.count,
 					},
-				]) as PreviewContent[],
+				]) as PreviewContentUI[],
 				options: { size: 'large' },
 			}
 		} catch (e) {
@@ -237,7 +242,7 @@ export function convertSourceLayerItemToPreview(
 						current: item.content.step.current,
 						count: item.content.step.count,
 					},
-				]) as PreviewContent[],
+				]) as PreviewContentUI[],
 				options: {},
 			}
 		}
@@ -287,43 +292,9 @@ export function convertSourceLayerItemToPreview(
 
 	return { contents: [], options: {} }
 }
-
-export type PreviewContent =
-	| {
-			type: 'iframe'
-			href: string
-			postMessage?: any
-			dimensions?: { width: number; height: number }
-	  }
-	| {
-			type: 'image'
-			src: string
-	  }
-	| {
-			type: 'video'
-			src: string
-	  }
-	| {
-			type: 'script'
-			script?: string
-			firstWords?: string
-			lastWords?: string
-			comment?: string
-			lastModified?: number
-	  }
-	| {
-			type: 'title'
-			content: string
-	  }
-	| {
-			type: 'inOutWords'
-			in?: string
-			out: string
-	  }
-	| {
-			type: 'data'
-			content: { key: string; value: string }[]
-	  }
+// PreviewContentUI should be the same as PreviewContent, but we need to extend it with some more types:
+export type PreviewContentUI =
+	| PreviewContent
 	| {
 			type: 'boxLayout'
 			boxSourceConfiguration: ReadonlyDeep<(SplitsContentBoxContent & SplitsContentBoxProperties)[]>
@@ -351,7 +322,7 @@ export interface IPreviewPopUpSession {
 	 * Update the open preview with new content or modify the content already being previewed, such as change current showing
 	 * time in the video, etc.
 	 */
-	readonly update: (content?: PreviewContent[]) => void
+	readonly update: (content?: PreviewContentUI[]) => void
 	/**
 	 * Set the time that the current pointer position is representing in the scope of the preview contents
 	 */
@@ -390,7 +361,7 @@ export interface IPreviewPopUpContext {
 	 */
 	requestPreview(
 		anchor: HTMLElement | VirtualElement,
-		content: PreviewContent[],
+		content: PreviewContentUI[],
 		opts?: PreviewRequestOptions
 	): IPreviewPopUpSession
 }
@@ -415,7 +386,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 	const previewRef = useRef<PreviewPopUpHandle>(null)
 
 	const [previewSession, setPreviewSession] = useState<PreviewSession | null>(null)
-	const [previewContent, setPreviewContent] = useState<PreviewContent[] | null>(null)
+	const [previewContent, setPreviewContent] = useState<PreviewContentUI[] | null>(null)
 	const [t, setTime] = useState<number | null>(null)
 
 	const context: IPreviewPopUpContext = {

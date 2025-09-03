@@ -1,5 +1,4 @@
 import React from 'react'
-import { PreviewContent } from './PreviewPopUpContext.js'
 import { WarningIconSmall } from '../../lib/ui/icons/notifications.js'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { TFunction, useTranslation } from 'react-i18next'
@@ -11,9 +10,11 @@ import { RundownUtils } from '../../lib/rundown.js'
 import { PieceInstancePiece } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import { ReadonlyObjectDeep } from 'type-fest/source/readonly-deep'
 import { PieceLifespan } from '@sofie-automation/blueprints-integration'
+import { LayerInfoPreview } from './Previews/LayerInfoPreview.js'
+import { PreviewContentUI } from './PreviewPopUpContext.js'
 
 interface PreviewPopUpContentProps {
-	content: PreviewContent
+	content: PreviewContentUI
 	time: number | null
 }
 
@@ -59,6 +60,10 @@ export function PreviewPopUpContent({ content, time }: PreviewPopUpContentProps)
 					</table>
 				</div>
 			)
+		case 'layerInfo':
+			return <LayerInfoPreview {...content} />
+		case 'separationLine':
+			return <hr className="separation-line" />
 		case 'boxLayout':
 			return <BoxLayoutPreview content={content} />
 		case 'warning':
