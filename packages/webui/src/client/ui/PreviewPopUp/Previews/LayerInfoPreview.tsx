@@ -15,7 +15,7 @@ export function LayerInfoPreview(content: layerInfoContent): React.ReactElement 
 			<div className={classNames('preview-popUp__element-with-time-info__layer-color', sourceLayerClassName)}> </div>
 			<div>
 				{content.text.map((line, index) => (
-					<div key={index} className="mini-inspector__full-text">
+					<div key={index} className="preview-popUp__element-with-time-info__text">
 						{line}
 					</div>
 				))}

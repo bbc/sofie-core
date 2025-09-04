@@ -3,12 +3,10 @@
 .preview-popUp {
 	border: 1px solid var(--sofie-segment-layer-hover-popup-border);
 	background: var(--sofie-segment-layer-hover-popup-background);
-	box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.8);
 	border-radius: 5px;
 	overflow: hidden;
 	pointer-events: none;
-
-	box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.6);
 
 	z-index: 9999;
 
@@ -25,18 +23,64 @@
 	&--hidden {
 		visibility: none;
 	}
+
+	font-style: normal;
+	font-weight: 500;
+	font-size: 16px;
+	line-height: 110%;
+	/* identical to box height, or 15px */
+	letter-spacing: 0.01em;
+	font-feature-settings: 'liga' off;
+
+	color: #ffffff;
+	font-stretch: 25;
+	font-variation-settings:
+		'GRAD' 0,
+		'opsz' 15,
+		'slnt' 9,
+		'XOPQ' 96,
+		'XTRA' 468,
+		'YOPQ' 79,
+		'YTAS' 750,
+		'YTDE' -203,
+		'YTFI' 738,
+		'YTLC' 548,
+		'YTUC' 712;
 }
 
 .preview-popUp__preview {
 	width: 100%;
-	font-family: 'Roboto Condensed';
-	font-size: 0.9375rem; // 15px;
 
 	.preview-popUp__script,
 	.preview-popUp__script-comment,
 	.preview-popUp__script-last-modified {
-		padding: 0.4em 0.4em 0.4em 0.6em;
+		padding: 5px;
+		padding-left: 2%;
+		padding-right: 2%;
 		font-style: italic;
+		font-weight: 300;
+		font-size: 16px;
+		line-height: 120%;
+		letter-spacing: 0.03em;
+		font-feature-settings:
+			'pnum' on,
+			'lnum' on,
+			'liga' off;
+
+		color: #ffffff;
+		font-stretch: 75;
+		font-variation-settings:
+			'GRAD' 0,
+			'opsz' 16,
+			'slnt' -10,
+			'XOPQ' 96,
+			'XTRA' 468,
+			'YOPQ' 79,
+			'YTAS' 750,
+			'YTDE' -203,
+			'YTFI' 738,
+			'YTLC' 548,
+			'YTUC' 712;
 	}
 
 	.preview-popUp__script-comment,
@@ -54,45 +98,71 @@
 		letter-spacing: 0.02rem;
 
 		padding: 5px;
+		padding-left: 2%;
 	}
 
 	.preview-popUp__element-with-time-info {
 		width: 100%;
 		display: flex;
-		font-feature-settings: 'liga' off;
 
-		margin-bottom: 0px;
+		margin-bottom: 5px;
 
 		.preview-popUp__element-with-time-info__layer-color {
-			width: 25px;
-			height: 20px;
-			margin-top: 5px;
-			margin-left: 5px;
-			margin-right: 5px;
-			font-size: 1.4em;
+			height: 15px;
+			aspect-ratio: 1;
+			margin-left: 2%;
+			margin-top: 10px;
+			flex-shrink: 0;
 			@include item-type-colors();
 		}
 
+		.preview-popUp__element-with-time-info__text {
+			margin: 5px;
+			width: calc(100% - 35px);
+			flex-grow: 1;
+		}
+
 		.preview-popUp__element-with-time-info__timing {
+			margin-left: 5px;
 			overflow: none;
 			white-space: nowrap;
 			text-overflow: ellipsis;
+			font-feature-settings: 'liga' off;
 
 			font-weight: 500;
 			line-height: 100%; /* 15px */
 
 			.label {
 				font-weight: 300;
+				line-height: 100%;
+				/* identical to box height, or 15px */
+				letter-spacing: 0.01em;
+				font-feature-settings: 'liga' off;
+
+				color: #ffffff;
+				font-stretch: 25;
+				font-variation-settings:
+					'opsz' 20,
+					'GRAD' 0,
+					'slnt' 0,
+					'XOPQ' 96,
+					'XTRA' 468,
+					'YOPQ' 79,
+					'YTAS' 750,
+					'YTDE' -203,
+					'YTFI' 738,
+					'YTLC' 548,
+					'YTUC' 712;
 			}
 		}
 	}
 
 	.preview-popup__separation-line {
-		width: 90%;
-		margin-left: 5%;
+		width: 96%;
+		margin-left: 2%;
 		background-color: #5b5b5b;
-		margin-top: 5px;
-		margin-bottom: 5px;
+		margin-top: 0px;
+		margin-bottom: 0px;
 	}
 
 	.preview-popUp__warning {
@@ -220,8 +290,9 @@
 		text-overflow: clip;
 		white-space: nowrap;
 
-		margin-top: -25px; //Pull up the in/out words a bit
-		padding: 7px;
+		padding: 5px;
+		padding-left: 2%;
+		padding-right: 2%;
 
 		.separation-line {
 			width: 100%;

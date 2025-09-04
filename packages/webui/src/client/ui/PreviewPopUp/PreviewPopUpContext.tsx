@@ -100,6 +100,7 @@ export function convertSourceLayerItemToPreview(
 					break
 				case PreviewType.VT:
 					if (popupPreview.preview.outWords) {
+						contents.push({ type: 'separationLine' })
 						contents.push({
 							type: 'inOutWords',
 							in: popupPreview.preview.inWords,
