@@ -62,6 +62,7 @@ export type PreviewContent =
 			text: Array<string>
 			inTime?: number | string
 			outTime?: number | string
+			duration?: number | string
 	  }
 	| {
 			type: 'separationLine'

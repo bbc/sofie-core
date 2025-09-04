@@ -59,8 +59,10 @@
 	.preview-popUp__element-with-time-info {
 		width: 100%;
 		display: flex;
+		font-feature-settings: 'liga' off;
+
 		margin-bottom: 0px;
-		
+
 		.preview-popUp__element-with-time-info__layer-color {
 			width: 25px;
 			height: 20px;
@@ -69,6 +71,19 @@
 			margin-right: 5px;
 			font-size: 1.4em;
 			@include item-type-colors();
+		}
+
+		.preview-popUp__element-with-time-info__timing {
+			overflow: none;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+
+			font-weight: 500;
+			line-height: 100%; /* 15px */
+
+			.label {
+				font-weight: 300;
+			}
 		}
 	}
 

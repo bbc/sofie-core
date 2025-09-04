@@ -19,18 +19,31 @@ export function LayerInfoPreview(content: layerInfoContent): React.ReactElement 
 						{line}
 					</div>
 				))}
-				<div className="preview-popUp__timing">
-					{content.inTime && (
+				<div className="preview-popUp__element-with-time-info__timing">
+					{content.inTime !== undefined && (
 						<>
-							<span className="label">IN: </span>{' '}
-							{RundownUtils.formatTimeToShortTime((content.inTime as any as number) || 0)}
+							<span className="label">{t('IN')}: </span>
+							{typeof content.inTime === 'number'
+								? RundownUtils.formatTimeToShortTime(content.inTime || 0)
+								: content.inTime}
 						</>
 					)}
 					&nbsp;{' '}
-					{content.outTime && (
+					{content.duration !== undefined && (
 						<>
-							<span className="label">{t('DURATION: ')}</span>
-							{RundownUtils.formatTimeToShortTime((content.outTime as any as number) || 0)}
+							<span className="label">{t('DURATION')}: </span>
+							{typeof content.duration === 'number'
+								? RundownUtils.formatTimeToShortTime(content.duration || 0)
+								: content.duration}
+						</>
+					)}
+					&nbsp;{' '}
+					{content.outTime !== undefined && (
+						<>
+							<span className="label">{t('OUT')}: </span>
+							{typeof content.outTime === 'number'
+								? RundownUtils.formatTimeToShortTime(content.outTime || 0)
+								: content.outTime}
 						</>
 					)}
 				</div>
