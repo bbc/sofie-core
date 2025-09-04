@@ -58,12 +58,26 @@
 
 	.preview-popUp__element-with-time-info {
 		width: 100%;
+		display: flex;
+		margin-bottom: 0px;
 		
 		.preview-popUp__element-with-time-info__layer-color {
-			width: 20px;
-			font-size: 1.2em;
+			width: 25px;
+			height: 20px;
+			margin-top: 5px;
+			margin-left: 5px;
+			margin-right: 5px;
+			font-size: 1.4em;
 			@include item-type-colors();
 		}
+	}
+
+	.preview-popup__separation-line {
+		width: 90%;
+		margin-left: 5%;
+		background-color: #5b5b5b;
+		margin-top: 5px;
+		margin-bottom: 5px;
 	}
 
 	.preview-popUp__warning {

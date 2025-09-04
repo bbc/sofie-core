@@ -12,27 +12,28 @@ export function LayerInfoPreview(content: layerInfoContent): React.ReactElement 
 
 	return (
 		<div className="preview-popUp__element-with-time-info">
-			<span className={classNames('preview-popUp__element-with-time-info__layer-color', sourceLayerClassName)}>
-				{'◼️'}
-			</span>
-			{content.text.map((line, index) => (
-				<div key={index} className="mini-inspector__full-text">
-					{line}
+			<div className={classNames('preview-popUp__element-with-time-info__layer-color', sourceLayerClassName)}> </div>
+			<div>
+				{content.text.map((line, index) => (
+					<div key={index} className="mini-inspector__full-text">
+						{line}
+					</div>
+				))}
+				<div className="preview-popUp__timing">
+					{content.inTime && (
+						<>
+							<span className="label">IN: </span>{' '}
+							{RundownUtils.formatTimeToShortTime((content.inTime as any as number) || 0)}
+						</>
+					)}
+					&nbsp;{' '}
+					{content.outTime && (
+						<>
+							<span className="label">{t('DURATION: ')}</span>
+							{RundownUtils.formatTimeToShortTime((content.outTime as any as number) || 0)}
+						</>
+					)}
 				</div>
-			))}
-			<div className="preview-popUp__timing">
-				{content.inTime && (
-					<>
-						<span className="label">IN: </span> {RundownUtils.formatTimeToShortTime((content.inTime as any as number) || 0)}
-					</>
-				)}
-				&nbsp;{' '}
-				{content.outTime && (
-					<>
-						<span className="label">{t('DURATION: ')}</span>
-						{RundownUtils.formatTimeToShortTime((content.outTime as any as number) || 0)}
-					</>
-				)}
 			</div>
 		</div>
 	)

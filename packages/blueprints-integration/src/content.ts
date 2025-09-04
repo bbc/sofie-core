@@ -8,54 +8,6 @@ export type WithTimeline<T extends BaseContent> = T & {
 	timelineObjects: TimelineObjectCoreExt<TSR.TSRTimelineContent>[]
 }
 
-// The PreviewContent types are a partly replica of the types in PreviewPopUpContext.tsx
-export type PreviewContent =
-	| {
-			type: 'iframe'
-			href: string
-			postMessage?: any
-			dimensions?: { width: number; height: number }
-	  }
-	| {
-			type: 'image'
-			src: string
-	  }
-	| {
-			type: 'video'
-			src: string
-	  }
-	| {
-			type: 'script'
-			script?: string
-			firstWords?: string
-			lastWords?: string
-			comment?: string
-			lastModified?: number
-	  }
-	| {
-			type: 'title'
-			content: string
-	  }
-	| {
-			type: 'inOutWords'
-			in?: string
-			out: string
-	  }
-	| {
-			type: 'layerInfo'
-			layerType: SourceLayerType
-			text: Array<string>
-			inTime?: number | string
-			outTime?: number | string
-	  }
-	| {
-			type: 'separationLine'
-	  }
-	| {
-			type: 'data'
-			content: { key: string; value: string }[]
-	  }
-
 export interface BaseContent {
 	editable?: BaseEditableParameters
 
@@ -73,10 +25,6 @@ export interface BaseContent {
 	 * Overwrite any default hover previews in Sofie
 	 */
 	popUpPreview?: PopupPreview
-	/**
-	 * Add custom content preview content
-	 */
-	additionalPreviewContent?: Array<PreviewContent>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

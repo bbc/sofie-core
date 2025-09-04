@@ -63,7 +63,7 @@ export function PreviewPopUpContent({ content, time }: PreviewPopUpContentProps)
 		case 'layerInfo':
 			return <LayerInfoPreview {...content} />
 		case 'separationLine':
-			return <hr className="separation-line" />
+			return <hr className="preview-popup__separation-line" />
 		case 'boxLayout':
 			return <BoxLayoutPreview content={content} />
 		case 'warning':

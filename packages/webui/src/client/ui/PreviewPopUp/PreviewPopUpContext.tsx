@@ -121,11 +121,11 @@ export function convertSourceLayerItemToPreview(
 					}
 					break
 			}
+			// Add any additional preview content to the popup:
+			popupPreview.additionalPreviewContent?.forEach((content) => {
+				contents.push(content as PreviewContentUI)
+			})
 		}
-
-		item.content.additionalPreviewContent?.forEach((content) => {
-			contents.push(content as PreviewContentUI)
-		})
 
 		if (popupPreview.warnings) {
 			contents.push(...popupPreview.warnings.map((w): PreviewContentUI => ({ type: 'warning', content: w.reason })))
