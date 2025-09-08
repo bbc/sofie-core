@@ -112,17 +112,17 @@ function getDurationText(
 function getLifeSpanText(t: TFunction, lifespan: PieceLifespan): string {
 	switch (lifespan) {
 		case PieceLifespan.WithinPart:
-			return t('Until next take')
+			return t('Until Next Take')
 		case PieceLifespan.OutOnSegmentChange:
-			return t('Until next segment')
+			return t('Until Next Segment')
 		case PieceLifespan.OutOnSegmentEnd:
-			return t('Until end of segment')
+			return t('Until End of Segment')
 		case PieceLifespan.OutOnRundownChange:
-			return t('Until next rundown')
+			return t('Until Next Rundown')
 		case PieceLifespan.OutOnRundownEnd:
-			return t('Until end of rundown')
+			return t('Until End of Rundown')
 		case PieceLifespan.OutOnShowStyleEnd:
-			return t('Until end of showstyle')
+			return t('Until End of Showstyle')
 		default:
 			return ''
 	}
