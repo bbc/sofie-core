@@ -15,12 +15,12 @@ import { logger } from '../../../logging.js'
 import { ProtectedString } from '@sofie-automation/corelib/dist/protectedString'
 import { IngestExpectedPackage } from '../IngestExpectedPackage.js'
 import { AnyBulkWriteOperation } from 'mongodb'
-import { Complete, normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
+import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
 
 export class SaveIngestModelHelper {
 	readonly #rundownId: RundownId
 
-	#expectedPackages = new DocumentChangeTracker<IngestExpectedPackage<any>>()
+	#expectedPackages: IngestExpectedPackage<any>[] = []
 	#expectedPlayoutItems = new DocumentChangeTracker<ExpectedPlayoutItem>()
 	#expectedMediaItems = new DocumentChangeTracker<ExpectedMediaItem>()
 
@@ -38,7 +38,7 @@ export class SaveIngestModelHelper {
 		store: ExpectedPackagesStore<TPackageSource>,
 		deleteAll?: boolean
 	): void {
-		this.#expectedPackages.addChanges(store.expectedPackagesChanges, deleteAll ?? false)
+		if (!deleteAll) this.#expectedPackages.push(...store.expectedPackages)
 		this.#expectedPlayoutItems.addChanges(store.expectedPlayoutItemsChanges, deleteAll ?? false)
 		this.#expectedMediaItems.addChanges(store.expectedMediaItemsChanges, deleteAll ?? false)
 	}
@@ -81,7 +81,6 @@ export class SaveIngestModelHelper {
 	commit(context: JobContext): Array<Promise<unknown>> {
 		// Log deleted ids:
 		const deletedIds: { [key: string]: ProtectedString<any>[] } = {
-			expectedPackages: this.#expectedPackages.getDeletedIds(),
 			expectedPlayoutItems: this.#expectedPlayoutItems.getDeletedIds(),
 			expectedMediaItems: this.#expectedMediaItems.getDeletedIds(),
 			segments: this.#segments.getDeletedIds(),
@@ -97,11 +96,7 @@ export class SaveIngestModelHelper {
 		}
 
 		return [
-			writeExpectedPackagesChangesForRundown(
-				context,
-				this.#rundownId,
-				Array.from(this.#expectedPackages.getDocumentsToSave().values())
-			),
+			writeExpectedPackagesChangesForRundown(context, this.#rundownId, this.#expectedPackages),
 			context.directCollections.ExpectedPlayoutItems.bulkWrite(this.#expectedPlayoutItems.generateWriteOps()),
 			context.directCollections.ExpectedMediaItems.bulkWrite(this.#expectedMediaItems.generateWriteOps()),
 
@@ -114,7 +109,7 @@ export class SaveIngestModelHelper {
 	}
 }
 
-export async function writeExpectedPackagesChangesForRundown(
+async function writeExpectedPackagesChangesForRundown(
 	context: JobContext,
 	rundownId: RundownId | null,
 	documentsToSave: IngestExpectedPackage<any>[]
@@ -134,40 +129,52 @@ export async function writeExpectedPackagesChangesForRundown(
 	)) as Pick<ExpectedPackageDB, '_id' | 'created'>[]
 	const existingDocsMap = normalizeArrayToMap(existingDocs, '_id')
 
+	const packagesToSave = new Map<ExpectedPackageId, ExpectedPackageDB>()
+	for (const doc of documentsToSave) {
+		const partialDoc = packagesToSave.get(doc.packageId)
+
+		if (partialDoc) {
+			// Add the source to the existing document
+			partialDoc.ingestSources.push(doc.source)
+
+			// Maybe this should check for duplicates, but the point where these documents are generated should be handling that.
+		} else {
+			// Add a new document
+			// Future: omit 'playoutSources from this doc
+			packagesToSave.set(doc.packageId, {
+				_id: doc.packageId,
+				studioId: context.studioId,
+				rundownId: rundownId,
+				bucketId: null,
+				created: Date.now(),
+				package: doc.package,
+				ingestSources: [doc.source],
+			})
+		}
+	}
+
 	// Generate any insert and update operations
 	const ops: AnyBulkWriteOperation<ExpectedPackageDB>[] = []
-	for (const doc of documentsToSave) {
-		const newDbDoc: Complete<Omit<ExpectedPackageDB, '_id'>> = {
-			// Future: omit 'playoutSources from this doc
-			studioId: context.studioId,
-			rundownId: rundownId,
-			bucketId: null,
-			created: Date.now(),
-			package: doc.package,
-			ingestSources: [doc.source],
-		}
-
+	for (const doc of packagesToSave.values()) {
 		const existingDoc = existingDocsMap.get(doc._id)
-		if (existingDoc) {
+		if (!existingDoc) {
+			// Insert this new document
+			ops.push({
+				insertOne: {
+					document: doc,
+				},
+			})
+		} else {
 			// Document already exists, perform an update to preserve other fields
+			// Future: would it be beneficial to perform some diffing to only update the field if it has changed?
 			ops.push({
 				updateOne: {
 					filter: { _id: doc._id },
 					update: {
+						// Update every field that we want to define
 						$set: {
-							// Update every field that we want to define
-							...newDbDoc,
+							ingestSources: doc.ingestSources,
 						},
-					},
-				},
-			})
-		} else {
-			// Insert this new document
-			ops.push({
-				insertOne: {
-					document: {
-						...newDbDoc,
-						_id: doc._id,
 					},
 				},
 			})
@@ -175,18 +182,16 @@ export async function writeExpectedPackagesChangesForRundown(
 	}
 
 	// Look over the existing documents, and see is no longer referenced
-	const documentsToSaveMap = normalizeArrayToMap(documentsToSave, '_id')
 	const idsToDelete: ExpectedPackageId[] = []
 
 	for (const doc of existingDocs) {
 		// Skip if this document is in the list of documents to save
-		if (documentsToSaveMap.has(doc._id)) continue
+		if (packagesToSave.has(doc._id)) continue
 
 		// Future: check for playoutSources
 		idsToDelete.push(doc._id)
 	}
 
-	// const idsToDelete = changeTracker.getDeletedIds()
 	if (idsToDelete.length > 0) {
 		ops.push({
 			deleteMany: {

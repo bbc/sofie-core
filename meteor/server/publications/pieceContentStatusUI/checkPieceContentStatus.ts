@@ -11,9 +11,8 @@ import {
 	VTContent,
 } from '@sofie-automation/blueprints-integration'
 import {
-	ExpectedPackageDBType,
 	getExpectedPackageIdForPieceInstance,
-	getExpectedPackageIdFromIngestSource,
+	getExpectedPackageIdNew,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	BucketId,
@@ -670,21 +669,7 @@ async function checkPieceContentExpectedPackageStatus(
 
 				checkedPackageContainers.add(matchedPackageContainer[0])
 
-				const expectedPackageIds = [
-					// Synthesize the expected packageId from the piece
-					getExpectedPackageIdFromIngestSource(
-						packageOwnerId,
-						{
-							fromPieceType: ExpectedPackageDBType.PIECE,
-							// HACK: This shouldn't be cast as any, because this could be a bucket piece, but that gives the same result
-							pieceId: piece._id as any,
-							// HACK: We need a value, but the method doesn't use them..
-							partId: piece._id as any,
-							segmentId: piece._id as any,
-						},
-						expectedPackage._id
-					),
-				]
+				const expectedPackageIds = [getExpectedPackageIdNew(packageOwnerId, expectedPackage)]
 				if (piece.pieceInstanceId) {
 					// If this is a PieceInstance, try looking up the PieceInstance first
 					expectedPackageIds.unshift(

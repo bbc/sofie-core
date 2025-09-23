@@ -25,29 +25,29 @@ export async function onUpdatedPackageInfo(packageId: ExpectedPackageId, _doc: P
 		return
 	}
 
-	if (pkg.package.listenToPackageInfoUpdates) {
-		for (const source of pkg.ingestSources) {
-			switch (source.fromPieceType) {
-				case ExpectedPackageDBType.PIECE:
-				case ExpectedPackageDBType.ADLIB_PIECE:
-				case ExpectedPackageDBType.ADLIB_ACTION:
-				case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
-				case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
-				case ExpectedPackageDBType.BASELINE_PIECE:
-				case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
-					onUpdatedPackageInfoForRundownDebounce(pkg)
-					break
-				case ExpectedPackageDBType.BUCKET_ADLIB:
-				case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
-					onUpdatedPackageInfoForBucketItemDebounce(pkg, source)
-					break
-				case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
-					onUpdatedPackageInfoForStudioBaselineDebounce(pkg)
-					break
-				default:
-					assertNever(source)
-					break
-			}
+	for (const source of pkg.ingestSources) {
+		if (!source.listenToPackageInfoUpdates) continue
+
+		switch (source.fromPieceType) {
+			case ExpectedPackageDBType.PIECE:
+			case ExpectedPackageDBType.ADLIB_PIECE:
+			case ExpectedPackageDBType.ADLIB_ACTION:
+			case ExpectedPackageDBType.BASELINE_PIECE:
+			case ExpectedPackageDBType.BASELINE_ADLIB_PIECE:
+			case ExpectedPackageDBType.BASELINE_ADLIB_ACTION:
+			case ExpectedPackageDBType.RUNDOWN_BASELINE_OBJECTS:
+				onUpdatedPackageInfoForRundownDebounce(pkg)
+				break
+			case ExpectedPackageDBType.BUCKET_ADLIB:
+			case ExpectedPackageDBType.BUCKET_ADLIB_ACTION:
+				onUpdatedPackageInfoForBucketItemDebounce(pkg, source)
+				break
+			case ExpectedPackageDBType.STUDIO_BASELINE_OBJECTS:
+				onUpdatedPackageInfoForStudioBaselineDebounce(pkg)
+				break
+			default:
+				assertNever(source)
+				break
 		}
 	}
 }

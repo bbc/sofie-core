@@ -14,11 +14,11 @@ import { clone } from '@sofie-automation/corelib/dist/lib'
 import { getPartId } from '../../lib.js'
 import {
 	ExpectedPackageDBType,
-	getExpectedPackageIdFromIngestSource,
+	ExpectedPackageIngestSourceAdlibAction,
 	ExpectedPackageIngestSourcePart,
+	ExpectedPackageIngestSourcePiece,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
-import type { ExpectedPackage } from '@sofie-automation/blueprints-integration'
-import type { IngestExpectedPackage } from '../IngestExpectedPackage.js'
+import { ExpectedPackageCollector, type IngestExpectedPackage } from '../IngestExpectedPackage.js'
 
 /**
  * A light wrapper around the IngestPartModel, so that we can track the deletions while still accessing the contents
@@ -268,61 +268,39 @@ function generateExpectedPackagesForPart(
 	adLibPieces: AdLibPiece[],
 	adLibActions: AdLibAction[]
 ): IngestExpectedPackage<ExpectedPackageIngestSourcePart>[] {
-	const packages: IngestExpectedPackage<ExpectedPackageIngestSourcePart>[] = []
+	const collector = new ExpectedPackageCollector<ExpectedPackageIngestSourcePart>(rundownId)
 
-	const wrapPackage = (
-		expectedPackage: ReadonlyDeep<ExpectedPackage.Any>,
-		source: ExpectedPackageIngestSourcePart
-	): IngestExpectedPackage<ExpectedPackageIngestSourcePart> => {
-		return {
-			_id: getExpectedPackageIdFromIngestSource(rundownId, source, expectedPackage._id),
-
-			package: expectedPackage,
-
-			source: source,
-		}
-	}
-
-	// Future: this will need to deduplicate packages with the same content
-	// For now, we just generate a package for each expectedPackage
+	// This expects to generate multiple documents with the same packageId, these get deduplicated during saving.
+	// This should only concern itself with avoiding duplicates with the same source
 
 	// Populate the ingestSources
 	for (const piece of pieces) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.PIECE,
-					pieceId: piece._id,
-					partId: partId,
-					segmentId: segmentId,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourcePiece>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.PIECE,
+				pieceId: piece._id,
+				partId: partId,
+				segmentId: segmentId,
+			})
 	}
 	for (const piece of adLibPieces) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.ADLIB_PIECE,
-					pieceId: piece._id,
-					partId: partId,
-					segmentId: segmentId,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourcePiece>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.ADLIB_PIECE,
+				pieceId: piece._id,
+				partId: partId,
+				segmentId: segmentId,
+			})
 	}
 	for (const piece of adLibActions) {
-		for (const expectedPackage of piece.expectedPackages || []) {
-			packages.push(
-				wrapPackage(expectedPackage, {
-					fromPieceType: ExpectedPackageDBType.ADLIB_ACTION,
-					pieceId: piece._id,
-					partId: partId,
-					segmentId: segmentId,
-				})
-			)
-		}
+		if (piece.expectedPackages)
+			collector.addPackagesWithSource<ExpectedPackageIngestSourceAdlibAction>(piece.expectedPackages, {
+				fromPieceType: ExpectedPackageDBType.ADLIB_ACTION,
+				pieceId: piece._id,
+				partId: partId,
+				segmentId: segmentId,
+			})
 	}
 
-	return packages
+	return collector.finish()
 }
