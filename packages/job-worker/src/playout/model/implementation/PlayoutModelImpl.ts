@@ -53,7 +53,6 @@ import { DeferredAfterSaveFunction, DeferredFunction, PlayoutModel, PlayoutModel
 import { writePartInstancesAndPieceInstances, writeAdlibTestingSegments } from './SavePlayoutModel.js'
 import { PlayoutPieceInstanceModel } from '../PlayoutPieceInstanceModel.js'
 import { DatabasePersistedModel } from '../../../modelBase.js'
-import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { StudioBaselineHelper } from '../../../studio/model/StudioBaselineHelper.js'
 import { EventsJobs } from '@sofie-automation/corelib/dist/worker/events'
@@ -62,6 +61,7 @@ import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/c
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper.js'
+import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -832,7 +832,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		return this.timelineImpl
 	}
 
-	setExpectedPackagesForStudioBaseline(packages: ExpectedPackageDBFromStudioBaselineObjects[]): void {
+	setExpectedPackagesForStudioBaseline(packages: ExpectedPackage.Any[]): void {
 		this.#baselineHelper.setExpectedPackages(packages)
 	}
 	setExpectedPlayoutItemsForStudioBaseline(playoutItems: ExpectedPlayoutItemStudio[]): void {

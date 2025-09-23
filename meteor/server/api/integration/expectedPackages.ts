@@ -33,6 +33,7 @@ import {
 } from '../../collections'
 import { logger } from '../../logging'
 import _ from 'underscore'
+import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export namespace PackageManagerIntegration {
 	export async function updateExpectedPackageWorkStatuses(
@@ -98,9 +99,17 @@ export namespace PackageManagerIntegration {
 					const fromPackageIds = workStatus.fromPackages.map((p) => p.id)
 					if (fromPackageIds.length) {
 						ps.push(
-							ExpectedPackages.findOneAsync({
-								_id: { $in: fromPackageIds },
-							}).then((expPackage) => {
+							ExpectedPackages.findOneAsync(
+								{
+									_id: { $in: fromPackageIds },
+								},
+								{
+									projection: {
+										_id: 1,
+										studioId: 1,
+									},
+								}
+							).then((expPackage: Pick<ExpectedPackageDB, '_id' | 'studioId'> | undefined) => {
 								if (!expPackage)
 									throw new Meteor.Error(404, `ExpectedPackages "${fromPackageIds}" not found`)
 
