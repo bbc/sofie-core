@@ -59,10 +59,13 @@ export interface ExpectedPackageDB {
 	 */
 	ingestSources: ExpectedPackageIngestSource[]
 
-	// playoutSources: {
-	// 	/** Any playout PieceInstance. This is limited to the current and next partInstances */
-	// 	pieceInstanceIds: PieceInstanceId[]
-	// }
+	playoutSources: {
+		/**
+		 * Any playout PieceInstance. This can be any non-reset pieceInstance in the rundown.
+		 * Due to the update flow, this can contain some stale data for a few seconds after a playout operation.
+		 */
+		pieceInstanceIds: PieceInstanceId[]
+	}
 }
 
 export interface ExpectedPackageIngestSourceBase {
@@ -149,19 +152,6 @@ export type ExpectedPackageIngestSource =
 	| ExpectedPackageIngestSourceStudioBaseline
 
 /**
- * Generate the expectedPackageId for the given piece instance.
- * Note: This will soon be replaced with a new flow based on the contentVersionHash once shared ownership is implemented.
- */
-export function getExpectedPackageIdForPieceInstance(
-	/** _id of the owner (the piece, adlib etc..) */
-	ownerId: PieceInstanceId,
-	/** The locally unique id of the expectedPackage */
-	localExpectedPackageId: ExpectedPackage.Base['_id']
-): ExpectedPackageId {
-	return protectString(`${ownerId}_${getHash(localExpectedPackageId)}`)
-}
-
-/**
  * Generate the expectedPackageId for the given expectedPackage.
  * This is a stable id derived from the package and its parent. This document is expected to be owned by multiple sources.
  */
@@ -179,4 +169,8 @@ export function getExpectedPackageIdNew(
 	} satisfies ReadonlyDeep<ExpectedPackage.Base>)
 
 	return protectString(`${parentId}_${getHash(objHash)}`)
+}
+
+export function isPackageReferencedByPlayout(expectedPackage: Pick<ExpectedPackageDB, 'playoutSources'>): boolean {
+	return expectedPackage.playoutSources.pieceInstanceIds.length > 0
 }

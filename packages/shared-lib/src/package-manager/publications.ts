@@ -1,5 +1,5 @@
 import { ExpectedPackage, PackageContainer, PackageContainerOnPackage } from './package.js'
-import { PeripheralDeviceId, PieceInstanceId, RundownId, RundownPlaylistId } from '../core/model/Ids.js'
+import { ExpectedPackageId, PeripheralDeviceId, RundownId, RundownPlaylistId } from '../core/model/Ids.js'
 import { ProtectedString } from '../lib/protectedString.js'
 import { ReadonlyDeep } from 'type-fest'
 
@@ -28,7 +28,9 @@ export interface PackageManagerPackageContainers {
 
 export type PackageManagerExpectedPackageId = ProtectedString<'PackageManagerExpectedPackage'>
 
-export type PackageManagerExpectedPackageBase = ReadonlyDeep<ExpectedPackage.Base>
+export type PackageManagerExpectedPackageBase = ReadonlyDeep<Omit<ExpectedPackage.Base, '_id'>> & {
+	_id: ExpectedPackageId
+}
 
 export interface PackageManagerExpectedPackage {
 	/** Unique id of the expectedPackage */
@@ -40,6 +42,4 @@ export interface PackageManagerExpectedPackage {
 	sources: PackageContainerOnPackage[]
 	targets: PackageContainerOnPackage[]
 	playoutDeviceId: PeripheralDeviceId
-
-	pieceInstanceId: PieceInstanceId | null
 }

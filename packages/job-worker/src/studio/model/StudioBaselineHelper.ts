@@ -85,6 +85,10 @@ export class StudioBaselineHelper {
 									created: Date.now(),
 									package: pkg.package,
 									ingestSources: [pkg.source],
+									playoutSources: {
+										// This doesn't belong to a rundown, so can't be referenced by playout
+										pieceInstanceIds: [],
+									},
 								}) satisfies Complete<ExpectedPackageDB>
 						),
 						{

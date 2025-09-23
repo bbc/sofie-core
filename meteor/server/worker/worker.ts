@@ -23,6 +23,7 @@ import { UserActionsLog } from '../collections'
 import { MetricsCounter } from '@sofie-automation/corelib/dist/prometheus'
 import { isInTestWrite } from '../security/securityVerify'
 import { UserError } from '@sofie-automation/corelib/dist/error'
+import { QueueJobOptions } from '@sofie-automation/job-worker/dist/jobs'
 
 const FREEZE_LIMIT = 1000 // how long to wait for a response to a Ping
 const RESTART_TIMEOUT = 30000 // how long to wait for a restart to complete before throwing an error
@@ -52,6 +53,8 @@ const metricsQueueErrorsCounter = new MetricsCounter({
 
 interface JobQueue {
 	jobs: Array<JobEntry | null>
+	// lowPriorityJobs: Array<JobEntry>
+
 	/** Notify that there is a job waiting (aka worker is long-polling) */
 	notifyWorker: ManualPromise<void> | null
 
@@ -179,22 +182,33 @@ async function interruptJobStream(queueName: string): Promise<void> {
 		queue.jobs.unshift(null)
 	}
 }
-async function queueJobWithoutResult(queueName: string, jobName: string, jobData: unknown): Promise<void> {
-	queueJobInner(queueName, {
-		spec: {
-			id: getRandomString(),
-			name: jobName,
-			data: jobData,
+async function queueJobWithoutResult(
+	queueName: string,
+	jobName: string,
+	jobData: unknown,
+	options: QueueJobOptions | undefined
+): Promise<void> {
+	queueJobInner(
+		queueName,
+		{
+			spec: {
+				id: getRandomString(),
+				name: jobName,
+				data: jobData,
+			},
+			completionHandler: null,
 		},
-		completionHandler: null,
-	})
+		options ?? {}
+	)
 }
 
-function queueJobInner(queueName: string, jobToQueue: JobEntry): void {
+function queueJobInner(queueName: string, jobToQueue: JobEntry, options: QueueJobOptions): void {
 	// Put the job at the end of the queue:
 	const queue = getOrCreateQueue(queueName)
 	queue.jobs.push(jobToQueue)
 	queue.metricsTotal.inc()
+
+	// nocommit - use options
 
 	// If there is a worker waiting to pick up a job
 	if (queue.notifyWorker) {
@@ -214,13 +228,22 @@ function queueJobInner(queueName: string, jobToQueue: JobEntry): void {
 	}
 }
 
-function queueJobAndWrapResult<TRes>(queueName: string, job: JobSpec, now: Time): WorkerJob<TRes> {
+function queueJobAndWrapResult<TRes>(
+	queueName: string,
+	job: JobSpec,
+	now: Time,
+	options: QueueJobOptions | undefined
+): WorkerJob<TRes> {
 	const { result, completionHandler } = generateCompletionHandler<TRes>(job.id, now)
 
-	queueJobInner(queueName, {
-		spec: job,
-		completionHandler: completionHandler,
-	})
+	queueJobInner(
+		queueName,
+		{
+			spec: job,
+			completionHandler: completionHandler,
+		},
+		options ?? {}
+	)
 
 	return result
 }
@@ -416,7 +439,8 @@ export async function QueueForceClearAllCaches(studioIds: StudioId[]): Promise<v
 					name: FORCE_CLEAR_CACHES_JOB,
 					data: undefined,
 				},
-				now
+				now,
+				{}
 			)
 		)
 
@@ -429,7 +453,8 @@ export async function QueueForceClearAllCaches(studioIds: StudioId[]): Promise<v
 					name: FORCE_CLEAR_CACHES_JOB,
 					data: undefined,
 				},
-				now
+				now,
+				{}
 			)
 		)
 
@@ -442,7 +467,8 @@ export async function QueueForceClearAllCaches(studioIds: StudioId[]): Promise<v
 					name: FORCE_CLEAR_CACHES_JOB,
 					data: undefined,
 				},
-				now
+				now,
+				{}
 			)
 		)
 	}
@@ -461,7 +487,8 @@ export async function QueueForceClearAllCaches(studioIds: StudioId[]): Promise<v
 export async function QueueStudioJob<T extends keyof StudioJobFunc>(
 	jobName: T,
 	studioId: StudioId,
-	jobParameters: Parameters<StudioJobFunc[T]>[0]
+	jobParameters: Parameters<StudioJobFunc[T]>[0],
+	options?: QueueJobOptions
 ): Promise<WorkerJob<ReturnType<StudioJobFunc[T]>>> {
 	if (isInTestWrite()) throw new Meteor.Error(404, 'Should not be reachable during startup tests')
 	if (!studioId) throw new Meteor.Error(500, 'Missing studioId')
@@ -474,7 +501,8 @@ export async function QueueStudioJob<T extends keyof StudioJobFunc>(
 			name: jobName,
 			data: jobParameters,
 		},
-		now
+		now,
+		options
 	)
 }
 

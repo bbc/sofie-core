@@ -112,6 +112,10 @@ function generateBucketExpectedPackages<TSource = never>(
 					listenToPackageInfoUpdates: expectedPackage.listenToPackageInfoUpdates,
 				},
 			],
+			playoutSources: {
+				// These don't belong to a rundown, so can't be referenced by playout
+				pieceInstanceIds: [],
+			},
 		})
 	}
 
@@ -163,7 +167,7 @@ async function writeUpdatedExpectedPackages(
 						},
 					},
 					update: {
-						$push: {
+						$addToSet: {
 							ingestSources: doc.ingestSources[0],
 						},
 					},
