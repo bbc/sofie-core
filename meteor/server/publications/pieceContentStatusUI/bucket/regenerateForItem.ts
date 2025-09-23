@@ -47,6 +47,7 @@ export async function regenerateForBucketAdLibIds(
 			if (sourceLayer) {
 				const [status, itemDependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.bucketId,
 					messageFactories.get(actionDoc.showStyleBaseId),
 					actionDoc,
 					sourceLayer
@@ -119,6 +120,7 @@ export async function regenerateForBucketActionIds(
 
 				const [status, itemDependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.bucketId,
 					messageFactories.get(actionDoc.showStyleBaseId),
 					fakedPiece,
 					sourceLayer

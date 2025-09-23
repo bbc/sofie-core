@@ -1,11 +1,5 @@
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
-import {
-	ExpectedPackageDBFromBaselineAdLibAction,
-	ExpectedPackageDBFromBaselineAdLibPiece,
-	ExpectedPackageDBFromBaselinePiece,
-	ExpectedPackageDBFromRundownBaselineObjects,
-	ExpectedPackageFromRundown,
-} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import type { ExpectedPackageIngestSource } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import {
 	ExpectedPackageId,
@@ -20,7 +14,7 @@ import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataMo
 import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
 import { RundownBaselineAdLibItem } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibPiece'
 import { LazyInitialiseReadonly } from '../../lib/lazy.js'
-import { RundownLock } from '../../jobs/lock.js'
+import type { PlaylistLock, RundownLock } from '../../jobs/lock.js'
 import { IngestSegmentModel, IngestSegmentModelReadonly } from './IngestSegmentModel.js'
 import { IngestPartModel, IngestPartModelReadonly } from './IngestPartModel.js'
 import { ReadonlyDeep } from 'type-fest'
@@ -33,13 +27,7 @@ import { ProcessedShowStyleBase, ProcessedShowStyleVariant } from '../../jobs/sh
 import { WrappedShowStyleBlueprint } from '../../blueprints/cache.js'
 import { IBlueprintRundown } from '@sofie-automation/blueprints-integration'
 import type { INotificationsModel } from '../../notifications/NotificationsModel.js'
-
-export type ExpectedPackageForIngestModelBaseline =
-	| ExpectedPackageDBFromBaselineAdLibAction
-	| ExpectedPackageDBFromBaselineAdLibPiece
-	| ExpectedPackageDBFromRundownBaselineObjects
-	| ExpectedPackageDBFromBaselinePiece
-export type ExpectedPackageForIngestModel = ExpectedPackageFromRundown | ExpectedPackageForIngestModelBaseline
+import type { IngestExpectedPackage } from './IngestExpectedPackage.js'
 
 export interface IngestModelReadonly {
 	/**
@@ -68,7 +56,7 @@ export interface IngestModelReadonly {
 	/**
 	 * The ExpectedPackages for the baseline of this Rundown
 	 */
-	readonly expectedPackagesForRundownBaseline: ReadonlyDeep<ExpectedPackageForIngestModelBaseline>[]
+	readonly expectedPackagesForRundownBaseline: ReadonlyDeep<IngestExpectedPackage>[]
 
 	/**
 	 * The baseline Timeline objects of this Rundown
@@ -153,7 +141,7 @@ export interface IngestModelReadonly {
 	 * Search for an ExpectedPackage through the whole Rundown
 	 * @param id Id of the ExpectedPackage
 	 */
-	findExpectedPackage(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageForIngestModel> | undefined
+	findExpectedPackageIngestSources(packageId: ExpectedPackageId): ReadonlyDeep<ExpectedPackageIngestSource>[]
 }
 
 export interface IngestModel extends IngestModelReadonly, BaseModel, INotificationsModel {
@@ -222,12 +210,6 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 	setExpectedMediaItemsForRundownBaseline(expectedMediaItems: ExpectedMediaItemRundown[]): void
 
 	/**
-	 * Set the ExpectedPackages for the baseline of this Rundown
-	 * @param expectedPackages The new ExpectedPackages
-	 */
-	setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void
-
-	/**
 	 * Set the data for this Rundown.
 	 * This will either update or create the Rundown
 	 * @param rundownData The blueprint Rundown data
@@ -258,7 +240,8 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 		timelineObjectsBlob: PieceTimelineObjectsBlob,
 		adlibPieces: RundownBaselineAdLibItem[],
 		adlibActions: RundownBaselineAdLibAction[],
-		pieces: Piece[]
+		pieces: Piece[],
+		expectedPackages: IngestExpectedPackage[]
 	): Promise<void>
 
 	/**
@@ -283,3 +266,10 @@ export interface IngestModel extends IngestModelReadonly, BaseModel, INotificati
 }
 
 export type IngestReplaceSegmentType = Omit<DBSegment, '_id' | 'rundownId'>
+
+export interface IngestDatabasePersistedModel {
+	/**
+	 * Issue a save of the contents of this model to the database
+	 */
+	saveAllToDatabase(lock: PlaylistLock): Promise<void>
+}
