@@ -7,7 +7,6 @@ import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
 import { ExpectedPlayoutItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import { ExpectedPackageFromRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { ExpectedPackagesStore } from './ExpectedPackagesStore.js'
 import {
@@ -17,13 +16,15 @@ import {
 	getDocumentChanges,
 	setValuesAndTrackChanges,
 } from './utils.js'
+import type { IngestExpectedPackage } from '../IngestExpectedPackage.js'
+import { ExpectedPackageIngestSourcePart } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export class IngestPartModelImpl implements IngestPartModel {
 	readonly partImpl: DBPart
 	readonly #pieces: Piece[]
 	readonly #adLibPieces: AdLibPiece[]
 	readonly #adLibActions: AdLibAction[]
-	readonly expectedPackagesStore: ExpectedPackagesStore<ExpectedPackageFromRundown>
+	readonly expectedPackagesStore: ExpectedPackagesStore<ExpectedPackageIngestSourcePart>
 
 	#setPartValue<T extends keyof DBPart>(key: T, newValue: DBPart[T]): void {
 		if (newValue === undefined) {
@@ -90,7 +91,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 	get expectedPlayoutItems(): ReadonlyDeep<ExpectedPlayoutItemRundown>[] {
 		return [...this.expectedPackagesStore.expectedPlayoutItems]
 	}
-	get expectedPackages(): ReadonlyDeep<ExpectedPackageFromRundown>[] {
+	get expectedPackages(): ReadonlyDeep<IngestExpectedPackage>[] {
 		return [...this.expectedPackagesStore.expectedPackages]
 	}
 
@@ -140,7 +141,7 @@ export class IngestPartModelImpl implements IngestPartModel {
 		adLibActions: AdLibAction[],
 		expectedMediaItems: ExpectedMediaItemRundown[],
 		expectedPlayoutItems: ExpectedPlayoutItemRundown[],
-		expectedPackages: ExpectedPackageFromRundown[]
+		expectedPackages: IngestExpectedPackage<ExpectedPackageIngestSourcePart>[]
 	) {
 		this.partImpl = part
 		this.#pieces = pieces
@@ -164,7 +165,6 @@ export class IngestPartModelImpl implements IngestPartModel {
 		this.expectedPackagesStore = new ExpectedPackagesStore(
 			isBeingCreated,
 			part.rundownId,
-			part.segmentId,
 			part._id,
 			expectedMediaItems,
 			expectedPlayoutItems,
@@ -211,7 +211,14 @@ export class IngestPartModelImpl implements IngestPartModel {
 		this.#compareAndSetPartValue('segmentId', segmentId)
 		this.#compareAndSetPartValue('rundownId', rundownId)
 
-		this.expectedPackagesStore.setOwnerIds(rundownId, segmentId, this.part._id)
+		this.expectedPackagesStore.setOwnerIds(rundownId, this.part._id, (pkgSource) => {
+			if (pkgSource.partId !== this.part._id || pkgSource.segmentId !== segmentId) {
+				pkgSource.partId = this.part._id
+				pkgSource.segmentId = segmentId
+				return true
+			}
+			return false
+		})
 
 		setValuesAndTrackChanges(this.#piecesWithChanges, this.#pieces, {
 			startRundownId: rundownId,
@@ -233,9 +240,5 @@ export class IngestPartModelImpl implements IngestPartModel {
 	}
 	setExpectedMediaItems(expectedMediaItems: ExpectedMediaItemRundown[]): void {
 		this.expectedPackagesStore.setExpectedMediaItems(expectedMediaItems)
-	}
-	setExpectedPackages(expectedPackages: ExpectedPackageFromRundown[]): void {
-		// Future: should these be here, or held as part of each adlib/piece?
-		this.expectedPackagesStore.setExpectedPackages(expectedPackages)
 	}
 }

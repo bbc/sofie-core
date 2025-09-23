@@ -37,6 +37,6 @@ export interface CoreRundownPlaylistSnapshot {
 	baselineAdLibActions: Array<RundownBaselineAdLibAction>
 	expectedMediaItems: Array<ExpectedMediaItem>
 	expectedPlayoutItems: Array<ExpectedPlayoutItem>
-	expectedPackages: Array<ExpectedPackageDB>
+	expectedPackages: Array<ExpectedPackageDB> // Note: when reading, this could be in the old format
 	timeline?: TimelineComplete
 }

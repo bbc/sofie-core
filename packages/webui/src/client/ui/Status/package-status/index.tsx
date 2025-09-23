@@ -67,11 +67,6 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		)
 	}
 	function renderExpectedPackageStatuses() {
-		const packageRef: { [packageId: string]: ExpectedPackageDB } = {}
-		for (const expPackage of expectedPackages) {
-			packageRef[unprotectString(expPackage._id)] = expPackage
-		}
-
 		const packagesWithWorkStatuses: {
 			[packageId: string]: {
 				package: ExpectedPackageDB | undefined
@@ -79,20 +74,33 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 				device: PeripheralDevice | undefined
 			}
 		} = {}
-		for (const work of expectedPackageWorkStatuses) {
-			const device = peripheralDevicesMap.get(work.deviceId)
-			// todo: make this better:
-			const key = unprotectString(work.fromPackages[0]?.id) || 'unknown_work_' + work._id
-			// const referencedPackage = packageRef[packageId]
-			let packageWithWorkStatus = packagesWithWorkStatuses[key]
-			if (!packageWithWorkStatus) {
-				packagesWithWorkStatuses[key] = packageWithWorkStatus = {
-					package: packageRef[key] || undefined,
-					statuses: [],
-					device,
-				}
+
+		for (const expPackage of expectedPackages) {
+			packagesWithWorkStatuses[unprotectString(expPackage._id)] = {
+				package: expPackage,
+				statuses: [],
+				device: undefined,
 			}
-			packageWithWorkStatus.statuses.push(work)
+		}
+
+		for (const work of expectedPackageWorkStatuses) {
+			// todo: make this better:
+			let fromPackageIds = work.fromPackages.map((p) => unprotectString(p.id))
+			if (fromPackageIds.length === 0) fromPackageIds = ['unknown_work_' + work._id]
+
+			for (const key of fromPackageIds) {
+				// const referencedPackage = packageRef[packageId]
+				let packageWithWorkStatus = packagesWithWorkStatuses[key]
+				if (!packageWithWorkStatus) {
+					packagesWithWorkStatuses[key] = packageWithWorkStatus = {
+						package: undefined,
+						statuses: [],
+						device: undefined,
+					}
+				}
+				packageWithWorkStatus.statuses.push(work)
+				packageWithWorkStatus.device = peripheralDevicesMap.get(work.deviceId)
+			}
 		}
 
 		for (const id of Object.keys(packagesWithWorkStatuses)) {
@@ -137,6 +145,8 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		return keys.map(({ packageId }) => {
 			const p = packagesWithWorkStatuses[packageId]
 
+			console.log('p', p)
+
 			return p.package ? (
 				<PackageStatus key={packageId} package={p.package} statuses={p.statuses} device={p.device} />
 			) : (
@@ -149,6 +159,7 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 	function renderPackageContainerStatuses() {
 		return packageContainerStatuses.map((packageContainerStatus) => {
 			const device = peripheralDevicesMap.get(packageContainerStatus.deviceId)
+			console.log(device, packageContainerStatus.deviceId)
 			return (
 				<PackageContainerStatus
 					key={unprotectString(packageContainerStatus._id)}
