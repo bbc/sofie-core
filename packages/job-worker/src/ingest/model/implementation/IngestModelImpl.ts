@@ -1,6 +1,5 @@
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
-import { ExpectedMediaItemRundown } from '@sofie-automation/corelib/dist/dataModel/ExpectedMediaItem'
 import {
 	ExpectedPackageDB,
 	ExpectedPackageDBType,
@@ -70,7 +69,6 @@ export interface IngestModelImplExistingData {
 	pieces: Piece[]
 	adLibPieces: AdLibPiece[]
 	adLibActions: AdLibAction[]
-	expectedMediaItems: ExpectedMediaItemRundown[]
 	expectedPlayoutItems: ExpectedPlayoutItemRundown[]
 	expectedPackages: ExpectedPackageDB[]
 }
@@ -145,9 +143,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 		return this.#rundownBaselineAdLibActions
 	}
 
-	get expectedMediaItemsForRundownBaseline(): ReadonlyDeep<ExpectedMediaItemRundown>[] {
-		return [...this.#rundownBaselineExpectedPackagesStore.expectedMediaItems]
-	}
 	get expectedPlayoutItemsForRundownBaseline(): ReadonlyDeep<ExpectedPlayoutItemRundown>[] {
 		return [...this.#rundownBaselineExpectedPackagesStore.expectedPlayoutItems]
 	}
@@ -175,7 +170,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 			const groupedAdLibPieces = groupByToMap(existingData.adLibPieces, 'partId')
 			const groupedAdLibActions = groupByToMap(existingData.adLibActions, 'partId')
 
-			const groupedExpectedMediaItems = groupByToMap(existingData.expectedMediaItems, 'partId')
 			const groupedExpectedPlayoutItems = groupByToMap(existingData.expectedPlayoutItems, 'partId')
 
 			const rundownExpectedPackages = existingData.expectedPackages.filter(
@@ -197,7 +191,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 				this.rundownId,
 				undefined,
 				undefined,
-				groupedExpectedMediaItems.get(undefined) ?? [],
 				groupedExpectedPlayoutItems.get(undefined) ?? [],
 				baselineExpectedPackages
 			)
@@ -215,7 +208,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 							groupedPieces.get(part._id) ?? [],
 							groupedAdLibPieces.get(part._id) ?? [],
 							groupedAdLibActions.get(part._id) ?? [],
-							groupedExpectedMediaItems.get(part._id) ?? [],
 							groupedExpectedPlayoutItems.get(part._id) ?? [],
 							groupedExpectedPackages.get(part._id) ?? []
 						)
@@ -251,7 +243,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 				this.rundownId,
 				undefined,
 				undefined,
-				[],
 				[],
 				[]
 			)
@@ -421,9 +412,6 @@ export class IngestModelImpl implements IngestModel, DatabasePersistedModel {
 
 	setExpectedPlayoutItemsForRundownBaseline(expectedPlayoutItems: ExpectedPlayoutItemRundown[]): void {
 		this.#rundownBaselineExpectedPackagesStore.setExpectedPlayoutItems(expectedPlayoutItems)
-	}
-	setExpectedMediaItemsForRundownBaseline(expectedMediaItems: ExpectedMediaItemRundown[]): void {
-		this.#rundownBaselineExpectedPackagesStore.setExpectedMediaItems(expectedMediaItems)
 	}
 	setExpectedPackagesForRundownBaseline(expectedPackages: ExpectedPackageForIngestModelBaseline[]): void {
 		// Future: should these be here, or held as part of each adlib?

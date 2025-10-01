@@ -13,8 +13,6 @@ import { Bucket } from '@sofie-automation/corelib/dist/dataModel/Bucket'
 import { ICoreSystem } from '../collections/CoreSystem.js'
 import { Evaluation } from '../collections/Evaluations.js'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import { MediaWorkFlow } from '@sofie-automation/shared-lib/dist/core/model/MediaWorkFlows'
-import { MediaWorkFlowStep } from '@sofie-automation/shared-lib/dist/core/model/MediaWorkFlowSteps'
 import { DBOrganization } from '../collections/Organization.js'
 import { RundownLayoutBase } from '../collections/RundownLayouts.js'
 import { SnapshotItem } from '../collections/Snapshots.js'
@@ -76,16 +74,6 @@ export enum MeteorPubSub {
 	 * Fetch all User Action Log entries for the specified time range
 	 */
 	userActionsLog = 'userActionsLog',
-	/**
-	 * Fetch all MediaManager workflows in the system
-	 * @deprecated
-	 */
-	mediaWorkFlows = 'mediaWorkFlows',
-	/**
-	 * Fetch all MediaManager workflow steps in the system
-	 * @deprecated
-	 */
-	mediaWorkFlowSteps = 'mediaWorkFlowSteps',
 	/**
 	 * Fetch either all RundownLayouts or limited to the specified ShowStyleBases
 	 */
@@ -197,10 +185,6 @@ export interface MeteorPubSubTypes {
 	) => CollectionName.TriggeredActions
 	[MeteorPubSub.snapshots]: (token?: string) => CollectionName.Snapshots
 	[MeteorPubSub.userActionsLog]: (dateFrom: number, dateTo: number, token?: string) => CollectionName.UserActionsLog
-	/** @deprecated */
-	[MeteorPubSub.mediaWorkFlows]: (token?: string) => CollectionName.MediaWorkFlows
-	/** @deprecated */
-	[MeteorPubSub.mediaWorkFlowSteps]: (token?: string) => CollectionName.MediaWorkFlowSteps
 	[MeteorPubSub.rundownLayouts]: (
 		/** ShowStyleBaseIds to fetch for, or null to fetch all */
 		showStyleBaseIds: ShowStyleBaseId[] | null,
@@ -286,9 +270,6 @@ export type MeteorPubSubCollections = {
 	[CollectionName.TranslationsBundles]: TranslationsBundle
 	[CollectionName.ExpectedPlayoutItems]: ExpectedPlayoutItem
 	[CollectionName.Notifications]: DBNotificationObj
-
-	[CollectionName.MediaWorkFlows]: MediaWorkFlow
-	[CollectionName.MediaWorkFlowSteps]: MediaWorkFlowStep
 } & MeteorPubSubCustomCollections
 
 export type MeteorPubSubCustomCollections = {

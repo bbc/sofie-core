@@ -494,9 +494,6 @@ export function APIPeripheralDeviceFrom(device: PeripheralDevice): APIPeripheral
 		case PeripheralDeviceType.LIVE_STATUS:
 			deviceType = 'live_status'
 			break
-		case PeripheralDeviceType.MEDIA_MANAGER:
-			deviceType = 'media_manager'
-			break
 		case PeripheralDeviceType.MOS:
 			deviceType = 'mos'
 			break
