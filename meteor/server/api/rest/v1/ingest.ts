@@ -13,18 +13,18 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { IngestJobs } from '@sofie-automation/corelib/dist/worker/ingest'
-import { Meteor } from 'meteor/meteor'
 import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
+import { Meteor } from 'meteor/meteor'
+import { Parts, RundownPlaylists, Rundowns, Segments, Studios } from '../../../collections'
+import { check } from '../../../lib/check'
 import {
-	RestApiIngestRundown,
 	IngestRestAPI,
 	PartResponse,
 	PlaylistResponse,
+	RestApiIngestRundown,
 	RundownResponse,
 	SegmentResponse,
 } from '../../../lib/rest/v1/ingest'
-import { check } from '../../../lib/check'
-import { Parts, RundownPlaylists, Rundowns, Segments, Studios } from '../../../collections'
 import { logger } from '../../../logging'
 import { runIngestOperation } from '../../ingest/lib'
 import { validateAPIPartPayload, validateAPIRundownPayload, validateAPISegmentPayload } from './typeConversion'
@@ -127,15 +127,6 @@ class IngestServerAPI implements IngestRestAPI {
 		check(ingestRundown.segments, Array)
 		check(ingestRundown.resyncUrl, String)
 
-		check(ingestRundown.timing, Object)
-		check(ingestRundown.timing?.type, String)
-
-		if (ingestRundown.timing?.type === 'forward-time') {
-			check(ingestRundown.timing.expectedStart, Number)
-		} else if (ingestRundown.timing?.type === 'back-time') {
-			check(ingestRundown.timing?.expectedEnd, Number)
-		}
-
 		ingestRundown.segments.forEach((ingestSegment) => this.validateSegment(ingestSegment))
 	}
 
@@ -146,12 +137,6 @@ class IngestServerAPI implements IngestRestAPI {
 		check(ingestSegment.rank, Number)
 		check(ingestSegment.parts, Array)
 
-		if (ingestSegment.isHidden !== undefined) check(ingestSegment.isHidden, Boolean)
-		if (ingestSegment.timing !== undefined) {
-			check(ingestSegment.timing.expectedStart, Number)
-			check(ingestSegment.timing.expectedEnd, Number)
-		}
-
 		ingestSegment.parts.forEach((ingestPart) => this.validatePart(ingestPart))
 	}
 
@@ -160,9 +145,6 @@ class IngestServerAPI implements IngestRestAPI {
 		check(ingestPart.externalId, String)
 		check(ingestPart.name, String)
 		check(ingestPart.rank, Number)
-
-		if (ingestPart.float !== undefined) check(ingestPart.float, Boolean)
-		if (ingestPart.autoNext !== undefined) check(ingestPart.autoNext, Boolean)
 	}
 
 	private adaptPlaylist(rawPlaylist: DBRundownPlaylist): PlaylistResponse {
@@ -493,7 +475,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 		await runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 			rundownExternalId: ingestRundown.externalId,
-			ingestRundown: { ...ingestRundown, playlistExternalId: playlistId },
+			ingestRundown: ingestRundown,
 			isCreateAction: true,
 			rundownSource: {
 				type: 'restApi',
@@ -538,7 +520,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 				return runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 					rundownExternalId: ingestRundown.externalId,
-					ingestRundown: { ...ingestRundown, playlistExternalId: playlist.externalId },
+					ingestRundown: ingestRundown,
 					isCreateAction: true,
 					rundownSource: {
 						type: 'restApi',
@@ -578,7 +560,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 		await runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 			rundownExternalId: existingRundown.externalId,
-			ingestRundown: { ...ingestRundown, playlistExternalId: playlist.externalId },
+			ingestRundown: ingestRundown,
 			isCreateAction: true,
 			rundownSource: {
 				type: 'restApi',

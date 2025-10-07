@@ -1097,31 +1097,6 @@ components:
           type: string
           example: http://nrcs-url/resync/rundownId
           description: URL on which the Sofie will send the POST request to request re-syncing of the Rundown.
-        timing:
-          type: object
-          description: If type is "none", only expectedDuration can be optionally provided. If type is "forward-time", expectedStart must be provided while either duration or expectedEnd can be optionally provided. If type is "back-time", expectedEnd must be provided while either duration or expectedStart can be optionally provided.
-          properties:
-            type:
-              type: string
-              enum:
-                - none
-                - forward-time
-                - back-time
-            expectedStart:
-              type: number
-              description: Epoch timestamp in milliseconds.
-              example: 1705924800000
-            expectedEnd:
-              type: number
-              description: Epoch timestamp in milliseconds.
-              example: 1705927500000
-            expectedDuration:
-              type: number
-              description: Interval in milliseconds.
-              example: 3600000
-          required:
-            - type
-          additionalProperties: false
         segments:
           type: array
           items:
@@ -1196,23 +1171,6 @@ components:
           description: The position of the Segment in the parent Rundown.
           inclusiveMinimum: 0.0
           example: 1
-        isHidden:
-          type: boolean
-          example: false
-          description: If the Segment is hidden or not.
-        timing:
-          type: object
-          description: Segment timing.
-          properties:
-            expectedStart:
-              type: number
-              description: Epoch timestamp in milliseconds.
-              example: 1705924800000
-            expectedEnd:
-              type: number
-              description: Epoch timestamp in milliseconds.
-              example: 1705927500000
-          additionalProperties: false
         parts:
           type: array
           items:
@@ -1268,12 +1226,6 @@ components:
         name:
           type: string
           example: Part 1
-        float:
-          type: boolean
-          example: false
-        autoNext:
-          type: boolean
-          example: false
         rank:
           type: number
           description: Position of the Part in the Segment.

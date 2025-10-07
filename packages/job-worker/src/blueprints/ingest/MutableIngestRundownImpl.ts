@@ -314,8 +314,6 @@ export class MutableIngestRundownImpl<TRundownPayload = unknown, TSegmentPayload
 				externalId: segment.externalId,
 				rank,
 				name: segment.name,
-				isHidden: segment.isHidden,
-				timing: segment.timing,
 				payload: segment.payload,
 				parts: segmentInfo.ingestParts,
 				userEditStates: { ...segment.userEditStates },
