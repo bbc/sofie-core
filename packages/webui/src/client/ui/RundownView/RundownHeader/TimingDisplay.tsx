@@ -9,22 +9,14 @@ import { CurrentPartOrSegmentRemaining } from '../RundownTiming/CurrentPartOrSeg
 import { NextBreakTiming } from '../RundownTiming/NextBreakTiming'
 import { PlaylistEndTiming } from '../RundownTiming/PlaylistEndTiming'
 import { PlaylistStartTiming } from '../RundownTiming/PlaylistStartTiming'
-import { RundownName } from '../RundownTiming/RundownName'
-import { TimeOfDay } from '../RundownTiming/TimeOfDay'
 import { useTiming } from '../RundownTiming/withTiming'
 
 interface ITimingDisplayProps {
 	rundownPlaylist: DBRundownPlaylist
-	currentRundown: Rundown | undefined
-	rundownCount: number
 	layout: RundownLayoutRundownHeader | undefined
+	isHovered: boolean
 }
-export function TimingDisplay({
-	rundownPlaylist,
-	currentRundown,
-	rundownCount,
-	layout,
-}: ITimingDisplayProps): JSX.Element | null {
+export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDisplayProps): JSX.Element | null {
 	const { t } = useTranslation()
 
 	const timingDurations = useTiming()
@@ -47,30 +39,24 @@ export function TimingDisplay({
 
 	return (
 		<div className="timing">
-			<div className="timing__header__left">
-				<PlaylistStartTiming rundownPlaylist={rundownPlaylist} hideDiff={true} />
-				<RundownName rundownPlaylist={rundownPlaylist} currentRundown={currentRundown} rundownCount={rundownCount} />
+			<div className="timing__left">
+				{rundownPlaylist.currentPartInfo && (
+					<span className="timing-clock current-remaining">
+						<CurrentPartOrSegmentRemaining
+							currentPartInstanceId={rundownPlaylist.currentPartInfo.partInstanceId}
+							heavyClassName="overtime"
+							preferSegmentTime={true}
+						/>
+						<AutoNextStatus />
+						{rundownPlaylist.holdState && rundownPlaylist.holdState !== RundownHoldState.COMPLETE ? (
+							<div className="rundown__header-status rundown__header-status--hold">{t('Hold')}</div>
+						) : null}
+					</span>
+				)}
 			</div>
-			<div className="timing__header__center">
-				<TimeOfDay />
-			</div>
-			<div className="timing__header__right">
-				<div className="timing__header__right__left">
-					{rundownPlaylist.currentPartInfo && (
-						<span className="timing-clock current-remaining">
-							<CurrentPartOrSegmentRemaining
-								currentPartInstanceId={rundownPlaylist.currentPartInfo.partInstanceId}
-								heavyClassName="overtime"
-								preferSegmentTime={true}
-							/>
-							<AutoNextStatus />
-							{rundownPlaylist.holdState && rundownPlaylist.holdState !== RundownHoldState.COMPLETE ? (
-								<div className="rundown__header-status rundown__header-status--hold">{t('Hold')}</div>
-							) : null}
-						</span>
-					)}
-				</div>
-				<div className="timing__header__right__right">
+			<div className="timing__counters">
+				<div className="timing__counters__center">
+					<PlaylistStartTiming rundownPlaylist={rundownPlaylist} hidePlannedStart={false} hideDiff={true} />
 					{showNextBreakTiming ? (
 						<NextBreakTiming
 							rundownsBeforeBreak={timingDurations.rundownsBeforeNextBreak!}
@@ -86,6 +72,8 @@ export function TimingDisplay({
 							expectedEnd={expectedEnd}
 							expectedDuration={expectedDuration}
 							endLabel={layout?.plannedEndText}
+							hideDiffLabel={!isHovered}
+							hidePlannedEndLabel={!isHovered}
 						/>
 					) : null}
 				</div>

@@ -66,6 +66,7 @@ export function RundownHeader({
 
 	const [selectedPiece, setSelectedPiece] = useState<BucketAdLibItem | IAdLibListItem | PieceUi | undefined>(undefined)
 	const [shouldQueueAdlibs, setShouldQueueAdlibs] = useState(false)
+	const [isHeaderHovered, setIsHeaderHovered] = useState(false)
 
 	const operations = useRundownPlaylistOperations()
 
@@ -165,63 +166,70 @@ export function RundownHeader({
 					rehearsal: playlist.rehearsal,
 				})}
 			>
+				<WarningDisplay
+					studioMode={userPermissions.studio}
+					inActiveRundownView={inActiveRundownView}
+					playlist={playlist}
+					oneMinuteBeforeAction={(e, noResetOnActivate) =>
+						noResetOnActivate ? operations.activateRundown(e) : operations.resetAndActivateRundown(e)
+					}
+				/>
 				<ContextMenuTrigger
 					id="rundown-context-menu"
 					attributes={{
-						className: 'flex-col col-timing horizontal-align-center',
+						className: 'flex-col col-timing horizontal-align-center header-timing-wrapper',
 					}}
 					holdToDisplay={contextMenuHoldToDisplayTime()}
 				>
-					<WarningDisplay
-						studioMode={userPermissions.studio}
-						inActiveRundownView={inActiveRundownView}
-						playlist={playlist}
-						oneMinuteBeforeAction={(e, noResetOnActivate) =>
-							noResetOnActivate ? operations.activateRundown(e) : operations.resetAndActivateRundown(e)
-						}
-					/>
-					<div className="header-row flex-row first-row super-dark">
-						<div className="flex-col left horizontal-align-left">
-							<div className="badge-sofie mt-4 mb-3 mx-4">
-								<Tooltip
-									overlay={t('Add ?studio=1 to the URL to enter studio mode')}
-									visible={getHelpMode() && !userPermissions.studio}
-									placement="bottom"
-								>
-									<div className="media-elem me-2 sofie-logo" />
-								</Tooltip>
-							</div>
+					<div
+						className="header-row flex-row first-row super-dark"
+						onMouseEnter={() => setIsHeaderHovered(true)}
+						onMouseLeave={() => setIsHeaderHovered(false)}
+					>
+						<div className="header-left-section">
+							<ContextMenuTrigger
+								id="rundown-context-menu"
+								attributes={{
+									className: 'menu-icon-trigger',
+								}}
+								mouseButton={0}
+								holdToDisplay={-1}
+							>
+								<button className="menu-icon-button" title={t('Menu')}>
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+										<line x1="3" y1="6" x2="21" y2="6" strokeWidth="2" strokeLinecap="round" />
+										<line x1="3" y1="12" x2="21" y2="12" strokeWidth="2" strokeLinecap="round" />
+										<line x1="3" y1="18" x2="21" y2="18" strokeWidth="2" strokeLinecap="round" />
+									</svg>
+								</button>
+							</ContextMenuTrigger>
 						</div>
 						{layout && RundownLayoutsAPI.isDashboardLayout(layout) ? (
-							<ShelfDashboardLayout
-								rundownLayout={layout}
-								playlist={playlist}
-								showStyleBase={showStyleBase}
-								showStyleVariant={showStyleVariant}
-								studio={studio}
-								studioMode={userPermissions.studio}
-								shouldQueue={shouldQueueAdlibs}
-								onChangeQueueAdLib={setShouldQueueAdlibs}
-								selectedPiece={selectedPiece}
-								onSelectPiece={setSelectedPiece}
-							/>
-						) : (
-							<>
-								<TimingDisplay
-									rundownPlaylist={playlist}
-									currentRundown={currentRundown}
-									rundownCount={rundownIds.length}
-									layout={layout}
+							<div className="header-center-section">
+								<ShelfDashboardLayout
+									rundownLayout={layout}
+									playlist={playlist}
+									showStyleBase={showStyleBase}
+									showStyleVariant={showStyleVariant}
+									studio={studio}
+									studioMode={userPermissions.studio}
+									shouldQueue={shouldQueueAdlibs}
+									onChangeQueueAdLib={setShouldQueueAdlibs}
+									selectedPiece={selectedPiece}
+									onSelectPiece={setSelectedPiece}
 								/>
-								<RundownSystemStatus studioId={studio._id} playlistId={playlist._id} firstRundown={firstRundown} />
-							</>
-						)}
-						<div className="flex-col right horizontal-align-right">
-							<div className="links close">
-								<NavLink to="/rundowns" title={t('Exit')}>
-									<CoreIcon.NrkClose />
-								</NavLink>
 							</div>
+						) : (
+							<TimingDisplay rundownPlaylist={playlist} layout={layout} isHovered={isHeaderHovered} />
+						)}
+						<div className="header-right-section">
+							{isHeaderHovered && (
+								<div className="links close">
+									<NavLink to="/rundowns" title={t('Exit')}>
+										<CoreIcon.NrkClose />
+									</NavLink>
+								</div>
+							)}
 						</div>
 					</div>
 				</ContextMenuTrigger>
