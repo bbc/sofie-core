@@ -26,6 +26,7 @@ import { executePeripheralDeviceAction, listPlayoutDevices } from '../../periphe
 import { ActionPartChange, PartAndPieceInstanceActionService } from './services/PartAndPieceInstanceActionService.js'
 import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 import { getOrderedPartsAfterPlayhead } from '../../playout/lookahead/util.js'
+import { convertPartToBlueprints } from './lib.js'
 
 export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContext, IEventContext {
 	public isTakeAborted: boolean
@@ -54,7 +55,7 @@ export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContex
 	}
 
 	async getUpcomingParts(limit: number = 5): Promise<ReadonlyDeep<IBlueprintPart[]>> {
-		return getOrderedPartsAfterPlayhead(this._context, this._playoutModel, limit)
+		return getOrderedPartsAfterPlayhead(this._context, this._playoutModel, limit).map(convertPartToBlueprints)
 	}
 
 	abortTake(): void {
