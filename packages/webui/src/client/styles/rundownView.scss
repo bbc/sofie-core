@@ -267,6 +267,7 @@ body.no-overflow {
 	}
 
 	.menu-icon-button {
+		margin-top: 10px;
 		background: none;
 		border: none;
 		cursor: pointer;
@@ -288,7 +289,8 @@ body.no-overflow {
 	}
 
 	.timing {
-		margin: 0 0;
+		margin-top: 10px;
+		margin-left: 0px;
 		min-width: auto;
 		width: 100%;
 		text-align: center;
@@ -414,6 +416,12 @@ body.no-overflow {
 					text-align: right;
 				}
 
+				&.center {
+					left: 50%;
+					transform: translateX(-50%);
+					text-align: center;
+				}
+
 				&.hide-overflow {
 					overflow: hidden;
 					text-overflow: ellipsis;
@@ -435,6 +443,11 @@ body.no-overflow {
 						height: 1.4em;
 					}
 				}
+			}
+
+			.planned-end-time {
+				color: #ffffff;
+				font-style: italic;
 			}
 
 			&.heavy-light {

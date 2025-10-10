@@ -7,8 +7,8 @@ import * as RundownResolver from '../../../lib/RundownResolver'
 import { AutoNextStatus } from '../RundownTiming/AutoNextStatus'
 import { CurrentPartOrSegmentRemaining } from '../RundownTiming/CurrentPartOrSegmentRemaining'
 import { NextBreakTiming } from '../RundownTiming/NextBreakTiming'
-import { PlaylistEndTiming } from '../RundownTiming/PlaylistEndTiming'
-import { PlaylistStartTiming } from '../RundownTiming/PlaylistStartTiming'
+import { PlaylistEndTimingV2 } from '../RundownTiming/PlaylistEndTimingV2'
+import { PlaylistStartTimingV2 } from '../RundownTiming/PlaylistStartTimingV2'
 import { useTiming } from '../RundownTiming/withTiming'
 
 interface ITimingDisplayProps {
@@ -56,7 +56,7 @@ export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDis
 			</div>
 			<div className="timing__counters">
 				<div className="timing__counters__center">
-					<PlaylistStartTiming rundownPlaylist={rundownPlaylist} hidePlannedStart={false} hideDiff={true} />
+					<PlaylistStartTimingV2 rundownPlaylist={rundownPlaylist} hidePlannedStart={false} hideDiff={true} />
 					{showNextBreakTiming ? (
 						<NextBreakTiming
 							rundownsBeforeBreak={timingDurations.rundownsBeforeNextBreak!}
@@ -65,7 +65,7 @@ export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDis
 						/>
 					) : null}
 					{showEndTiming ? (
-						<PlaylistEndTiming
+						<PlaylistEndTimingV2
 							rundownPlaylist={rundownPlaylist}
 							loop={RundownResolver.isLoopRunning(rundownPlaylist)}
 							expectedStart={expectedStart}
