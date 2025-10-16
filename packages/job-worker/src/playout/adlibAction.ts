@@ -83,7 +83,7 @@ export async function executeAdlibActionAndSaveModel(
 		context.directCollections.RundownBaselineAdLibActions.findOne(
 			data.actionDocId as RundownBaselineAdLibActionId,
 			{
-				projection: { _id: 1, privateData: 1 },
+				projection: { _id: 1, privateData: 1, publicData: 1 },
 			}
 		),
 		context.directCollections.BucketAdLibActions.findOne(data.actionDocId as BucketAdLibActionId, {
