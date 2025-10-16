@@ -1101,12 +1101,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/segment'
+        payload:
+          type: object
+          additionalProperties: true
       required:
         - externalId
         - name
         - type
         - resyncUrl
-        - timing
+        - segments
       additionalProperties: false
     rundownResponse:
       type: object
@@ -1175,10 +1178,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/part'
+        payload:
+          type: object
+          additionalProperties: true
       required:
         - externalId
         - name
         - rank
+        - parts
       additionalProperties: false
     segmentResponse:
       type: object
