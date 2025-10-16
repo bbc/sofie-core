@@ -475,7 +475,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 		await runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 			rundownExternalId: ingestRundown.externalId,
-			ingestRundown: ingestRundown,
+			ingestRundown: { ...ingestRundown, playlistExternalId: playlistId },
 			isCreateAction: true,
 			rundownSource: {
 				type: 'restApi',
@@ -520,7 +520,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 				return runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 					rundownExternalId: ingestRundown.externalId,
-					ingestRundown: ingestRundown,
+					ingestRundown: { ...ingestRundown, playlistExternalId: playlist.externalId },
 					isCreateAction: true,
 					rundownSource: {
 						type: 'restApi',
@@ -560,7 +560,7 @@ class IngestServerAPI implements IngestRestAPI {
 
 		await runIngestOperation(studio._id, IngestJobs.UpdateRundown, {
 			rundownExternalId: existingRundown.externalId,
-			ingestRundown: ingestRundown,
+			ingestRundown: { ...ingestRundown, playlistExternalId: playlist.externalId },
 			isCreateAction: true,
 			rundownSource: {
 				type: 'restApi',

@@ -278,7 +278,7 @@ async function updateSofieIngestRundown(
 						payload: undefined,
 						userEditStates: {},
 						rundownSource: nrcsIngestRundown.rundownSource,
-						playlistExternalId: undefined,
+						playlistExternalId: nrcsIngestRundown.playlistExternalId,
 					} satisfies Complete<SofieIngestRundownWithSource>,
 					false
 				)
