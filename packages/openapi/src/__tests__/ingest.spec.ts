@@ -1,4 +1,4 @@
-import { Configuration, IngestApi, Part, RundownTimingTypeEnum } from '../../client/ts/index.js'
+import { Configuration, IngestApi, Part } from '../../client/ts/index.js'
 import { checkServer } from '../checkServer.js'
 import Logging from '../httpLogging.js'
 
@@ -135,17 +135,11 @@ describe('Ingest API', () => {
 		name: 'New rundown',
 		type: 'external',
 		resyncUrl: 'resyncUrl',
-		timing: {
-			type: RundownTimingTypeEnum.None,
-			expectedStart: 0,
-			expectedEnd: 0,
-			expectedDuration: 0,
-		},
+		segments: [],
 	}
 
 	test('Can create rundown', async () => {
 		const result = await ingestApi.postRundown({ studioId, playlistId: playlistIds[0], rundown })
-
 		expect(result).toBe(undefined)
 	})
 
@@ -232,11 +226,7 @@ describe('Ingest API', () => {
 		externalId: 'segment1',
 		name: 'Segment 1',
 		rank: 0,
-		_float: true,
-		timing: {
-			expectedStart: 0,
-			expectedEnd: 0,
-		},
+		parts: [],
 	}
 
 	test('Can create segment', async () => {
@@ -351,8 +341,6 @@ describe('Ingest API', () => {
 				externalId: 'part1',
 				name: 'Part 1',
 				rank: 0,
-				_float: true,
-				autoNext: true,
 				payload: {
 					type: 'CAMERA',
 					guest: true,
@@ -391,8 +379,6 @@ describe('Ingest API', () => {
 					externalId: 'part1',
 					name: 'Part 1',
 					rank: 0,
-					_float: true,
-					autoNext: true,
 					payload: {
 						type: 'CAMERA',
 						guest: true,
@@ -426,8 +412,6 @@ describe('Ingest API', () => {
 				externalId: 'part1',
 				name: 'Part 1',
 				rank: 0,
-				_float: true,
-				autoNext: true,
 				payload: {
 					type: 'CAMERA',
 					guest: true,
