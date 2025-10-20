@@ -14,9 +14,16 @@ import { useTiming } from '../RundownTiming/withTiming'
 interface ITimingDisplayProps {
 	rundownPlaylist: DBRundownPlaylist
 	layout: RundownLayoutRundownHeader | undefined
+	currentRundown: Rundown | undefined
+	rundownCount: number
 	isHovered: boolean
 }
-export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDisplayProps): JSX.Element | null {
+export function TimingDisplay({
+	rundownPlaylist,
+	layout,
+	isHovered,
+	currentRundown,
+}: ITimingDisplayProps): JSX.Element | null {
 	const { t } = useTranslation()
 
 	const timingDurations = useTiming()
@@ -56,7 +63,12 @@ export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDis
 			</div>
 			<div className="timing__counters">
 				<div className="timing__counters__center">
-					<PlaylistStartTimingV2 rundownPlaylist={rundownPlaylist} hidePlannedStart={false} hideDiff={true} />
+					<PlaylistStartTimingV2
+						rundownPlaylist={rundownPlaylist}
+						hidePlannedStart={false}
+						hideDiff={true}
+						hidePlannedStartLabel={!isHovered}
+					/>
 					{showNextBreakTiming ? (
 						<NextBreakTiming
 							rundownsBeforeBreak={timingDurations.rundownsBeforeNextBreak!}
@@ -72,11 +84,13 @@ export function TimingDisplay({ rundownPlaylist, layout, isHovered }: ITimingDis
 							expectedEnd={expectedEnd}
 							expectedDuration={expectedDuration}
 							endLabel={layout?.plannedEndText}
-							hideDiffLabel={!isHovered}
 							hidePlannedEndLabel={!isHovered}
 						/>
 					) : null}
 				</div>
+			</div>
+			<div className="timing__right">
+				<div className="timing__right__rundownname">{isHovered && currentRundown?.name}</div>
 			</div>
 		</div>
 	)

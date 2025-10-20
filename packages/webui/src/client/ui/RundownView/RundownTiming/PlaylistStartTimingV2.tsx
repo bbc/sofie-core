@@ -11,6 +11,7 @@ interface IStartTimingProps {
 	rundownPlaylist: DBRundownPlaylist
 	hidePlannedStart?: boolean
 	hideDiff?: boolean
+	hidePlannedStartLabel?: boolean
 	plannedStartText?: string
 }
 
@@ -18,6 +19,7 @@ export function PlaylistStartTimingV2({
 	rundownPlaylist,
 	hidePlannedStart,
 	hideDiff,
+	hidePlannedStartLabel,
 	plannedStartText,
 }: IStartTimingProps): JSX.Element {
 	const { t } = useTranslation()
@@ -33,6 +35,14 @@ export function PlaylistStartTimingV2({
 
 	return (
 		<React.Fragment>
+			<span className="timing-clock plan-start left" role="timer">
+				{!hidePlannedStartLabel && (
+					<span className="timing-clock-label left">{plannedStartText ?? t('Planned Start At')}</span>
+				)}
+				<span className="planned-start-time">
+					<Moment interval={0} format="HH:mm:ss" date={playlistExpectedStart} />
+				</span>
+			</span>
 			{!hidePlannedStart &&
 				(rundownPlaylist.startedPlayback && rundownPlaylist.activationId && !rundownPlaylist.rehearsal ? (
 					<span className="timing-clock plan-start left" role="timer">

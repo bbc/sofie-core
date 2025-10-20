@@ -220,7 +220,13 @@ export function RundownHeader({
 								/>
 							</div>
 						) : (
-							<TimingDisplay rundownPlaylist={playlist} layout={layout} isHovered={isHeaderHovered} />
+							<TimingDisplay
+								rundownPlaylist={playlist}
+								layout={layout}
+								isHovered={isHeaderHovered}
+								currentRundown={currentRundown}
+								rundownCount={rundownIds.length}
+							/>
 						)}
 						<div className="header-right-section">
 							{isHeaderHovered && (

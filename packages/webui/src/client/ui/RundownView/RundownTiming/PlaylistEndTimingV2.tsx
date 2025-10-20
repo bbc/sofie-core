@@ -17,7 +17,6 @@ interface IEndTimingProps {
 	expectedEnd?: number
 	endLabel?: string
 	hidePlannedEndLabel?: boolean
-	hideDiffLabel?: boolean
 	hidePlannedEnd?: boolean
 	hideCountdown?: boolean
 	hideDiff?: boolean
@@ -31,7 +30,6 @@ export function PlaylistEndTimingV2({
 	expectedEnd,
 	endLabel,
 	hidePlannedEndLabel,
-	hideDiffLabel,
 	hidePlannedEnd,
 	hideCountdown,
 	hideDiff,
@@ -48,15 +46,12 @@ export function PlaylistEndTimingV2({
 			{!hideDiff ? (
 				timingDurations ? (
 					<span
-						className={ClassNames('timing-clock heavy-light ', {
+						className={ClassNames('timing-clock round-red', {
 							heavy: overUnderClock < 0,
 							light: overUnderClock >= 0,
 						})}
 						role="timer"
 					>
-						{!hideDiffLabel && (
-							<span className="timing-clock-label center">{overUnderClock < 0 ? t('Under') : t('Over')}</span>
-						)}
 						{RundownUtils.formatDiffToTimecode(overUnderClock, true, false, true, true, true, undefined, true, true)}
 					</span>
 				) : null
