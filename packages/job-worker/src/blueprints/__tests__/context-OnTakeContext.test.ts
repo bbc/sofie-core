@@ -6,6 +6,8 @@ import { mock } from 'jest-mock-extended'
 import { PartAndPieceInstanceActionService } from '../context/services/PartAndPieceInstanceActionService.js'
 import { OnTakeContext } from '../context/index.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PlayoutModelImpl } from '../../playout/model/implementation/PlayoutModelImpl.js'
 
 describe('Test blueprint api context', () => {
@@ -107,8 +109,30 @@ describe('Test blueprint api context', () => {
 
 			mockPlayoutModel.getAllOrderedParts.mockReturnValue(
 				mock([
-					{ _id: 'part1', title: 'Part 1', invalid: false, floated: false } as unknown as DBPart,
-					{ _id: 'part2', title: 'Part 2', invalid: false, floated: false } as unknown as DBPart,
+					{
+						_id: protectString<PartId>('part1'),
+						title: 'Part 1',
+						invalid: false,
+						floated: false,
+						_rank: 1,
+						rundownId: protectString<RundownId>('rundown1'),
+						externalId: 'ext1',
+						segmentId: protectString<SegmentId>('seg1'),
+						expectedDurationWithTransition: 1000,
+						userEditOperations: [],
+					} as DBPart,
+					{
+						_id: protectString<PartId>('part2'),
+						title: 'Part 2',
+						invalid: false,
+						floated: false,
+						_rank: 1,
+						rundownId: protectString<RundownId>('rundown1'),
+						externalId: 'ext1',
+						segmentId: protectString<SegmentId>('seg1'),
+						expectedDurationWithTransition: 1000,
+						userEditOperations: [],
+					} as unknown as DBPart,
 				])
 			)
 
