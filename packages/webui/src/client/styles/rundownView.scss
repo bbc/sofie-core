@@ -267,12 +267,12 @@ body.no-overflow {
 	}
 
 	.menu-icon-button {
-		margin-top: 10px;
+		margin-top: 0px;
 		background: none;
 		border: none;
 		cursor: pointer;
 		color: #0066cc;
-		padding: 0.5rem 1rem;
+		padding: 0.8rem 1rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -347,7 +347,7 @@ body.no-overflow {
 
 		.timing__left {
 			position: absolute;
-			left: 60px;
+			left: 80px;
 			display: flex;
 			align-items: center;
 		}
@@ -480,8 +480,7 @@ body.no-overflow {
 
 			.planned-end-time {
 				color: #ffffff;
-				font-size: 1.1em;
-				// font-style: italic;
+				font-size: 1.0em;
 				font-variation-settings:
 					'GRAD' 0,
 					'XOPQ' 96,
@@ -492,16 +491,15 @@ body.no-overflow {
 					'YTFI' 738,
 					'YTLC' 548,
 					'YTUC' 712,
-					'opsz' 100,
-					'slnt' -20,
-					'wdth' 80,
-					'wght' 550;
+					'opsz' 44,
+					'slnt' -5,
+					'wdth' 70,
+					'wght' 400;
 			}
 
 			.planned-start-time {
 				color: #ffffff;
-				font-size: 1.1em;
-				// font-style: italic;
+				font-size: 1.0em;
 				font-variation-settings:
 					'GRAD' 0,
 					'XOPQ' 96,
@@ -512,10 +510,10 @@ body.no-overflow {
 					'YTFI' 738,
 					'YTLC' 548,
 					'YTUC' 712,
-					'opsz' 100,
-					'slnt' -20,
-					'wdth' 80,
-					'wght' 550;
+					'opsz' 44,
+					'slnt' -5,
+					'wdth' 70,
+					'wght' 400;
 			}
 
 			&.heavy-light {
