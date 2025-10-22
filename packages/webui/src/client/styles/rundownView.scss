@@ -358,12 +358,25 @@ body.no-overflow {
 			align-items: center;
 
 			.timing__right__rundownname {
-				font-size: 0.6em;
-				font-weight: 100;
+				font-size: 0.4em;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				max-width: 40vw;
+				font-variation-settings:
+				'GRAD' 0,
+				'XOPQ' 96,
+				'XTRA' 468,
+				'YOPQ' 79,
+				'YTAS' 750,
+				'YTDE' -203,
+				'YTFI' 738,
+				'YTLC' 548,
+				'YTUC' 712,
+				'opsz' 50,
+				'slnt' -10,
+				'wdth' 100,
+				'wght' 550;
 			}
 		}
 
@@ -434,7 +447,8 @@ body.no-overflow {
 				color: #888;
 				text-transform: uppercase;
 				white-space: nowrap;
-				font-size: 0.35em;
+				font-size: 0.33em;
+				letter-spacing: 0.1em;
 
 				font-variation-settings:
 					'GRAD' 0,
