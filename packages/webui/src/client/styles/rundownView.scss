@@ -326,7 +326,7 @@ body.no-overflow {
 			'YTFI' 738,
 			'YTLC' 548,
 			'YTUC' 712,
-			'opsz' 100,
+			'opsz' 50,
 			'slnt' 0,
 			'wdth' 100,
 			'wght' 550;
@@ -376,7 +376,7 @@ body.no-overflow {
 
 			.timing__counters__center {
 				display: flex;
-				gap: 1rem;
+				gap: 2rem;
 			}
 		}
 
@@ -430,12 +430,27 @@ body.no-overflow {
 			.timing-clock-label {
 				position: absolute;
 				display: inline;
-				top: -1em;
-				color: #b8b8b8;
+				top: -0.75em;
+				color: #888;
 				text-transform: uppercase;
 				white-space: nowrap;
-				font-weight: 300;
-				font-size: 0.5em;
+				font-size: 0.35em;
+
+				font-variation-settings:
+					'GRAD' 0,
+					'XOPQ' 96,
+					'XTRA' 468,
+					'YOPQ' 79,
+					'YTAS' 750,
+					'YTDE' -203,
+					'YTFI' 738,
+					'YTLC' 548,
+					'YTUC' 712,
+					'opsz' 50,
+					'slnt' 0,
+					'wdth' 100,
+					'wght' 400;
+
 
 				&.left {
 					left: 0;
@@ -533,10 +548,25 @@ body.no-overflow {
 			}
 
 			&.round-red {
-				font-weight: 400;
 				border-radius: 20px;
-				padding: 0px 8px;
-				max-height: 30px;
+				margin-top: 4px;
+				padding: 10px 8px 8px 8px;
+				max-height: 32px;
+				font-variation-settings:
+					'GRAD' 0,
+					'XOPQ' 96,
+					'XTRA' 468,
+					'YOPQ' 79,
+					'YTAS' 750,
+					'YTDE' -203,
+					'YTFI' 738,
+					'YTLC' 548,
+					'YTUC' 712,
+					'opsz' 20,
+					'slnt' 0,
+					'wdth' 25,
+					'wght' 700;
+
 
 				&.heavy {
 					// color: $general-late-color;
