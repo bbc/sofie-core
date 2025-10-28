@@ -46,13 +46,13 @@ export function PlaylistEndTimingV2({
 			{!hideDiff ? (
 				timingDurations ? (
 					<span
-						className={ClassNames('timing-clock round-red', {
+						className={ClassNames('timing-clock round-diff', {
 							heavy: overUnderClock < 0,
 							light: overUnderClock >= 0,
 						})}
 						role="timer"
 					>
-						{!hidePlannedEndLabel && <span className="timing-clock-label right">{endLabel ?? t('Diff')}</span>}
+						{!hidePlannedEndLabel && <span className="timing-clock-label center">{endLabel ?? t('Diff')}</span>}
 						{RundownUtils.formatDiffToTimecode(overUnderClock, true, false, true, true, true, undefined, true, true)}
 					</span>
 				) : null
@@ -75,14 +75,18 @@ export function PlaylistEndTimingV2({
 					!rundownPlaylist.startedPlayback ? (
 						<span className="timing-clock plan-end visual-last-child" role="timer">
 							{!hidePlannedEndLabel && <span className="timing-clock-label right">{endLabel ?? t('Planned End')}</span>}
-							<Moment interval={0} format="HH:mm:ss" date={expectedEnd} />
+							<span className="planned-end-time">
+								<Moment interval={0} format="HH:mm:ss" date={expectedEnd} />
+							</span>
 						</span>
 					) : (
 						<span className="timing-clock plan-end visual-last-child" role="timer">
 							{!hidePlannedEndLabel && (
 								<span className="timing-clock-label right">{endLabel ?? t('Expected End')}</span>
 							)}
-							<Moment interval={0} format="HH:mm:ss" date={expectedEnd} />
+							<span className="planned-end-time">
+								<Moment interval={0} format="HH:mm:ss" date={expectedEnd} />
+							</span>
 						</span>
 					)
 				) : timingDurations ? (
@@ -90,11 +94,13 @@ export function PlaylistEndTimingV2({
 						timingDurations.partCountdown && rundownPlaylist.activationId && rundownPlaylist.currentPartInfo ? (
 							<span className="timing-clock plan-end visual-last-child" role="timer">
 								{!hidePlannedEndLabel && <span className="timing-clock-label right">{t('Next Loop at')}</span>}
-								<Moment
-									interval={0}
-									format="HH:mm:ss"
-									date={now + (timingDurations.partCountdown[Object.keys(timingDurations.partCountdown)[0]] || 0)}
-								/>
+								<span className="planned-end-time">
+									<Moment
+										interval={0}
+										format="HH:mm:ss"
+										date={now + (timingDurations.partCountdown[Object.keys(timingDurations.partCountdown)[0]] || 0)}
+									/>
+								</span>
 							</span>
 						) : null
 					) : (

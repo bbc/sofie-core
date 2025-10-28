@@ -480,7 +480,7 @@ body.no-overflow {
 
 				&.center {
 					left: 50%;
-					transform: translateX(-50%);
+					margin-top: -4px;
 					text-align: center;
 				}
 
@@ -561,9 +561,8 @@ body.no-overflow {
 				}
 			}
 
-			&.round-red {
+			&.round-diff {
 				border-radius: 20px;
-				margin-top: 4px;
 				padding: 10px 8px 8px 8px;
 				max-height: 32px;
 				font-variation-settings:

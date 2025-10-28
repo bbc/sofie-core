@@ -49,6 +49,7 @@ export function TimingDisplay({
 			<div className="timing__left">
 				{rundownPlaylist.currentPartInfo && (
 					<span className="timing-clock current-remaining">
+						{isHovered && <span className="timing-clock-label left">{t('On Air Part')}</span>}
 						<CurrentPartOrSegmentRemaining
 							currentPartInstanceId={rundownPlaylist.currentPartInfo.partInstanceId}
 							heavyClassName="overtime"

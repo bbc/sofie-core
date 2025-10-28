@@ -35,29 +35,31 @@ export function PlaylistStartTimingV2({
 
 	return (
 		<React.Fragment>
-			<span className="timing-clock plan-start left" role="timer">
-				{!hidePlannedStartLabel && (
-					<span className="timing-clock-label left">{plannedStartText ?? t('Planned Start At')}</span>
-				)}
-				<span className="planned-start-time">
-					<Moment interval={0} format="HH:mm:ss" date={playlistExpectedStart} />
-				</span>
-			</span>
 			{!hidePlannedStart &&
 				(rundownPlaylist.startedPlayback && rundownPlaylist.activationId && !rundownPlaylist.rehearsal ? (
 					<span className="timing-clock plan-start left" role="timer">
-						<span className="timing-clock-label left">{t('Started')}</span>
-						<Moment interval={0} format="HH:mm:ss" date={rundownPlaylist.startedPlayback} />
+						{!hidePlannedStartLabel && <span className="timing-clock-label left">{t('Started')}</span>}
+						<span className="planned-start-time">
+							<Moment interval={0} format="HH:mm:ss" date={rundownPlaylist.startedPlayback} />
+						</span>
 					</span>
 				) : playlistExpectedStart ? (
 					<span className="timing-clock plan-start left" role="timer">
-						<span className="timing-clock-label left">{plannedStartText || t('Planned Start')}</span>
-						<Moment interval={0} format="HH:mm:ss" date={playlistExpectedStart} />
+						{!hidePlannedStartLabel && (
+							<span className="timing-clock-label left">{plannedStartText || t('Planned Start')}</span>
+						)}
+						<span className="planned-start-time">
+							<Moment interval={0} format="HH:mm:ss" date={playlistExpectedStart} />
+						</span>
 					</span>
 				) : playlistExpectedEnd && playlistExpectedDuration ? (
 					<span className="timing-clock plan-start left" role="timer">
-						<span className="timing-clock-label left">{plannedStartText || t('Expected Start')}</span>
-						<Moment interval={0} format="HH:mm:ss" date={playlistExpectedEnd - playlistExpectedDuration} />
+						{!hidePlannedStartLabel && (
+							<span className="timing-clock-label left">{plannedStartText || t('Expected Start')}</span>
+						)}
+						<span className="planned-start-time">
+							<Moment interval={0} format="HH:mm:ss" date={playlistExpectedEnd - playlistExpectedDuration} />
+						</span>
 					</span>
 				) : null)}
 			{!hideDiff && expectedStart && (
@@ -68,17 +70,19 @@ export function PlaylistStartTimingV2({
 					})}
 					role="timer"
 				>
-					<span className="timing-clock-label">{t('Diff')}</span>
-					{rundownPlaylist.startedPlayback
-						? RundownUtils.formatDiffToTimecode(
-								rundownPlaylist.startedPlayback - expectedStart,
-								true,
-								false,
-								true,
-								true,
-								true
-							)
-						: RundownUtils.formatDiffToTimecode(getCurrentTime() - expectedStart, true, false, true, true, true)}
+					{!hidePlannedStartLabel && <span className="timing-clock-label">{t('Diff')}</span>}
+					<span className="planned-start-time">
+						{rundownPlaylist.startedPlayback
+							? RundownUtils.formatDiffToTimecode(
+									rundownPlaylist.startedPlayback - expectedStart,
+									true,
+									false,
+									true,
+									true,
+									true
+								)
+							: RundownUtils.formatDiffToTimecode(getCurrentTime() - expectedStart, true, false, true, true, true)}
+					</span>
 				</span>
 			)}
 		</React.Fragment>
