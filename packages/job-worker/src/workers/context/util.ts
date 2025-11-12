@@ -1,4 +1,4 @@
-import type { QueueJobOptions } from '../../jobs'
+import type { QueueJobOptions } from '../../jobs/index.js'
 
 export type QueueJobFunc = (
 	queueName: string,

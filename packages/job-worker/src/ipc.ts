@@ -4,7 +4,7 @@ import { FastTrackTimelineFunc, JobSpec, JobWorkerBase } from './main.js'
 import { JobManager, JobStream } from './manager.js'
 import { WorkerId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { getPrometheusMetricsString, setupPrometheusMetrics } from '@sofie-automation/corelib/dist/prometheus'
-import type { QueueJobOptions } from './jobs'
+import type { QueueJobOptions } from './jobs/index.js'
 
 /**
  * A very simple implementation of JobManager, that is designed to work via threadedClass over IPC

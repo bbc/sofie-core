@@ -5,7 +5,7 @@ import { clone, getRandomId } from '@sofie-automation/corelib/dist/lib'
 import { ExpectedPackage, Time } from '@sofie-automation/blueprints-integration'
 import { PlayoutPieceInstanceModel } from '../PlayoutPieceInstanceModel.js'
 import _ from 'underscore'
-import { getExpectedPackageId } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages.js'
+import { getExpectedPackageId } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export class PlayoutPieceInstanceModelImpl implements PlayoutPieceInstanceModel {
 	/**

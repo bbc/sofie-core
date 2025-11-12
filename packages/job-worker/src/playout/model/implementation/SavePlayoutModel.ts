@@ -15,9 +15,9 @@ import { PlayoutPartInstanceModelImpl } from './PlayoutPartInstanceModelImpl.js'
 import { PlayoutRundownModelImpl } from './PlayoutRundownModelImpl.js'
 import { ReadonlyDeep } from 'type-fest'
 import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
-import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib.js'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages.js'
-import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio.js'
+import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
+import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
 
 /**
  * Save any changed AdlibTesting Segments

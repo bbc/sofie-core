@@ -24,6 +24,7 @@ import { MetricsCounter } from '@sofie-automation/corelib/dist/prometheus'
 import { isInTestWrite } from '../security/securityVerify'
 import { UserError } from '@sofie-automation/corelib/dist/error'
 import { QueueJobOptions } from '@sofie-automation/job-worker/dist/jobs'
+import _ from 'underscore'
 
 const FREEZE_LIMIT = 1000 // how long to wait for a response to a Ping
 const RESTART_TIMEOUT = 30000 // how long to wait for a restart to complete before throwing an error
@@ -52,8 +53,9 @@ const metricsQueueErrorsCounter = new MetricsCounter({
 })
 
 interface JobQueue {
-	jobs: Array<JobEntry | null>
-	// lowPriorityJobs: Array<JobEntry>
+	// TODO: figure out why there can be null types in the array.
+	jobsHighPriority: Array<JobEntry | null>
+	jobsLowPriority: Array<JobEntry | null>
 
 	/** Notify that there is a job waiting (aka worker is long-polling) */
 	notifyWorker: ManualPromise<void> | null
@@ -78,7 +80,8 @@ function getOrCreateQueue(queueName: string): JobQueue {
 	let queue = queues.get(queueName)
 	if (!queue) {
 		queue = {
-			jobs: [],
+			jobsHighPriority: [],
+			jobsLowPriority: [],
 			notifyWorker: null,
 			metricsTotal: metricsQueueTotalCounter.labels(queueName),
 			metricsSuccess: metricsQueueSuccessCounter.labels(queueName),
@@ -120,7 +123,7 @@ async function jobFinished(
 async function waitForNextJob(queueName: string): Promise<void> {
 	// Check if there is a job waiting:
 	const queue = getOrCreateQueue(queueName)
-	if (queue.jobs.length > 0) {
+	if (queue.jobsHighPriority.length + queue.jobsLowPriority.length > 0) {
 		return
 	}
 	// No job ready, do a long-poll
@@ -147,7 +150,14 @@ async function waitForNextJob(queueName: string): Promise<void> {
 async function getNextJob(queueName: string): Promise<JobSpec | null> {
 	// Check if there is a job waiting:
 	const queue = getOrCreateQueue(queueName)
-	const job = queue.jobs.shift()
+	// Prefer high priority jobs
+	let job: JobEntry | null | undefined
+	if (queue.jobsHighPriority.length > 0) {
+		job = queue.jobsLowPriority.shift()
+	} else {
+		job = queue.jobsHighPriority.shift()
+	}
+
 	if (job) {
 		// If there is a completion handler, register it for execution
 		runningJobs.set(job.spec.id, {
@@ -179,7 +189,7 @@ async function interruptJobStream(queueName: string): Promise<void> {
 			}
 		})
 	} else {
-		queue.jobs.unshift(null)
+		queue.jobsLowPriority.unshift(null)
 	}
 }
 async function queueJobWithoutResult(
@@ -202,13 +212,28 @@ async function queueJobWithoutResult(
 	)
 }
 
-function queueJobInner(queueName: string, jobToQueue: JobEntry, options: QueueJobOptions): void {
+function queueJobInner(queueName: string, jobToQueue: JobEntry, options?: QueueJobOptions): void {
 	// Put the job at the end of the queue:
 	const queue = getOrCreateQueue(queueName)
-	queue.jobs.push(jobToQueue)
-	queue.metricsTotal.inc()
 
-	// nocommit - use options
+	// Debounce: skip if an identical job is already queued
+	if (options?.debounce) {
+		const alreadyQueued = [...queue.jobsHighPriority, ...queue.jobsLowPriority].some(
+			(job) => job && job.spec.name === jobToQueue.spec.name && _.isEqual(job.spec.data, jobToQueue.spec.data)
+		)
+
+		if (alreadyQueued) {
+			logger.debug(`Debounced duplicate job "${jobToQueue.spec.name}" in queue "${queueName}"`)
+			return
+		}
+	}
+
+	// Queue the job based on priority
+	if (options?.lowPriority) queue.jobsLowPriority.push(jobToQueue)
+	else queue.jobsHighPriority.push(jobToQueue)
+
+	queue.metricsTotal.inc()
+	// nocommit - add test for priority and debounce
 
 	// If there is a worker waiting to pick up a job
 	if (queue.notifyWorker) {
@@ -232,7 +257,7 @@ function queueJobAndWrapResult<TRes>(
 	queueName: string,
 	job: JobSpec,
 	now: Time,
-	options: QueueJobOptions | undefined
+	options?: QueueJobOptions
 ): WorkerJob<TRes> {
 	const { result, completionHandler } = generateCompletionHandler<TRes>(job.id, now)
 
@@ -242,7 +267,7 @@ function queueJobAndWrapResult<TRes>(
 			spec: job,
 			completionHandler: completionHandler,
 		},
-		options ?? {}
+		options
 	)
 
 	return result

@@ -25,14 +25,14 @@ export { ProcessedShowStyleVariant, ProcessedShowStyleBase, ProcessedShowStyleCo
 export { JobStudio }
 
 export interface QueueJobOptions {
-	/** 
+	/**
 	 * The job should be run with a low priority, allowing other operations to be run first ]
 	 */
 	lowPriority?: boolean
 
-	/** 
+	/**
 	 * Debounce execution, delaying execution until at least this wait time.
-	 * If the job is already queued, it will not be queued again 
+	 * If the job is already queued, it will not be queued again
 	 */
 	debounce?: number
 }
