@@ -37,7 +37,13 @@ import _ from 'underscore'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PlaylistLock } from '../../../jobs/lock.js'
 import { logger } from '../../../logging.js'
-import { clone, getRandomId, literal, normalizeArrayToMapFunc } from '@sofie-automation/corelib/dist/lib'
+import {
+	clone,
+	getRandomId,
+	groupByToMapFunc,
+	literal,
+	normalizeArrayToMapFunc,
+} from '@sofie-automation/corelib/dist/lib'
 import { sleep } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { sortRundownIDsInPlaylist } from '@sofie-automation/corelib/dist/playout/playlist'
 import { PlayoutRundownModel } from '../PlayoutRundownModel.js'
@@ -50,7 +56,11 @@ import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedSt
 import { queuePartInstanceTimingEvent } from '../../timings/events.js'
 import { IS_PRODUCTION } from '../../../environment.js'
 import { DeferredAfterSaveFunction, DeferredFunction, PlayoutModel, PlayoutModelReadonly } from '../PlayoutModel.js'
-import { writePartInstancesAndPieceInstances, writeAdlibTestingSegments } from './SavePlayoutModel.js'
+import {
+	writePartInstancesAndPieceInstances,
+	writeAdlibTestingSegments,
+	writeExpectedPackagesForPlayoutSources,
+} from './SavePlayoutModel.js'
 import { PlayoutPieceInstanceModel } from '../PlayoutPieceInstanceModel.js'
 import { DatabasePersistedModel } from '../../../modelBase.js'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
@@ -661,12 +671,20 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		}
 		this.#timelineHasChanged = false
 
+		const partInstancesByRundownId = groupByToMapFunc(
+			Array.from(this.allPartInstances.values()).filter((p) => !!p),
+			(p) => p.partInstance.rundownId
+		)
+
 		await Promise.all([
 			this.#playlistHasChanged
 				? this.context.directCollections.RundownPlaylists.replace(this.playlistImpl)
 				: undefined,
 			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
+			...Array.from(partInstancesByRundownId.entries()).map(async ([rundownId, partInstances]) =>
+				writeExpectedPackagesForPlayoutSources(this.context, this.playlistId, rundownId, partInstances)
+			),
 			this.#baselineHelper.saveAllToDatabase(),
 			this.#notificationsHelper.saveAllToDatabase(),
 			this.context.saveRouteSetChanges(),

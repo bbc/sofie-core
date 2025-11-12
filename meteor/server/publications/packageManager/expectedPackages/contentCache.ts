@@ -3,7 +3,7 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { PieceInstance, PieceInstancePiece } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
+import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 
 export type RundownPlaylistCompact = Pick<
 	DBRundownPlaylist,
@@ -16,16 +16,16 @@ export const rundownPlaylistFieldSpecifier = literal<MongoFieldSpecifierOnesStri
 	nextPartInfo: 1, // So that it invalidates when the next changes
 })
 
-export type PieceInstanceCompact = Pick<PieceInstance, '_id' | 'rundownId'> & {
-	piece: Pick<PieceInstancePiece, 'expectedPackages'>
-}
+export type PieceInstanceCompact = Pick<
+	PieceInstance,
+	'_id' | 'rundownId' | 'partInstanceId' | 'neededExpectedPackageIds'
+>
 
 export const pieceInstanceFieldsSpecifier = literal<MongoFieldSpecifierOnesStrict<PieceInstanceCompact>>({
 	_id: 1,
 	rundownId: 1,
-	piece: {
-		expectedPackages: 1,
-	},
+	partInstanceId: 1,
+	neededExpectedPackageIds: 1,
 })
 
 export type ExpectedPackageDBCompact = Pick<ExpectedPackageDB, '_id' | 'package'>

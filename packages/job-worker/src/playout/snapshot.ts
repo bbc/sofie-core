@@ -2,7 +2,7 @@ import {
 	ExpectedPackageDB,
 	ExpectedPackageDBType,
 	ExpectedPackageIngestSource,
-	getExpectedPackageIdNew,
+	getExpectedPackageId,
 } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	AdLibActionId,
@@ -497,6 +497,9 @@ export async function handleRestorePlaylistSnapshot(
 				},
 
 				ingestSources: [source],
+				playoutSources: {
+					pieceInstanceIds: [],
+				},
 			}
 
 			expectedPackageIdMap.set(expectedPackage._id, newExpectedPackage._id)
@@ -552,7 +555,7 @@ export async function handleRestorePlaylistSnapshot(
 			}
 
 			// Regenerate the ID from the new rundownId and packageId
-			expectedPackage._id = getExpectedPackageIdNew(
+			expectedPackage._id = getExpectedPackageId(
 				expectedPackage.rundownId || expectedPackage.studioId,
 				expectedPackage.package
 			)
