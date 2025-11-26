@@ -96,13 +96,22 @@ function shouldDisplayAbChannel(
 		}
 	}
 
+	// Check source layer filters (ID or Type)
+	// If both filters are empty, show all pieces (no filtering)
+	const hasSourceLayerIdFilter = effectiveConfig.sourceLayerIds.length > 0
+	const hasSourceLayerTypeFilter = effectiveConfig.sourceLayerTypes.length > 0
+
+	if (!hasSourceLayerIdFilter && !hasSourceLayerTypeFilter) {
+		return true
+	}
+
 	// Check if source layer ID is explicitly listed
-	if (effectiveConfig.sourceLayerIds.includes(pieceInstance.piece.sourceLayerId)) {
+	if (hasSourceLayerIdFilter && effectiveConfig.sourceLayerIds.includes(pieceInstance.piece.sourceLayerId)) {
 		return true
 	}
 
 	// Check sourceLayer type match
-	if (sourceLayer?.type && effectiveConfig.sourceLayerTypes.includes(sourceLayer.type)) {
+	if (hasSourceLayerTypeFilter && sourceLayer?.type && effectiveConfig.sourceLayerTypes.includes(sourceLayer.type)) {
 		return true
 	}
 
