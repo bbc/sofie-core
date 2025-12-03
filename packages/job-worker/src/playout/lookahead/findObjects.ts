@@ -13,8 +13,9 @@ import { JobContext } from '../../jobs/index.js'
 import { PartAndPieces, PieceInstanceWithObjectMap } from './util.js'
 import { deserializePieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { ReadonlyDeep, SetRequired } from 'type-fest'
+import { computeLookaheadObject } from './lookaheadOffset'
 
-function getBestPieceInstanceId(piece: ReadonlyDeep<PieceInstance>): string {
+export function getBestPieceInstanceId(piece: ReadonlyDeep<PieceInstance>): string {
 	if (!piece.isTemporary || piece.partInstanceId) {
 		return unprotectString(piece._id)
 	}
@@ -105,43 +106,11 @@ export function findLookaheadObjectsForPart(
 		if (shouldIgnorePiece(partInfo, rawPiece)) continue
 
 		const obj = getObjectMapForPiece(rawPiece).get(layer)
-		if (obj) {
-			// TODO: forcing these types feels wrong, do we even need to take the object's enable into account?
-			const objEnable: typeof rawPiece.piece.enable = Array.isArray(obj.enable)
-				? (obj.enable[0] as typeof rawPiece.piece.enable)
-				: (obj.enable as typeof rawPiece.piece.enable)
-			let lookaheadOffset: number | undefined
 
-			if (nextTimeOffset) {
-				const pieceStart = rawPiece.piece.enable.start === 'now' ? 0 : rawPiece.piece.enable.start
-				const objStart = objEnable.start === 'now' ? 0 : objEnable.start
-
-				const offset = nextTimeOffset - pieceStart - objStart
-
-				lookaheadOffset = offset > 0 ? offset : undefined
-			} else {
-				lookaheadOffset = undefined
-			}
-			// TODO: remove console log before PR
-			// console.log(
-			// 	`--------------------------LOOK HERE---------------------------2\n${JSON.stringify(
-			// 		{ ...obj, lookaheadOffset },
-			// 		null,
-			// 		2
-			// 	)}`
-			// )
-			console.log('lookaheadOffset: ' + nextTimeOffset)
-			allObjs.push(
-				literal<LookaheadTimelineObject>({
-					metaData: undefined,
-					...obj,
-					objectType: TimelineObjType.RUNDOWN,
-					pieceInstanceId: getBestPieceInstanceId(rawPiece),
-					infinitePieceInstanceId: rawPiece.infinite?.infiniteInstanceId,
-					partInstanceId: partInstanceId ?? protectString(unprotectString(partInfo.part._id)),
-					lookaheadOffset,
-				})
-			)
+		// we only consider lookahead objects for lookahead and calculate the lookaheadOffset for each object.
+		const computedLookaheadObj = computeLookaheadObject(obj, rawPiece, partInfo, partInstanceId, nextTimeOffset)
+		if (computedLookaheadObj) {
+			allObjs.push(computedLookaheadObj)
 		}
 	}
 
