@@ -24,7 +24,7 @@ import { LookaheadTimelineObject } from './findObjects.js'
 import { hasPieceInstanceDefinitelyEnded } from '../timeline/lib.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { ReadonlyDeep } from 'type-fest'
-import { filterPieceInstancesForNextPartWithOffset } from './lookaheadOffset'
+import { filterPieceInstancesForNextPartWithOffset } from './lookaheadOffset.js'
 
 const LOOKAHEAD_OBJ_PRIORITY = 0.1
 
