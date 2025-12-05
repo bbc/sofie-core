@@ -2,8 +2,8 @@ import { PartInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { TimelineObjType } from '@sofie-automation/corelib/dist/dataModel/Timeline'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
-import { getBestPieceInstanceId, LookaheadTimelineObject } from './findObjects'
-import { PartAndPieces, PieceInstanceWithObjectMap } from './util'
+import { getBestPieceInstanceId, LookaheadTimelineObject } from './findObjects.js'
+import { PartAndPieces, PieceInstanceWithObjectMap } from './util.js'
 import { TimelineEnable } from 'superfly-timeline'
 import { TimelineObjectCoreExt } from '@sofie-automation/blueprints-integration'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
@@ -177,7 +177,7 @@ export function filterPieceInstancesForNextPartWithOffset(
 	for (const p of pieces) {
 		const layer = p.piece.outputLayerId || '__noLayer__'
 		if (!layers.has(layer)) layers.set(layer, [])
-		layers.get(layer)!.push(p)
+		layers.get(layer)?.push(p)
 	}
 
 	const result: PieceInstanceWithTimings[] = []

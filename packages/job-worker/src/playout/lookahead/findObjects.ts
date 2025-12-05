@@ -13,7 +13,7 @@ import { JobContext } from '../../jobs/index.js'
 import { PartAndPieces, PieceInstanceWithObjectMap } from './util.js'
 import { deserializePieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { ReadonlyDeep, SetRequired } from 'type-fest'
-import { computeLookaheadObject } from './lookaheadOffset'
+import { computeLookaheadObject } from './lookaheadOffset.js'
 
 export function getBestPieceInstanceId(piece: ReadonlyDeep<PieceInstance>): string {
 	if (!piece.isTemporary || piece.partInstanceId) {
