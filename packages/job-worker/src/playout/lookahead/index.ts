@@ -24,7 +24,7 @@ import { LookaheadTimelineObject } from './findObjects.js'
 import { hasPieceInstanceDefinitelyEnded } from '../timeline/lib.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { ReadonlyDeep } from 'type-fest'
-import { filterPieceInstancesForNextPartWithOffset } from './lookaheadOffset'
+import { filterPieceInstancesForNextPartWithOffset } from './lookaheadOffset.js'
 
 const LOOKAHEAD_OBJ_PRIORITY = 0.1
 
@@ -112,7 +112,7 @@ export async function getLookeaheadObjects(
 					nowInPart: partInstancesInfo0.current.nowInPart,
 					allPieces: getPrunedEndedPieceInstances(partInstancesInfo0.current),
 					calculatedTimings: partInstancesInfo0.current.calculatedTimings,
-			  })
+				})
 			: undefined,
 		next: partInstancesInfo0.next
 			? removeInfiniteContinuations({
@@ -124,7 +124,7 @@ export async function getLookeaheadObjects(
 						playoutModel.playlist.nextTimeOffset
 					),
 					calculatedTimings: partInstancesInfo0.next.calculatedTimings,
-			  })
+				})
 			: undefined,
 	}
 
