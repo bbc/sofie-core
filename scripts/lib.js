@@ -1,5 +1,32 @@
 const args = process.argv.slice(2);
 
+// Check for --help
+if (args.indexOf("--help") >= 0 || args.indexOf("-h") >= 0) {
+	console.log(`
+Sofie Core Development Mode
+
+Usage: yarn dev [options]
+
+Options:
+  --help, -h           Show this help message
+  --ui-only            Only watch and build UI packages (skip job-worker, gateways)
+  --inspect-meteor     Run Meteor with Node.js inspector enabled
+  --verbose            Enable verbose logging
+  --db=<name>          Use a named database directory (e.g., --db=demo)
+                       Creates meteor/.meteor/local/db.<name> and switches to it with a symlink
+                       Original database is backed up to db.default on first use
+                       Run without --db to use the currently active database
+
+Examples:
+  yarn dev                    # Run in normal dev mode
+  yarn dev --db=testing       # Use a separate database for testing
+  yarn dev --db=demo          # Switch to demo database
+  yarn dev --ui-only          # Only watch UI, skip backend packages
+  yarn dev --inspect-meteor   # Debug Meteor with inspector
+`);
+	process.exit(0);
+}
+
 // Parse --db=name option
 const dbArg = args.find(arg => arg.startsWith('--db='));
 const dbName = dbArg ? dbArg.split('=')[1] : null;
