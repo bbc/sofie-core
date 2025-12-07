@@ -6,6 +6,10 @@ if (args.indexOf("--help") >= 0 || args.indexOf("-h") >= 0) {
 Sofie Core Development Mode
 
 Usage: yarn dev [options]
+       yarn start [options]
+
+Note: 'yarn start' runs install + build + dev, while 'yarn dev' just runs dev mode.
+      All options work with both commands.
 
 Options:
   --help, -h           Show this help message
@@ -18,11 +22,13 @@ Options:
                        Run without --db to use the currently active database
 
 Examples:
-  yarn dev                    # Run in normal dev mode
+  yarn start                  # Install, build, then run in dev mode
+  yarn dev                    # Run in normal dev mode (requires prior build)
   yarn dev --db=testing       # Use a separate database for testing
   yarn dev --db=demo          # Switch to demo database
   yarn dev --ui-only          # Only watch UI, skip backend packages
   yarn dev --inspect-meteor   # Debug Meteor with inspector
+  yarn start --db=demo        # Install, build, and run with demo database
 `);
 	process.exit(0);
 }
