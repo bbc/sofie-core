@@ -31,7 +31,7 @@ export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.E
 
 	return (
 		<Switch>
-			<Route path="/countdowns/:studioId/presenter">
+			<Route exact path="/countdowns/:studioId/presenter">
 				{playlist ? (
 					<RundownTimingProvider playlist={playlist}>
 						<PresenterScreen playlistId={playlist._id} studioId={studioId} />
@@ -40,7 +40,7 @@ export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.E
 					<StudioScreenSaver studioId={studioId} ownBackground={true} screenName={t('Presenter Screen')} />
 				)}
 			</Route>
-			<Route path="/countdowns/:studioId/director">
+			<Route exact path="/countdowns/:studioId/director">
 				{playlist ? (
 					<RundownTimingProvider playlist={playlist}>
 						<DirectorScreen playlistId={playlist._id} studioId={studioId} />
@@ -49,7 +49,7 @@ export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.E
 					<StudioScreenSaver studioId={studioId} ownBackground={true} screenName={t("Director's Screen")} />
 				)}
 			</Route>
-			<Route path="/countdowns/:studioId/overlay">
+			<Route exact path="/countdowns/:studioId/overlay">
 				{playlist ? (
 					<RundownTimingProvider playlist={playlist}>
 						<OverlayScreen playlistId={playlist._id} studioId={studioId} />
@@ -58,16 +58,19 @@ export function ClockView({ studioId }: Readonly<{ studioId: StudioId }>): JSX.E
 					<OverlayScreenSaver studioId={studioId} />
 				)}
 			</Route>
-			<Route path="/countdowns/:studioId/camera">
+			<Route exact path="/countdowns/:studioId/camera">
 				<RundownTimingProvider playlist={playlist}>
 					<CameraScreen playlist={playlist} studioId={studioId} />
 				</RundownTimingProvider>
 			</Route>
-			<Route path="/countdowns/:studioId/multiview">
+			<Route exact path="/countdowns/:studioId/multiview">
 				<MultiviewScreen studioId={studioId} />
 			</Route>
-			<Route path="/countdowns/:studioId">
+			<Route exact path="/countdowns/:studioId">
 				<ClockViewIndex studioId={studioId} />
+			</Route>
+			<Route path="*">
+				<div>404 - Page not found</div>
 			</Route>
 		</Switch>
 	)
