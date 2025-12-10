@@ -91,7 +91,7 @@ export function findLookaheadObjectsForPart(
 	_context: JobContext,
 	currentPartInstanceId: PartInstanceId | null,
 	layer: string,
-	previousPart: ReadonlyDeep<DBPart> | undefined,
+	partBefore: ReadonlyDeep<DBPart> | undefined,
 	partInfo: PartAndPieces,
 	partInstanceId: PartInstanceId | null,
 	nextTimeOffset?: number
@@ -120,8 +120,8 @@ export function findLookaheadObjectsForPart(
 	}
 
 	let classesFromPreviousPart: readonly string[] = []
-	if (previousPart && currentPartInstanceId && partInstanceId) {
-		classesFromPreviousPart = previousPart.classesForNext || []
+	if (partBefore && currentPartInstanceId && partInstanceId) {
+		classesFromPreviousPart = partBefore.classesForNext || []
 	}
 
 	const transitionPiece = partInfo.usesInTransition
