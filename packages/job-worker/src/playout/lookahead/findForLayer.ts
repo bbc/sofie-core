@@ -51,6 +51,8 @@ export function findLookaheadForLayer(
 
 		if (partInstancesInfo.current.onTimeline) {
 			res.timed.push(...currentObjs)
+		} else {
+			res.future.push(...currentObjs)
 		}
 		previousPart = currentPartInfo.part
 	}
@@ -68,6 +70,8 @@ export function findLookaheadForLayer(
 		)
 
 		if (partInstancesInfo.next?.onTimeline) {
+			res.timed.push(...nextObjs)
+		} else {
 			res.future.push(...nextObjs)
 		}
 		previousPart = nextPartInfo.part
@@ -101,7 +105,7 @@ function generatePartInstanceLookaheads(
 ): { objs: LookaheadTimelineObject[]; partInfo: PartAndPieces } {
 	const partInfo: PartAndPieces = {
 		part: partInstanceInfo.part.part,
-		usesInTransition: partInstanceInfo.calculatedTimings.inTransitionStart !== null,
+		usesInTransition: partInstanceInfo.calculatedTimings?.inTransitionStart ? true : false,
 		pieces: sortPieceInstancesByStart(partInstanceInfo.allPieces, partInstanceInfo.nowInPart),
 	}
 
