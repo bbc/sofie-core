@@ -71,7 +71,7 @@ export function findLookaheadForLayer(
 
 		if (partInstancesInfo.next?.onTimeline) {
 			res.timed.push(...nextObjs)
-		} else {
+		} else if (lookaheadMaxSearchDistance >= 1 && lookaheadTargetFutureObjects > 0) {
 			res.future.push(...nextObjs)
 		}
 		previousPart = nextPartInfo.part
@@ -108,15 +108,30 @@ function generatePartInstanceLookaheads(
 		usesInTransition: partInstanceInfo.calculatedTimings?.inTransitionStart ? true : false,
 		pieces: sortPieceInstancesByStart(partInstanceInfo.allPieces, partInstanceInfo.nowInPart),
 	}
-
-	const objs = findLookaheadObjectsForPart(
-		context,
-		currentPartInstanceId,
-		layer,
-		previousPart,
-		partInfo,
-		partInstanceInfo.part._id,
-		nextTimeOffset ?? undefined
-	)
-	return { objs, partInfo }
+	if (nextTimeOffset) {
+		return {
+			objs: findLookaheadObjectsForPart(
+				context,
+				currentPartInstanceId,
+				layer,
+				previousPart,
+				partInfo,
+				partInstanceInfo.part._id,
+				nextTimeOffset
+			),
+			partInfo,
+		}
+	} else {
+		return {
+			objs: findLookaheadObjectsForPart(
+				context,
+				currentPartInstanceId,
+				layer,
+				previousPart,
+				partInfo,
+				partInstanceInfo.part._id
+			),
+			partInfo,
+		}
+	}
 }
