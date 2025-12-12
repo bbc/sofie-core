@@ -37,7 +37,6 @@ import { deserializePieceTimelineObjectsBlob } from '@sofie-automation/corelib/d
 import { convertResolvedPieceInstanceToBlueprints } from '../../blueprints/context/lib.js'
 import { buildTimelineObjsForRundown, RundownTimelineTimingContext } from './rundown.js'
 import { SourceLayers } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
-import { deNowifyMultiGatewayTimeline } from './multi-gateway.js'
 import { validateTimeline } from 'superfly-timeline'
 import { getPartTimingsOrDefaults, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { applyAbPlaybackForTimeline } from '../abPlayback/index.js'
@@ -140,39 +139,21 @@ export async function updateStudioTimeline(
 
 export async function updateTimeline(context: JobContext, playoutModel: PlayoutModel): Promise<void> {
 	const span = context.startSpan('updateTimeline')
-	logger.debug('updateTimeline running...')
+	logger.debug('updateTimeline: marking playlist as needing timeline update')
 
 	if (!playoutModel.playlist.activationId) {
 		throw new Error(`RundownPlaylist ("${playoutModel.playlist._id}") is not active")`)
 	}
 
-	const {
-		versions,
-		objs: timelineObjs,
-		timingContext: timingInfo,
-		regenerateTimelineToken,
-	} = await getTimelineRundown(context, playoutModel)
-
-	flattenAndProcessTimelineObjects(context, timelineObjs)
-
-	preserveOrReplaceNowTimesInObjects(playoutModel, timelineObjs)
-
-	if (playoutModel.isMultiGatewayMode) {
-		deNowifyMultiGatewayTimeline(playoutModel, timelineObjs, timingInfo)
-
-		logAnyRemainingNowTimes(context, timelineObjs)
-	}
-
-	const timelineHash = playoutModel.setTimeline(timelineObjs, versions, regenerateTimelineToken).timelineHash
-	logger.verbose(`updateTimeline done, hash: "${timelineHash}"`)
+	playoutModel.markTimelineNeedsUpdate()
 
 	if (span) span.end()
 }
 
-function preserveOrReplaceNowTimesInObjects(
+export function preserveOrReplaceNowTimesInObjects(
 	studioPlayoutModel: StudioPlayoutModelBase,
 	timelineObjs: Array<TimelineObjGeneric>
-) {
+): void {
 	const timeline = studioPlayoutModel.timeline
 	const oldTimelineObjsMap = normalizeArray(
 		(timeline?.timelineBlob !== undefined && deserializeTimelineBlob(timeline.timelineBlob)) || [],
@@ -202,7 +183,7 @@ function preserveOrReplaceNowTimesInObjects(
 	})
 }
 
-function logAnyRemainingNowTimes(_context: JobContext, timelineObjs: Array<TimelineObjGeneric>): void {
+export function logAnyRemainingNowTimes(_context: JobContext, timelineObjs: Array<TimelineObjGeneric>): void {
 	const badTimelineObjs: any[] = []
 
 	for (const obj of timelineObjs) {
@@ -287,7 +268,7 @@ function getPartInstanceTimelineInfo(
 /**
  * Returns timeline objects related to rundowns in a studio
  */
-async function getTimelineRundown(
+export async function getTimelineRundown(
 	context: JobContext,
 	playoutModel: PlayoutModel
 ): Promise<{
@@ -541,7 +522,7 @@ function createRegenerateTimelineObj(
  * @param context
  * @param timelineObjs Array of timeline objects
  */
-function flattenAndProcessTimelineObjects(context: JobContext, timelineObjs: Array<TimelineObjGeneric>): void {
+export function flattenAndProcessTimelineObjects(context: JobContext, timelineObjs: Array<TimelineObjGeneric>): void {
 	const span = context.startSpan('processTimelineObjects')
 
 	// first, split out any grouped objects, to make the timeline shallow:
