@@ -143,26 +143,25 @@ export function findLookaheadObjectsForPart(
 		const hasTransitionObj = transitionPiece && getObjectMapForPiece(transitionPiece).get(layer)
 
 		const res: Array<LookaheadTimelineObject> = []
-		partInfo.pieces.forEach((piece) => {
-			if (shouldIgnorePiece(partInfo, piece)) return
+		allObjs.map((obj) => {
+			const piece = partInfo.pieces.find((piece) => unprotectString(piece._id) === obj.pieceInstanceId)
+			if (!piece) return
 
 			// If there is a transition and this piece is abs0, it is assumed to be the primary piece and so does not need lookahead
 			if (
 				hasTransitionObj &&
+				obj.pieceInstanceId &&
 				piece.piece.pieceType === IBlueprintPieceType.Normal &&
 				piece.piece.enable.start === 0
 			) {
 				return
 			}
 
-			// Note: This is assuming that there is only one use of a layer in each piece.
-			const obj = getObjectMapForPiece(piece).get(layer)
 			if (obj) {
 				const patchedContent = tryActivateKeyframesForObject(obj, !!transitionPiece, classesFromPreviousPart)
 
 				res.push(
 					literal<LookaheadTimelineObject>({
-						metaData: undefined,
 						...obj,
 						objectType: TimelineObjType.RUNDOWN,
 						pieceInstanceId: getBestPieceInstanceId(piece),
@@ -173,6 +172,7 @@ export function findLookaheadObjectsForPart(
 				)
 			}
 		})
+		console.log(res)
 
 		return res
 	}

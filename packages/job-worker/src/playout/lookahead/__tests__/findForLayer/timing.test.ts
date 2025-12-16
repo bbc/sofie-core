@@ -1,7 +1,16 @@
-import { context, findLookaheadObjectsForPartMock } from './helpers/mockSetup.js'
+jest.mock('../../findObjects')
+import { context, TfindLookaheadObjectsForPart } from './helpers/mockSetup.js'
 import { findLookaheadForLayer } from '../../findForLayer.js'
 import { expectInstancesToMatch } from '../utils.js'
 import { findForLayerTestConstants } from './constants.js'
+import { findLookaheadObjectsForPart } from '../../findObjects.js'
+
+const findLookaheadObjectsForPartMockBase = findLookaheadObjectsForPart as TfindLookaheadObjectsForPart
+const findLookaheadObjectsForPartMock = findLookaheadObjectsForPartMockBase.mockImplementation(() => []) // Default mock
+
+beforeEach(() => {
+	findLookaheadObjectsForPartMock.mockReset()
+})
 
 const previous = findForLayerTestConstants.previous
 const current = findForLayerTestConstants.current
@@ -21,8 +30,8 @@ describe('findLookaheadForLayer – timing', () => {
 		expect(res.future).toHaveLength(0) // should be empty
 
 		expect(findLookaheadObjectsForPartMock).toHaveBeenCalledTimes(2)
-		expectInstancesToMatch(1, layer, current, previous)
-		expectInstancesToMatch(2, layer, nextTimed, current)
+		expectInstancesToMatch(findLookaheadObjectsForPartMock, 1, layer, current, previous)
+		expectInstancesToMatch(findLookaheadObjectsForPartMock, 2, layer, nextTimed, current)
 	})
 
 	test('current part with un-timed next part (next goes into future)', () => {
@@ -36,7 +45,7 @@ describe('findLookaheadForLayer – timing', () => {
 		expect(res.future).toEqual(['nF0', 'nF1']) // Should only contain the future pieces
 
 		expect(findLookaheadObjectsForPartMock).toHaveBeenCalledTimes(2)
-		expectInstancesToMatch(1, layer, current, previous)
-		expectInstancesToMatch(2, layer, nextFuture, current)
+		expectInstancesToMatch(findLookaheadObjectsForPartMock, 1, layer, current, previous)
+		expectInstancesToMatch(findLookaheadObjectsForPartMock, 2, layer, nextFuture, current)
 	})
 })

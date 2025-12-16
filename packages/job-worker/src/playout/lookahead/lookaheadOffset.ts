@@ -171,7 +171,6 @@ export function filterPieceInstancesForNextPartWithOffset(
 	nextTimeOffset: number | null | undefined
 ): PieceInstanceWithTimings[] {
 	if (!nextTimeOffset) return pieces
-
 	// Group pieces by layer
 	const layers = new Map<string, PieceInstanceWithTimings[]>()
 	for (const p of pieces) {

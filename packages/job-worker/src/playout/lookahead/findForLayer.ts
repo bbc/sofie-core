@@ -58,7 +58,6 @@ export function findLookaheadForLayer(
 	}
 
 	// for Lookaheads in the next part we need to take the nextTimeOffset into account.
-	// TODO: Check if having two pieces after eachother on the same layer is handled correctly
 	if (partInstancesInfo.next) {
 		const { objs: nextObjs, partInfo: nextPartInfo } = generatePartInstanceLookaheads(
 			context,
@@ -75,7 +74,7 @@ export function findLookaheadForLayer(
 			res.future.push(...nextObjs)
 		}
 		previousPart = nextPartInfo.part
-	}
+	} else lookaheadMaxSearchDistance += 1 // if there is no next part, we should look at the future parts. It's easiest to just expand the search by one.
 
 	if (lookaheadMaxSearchDistance > 1 && lookaheadTargetFutureObjects > 0) {
 		for (const partInfo of orderedPartInfos.slice(0, lookaheadMaxSearchDistance - 1)) {
@@ -85,7 +84,18 @@ export function findLookaheadForLayer(
 			}
 
 			if (partInfo.pieces.length > 0 && isPartPlayable(partInfo.part)) {
-				const objs = findLookaheadObjectsForPart(context, currentPartId, layer, previousPart, partInfo, null)
+				const objs =
+					nextTimeOffset && !partInstancesInfo.next // apply the lookahead offset to the first future if an offset is set.
+						? findLookaheadObjectsForPart(
+								context,
+								currentPartId,
+								layer,
+								previousPart,
+								partInfo,
+								null,
+								nextTimeOffset
+							)
+						: findLookaheadObjectsForPart(context, currentPartId, layer, previousPart, partInfo, null)
 				res.future.push(...objs)
 				previousPart = partInfo.part
 			}
