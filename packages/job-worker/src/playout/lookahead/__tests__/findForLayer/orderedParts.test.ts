@@ -4,7 +4,15 @@ import { setupDefaultJobEnvironment } from '../../../../__mocks__/context.js'
 jest.mock('../../findObjects')
 import { findForLayerTestConstants } from './constants.js'
 import { expectPartToMatch } from '../utils.js'
-import { findLookaheadObjectsForPartMock } from './helpers/mockSetup.js'
+import { findLookaheadObjectsForPart } from '../../findObjects.js'
+import { TfindLookaheadObjectsForPart } from './helpers/mockSetup.js'
+
+const findLookaheadObjectsForPartMockBase = findLookaheadObjectsForPart as TfindLookaheadObjectsForPart
+const findLookaheadObjectsForPartMock = findLookaheadObjectsForPartMockBase.mockImplementation(() => []) // Default mock
+
+beforeEach(() => {
+	findLookaheadObjectsForPartMock.mockReset()
+})
 
 const orderedParts = findForLayerTestConstants.orderedParts
 const layer = findForLayerTestConstants.layer
@@ -31,7 +39,7 @@ describe('findLookaheadForLayer - orderedParts', () => {
 		expect(res2.future).toEqual(['t0', 't1'])
 		expect(findLookaheadObjectsForPartMock).toHaveBeenCalledTimes(1)
 
-		expectPartToMatch(1, layer, orderedParts[0], undefined)
+		expectPartToMatch(findLookaheadObjectsForPartMock, 1, layer, orderedParts[0], undefined)
 	})
 
 	test('returns nothing when target index is 0', () => {
@@ -61,8 +69,8 @@ describe('findLookaheadForLayer - orderedParts', () => {
 		// Called for parts: [0], [2], [3]
 		expect(findLookaheadObjectsForPartMock).toHaveBeenCalledTimes(3)
 
-		expectPartToMatch(1, layer, orderedParts[0], undefined)
-		expectPartToMatch(2, layer, orderedParts[2], orderedParts[0].part)
-		expectPartToMatch(3, layer, orderedParts[3], orderedParts[2].part)
+		expectPartToMatch(findLookaheadObjectsForPartMock, 1, layer, orderedParts[0], undefined)
+		expectPartToMatch(findLookaheadObjectsForPartMock, 2, layer, orderedParts[2], orderedParts[0].part)
+		expectPartToMatch(findLookaheadObjectsForPartMock, 3, layer, orderedParts[3], orderedParts[2].part)
 	})
 })
