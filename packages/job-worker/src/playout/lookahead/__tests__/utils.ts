@@ -1,12 +1,13 @@
 import { PartInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
+import { PieceInstance, PieceInstancePiece } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import { ReadonlyDeep } from 'type-fest'
 import { PartInstanceAndPieceInstances, PartAndPieces } from '../util.js'
 import { findForLayerTestConstants } from './findForLayer/constants.js'
-import { findLookaheadObjectsForPartMock, context } from './findForLayer/helpers/mockSetup.js'
+import { context, TfindLookaheadObjectsForPart } from './findForLayer/helpers/mockSetup.js'
 
 export function expectInstancesToMatch(
+	findLookaheadObjectsForPartMock: TfindLookaheadObjectsForPart,
 	index: number,
 	layer: string,
 	partInstanceInfo: PartInstanceAndPieceInstances,
@@ -27,18 +28,21 @@ export function expectInstancesToMatch(
 	)
 }
 
-export function createFakePiece(id: string): PieceInstance {
+export function createFakePiece(id: string, pieceProps?: Partial<PieceInstancePiece>): PieceInstance {
 	return {
 		_id: id,
 		piece: {
+			...(pieceProps ?? {}),
 			enable: {
 				start: 0,
+				...(pieceProps ? pieceProps.enable : {}),
 			},
 		},
 	} as any
 }
 
 export function expectPartToMatch(
+	findLookaheadObjectsForPartMock: TfindLookaheadObjectsForPart,
 	index: number,
 	layer: string,
 	partInfo: PartAndPieces,

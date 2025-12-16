@@ -36,7 +36,7 @@ function parseSearchDistance(rawVal: number | undefined): number {
 	}
 }
 
-function findLargestLookaheadDistance(mappings: Array<[string, MappingExt]>): number {
+export function findLargestLookaheadDistance(mappings: Array<[string, MappingExt]>): number {
 	const values = mappings.map(([_id, m]) => parseSearchDistance(m.lookaheadMaxSearchDistance))
 	return _.max(values)
 }
@@ -192,7 +192,6 @@ export async function getLookeaheadObjects(
 				parseSearchDistance(mapping.lookaheadMaxSearchDistance),
 				futurePartCount
 			)
-
 			const lookaheadObjs = findLookaheadForLayer(
 				context,
 				partInstancesInfo,

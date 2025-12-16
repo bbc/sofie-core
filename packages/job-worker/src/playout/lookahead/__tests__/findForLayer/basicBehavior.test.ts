@@ -1,7 +1,16 @@
-import { context, findLookaheadObjectsForPartMock } from './helpers/mockSetup.js'
+jest.mock('../../findObjects')
+import { context, TfindLookaheadObjectsForPart } from './helpers/mockSetup.js'
 import { findLookaheadForLayer } from '../../findForLayer.js'
 import { expectInstancesToMatch } from '../utils.js'
 import { findForLayerTestConstants } from './constants.js'
+import { findLookaheadObjectsForPart } from '../../findObjects.js'
+
+const findLookaheadObjectsForPartMockBase = findLookaheadObjectsForPart as TfindLookaheadObjectsForPart
+const findLookaheadObjectsForPartMock = findLookaheadObjectsForPartMockBase.mockImplementation(() => []) // Default mock
+
+beforeEach(() => {
+	findLookaheadObjectsForPartMock.mockReset()
+})
 
 const current = findForLayerTestConstants.current
 const nextFuture = findForLayerTestConstants.nextFuture
@@ -20,6 +29,6 @@ describe('findLookaheadForLayer – basic behavior', () => {
 		findLookaheadForLayer(context, { previous: undefined, current, next: nextFuture }, [], layer, 1, 1)
 
 		expect(findLookaheadObjectsForPartMock).toHaveBeenCalledTimes(2)
-		expectInstancesToMatch(1, layer, current, undefined)
+		expectInstancesToMatch(findLookaheadObjectsForPartMock, 1, layer, current, undefined)
 	})
 })
