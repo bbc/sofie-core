@@ -32,6 +32,7 @@ import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 import { assertConnectionHasOneOfPermissions, RequestCredentials } from '../../security/auth'
 import { blueprintsPerformDevelopmentMode } from './development'
+import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 
 const PERMISSIONS_FOR_MANAGE_BLUEPRINTS: Array<keyof UserPermissions> = ['configure']
 
@@ -170,8 +171,10 @@ async function innerUploadBlueprint(
 	let blueprintManifest: SomeBlueprintManifest | undefined
 	try {
 		blueprintManifest = evalBlueprint(newBlueprint)
-	} catch (_e) {
-		throw new Meteor.Error(400, `Blueprint ${blueprintId} failed to parse`)
+	} catch (e) {
+		logger.error(`Error evaluating Blueprint "${blueprintId}": "${stringifyError(e)}"`)
+
+		throw new Meteor.Error(400, `Error evaluating Blueprint "${blueprintId}": "${stringifyError(e)}"`)
 	}
 
 	if (!_.isObject(blueprintManifest))
