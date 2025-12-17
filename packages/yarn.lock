@@ -7086,7 +7086,7 @@ __metadata:
   dependencies:
     "@mos-connection/model": "npm:^5.0.0-alpha.0"
     kairos-lib: "npm:^0.2.3"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
     tslib: "npm:^2.8.1"
     type-fest: "npm:^4.33.0"
   languageName: unknown
@@ -10083,9 +10083,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"atem-connection@npm:3.5.0":
-  version: 3.5.0
-  resolution: "atem-connection@npm:3.5.0"
+"atem-connection@npm:3.7.0":
+  version: 3.7.0
+  resolution: "atem-connection@npm:3.7.0"
   dependencies:
     "@julusian/freetype2": "npm:^1.1.2"
     debug: "npm:^4.3.4"
@@ -10097,7 +10097,7 @@ asn1@evs-broadcast/node-asn1:
     threadedclass: "npm:^1.2.1"
     tslib: "npm:^2.6.2"
     wavefile: "npm:^8.4.6"
-  checksum: 10/42a60b31dd0ef704231d00f8e8144a7af62b69ccda47559fed8b56c05b0c6d783112f82c60ca0d2eb7a8317f964b0eee494014718ee3730db6d70eb94b831147
+  checksum: 10/12664d57ef887a48cb984ea675161acfe81d8e479d7b066d782ca31c71c6c6c262da0653ad8b44e807ef55bd86fc4519f6224fdd12ad3051c183b7407576b225
   languageName: node
   linkType: hard
 
@@ -11091,25 +11091,25 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"casparcg-connection@npm:6.3.0":
-  version: 6.3.0
-  resolution: "casparcg-connection@npm:6.3.0"
+"casparcg-connection@npm:6.3.3":
+  version: 6.3.3
+  resolution: "casparcg-connection@npm:6.3.3"
   dependencies:
     eventemitter3: "npm:^5.0.1"
-    tslib: "npm:^2.5.0"
+    tslib: "npm:^2.6.3"
     xml2js: "npm:^0.6.2"
-  checksum: 10/3734d75ef6330fa21679e967490c561214bc6ad1258cb8114b2d8c4ba4efddfcb28aebf3593d52881d273f8b780f4eb722e7ceefd4fe18b87f0715f43006cd2d
+  checksum: 10/c75b89e0ee71c448628ab012384eded64e43ec4c199f24718d87c0537f27d0a3913940d10958d224a6251ffeceb721cb5be977c9cfe8fdffef7f55c3a93b248b
   languageName: node
   linkType: hard
 
-"casparcg-state@npm:3.0.3":
-  version: 3.0.3
-  resolution: "casparcg-state@npm:3.0.3"
+"casparcg-state@npm:3.0.4":
+  version: 3.0.4
+  resolution: "casparcg-state@npm:3.0.4"
   dependencies:
     casparcg-connection: "npm:6.2.0"
     fast-clone: "npm:^1.5.13"
     underscore: "npm:^1.13.6"
-  checksum: 10/3dba1fd26ed8546da3b734611225611007782b5e76b6901563ef0374b1eb41d1de01dd312e634e07c3e2e98d1262875d8c3bc1c2a4d1d2a9e553133647eebc56
+  checksum: 10/6832057e2fc3f322c74144d78eb9e81538cf6cea411a1c518584df7cf4a08cf3f4c1344ecee0d671440afedb0f4936ac01a9bc53916f98e52a267dd620c77459
   languageName: node
   linkType: hard
 
@@ -13143,7 +13143,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.0.0, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.3.6, debug@npm:^4.4.0, debug@npm:^4.4.1":
+"debug@npm:4, debug@npm:^4.0.0, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.4.0, debug@npm:^4.4.1, debug@npm:^4.4.3":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
   dependencies:
@@ -13883,9 +13883,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"emberplus-connection@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "emberplus-connection@npm:0.3.0"
+"emberplus-connection@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "emberplus-connection@npm:0.3.1"
   dependencies:
     asn1: evs-broadcast/node-asn1
     debug: "npm:^4.3.4"
@@ -13893,7 +13893,7 @@ asn1@evs-broadcast/node-asn1:
     long: "npm:^3.2.0"
     smart-buffer: "npm:^3.0.3"
     tslib: "npm:^2.6.2"
-  checksum: 10/551d67ebed772d916c1e60ac9dd22d9992c9f034d8304bc92be6055b28329c641e316ce91917ff8a0d64e54cf51df3d832c2d7af57ce3552ad7e9fd7ec767298
+  checksum: 10/1b07ecc344e9392240ed64e8dd9cf88dea05bbb9a1e196198976f1185c9b9d2ccfb981af7d27b58b44c9b2477032ec24b300bcdd3fb775d3578ae123a880ad04
   languageName: node
   linkType: hard
 
@@ -22735,9 +22735,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"obs-websocket-js@npm:^5.0.6":
-  version: 5.0.6
-  resolution: "obs-websocket-js@npm:5.0.6"
+"obs-websocket-js@npm:^5.0.7":
+  version: 5.0.7
+  resolution: "obs-websocket-js@npm:5.0.7"
   dependencies:
     "@msgpack/msgpack": "npm:^2.7.1"
     crypto-js: "npm:^4.1.1"
@@ -22746,7 +22746,7 @@ asn1@evs-broadcast/node-asn1:
     isomorphic-ws: "npm:^5.0.0"
     type-fest: "npm:^3.11.0"
     ws: "npm:^8.13.0"
-  checksum: 10/a48a6df46c6673b374444443cb0eb3ec14b7a1928c3c33459181a9697f93b470c72349a8619518785dcde4c5f2f2287404e086c522519a61ff3e00727c0a5d3f
+  checksum: 10/442048223d5556869fbba6fdddf1be36637be0e3403fb2990c134fe6878a182257efc90b31527f66c4c8428e62a7a80014f2d80802b7e15363ed24480375333f
   languageName: node
   linkType: hard
 
@@ -23987,7 +23987,7 @@ asn1@evs-broadcast/node-asn1:
     "@sofie-automation/shared-lib": "npm:1.53.0-in-development"
     debug: "npm:^4.4.0"
     influx: "npm:^5.9.7"
-    timeline-state-resolver: "npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
+    timeline-state-resolver: "npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
     tslib: "npm:^2.8.1"
     underscore: "npm:^1.13.7"
     winston: "npm:^3.17.0"
@@ -28637,15 +28637,15 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"threadedclass@npm:^1.2.1, threadedclass@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "threadedclass@npm:1.2.2"
+"threadedclass@npm:^1.2.1, threadedclass@npm:^1.2.2, threadedclass@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "threadedclass@npm:1.3.0"
   dependencies:
     callsites: "npm:^3.1.0"
     eventemitter3: "npm:^4.0.4"
     is-running: "npm:^2.1.0"
     tslib: "npm:^1.13.0"
-  checksum: 10/0965f2b4a3350c0a9522bb02bcaf3be7ae12f8c3b3e54d846bf650ea16ac2af1e1b99ed105b889c77a381ee8984b826be25c02688121d9ba303fdec5de421ab6
+  checksum: 10/9e048e82ee745ee2009dabb0015330fa9d4f4d83629c799c6059f77a6a1c6a8b0392e6e8c2a28834a88532be6b86ac276cf1f0133a855ea867b0217021350043
   languageName: node
   linkType: hard
 
@@ -28694,62 +28694,62 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-api@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0":
-  version: 10.0.0-nightly-release53-20251030-091938-982ec3103.0
-  resolution: "timeline-state-resolver-api@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
+"timeline-state-resolver-api@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0":
+  version: 10.0.0-nightly-release53-20251217-143607-df590aa96.0
+  resolution: "timeline-state-resolver-api@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
   dependencies:
-    tslib: "npm:^2.6.3"
+    tslib: "npm:^2.8.1"
   peerDependencies:
-    timeline-state-resolver-types: 10.0.0-nightly-release53-20251030-091938-982ec3103.0
-  checksum: 10/2345dccdb351ae460c930b2084ee24e03fc469361c470c52843d72bdfabf793480377244c29693f625f1571ce537e00e9a11d84321ed565b72d6cb9d19df09f2
+    timeline-state-resolver-types: 10.0.0-nightly-release53-20251217-143607-df590aa96.0
+  checksum: 10/fb174edd6694643c8ca16f851593ab09cd2ea4edbadaa70944f92bf5dad97a18aab1b5a454a353428589cb104f150f379eaba394ae57099843388c12b27c7683
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-types@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0":
-  version: 10.0.0-nightly-release53-20251030-091938-982ec3103.0
-  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
+"timeline-state-resolver-types@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0":
+  version: 10.0.0-nightly-release53-20251217-143607-df590aa96.0
+  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
   dependencies:
-    tslib: "npm:^2.6.3"
-  checksum: 10/02be331dd365ff6e413616c431934887f5c2c194e55c0c05f17c14f02834cb9a733648192252412be946e650b778fdc5e69919cc26076ab1a6e9171a150134de
+    tslib: "npm:^2.8.1"
+  checksum: 10/6f17030e9f10568757b3ebaae40a54ce5220ce5c2f37d9b5d8a5d286704e4779c80fbfddae500e1952a6efdf6e76b67bc18d0151211c84eb194ae3b52f78c7bf
   languageName: node
   linkType: hard
 
-"timeline-state-resolver@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0":
-  version: 10.0.0-nightly-release53-20251030-091938-982ec3103.0
-  resolution: "timeline-state-resolver@npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
+"timeline-state-resolver@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0":
+  version: 10.0.0-nightly-release53-20251217-143607-df590aa96.0
+  resolution: "timeline-state-resolver@npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
   dependencies:
     "@tv2media/v-connection": "npm:^7.3.4"
-    atem-connection: "npm:3.5.0"
+    atem-connection: "npm:3.7.0"
     atem-state: "npm:1.2.0"
     cacheable-lookup: "npm:^5.0.4"
-    casparcg-connection: "npm:6.3.0"
-    casparcg-state: "npm:3.0.3"
-    debug: "npm:^4.3.6"
+    casparcg-connection: "npm:6.3.3"
+    casparcg-state: "npm:3.0.4"
+    debug: "npm:^4.4.3"
     deepmerge: "npm:^4.3.1"
-    emberplus-connection: "npm:^0.3.0"
+    emberplus-connection: "npm:^0.3.1"
     eventemitter3: "npm:^4.0.7"
     got: "npm:^11.8.6"
     hpagent: "npm:^1.2.0"
     hyperdeck-connection: "npm:2.0.1"
     klona: "npm:^2.0.6"
-    obs-websocket-js: "npm:^5.0.6"
+    obs-websocket-js: "npm:^5.0.7"
     osc: "npm:^2.4.5"
     p-all: "npm:^3.0.0"
     p-queue: "npm:^6.6.2"
     simple-oauth2: "npm:^5.1.0"
     sprintf-js: "npm:^1.1.3"
     superfly-timeline: "npm:^9.2.0"
-    threadedclass: "npm:^1.2.2"
-    timeline-state-resolver-api: "npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-release53-20251030-091938-982ec3103.0"
-    tslib: "npm:^2.6.3"
+    threadedclass: "npm:^1.3.0"
+    timeline-state-resolver-api: "npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-release53-20251217-143607-df590aa96.0"
+    tslib: "npm:^2.8.1"
     tv-automation-quantel-gateway-client: "npm:^3.1.7"
     type-fest: "npm:^3.13.1"
     underscore: "npm:^1.13.7"
-    utf-8-validate: "npm:^6.0.4"
-    ws: "npm:^8.18.0"
+    utf-8-validate: "npm:^6.0.5"
+    ws: "npm:^8.18.3"
     xml-js: "npm:^1.6.11"
-  checksum: 10/dcccdda7f8b7cf698ad2472ba441c8ca2478b7ae9fab789b3e03e0cf3220d33097f3d10b78865cd66ed9f83851bf2e5264f6373e496ed125d9d16f007a8a0086
+  checksum: 10/82b22c7945946005485c38ad8fcb94314bcba99aaf3aa549ec30326bb33548e46fe3ee5f6d48c06e6b593405458cbf1bbbda8a95793f57507f0158180e441686
   languageName: node
   linkType: hard
 
@@ -30026,7 +30026,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"utf-8-validate@npm:^6.0.4":
+"utf-8-validate@npm:^6.0.5":
   version: 6.0.5
   resolution: "utf-8-validate@npm:6.0.5"
   dependencies:
@@ -31053,7 +31053,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"ws@npm:8.18.0, ws@npm:^8.11.0, ws@npm:^8.13.0, ws@npm:^8.18.0":
+"ws@npm:8.18.0":
   version: 8.18.0
   resolution: "ws@npm:8.18.0"
   peerDependencies:
@@ -31095,6 +31095,21 @@ asn1@evs-broadcast/node-asn1:
     utf-8-validate:
       optional: true
   checksum: 10/9c796b84ba80ffc2c2adcdfc9c8e9a219ba99caa435c9a8d45f9ac593bba325563b3f83edc5eb067cc6d21b9a6bf2c930adf76dd40af5f58a5ca6859e81858f0
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.11.0, ws@npm:^8.13.0, ws@npm:^8.18.0, ws@npm:^8.18.3":
+  version: 8.18.3
+  resolution: "ws@npm:8.18.3"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10/725964438d752f0ab0de582cd48d6eeada58d1511c3f613485b5598a83680bedac6187c765b0fe082e2d8cc4341fc57707c813ae780feee82d0c5efe6a4c61b6
   languageName: node
   linkType: hard
 
@@ -31216,16 +31231,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.0.0, yaml@npm:^2.6.0, yaml@npm:^2.6.1":
-  version: 2.7.0
-  resolution: "yaml@npm:2.7.0"
-  bin:
-    yaml: bin.mjs
-  checksum: 10/c8c314c62fbd49244a6a51b06482f6d495b37ab10fa685fcafa1bbaae7841b7233ee7d12cab087bcca5a0b28adc92868b6e437322276430c28d00f1c1732eeec
-  languageName: node
-  linkType: hard
-
-"yaml@npm:^2.8.1":
+"yaml@npm:^2.0.0, yaml@npm:^2.6.0, yaml@npm:^2.6.1, yaml@npm:^2.8.1":
   version: 2.8.1
   resolution: "yaml@npm:2.8.1"
   bin:
