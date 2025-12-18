@@ -156,7 +156,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 		return () => {
 			RundownViewEventBus.off(RundownViewEvents.EDIT_MODE, onSetEditMode)
 		}
-	})
+	}, [onSetEditMode])
 
 	const ctx = literal<IDragContext>({
 		pieceId,
