@@ -32,13 +32,7 @@ import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-auto
 import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { UIShowStyleBases, UIStudios } from '../../Collections.js'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
-import {
-	PartInstances,
-	PieceInstances,
-	RundownPlaylists,
-	Rundowns,
-	ShowStyleVariants,
-} from '../../../collections/index.js'
+import { PieceInstances, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../../collections/index.js'
 import { RundownPlaylistCollectionUtil } from '../../../collections/rundownPlaylistUtil.js'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { useSetDocumentClass } from '../../util/useSetDocumentClass.js'
