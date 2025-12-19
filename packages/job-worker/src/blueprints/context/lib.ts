@@ -545,6 +545,7 @@ function translateUserEditsToBlueprint(
 					return literal<UserEditingDefinitionSofieDefault>({
 						type: UserEditingType.SOFIE,
 						id: userEdit.id,
+						limitToCurrentPart: userEdit.limitToCurrentPart,
 					})
 				default:
 					assertNever(userEdit)
@@ -608,6 +609,7 @@ export function translateUserEditsFromBlueprint(
 					return literal<CoreUserEditingDefinitionSofie>({
 						type: UserEditingType.SOFIE,
 						id: userEdit.id,
+						limitToCurrentPart: userEdit.limitToCurrentPart,
 					})
 				default:
 					assertNever(userEdit)

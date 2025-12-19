@@ -16,6 +16,7 @@ export interface IDragContext {
 		timeScale: number,
 		position: { x: number; y: number },
 		elementOffset?: number,
+		limitToPart?: PartInstanceId,
 		limitToSegment?: SegmentId
 	) => void
 	/**

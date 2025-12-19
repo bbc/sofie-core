@@ -199,8 +199,14 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 
 			if (!hasDraggableElement) return
 
-			const targetPos = (e.target as HTMLDivElement).getBoundingClientRect()
-			if (dragCtx && dragCtx.enabled)
+			if (dragCtx && dragCtx.enabled) {
+				const targetPos = (e.target as HTMLDivElement).getBoundingClientRect()
+				const retimeOp = piece.instance.piece.userEditOperations?.find(
+					(op) => op.type === UserEditingType.SOFIE && op.id === DefaultUserOperationsTypes.RETIME_PIECE
+				) as any
+
+				const limitToPart = retimeOp?.limitToCurrentPart ? piece.instance.partInstanceId : undefined
+
 				dragCtx.startDrag(
 					piece,
 					timeScale,
@@ -209,8 +215,10 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 						y: e.clientY,
 					},
 					targetPos.x - e.clientX,
+					limitToPart,
 					part.instance.segmentId
 				)
+			}
 		},
 		[piece, timeScale, dragCtx]
 	)
