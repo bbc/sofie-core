@@ -30,18 +30,21 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 	const partIdRef = useRef<undefined | PartInstanceId>(undefined)
 	const positionRef = useRef({ x: 0, y: 0 })
 	const segmentIdRef = useRef<undefined | SegmentId>(undefined)
+	const limitToPartRef = useRef<undefined | PartInstanceId>(undefined)
 
 	const startDrag = (
 		ogPiece: PieceUi,
 		timeScale: number,
 		pos: { x: number; y: number },
 		elementOffset?: number,
+		limitToPart?: PartInstanceId,
 		limitToSegment?: SegmentId
 	) => {
 		if (pieceId) return // a drag is currently in progress....
 
 		const inPoint = ogPiece.renderedInPoint ?? 0
 		segmentIdRef.current = limitToSegment
+		limitToPartRef.current = limitToPart
 		positionRef.current = pos
 		setPieceId(ogPiece.instance._id)
 
@@ -138,6 +141,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 		if (!pieceId) return
 		if (updatedPartId === piece?.instance.partInstanceId) return
 		if (segmentIdRef.current && segmentIdRef.current !== segmentId) return
+		if (limitToPartRef.current && limitToPartRef.current !== updatedPartId) return
 
 		partIdRef.current = updatedPartId
 		positionRef.current = pos
