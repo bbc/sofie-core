@@ -74,7 +74,7 @@ export function findLookaheadForLayer(
 			res.future.push(...nextObjs)
 		}
 		previousPart = nextPartInfo.part
-	} else lookaheadMaxSearchDistance += 1 // if there is no next part, we should look at the future parts. It's easiest to just expand the search by one.
+	}
 
 	if (lookaheadMaxSearchDistance > 1 && lookaheadTargetFutureObjects > 0) {
 		for (const partInfo of orderedPartInfos.slice(0, lookaheadMaxSearchDistance - 1)) {
