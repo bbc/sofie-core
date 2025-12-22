@@ -638,7 +638,6 @@ describe('getLookeaheadObjects', () => {
 				),
 			},
 		} as any)
-		console.log(res)
 		expect(res).toHaveLength(2)
 		expect(res.map((o) => o.layer)).toEqual(['layer1_lookahead', 'layer1_lookahead'])
 		expect(res.map((o) => o.lookaheadOffset)).toEqual([500, undefined])
