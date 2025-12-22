@@ -172,8 +172,6 @@ export function findLookaheadObjectsForPart(
 				)
 			}
 		})
-		console.log(res)
-
 		return res
 	}
 }
