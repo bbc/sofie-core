@@ -58,52 +58,22 @@ describe('lookahead offset integration', () => {
 
 		expect(res).toEqual([])
 	})
-	test('returns one lookahead object for a single future part', async () => {
-		getOrderedPartsAfterPlayheadMock.mockReturnValue([
-			{
-				_id: protectString('p1'),
-				classesForNext: [],
-			} as any,
-		])
-
-		const findFetchMock = jest.fn().mockResolvedValue([makePiece({ partId: 'p1', layer: 'layer1' })])
-
-		context = {
-			...context,
-			directCollections: {
-				...context.directCollections,
-				Pieces: {
-					...context.directCollections.Pieces,
-					findFetch: findFetchMock,
-				},
-			},
-		} as unknown as JobContext
-
-		const res = await getLookeaheadObjects(context, playoutModel, {
-			current: undefined,
-			next: undefined,
-			previous: undefined,
-		} as SelectedPartInstancesTimelineInfo)
-
-		expect(res).toHaveLength(1)
-
-		const obj = res[0]
-		expect(obj.layer).toBe('layer1_lookahead')
-		expect(obj.objectType).toBe('rundown')
-		expect(obj.pieceInstanceId).toContain('p1')
-		expect(obj.partInstanceId).toContain('p1')
-		expect(obj.content).toMatchObject({
-			deviceType: TSR.DeviceType.CASPARCG,
-			type: TSR.TimelineContentTypeCasparCg.MEDIA,
-			file: 'AMB',
-		})
-	})
 	test('respects lookaheadMaxSearchDistance', async () => {
-		findLargestLookaheadDistanceMock.mockReturnValue(10)
 		getOrderedPartsAfterPlayheadMock.mockReturnValue([
 			{ _id: protectString('p1'), classesForNext: [] } as any,
 			{ _id: protectString('p2'), classesForNext: [] } as any,
+			{ _id: protectString('p3'), classesForNext: [] } as any,
+			{ _id: protectString('p4'), classesForNext: [] } as any,
 		])
+
+		const findFetchMock = jest
+			.fn()
+			.mockResolvedValue([
+				makePiece({ partId: 'p1', layer: 'layer1' }),
+				makePiece({ partId: 'p2', layer: 'layer1' }),
+				makePiece({ partId: 'p3', layer: 'layer1' }),
+				makePiece({ partId: 'p4', layer: 'layer1' }),
+			])
 
 		context = {
 			...context,
@@ -113,23 +83,47 @@ describe('lookahead offset integration', () => {
 					...context.studio.mappings,
 					layer1: {
 						...context.studio.mappings['layer1'],
-						lookaheadMaxSearchDistance: 1,
+						lookaheadMaxSearchDistance: 3,
 					},
+				},
+			},
+			directCollections: {
+				...context.directCollections,
+				Pieces: {
+					...context.directCollections.Pieces,
+					findFetch: findFetchMock,
 				},
 			},
 		} as JobContext
 
-		context.directCollections.Pieces.findFetch = jest
-			.fn()
-			.mockResolvedValue([
-				makePiece({ partId: 'p1', layer: 'layer1' }),
-				makePiece({ partId: 'p2', layer: 'layer1' }),
-			])
+		const res = await getLookeaheadObjects(context, playoutModel, {
+			current: undefined,
+			next: undefined,
+			previous: undefined,
+		} as SelectedPartInstancesTimelineInfo)
 
-		const res = await getLookeaheadObjects(context, playoutModel, {} as SelectedPartInstancesTimelineInfo)
+		expect(res).toHaveLength(2)
+		const obj0 = res[0]
+		const obj1 = res[1]
 
-		expect(res).toHaveLength(1)
-		expect(res[0].partInstanceId).toContain('p1')
+		expect(obj0.layer).toBe('layer1_lookahead')
+		expect(obj0.objectType).toBe('rundown')
+		expect(obj0.pieceInstanceId).toContain('p1')
+		expect(obj0.partInstanceId).toContain('p1')
+		expect(obj0.content).toMatchObject({
+			deviceType: TSR.DeviceType.CASPARCG,
+			type: TSR.TimelineContentTypeCasparCg.MEDIA,
+			file: 'AMB',
+		})
+		expect(obj1.layer).toBe('layer1_lookahead')
+		expect(obj1.objectType).toBe('rundown')
+		expect(obj1.pieceInstanceId).toContain('p2')
+		expect(obj1.partInstanceId).toContain('p2')
+		expect(obj1.content).toMatchObject({
+			deviceType: TSR.DeviceType.CASPARCG,
+			type: TSR.TimelineContentTypeCasparCg.MEDIA,
+			file: 'AMB',
+		})
 	})
 	test('applies nextTimeOffset to lookahead objects in future part', async () => {
 		playoutModel = {
@@ -140,11 +134,17 @@ describe('lookahead offset integration', () => {
 			},
 		} as PlayoutModel
 		findLargestLookaheadDistanceMock.mockReturnValue(1)
-		getOrderedPartsAfterPlayheadMock.mockReturnValue([{ _id: protectString('p1'), classesForNext: [] } as any])
+		getOrderedPartsAfterPlayheadMock.mockReturnValue([
+			{ _id: protectString('p1'), classesForNext: [] } as any,
+			{ _id: protectString('p2'), classesForNext: [] } as any,
+		])
 
 		context.directCollections.Pieces.findFetch = jest
 			.fn()
-			.mockResolvedValue([makePiece({ partId: 'p1', layer: 'layer1', start: 0 })])
+			.mockResolvedValue([
+				makePiece({ partId: 'p1', layer: 'layer1' }),
+				makePiece({ partId: 'p2', layer: 'layer1' }),
+			])
 
 		const res = await getLookeaheadObjects(context, playoutModel, {} as SelectedPartInstancesTimelineInfo)
 
