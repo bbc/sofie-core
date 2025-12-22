@@ -402,7 +402,6 @@ describe('getLookeaheadObjects', () => {
 
 		expect(res).toEqual([])
 	})
-
 	test('returns one lookahead object for a single future part', async () => {
 		getOrderedPartsAfterPlayheadMock.mockReturnValue([
 			{
@@ -443,7 +442,6 @@ describe('getLookeaheadObjects', () => {
 			file: 'AMB',
 		})
 	})
-
 	test('respects lookaheadMaxSearchDistance', async () => {
 		findLargestLookaheadDistanceMock.mockReturnValue(10)
 		getOrderedPartsAfterPlayheadMock.mockReturnValue([
@@ -477,7 +475,6 @@ describe('getLookeaheadObjects', () => {
 		expect(res).toHaveLength(1)
 		expect(res[0].partInstanceId).toContain('p1')
 	})
-
 	test('applies nextTimeOffset to lookahead objects in future part', async () => {
 		playoutModel = {
 			...playoutModel,
@@ -498,7 +495,6 @@ describe('getLookeaheadObjects', () => {
 		expect(res).toHaveLength(1)
 		expect(res[0].lookaheadOffset).toBe(5000)
 	})
-
 	test('applies nextTimeOffset to lookahead objects in nextPart with no offset on next part', async () => {
 		playoutModel = {
 			...playoutModel,
@@ -543,7 +539,6 @@ describe('getLookeaheadObjects', () => {
 		expect(res[0].lookaheadOffset).toBe(5000)
 		expect(res[1].lookaheadOffset).toBe(undefined)
 	})
-
 	test('Multi layer part produces lookahead objects for all layers with the correct offsets', async () => {
 		playoutModel = {
 			...playoutModel,
@@ -634,6 +629,38 @@ describe('getLookeaheadObjects', () => {
 						piece as any,
 						'pA1' as any,
 						lookaheadOffsetTestConstants.singleLayerPart.partInstance._id
+					)
+				),
+			},
+		} as any)
+		expect(res).toHaveLength(2)
+		expect(res.map((o) => o.layer)).toEqual(['layer1_lookahead', 'layer1_lookahead'])
+		expect(res.map((o) => o.lookaheadOffset)).toEqual([500, undefined])
+	})
+	test('Single layer part produces lookahead objects with while enable values with the correct offsets', async () => {
+		playoutModel = {
+			...playoutModel,
+			playlist: {
+				...playoutModel.playlist,
+				nextTimeOffset: 1000,
+			},
+		} as PlayoutModel
+		getOrderedPartsAfterPlayheadMock.mockReturnValue([
+			{ ...lookaheadOffsetTestConstants.singleLayerPartWhile, classesForNext: [] } as any,
+		])
+
+		context.directCollections.Pieces.findFetch = jest
+			.fn()
+			.mockResolvedValue(lookaheadOffsetTestConstants.singleLayerPartWhile.pieces)
+
+		const res = await getLookeaheadObjects(context, playoutModel, {
+			next: {
+				...lookaheadOffsetTestConstants.singleLayerPartWhile,
+				pieceInstances: lookaheadOffsetTestConstants.singleLayerPartWhile.pieces.map((piece) =>
+					wrapPieceToInstance(
+						piece as any,
+						'pA1' as any,
+						lookaheadOffsetTestConstants.singleLayerPartWhile.partInstance._id
 					)
 				),
 			},
