@@ -120,6 +120,25 @@ export function SegmentContextMenu({
 		part?.instance._id !== playlist.nextPartInfo?.partInstanceId &&
 		part?.instance._id !== playlist.previousPartInfo?.partInstanceId
 
+	const segmentHasEditableContent = !!(
+		segment?.userEditOperations?.length ||
+		segment?.userEditProperties?.pieceTypeProperties ||
+		segment?.userEditProperties?.globalProperties ||
+		segment?.userEditProperties?.operations?.length
+	)
+	const partHasEditableContent = !!(
+		part?.instance.part.userEditOperations?.length ||
+		part?.instance.part.userEditProperties?.pieceTypeProperties ||
+		part?.instance.part.userEditProperties?.globalProperties ||
+		part?.instance.part.userEditProperties?.operations?.length
+	)
+	const pieceHasEditableContent = !!(
+		piece?.instance.piece.userEditOperations?.length ||
+		piece?.instance.piece.userEditProperties?.pieceTypeProperties ||
+		piece?.instance.piece.userEditProperties?.globalProperties ||
+		piece?.instance.piece.userEditProperties?.operations?.length
+	)
+
 	const isPartOrphaned: boolean | undefined = part ? part.instance.orphaned !== undefined : undefined
 
 	const isPartNext: boolean | undefined = part ? playlist.nextPartInfo?.partInstanceId === part.instance._id : undefined
@@ -159,7 +178,7 @@ export function SegmentContextMenu({
 								isFormEditable={isSegmentEditAble}
 							/>
 						)}
-						{enableUserEdits && (
+						{enableUserEdits && segmentHasEditableContent && (
 							<>
 								<hr />
 								<MenuItem onClick={() => onEditProps({ type: 'segment', elementId: part.instance.segmentId })}>
@@ -286,16 +305,20 @@ export function SegmentContextMenu({
 								/>
 							)}
 
-							{enableUserEdits && (
+							{enableUserEdits && (segmentHasEditableContent || partHasEditableContent || pieceHasEditableContent) && (
 								<>
 									<hr />
-									<MenuItem onClick={() => onEditProps({ type: 'segment', elementId: part.instance.segmentId })}>
-										<span>{t('Edit Segment Properties')}</span>
-									</MenuItem>
-									<MenuItem onClick={() => onEditProps({ type: 'part', elementId: part.instance.part._id })}>
-										<span>{t('Edit Part Properties')}</span>
-									</MenuItem>
-									{piece && piece.instance.piece.userEditProperties && (
+									{segmentHasEditableContent && (
+										<MenuItem onClick={() => onEditProps({ type: 'segment', elementId: part.instance.segmentId })}>
+											<span>{t('Edit Segment Properties')}</span>
+										</MenuItem>
+									)}
+									{partHasEditableContent && (
+										<MenuItem onClick={() => onEditProps({ type: 'part', elementId: part.instance.part._id })}>
+											<span>{t('Edit Part Properties')}</span>
+										</MenuItem>
+									)}
+									{pieceHasEditableContent && (
 										<MenuItem onClick={() => onEditProps({ type: 'piece', elementId: piece.instance.piece._id })}>
 											<span>{t('Edit Piece Properties')}</span>
 										</MenuItem>
