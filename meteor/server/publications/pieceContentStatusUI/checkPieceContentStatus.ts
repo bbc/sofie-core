@@ -10,10 +10,7 @@ import {
 	SourceLayerType,
 	VTContent,
 } from '@sofie-automation/blueprints-integration'
-import {
-	getExpectedPackageIdForPieceInstance,
-	getExpectedPackageIdNew,
-} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { getExpectedPackageIdNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import {
 	BucketId,
 	ExpectedPackageId,
@@ -46,7 +43,7 @@ import {
 import { getActiveRoutes, getRoutedMappings } from '@sofie-automation/meteor-lib/dist/collections/Studios'
 import { ensureHasTrailingSlash } from '@sofie-automation/corelib/dist/lib'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
-import { MediaObjects, PackageContainerPackageStatuses, PackageInfos } from '../../collections'
+import { ExpectedPackages, MediaObjects, PackageContainerPackageStatuses, PackageInfos } from '../../collections'
 import {
 	mediaObjectFieldSpecifier,
 	MediaObjectLight,
@@ -285,6 +282,27 @@ export async function checkPieceContentStatusAndDependencies(
 				packageContainerId: string,
 				expectedPackageId: ExpectedPackageId
 			) => {
+				if (piece.pieceInstanceId) {
+					// nocommit - HACK. This is a temporary hack to help test that the ownership is tracked correctly.
+					// This is intended to only match the package if it has the pieceinstance as an owner.
+					// This should reveal issues with ownership being lost/forgotten even when the link for the underlying piece is still in place
+					// This is not reactive, but that should be fine for this testing
+					const hasDoc = await ExpectedPackages.findOneAsync(
+						{
+							_id: expectedPackageId,
+							rundownId: packageOwnerId,
+							bucketId: null,
+							'playoutSources.pieceInstanceIds': piece.pieceInstanceId,
+						},
+						{
+							projection: {
+								_id: 1,
+							},
+						}
+					)
+					if (!hasDoc) return undefined
+				}
+
 				const id = getPackageContainerPackageId(studio._id, packageContainerId, expectedPackageId)
 				pieceDependencies.packageContainerPackageStatuses.push(id)
 				return PackageContainerPackageStatuses.findOneAsync(
@@ -670,20 +688,8 @@ async function checkPieceContentExpectedPackageStatus(
 
 				checkedPackageContainers.add(matchedPackageContainer[0])
 
+				// nocommit - strip out array
 				const expectedPackageIds = [getExpectedPackageIdNew(packageOwnerId, expectedPackage)]
-				if (piece.pieceInstanceId) {
-					// If this is a PieceInstance, try looking up the PieceInstance first
-					expectedPackageIds.unshift(
-						getExpectedPackageIdForPieceInstance(piece.pieceInstanceId, expectedPackage._id)
-					)
-
-					if (piece.previousPieceInstanceId) {
-						// Also try the previous PieceInstance, when this is an infinite continuation in case package-manager needs to catchup
-						expectedPackageIds.unshift(
-							getExpectedPackageIdForPieceInstance(piece.previousPieceInstanceId, expectedPackage._id)
-						)
-					}
-				}
 
 				const fileName = getExpectedPackageFileName(expectedPackage) ?? ''
 

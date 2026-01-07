@@ -1,6 +1,10 @@
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
-import { ExpectedPackageDB, ExpectedPackageDBType } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import {
+	ExpectedPackageDB,
+	ExpectedPackageDBType,
+	isPackageReferencedByPlayout,
+} from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { PieceId, ExpectedPackageId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
@@ -118,13 +122,13 @@ async function writeExpectedPackagesChangesForRundown(
 		{
 			projection: {
 				_id: 1,
-				// Future: playoutSources
+				playoutSources: 1, // This feels a bit excessive, but the whole object is needed for `isPackageReferencedByPlayout`
 			},
 		}
-	)) as Pick<ExpectedPackageDB, '_id' | 'created'>[]
+	)) as Pick<ExpectedPackageDB, '_id' | 'created' | 'playoutSources'>[]
 	const existingDocsMap = normalizeArrayToMap(existingDocs, '_id')
 
-	const packagesToSave = new Map<ExpectedPackageId, ExpectedPackageDB>()
+	const packagesToSave = new Map<ExpectedPackageId, Omit<ExpectedPackageDB, 'playoutSources'>>()
 	for (const doc of documentsToSave) {
 		const partialDoc = packagesToSave.get(doc.packageId)
 
@@ -156,7 +160,12 @@ async function writeExpectedPackagesChangesForRundown(
 			// Insert this new document
 			ops.push({
 				insertOne: {
-					document: doc,
+					document: {
+						...doc,
+						playoutSources: {
+							pieceInstanceIds: [],
+						},
+					},
 				},
 			})
 		} else {
@@ -178,19 +187,35 @@ async function writeExpectedPackagesChangesForRundown(
 
 	// Look over the existing documents, and see is no longer referenced
 	const idsToDelete: ExpectedPackageId[] = []
+	const idsToClearSources: ExpectedPackageId[] = []
 
 	for (const doc of existingDocs) {
 		// Skip if this document is in the list of documents to save
 		if (packagesToSave.has(doc._id)) continue
 
-		// Future: check for playoutSources
-		idsToDelete.push(doc._id)
+		if (isPackageReferencedByPlayout(doc)) {
+			idsToClearSources.push(doc._id)
+		} else {
+			idsToDelete.push(doc._id)
+		}
 	}
 
 	if (idsToDelete.length > 0) {
 		ops.push({
 			deleteMany: {
 				filter: { _id: { $in: idsToDelete as any } },
+			},
+		})
+	}
+	if (idsToClearSources.length > 0) {
+		ops.push({
+			updateMany: {
+				filter: { _id: { $in: idsToClearSources as any } },
+				update: {
+					$set: {
+						ingestSources: [],
+					},
+				},
 			},
 		})
 	}

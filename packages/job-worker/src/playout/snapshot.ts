@@ -493,6 +493,9 @@ export async function handleRestorePlaylistSnapshot(
 				},
 
 				ingestSources: [source],
+				playoutSources: {
+					pieceInstanceIds: [],
+				},
 			}
 
 			expectedPackageIdMap.set(expectedPackage._id, newExpectedPackage._id)
