@@ -5,7 +5,7 @@ import { clone, getRandomId } from '@sofie-automation/corelib/dist/lib'
 import { ExpectedPackage, Time } from '@sofie-automation/blueprints-integration'
 import { PlayoutPieceInstanceModel } from '../PlayoutPieceInstanceModel.js'
 import _ from 'underscore'
-import { getExpectedPackageIdNew } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages.js'
+import { getExpectedPackageId } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 
 export class PlayoutPieceInstanceModelImpl implements PlayoutPieceInstanceModel {
 	/**
@@ -93,6 +93,7 @@ export class PlayoutPieceInstanceModelImpl implements PlayoutPieceInstanceModel 
 				pieceInstance.rundownId,
 				pieceInstance.piece.expectedPackages
 			)
+			this.PieceInstanceImpl.neededExpectedPackageIds = Array.from(this.updatedExpectedPackages.keys())
 		} else {
 			this.updatedExpectedPackages = null
 		}
@@ -168,7 +169,7 @@ function createExpectedPackagesMap(
 	if (!packages) return map
 
 	for (const pkg of packages) {
-		map.set(getExpectedPackageIdNew(rundownId, pkg), pkg)
+		map.set(getExpectedPackageId(rundownId, pkg), pkg)
 	}
 	return map
 }

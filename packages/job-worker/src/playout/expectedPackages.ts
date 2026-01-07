@@ -1,6 +1,6 @@
 import type { CleanupOrphanedExpectedPackageReferencesProps } from '@sofie-automation/corelib/dist/worker/studio'
-import type { JobContext } from '../jobs'
-import { runWithPlaylistLock } from './lock'
+import type { JobContext } from '../jobs/index.js'
+import { runWithPlaylistLock } from './lock.js'
 import {
 	ExpectedPackageDB,
 	isPackageReferencedByPlayout,
@@ -126,6 +126,8 @@ export async function handleCleanupOrphanedExpectedPackageReferences(
 			}
 		}
 
-		await context.directCollections.ExpectedPackages.bulkWrite(writeOps)
+		if (writeOps.length > 0) {
+			await context.directCollections.ExpectedPackages.bulkWrite(writeOps)
+		}
 	})
 }

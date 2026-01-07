@@ -108,7 +108,7 @@ export class SaveIngestModelHelper {
 	}
 }
 
-async function writeExpectedPackagesChangesForRundown(
+export async function writeExpectedPackagesChangesForRundown(
 	context: JobContext,
 	rundownId: RundownId | null,
 	documentsToSave: IngestExpectedPackage<any>[]

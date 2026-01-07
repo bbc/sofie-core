@@ -15,9 +15,9 @@ import { PlayoutPartInstanceModelImpl } from './PlayoutPartInstanceModelImpl.js'
 import { PlayoutRundownModelImpl } from './PlayoutRundownModelImpl.js'
 import { ReadonlyDeep } from 'type-fest'
 import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
-import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib.js'
-import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages.js'
-import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio.js'
+import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
+import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
+import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
 
 /**
  * Save any changed AdlibTesting Segments
@@ -181,14 +181,22 @@ export async function writeExpectedPackagesForPlayoutSources(
 	const pieceInstancesToAddToPackages = new Map<ExpectedPackageId, PieceInstanceId[]>()
 	const packagesToInsert = new Map<ExpectedPackageId, ExpectedPackageEntry>()
 
+	let hasPieceInstanceExpectedPackageChanges = false
+
 	for (const partInstance of partInstancesForRundown) {
 		if (!partInstance) continue
 
 		for (const pieceInstance of partInstance.pieceInstancesImpl.values()) {
-			if (!pieceInstance) continue // Future: We could handle these deleted pieces here?
+			if (!pieceInstance) {
+				// PieceInstance was deleted, cleanup may be needed
+				hasPieceInstanceExpectedPackageChanges = true
+				continue
+			}
 
 			// The expectedPackages of the PieceInstance has not been modified, so there is nothing to do
 			if (!pieceInstance.updatedExpectedPackages) continue
+
+			hasPieceInstanceExpectedPackageChanges = true
 
 			// Any removed references will be removed by the debounced job
 
@@ -205,12 +213,17 @@ export async function writeExpectedPackagesForPlayoutSources(
 					pieceInstanceIds.push(pieceInstance.pieceInstance._id)
 					pieceInstancesToAddToPackages.set(packageId, pieceInstanceIds)
 				} else {
-					// Record as needing a new document
-					packagesToInsert.set(packageId, {
-						_id: packageId,
-						package: expectedPackage,
-						pieceInstanceIds: [pieceInstance.pieceInstance._id],
-					})
+					// Record as needing a new document, or add to existing entry if already queued for insert
+					const existingEntry = packagesToInsert.get(packageId)
+					if (existingEntry) {
+						existingEntry.pieceInstanceIds.push(pieceInstance.pieceInstance._id)
+					} else {
+						packagesToInsert.set(packageId, {
+							_id: packageId,
+							package: expectedPackage,
+							pieceInstanceIds: [pieceInstance.pieceInstance._id],
+						})
+					}
 
 					// Future: If this came from a bucket, can we copy the packageInfos across to minimise latency until the status is ready?
 				}
@@ -260,16 +273,18 @@ export async function writeExpectedPackagesForPlayoutSources(
 	}
 
 	// We can't easily track any references which have been deleted, so we should schedule a cleanup job to deal with that for us
-	// Always perform this, in case any pieceInstances have been purged directly from the db
-	await context.queueStudioJob(
-		StudioJobs.CleanupOrphanedExpectedPackageReferences,
-		{
-			playlistId: playlistId,
-			rundownId: rundownId,
-		},
-		{
-			lowPriority: true,
-			debounce: 1000,
-		}
-	)
+	// Only queue if there were changes to expected packages, to avoid unnecessary job scheduling
+	if (hasPieceInstanceExpectedPackageChanges) {
+		await context.queueStudioJob(
+			StudioJobs.CleanupOrphanedExpectedPackageReferences,
+			{
+				playlistId: playlistId,
+				rundownId: rundownId,
+			},
+			{
+				lowPriority: true,
+				debounce: 1000,
+			}
+		)
+	}
 }

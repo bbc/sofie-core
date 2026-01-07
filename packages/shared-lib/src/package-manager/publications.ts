@@ -37,8 +37,8 @@ export interface PackageManagerExpectedPackage {
 	_id: PackageManagerExpectedPackageId
 
 	expectedPackage: PackageManagerExpectedPackageBase
-	/** Lower should be done first */
-	priority: number
+	/** Lower should be done first. If not set, the priority is considered as low priority */
+	priority: number | null
 	sources: PackageContainerOnPackage[]
 	targets: PackageContainerOnPackage[]
 	playoutDeviceId: PeripheralDeviceId

@@ -57,6 +57,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -100,6 +103,9 @@ describe('WatchedPackagesHelper', () => {
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -127,6 +133,9 @@ describe('WatchedPackagesHelper', () => {
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -142,6 +151,9 @@ describe('WatchedPackagesHelper', () => {
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece2') } as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -171,6 +183,9 @@ describe('WatchedPackagesHelper', () => {
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece2') } as any,
 					] as any,
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -209,6 +224,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: false,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -263,6 +281,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: false,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -304,6 +325,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -323,6 +347,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -358,6 +385,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -377,6 +407,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -436,6 +469,9 @@ describe('WatchedPackagesHelper', () => {
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -492,6 +528,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -539,6 +578,9 @@ describe('WatchedPackagesHelper', () => {
 							listenToPackageInfoUpdates: true,
 						} as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)
@@ -595,6 +637,9 @@ describe('WatchedPackagesHelper', () => {
 					ingestSources: [
 						{ fromPieceType: ExpectedPackageDBType.PIECE, pieceId: protectString('piece1') } as any,
 					],
+					playoutSources: {
+						pieceInstanceIds: [],
+					},
 					created: 1000,
 				})
 			)

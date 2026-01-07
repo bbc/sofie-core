@@ -24,7 +24,7 @@ import { PackageManagerExpectedPackage } from '@sofie-automation/shared-lib/dist
 import { ExpectedPackagesContentObserver } from './contentObserver'
 import { createReactiveContentCache, ExpectedPackagesContentCache } from './contentCache'
 import { buildMappingsToDeviceIdMap } from './util'
-import { ExpectedPackagePriorities, updateCollectionForExpectedPackageIds } from './generate'
+import { updateCollectionForExpectedPackageIds } from './generate'
 import {
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
@@ -188,11 +188,15 @@ async function manipulateExpectedPackagesPublicationData(
 	updatePackagePriorities(state.contentCache, collection)
 }
 
+const PACKAGE_PRIORITY_PLAYOUT_CURRENT = 0
+const PACKAGE_PRIORITY_PLAYOUT_NEXT = 1
+const PACKAGE_PRIORITY_OTHER = 9
+
 function updatePackagePriorities(
 	contentCache: ReadonlyDeep<ExpectedPackagesContentCache>,
 	collection: CustomPublishCollection<PackageManagerExpectedPackage>
 ) {
-	const highPriorityPackages = new Map<ExpectedPackageId, ExpectedPackagePriorities>()
+	const packagePriorities = new Map<ExpectedPackageId, number>()
 
 	// Compile the map of the expected priority of each package
 	const knownPieceInstances = contentCache.PieceInstances.find({})
@@ -204,18 +208,18 @@ function updatePackagePriorities(
 
 		const packagePriority =
 			pieceInstance.partInstanceId === currentPartInstanceId
-				? ExpectedPackagePriorities.PLAYOUT_CURRENT
-				: ExpectedPackagePriorities.PLAYOUT_NEXT
+				? PACKAGE_PRIORITY_PLAYOUT_CURRENT
+				: PACKAGE_PRIORITY_PLAYOUT_NEXT
 
 		for (const packageId of packageIds) {
-			const existingPriority = highPriorityPackages.get(packageId) ?? ExpectedPackagePriorities.OTHER
-			highPriorityPackages.set(packageId, Math.min(existingPriority, packagePriority))
+			const existingPriority = packagePriorities.get(packageId) ?? PACKAGE_PRIORITY_OTHER
+			packagePriorities.set(packageId, Math.min(existingPriority, packagePriority))
 		}
 	}
 
 	// Iterate through and update each package
 	collection.updateAll((pkg) => {
-		const expectedPriority = highPriorityPackages.get(pkg.expectedPackage._id) ?? ExpectedPackagePriorities.OTHER
+		const expectedPriority = packagePriorities.get(pkg.expectedPackage._id) ?? PACKAGE_PRIORITY_OTHER
 		if (pkg.priority === expectedPriority) return false
 
 		return {

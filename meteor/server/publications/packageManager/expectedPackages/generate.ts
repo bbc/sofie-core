@@ -80,16 +80,6 @@ export async function updateCollectionForExpectedPackageIds(
 	})
 }
 
-export enum ExpectedPackagePriorities {
-	// Lower priorities are done first
-
-	/** Highest priority */
-	PLAYOUT_CURRENT = 0,
-	/** Second-to-highest priority */
-	PLAYOUT_NEXT = 1,
-	OTHER = 9,
-}
-
 function generateExpectedPackageForDevice(
 	studio: Pick<
 		StudioLight,
@@ -139,7 +129,7 @@ function generateExpectedPackageForDevice(
 		},
 		sources: combinedSources,
 		targets: combinedTargets,
-		priority: ExpectedPackagePriorities.OTHER, // This gets overriden later if needed
+		priority: null,
 		playoutDeviceId: deviceId,
 	}
 }
