@@ -26,7 +26,7 @@ export { JobStudio }
 
 export interface QueueJobOptions {
 	/**
-	 * The job should be run with a low priority, allowing other operations to be run first ]
+	 * The job should be run with a low priority, allowing other operations to be run first
 	 */
 	lowPriority?: boolean
 
