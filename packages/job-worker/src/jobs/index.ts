@@ -31,7 +31,7 @@ export interface QueueJobOptions {
 	lowPriority?: boolean
 
 	/**
-	 * Debounce execution, delaying execution until at least this wait time.
+	 * Debounce execution, delaying execution for at least this wait time (in ms).
 	 * If the job is already queued, it will not be queued again
 	 */
 	debounce?: number
