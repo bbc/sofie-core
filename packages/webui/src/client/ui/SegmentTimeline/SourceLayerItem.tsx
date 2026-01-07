@@ -176,15 +176,14 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 					innerPiece.userEditProperties?.globalProperties ||
 					innerPiece.userEditProperties?.operations?.length
 				)
+
 				if (!hasEditableContent) return
 
 				const pieceId = innerPiece._id
-				if (!selectElementContext.isSelected(pieceId)) {
-					RundownViewEventBus.emit(RundownViewEvents.CLOSE_NOTIFICATIONS)
-					selectElementContext.clearAndSetSelection({ type: 'piece', elementId: pieceId })
-				} else {
-					selectElementContext.clearSelections()
-				}
+
+				RundownViewEventBus.emit(RundownViewEvents.CLOSE_NOTIFICATIONS)
+				selectElementContext.clearAndSetSelection({ type: 'piece', elementId: pieceId })
+
 				// Until a proper data structure, the only reference is a part.
 				// const partId = this.props.part.instance.part._id
 				// if (!selectElementContext.isSelected(partId)) {
