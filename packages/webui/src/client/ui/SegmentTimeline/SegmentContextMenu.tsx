@@ -139,7 +139,7 @@ export const SegmentContextMenu = withTranslation()(
 								)}
 							</>
 						)}
-						{part && !part.instance.part.invalid && timecode !== null && (
+						{part && timecode !== null && (
 							<>
 								<MenuItem
 									onClick={(e) => this.props.onSetNext(part.instance.part, e)}
