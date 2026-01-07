@@ -181,14 +181,22 @@ export async function writeExpectedPackagesForPlayoutSources(
 	const pieceInstancesToAddToPackages = new Map<ExpectedPackageId, PieceInstanceId[]>()
 	const packagesToInsert = new Map<ExpectedPackageId, ExpectedPackageEntry>()
 
+	let hasPieceInstanceExpectedPackageChanges = false
+
 	for (const partInstance of partInstancesForRundown) {
 		if (!partInstance) continue
 
 		for (const pieceInstance of partInstance.pieceInstancesImpl.values()) {
-			if (!pieceInstance) continue // Future: We could handle these deleted pieces here?
+			if (!pieceInstance) {
+				// PieceInstance was deleted, cleanup may be needed
+				hasPieceInstanceExpectedPackageChanges = true
+				continue
+			}
 
 			// The expectedPackages of the PieceInstance has not been modified, so there is nothing to do
 			if (!pieceInstance.updatedExpectedPackages) continue
+
+			hasPieceInstanceExpectedPackageChanges = true
 
 			// Any removed references will be removed by the debounced job
 
@@ -260,16 +268,18 @@ export async function writeExpectedPackagesForPlayoutSources(
 	}
 
 	// We can't easily track any references which have been deleted, so we should schedule a cleanup job to deal with that for us
-	// Always perform this, in case any pieceInstances have been purged directly from the db
-	await context.queueStudioJob(
-		StudioJobs.CleanupOrphanedExpectedPackageReferences,
-		{
-			playlistId: playlistId,
-			rundownId: rundownId,
-		},
-		{
-			lowPriority: true,
-			debounce: 1000,
-		}
-	)
+	// Only queue if there were changes to expected packages, to avoid unnecessary job scheduling
+	if (hasPieceInstanceExpectedPackageChanges) {
+		await context.queueStudioJob(
+			StudioJobs.CleanupOrphanedExpectedPackageReferences,
+			{
+				playlistId: playlistId,
+				rundownId: rundownId,
+			},
+			{
+				lowPriority: true,
+				debounce: 1000,
+			}
+		)
+	}
 }
