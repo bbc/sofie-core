@@ -126,6 +126,8 @@ export async function handleCleanupOrphanedExpectedPackageReferences(
 			}
 		}
 
-		await context.directCollections.ExpectedPackages.bulkWrite(writeOps)
+		if (writeOps.length > 0) {
+			await context.directCollections.ExpectedPackages.bulkWrite(writeOps)
+		}
 	})
 }
