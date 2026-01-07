@@ -194,12 +194,12 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 	)
 	const itemMouseDown = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			e.preventDefault()
-			e.stopPropagation()
-
 			if (!hasDraggableElement) return
 
 			if (dragCtx && dragCtx.enabled) {
+				e.preventDefault()
+				e.stopPropagation()
+
 				const targetPos = (e.target as HTMLDivElement).getBoundingClientRect()
 				const retimeOp = piece.instance.piece.userEditOperations?.find(
 					(op) => op.type === UserEditingType.SOFIE && op.id === DefaultUserOperationsTypes.RETIME_PIECE
