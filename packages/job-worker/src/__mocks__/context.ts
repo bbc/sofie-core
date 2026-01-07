@@ -46,6 +46,7 @@ import {
 	ProcessedShowStyleBase,
 	ProcessedShowStyleCompound,
 	ProcessedShowStyleVariant,
+	QueueJobOptions,
 } from '../jobs/index.js'
 import { PlaylistLock, RundownLock } from '../jobs/lock.js'
 import { BaseModel } from '../modelBase.js'
@@ -154,7 +155,8 @@ export class MockJobContext implements JobContext {
 	}
 	async queueStudioJob<T extends keyof StudioJobFunc>(
 		_name: T,
-		_data: Parameters<StudioJobFunc[T]>[0]
+		_data: Parameters<StudioJobFunc[T]>[0],
+		_options?: QueueJobOptions
 	): Promise<void> {
 		throw new Error('Method not implemented.')
 	}

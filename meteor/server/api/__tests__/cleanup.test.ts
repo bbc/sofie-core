@@ -270,7 +270,10 @@ async function setDefaultDatatoDB(env: DefaultEnvironment, now: number) {
 		bucketId: null,
 		created: 0,
 		package: {} as any,
-		ingestSources: [] as any,
+		ingestSources: [],
+		playoutSources: {
+			pieceInstanceIds: [],
+		},
 	})
 	await ExpectedPackageWorkStatuses.insertAsync({
 		_id: getRandomId(),

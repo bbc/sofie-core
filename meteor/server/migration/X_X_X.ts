@@ -187,6 +187,9 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 						},
 						created: pkg.created,
 						ingestSources: [ingestSource],
+						playoutSources: {
+							pieceInstanceIds: [],
+						},
 					} satisfies Complete<ExpectedPackageDB>)
 				}
 			}
