@@ -1378,6 +1378,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 					<SelectedElementsContext.Consumer>
 						{(selectionContext) => {
 							const isPropertiesPanelOpen = selectionContext.listSelectedElements().length > 0
+
 							return (
 								<div
 									className={classNames('rundown-view', {
