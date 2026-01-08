@@ -50,6 +50,8 @@ export namespace ClientAPI {
 		errorCode: number
 		/** On error, provide a human-readable error message */
 		error: SerializedUserError
+		/** For blocked TAKE operations, the next allowed take time (Unix timestamp ms) */
+		nextAllowedTakeTime?: number
 	}
 
 	/**
@@ -59,7 +61,12 @@ export namespace ClientAPI {
 	 * @returns A `ClientResponseError` object containing the error and the resolved error code.
 	 */
 	export function responseError(userError: UserError): ClientResponseError {
-		return { error: UserError.serialize(userError), errorCode: userError.errorCode }
+		const nextAllowedTakeTime = userError.userMessage.args?.nextAllowedTakeTime as number | undefined
+		return {
+			error: UserError.serialize(userError),
+			errorCode: userError.errorCode,
+			...(nextAllowedTakeTime !== undefined && { nextAllowedTakeTime }),
+		}
 	}
 	export interface ClientResponseSuccess<Result> {
 		/** On success, return success code (by default, use 200) */
