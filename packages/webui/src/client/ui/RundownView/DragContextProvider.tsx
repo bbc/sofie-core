@@ -64,19 +64,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 				setPiece(localPiece)
 			}
 
-			const cleanup = () => {
-				// unset state - note: for ux reasons this runs after the backend operation has returned a result
-				setPieceId(undefined)
-				setPiece(undefined)
-				partIdRef.current = undefined
-				segmentIdRef.current = undefined
-			}
-
 			const onMouseUp = (e: MouseEvent) => {
-				// detach from the mouse
-				document.removeEventListener('mousemove', onMove)
-				document.removeEventListener('mouseup', onMouseUp)
-
 				// process the drag
 				if (!localPiece || localPiece.renderedInPoint === ogPiece.renderedInPoint) return cleanup()
 
@@ -94,7 +82,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 				// find the Segment's External ID
 				const segment = Segments.findOne(part?.segmentId)
 				const oldSegment = part?.segmentId === oldPart?.segmentId ? segment : Segments.findOne(oldPart?.segmentId)
-				if (!segment) return
+				if (!segment) return cleanup()
 
 				const operationTarget = {
 					segmentExternalId: oldSegment?.externalId,
@@ -127,14 +115,22 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 				)
 			}
 
+			const cleanup = () => {
+				// detach from the mouse
+				document.removeEventListener('mousemove', onMove)
+				document.removeEventListener('mouseup', onMouseUp)
+				// unset state - note: for ux reasons this runs after the backend operation has returned a result
+				setPieceId(undefined)
+				setPiece(undefined)
+				partIdRef.current = undefined
+				segmentIdRef.current = undefined
+			}
+
 			document.addEventListener('mousemove', onMove)
 			document.addEventListener('mouseup', onMouseUp)
 
 			setTimeout(() => {
 				// after the timeout we want to bail out in case something went wrong
-				document.removeEventListener('mousemove', onMove)
-				document.removeEventListener('mouseup', onMouseUp)
-
 				cleanup()
 			}, DRAG_TIMEOUT)
 		},
