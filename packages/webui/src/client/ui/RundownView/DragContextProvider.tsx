@@ -1,5 +1,5 @@
 import { PartInstanceId, PieceInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react'
+import { PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { dragContext, IDragContext } from './DragContext.js'
 import { PieceUi } from '../SegmentContainer/withResolvedSegment.js'
 import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
@@ -32,120 +32,127 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 	const segmentIdRef = useRef<undefined | SegmentId>(undefined)
 	const limitToPartRef = useRef<undefined | PartInstanceId>(undefined)
 
-	const startDrag = (
-		ogPiece: PieceUi,
-		timeScale: number,
-		pos: { x: number; y: number },
-		elementOffset?: number,
-		limitToPart?: PartInstanceId,
-		limitToSegment?: SegmentId
-	) => {
-		if (pieceId) return // a drag is currently in progress....
+	const startDrag = useCallback(
+		(
+			ogPiece: PieceUi,
+			timeScale: number,
+			pos: { x: number; y: number },
+			elementOffset?: number,
+			limitToPart?: PartInstanceId,
+			limitToSegment?: SegmentId
+		) => {
+			if (pieceId) return // a drag is currently in progress....
 
-		const inPoint = ogPiece.renderedInPoint ?? 0
-		segmentIdRef.current = limitToSegment
-		limitToPartRef.current = limitToPart
-		positionRef.current = pos
-		setPieceId(ogPiece.instance._id)
+			const inPoint = ogPiece.renderedInPoint ?? 0
+			segmentIdRef.current = limitToSegment
+			limitToPartRef.current = limitToPart
+			positionRef.current = pos
+			setPieceId(ogPiece.instance._id)
 
-		let localPiece = ogPiece // keep a copy of the overriden piece because react does not let us access the state of the context easily
+			let localPiece = ogPiece // keep a copy of the overriden piece because react does not let us access the state of the context easily
 
-		const onMove = (e: MouseEvent) => {
-			const newInPoint =
-				(!partIdRef.current ? inPoint : (elementOffset ?? 0) / timeScale) +
-				(e.clientX - positionRef.current.x) / timeScale
+			const onMove = (e: MouseEvent) => {
+				const newInPoint =
+					(!partIdRef.current ? inPoint : (elementOffset ?? 0) / timeScale) +
+					(e.clientX - positionRef.current.x) / timeScale
 
-			localPiece = {
-				...ogPiece,
-				instance: { ...ogPiece.instance, partInstanceId: partIdRef.current ?? ogPiece.instance.partInstanceId },
-				renderedInPoint: newInPoint,
-			}
-			setPiece(localPiece)
-		}
-
-		const cleanup = () => {
-			// unset state - note: for ux reasons this runs after the backend operation has returned a result
-			setPieceId(undefined)
-			setPiece(undefined)
-			partIdRef.current = undefined
-			segmentIdRef.current = undefined
-		}
-
-		const onMouseUp = (e: MouseEvent) => {
-			// detach from the mouse
-			document.removeEventListener('mousemove', onMove)
-			document.removeEventListener('mouseup', onMouseUp)
-
-			// process the drag
-			if (!localPiece || localPiece.renderedInPoint === ogPiece.renderedInPoint) return cleanup()
-
-			// find the parts so we can get their externalId
-			const startPartId = localPiece.instance.piece.startPartId // this could become a funny thing with infinites
-			const part = startPartId ? UIParts.findOne(startPartId) : undefined
-			const oldPart =
-				startPartId === ogPiece.instance.piece.startPartId
-					? part
-					: ogPiece.instance.piece.startPartId
-						? UIParts.findOne(ogPiece.instance.piece.startPartId)
-						: undefined
-			if (!part) return cleanup() // tough to continue without a parent for the piece
-
-			// find the Segment's External ID
-			const segment = Segments.findOne(part?.segmentId)
-			const oldSegment = part?.segmentId === oldPart?.segmentId ? segment : Segments.findOne(oldPart?.segmentId)
-			if (!segment) return
-
-			const operationTarget = {
-				segmentExternalId: oldSegment?.externalId,
-				partExternalId: oldPart?.externalId,
-				pieceExternalId: ogPiece.instance.piece.externalId,
-			}
-			doUserAction(
-				t,
-				e,
-				UserAction.EXECUTE_USER_OPERATION,
-				(e, ts) =>
-					MeteorCall.userAction.executeUserChangeOperation(
-						e,
-						ts,
-						part.rundownId,
-						operationTarget,
-						literal<DefaultUserOperationRetimePiece>({
-							id: DefaultUserOperationsTypes.RETIME_PIECE,
-							payload: {
-								segmentExternalId: segment.externalId,
-								partExternalId: part.externalId,
-
-								inPoint: localPiece.renderedInPoint ?? inPoint,
-							},
-						})
-					),
-				() => {
-					cleanup()
+				localPiece = {
+					...ogPiece,
+					instance: { ...ogPiece.instance, partInstanceId: partIdRef.current ?? ogPiece.instance.partInstanceId },
+					renderedInPoint: newInPoint,
 				}
-			)
-		}
+				setPiece(localPiece)
+			}
 
-		document.addEventListener('mousemove', onMove)
-		document.addEventListener('mouseup', onMouseUp)
+			const cleanup = () => {
+				// unset state - note: for ux reasons this runs after the backend operation has returned a result
+				setPieceId(undefined)
+				setPiece(undefined)
+				partIdRef.current = undefined
+				segmentIdRef.current = undefined
+			}
 
-		setTimeout(() => {
-			// after the timeout we want to bail out in case something went wrong
-			document.removeEventListener('mousemove', onMove)
-			document.removeEventListener('mouseup', onMouseUp)
+			const onMouseUp = (e: MouseEvent) => {
+				// detach from the mouse
+				document.removeEventListener('mousemove', onMove)
+				document.removeEventListener('mouseup', onMouseUp)
 
-			cleanup()
-		}, DRAG_TIMEOUT)
-	}
-	const setHoveredPart = (updatedPartId: PartInstanceId, segmentId: SegmentId, pos: { x: number; y: number }) => {
-		if (!pieceId) return
-		if (updatedPartId === piece?.instance.partInstanceId) return
-		if (segmentIdRef.current && segmentIdRef.current !== segmentId) return
-		if (limitToPartRef.current && limitToPartRef.current !== updatedPartId) return
+				// process the drag
+				if (!localPiece || localPiece.renderedInPoint === ogPiece.renderedInPoint) return cleanup()
 
-		partIdRef.current = updatedPartId
-		positionRef.current = pos
-	}
+				// find the parts so we can get their externalId
+				const startPartId = localPiece.instance.piece.startPartId // this could become a funny thing with infinites
+				const part = startPartId ? UIParts.findOne(startPartId) : undefined
+				const oldPart =
+					startPartId === ogPiece.instance.piece.startPartId
+						? part
+						: ogPiece.instance.piece.startPartId
+							? UIParts.findOne(ogPiece.instance.piece.startPartId)
+							: undefined
+				if (!part) return cleanup() // tough to continue without a parent for the piece
+
+				// find the Segment's External ID
+				const segment = Segments.findOne(part?.segmentId)
+				const oldSegment = part?.segmentId === oldPart?.segmentId ? segment : Segments.findOne(oldPart?.segmentId)
+				if (!segment) return
+
+				const operationTarget = {
+					segmentExternalId: oldSegment?.externalId,
+					partExternalId: oldPart?.externalId,
+					pieceExternalId: ogPiece.instance.piece.externalId,
+				}
+				doUserAction(
+					t,
+					e,
+					UserAction.EXECUTE_USER_OPERATION,
+					(e, ts) =>
+						MeteorCall.userAction.executeUserChangeOperation(
+							e,
+							ts,
+							part.rundownId,
+							operationTarget,
+							literal<DefaultUserOperationRetimePiece>({
+								id: DefaultUserOperationsTypes.RETIME_PIECE,
+								payload: {
+									segmentExternalId: segment.externalId,
+									partExternalId: part.externalId,
+
+									inPoint: localPiece.renderedInPoint ?? inPoint,
+								},
+							})
+						),
+					() => {
+						cleanup()
+					}
+				)
+			}
+
+			document.addEventListener('mousemove', onMove)
+			document.addEventListener('mouseup', onMouseUp)
+
+			setTimeout(() => {
+				// after the timeout we want to bail out in case something went wrong
+				document.removeEventListener('mousemove', onMove)
+				document.removeEventListener('mouseup', onMouseUp)
+
+				cleanup()
+			}, DRAG_TIMEOUT)
+		},
+		[pieceId, t]
+	)
+
+	const setHoveredPart = useCallback(
+		(updatedPartId: PartInstanceId, segmentId: SegmentId, pos: { x: number; y: number }) => {
+			if (!pieceId) return
+			if (updatedPartId === piece?.instance.partInstanceId) return
+			if (segmentIdRef.current && segmentIdRef.current !== segmentId) return
+			if (limitToPartRef.current && limitToPartRef.current !== updatedPartId) return
+
+			partIdRef.current = updatedPartId
+			positionRef.current = pos
+		},
+		[pieceId, piece?.instance.partInstanceId]
+	)
 
 	const onSetEditMode = useCallback((e: EditModeEvent) => {
 		if (e.state === 'toggle') {
@@ -162,15 +169,19 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 		}
 	}, [onSetEditMode])
 
-	const ctx = literal<IDragContext>({
-		pieceId,
-		piece,
+	const ctx = useMemo(
+		() =>
+			literal<IDragContext>({
+				pieceId,
+				piece,
 
-		enabled,
+				enabled,
 
-		startDrag,
-		setHoveredPart,
-	})
+				startDrag,
+				setHoveredPart,
+			}),
+		[pieceId, piece, enabled, startDrag, setHoveredPart]
+	)
 
 	return <dragContext.Provider value={ctx}>{children}</dragContext.Provider>
 }
