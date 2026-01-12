@@ -102,7 +102,7 @@ export function SourceLayer(props: Readonly<ISourceLayerProps>): JSX.Element {
 	const onMouseEnter: MouseEventHandler<HTMLElement> = (e) => {
 		if (!dragCtx) return
 
-		const pos = (e.target as HTMLDivElement).getBoundingClientRect() // ugly cast here because the event handler doesn't cast for us
+		const pos = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
 		dragCtx.setHoveredPart(props.part.instance._id, props.segment._id, { x: pos.x, y: pos.y })
 	}
 
