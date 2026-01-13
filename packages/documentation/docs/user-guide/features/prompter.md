@@ -46,6 +46,7 @@ The prompter can be controlled by different types of controllers. The control mo
 | `?mode=shuttlewebhid`   | Controlled by a Contour Design ShuttleXpress, using the browser's WebHID API [See configuration details](prompter.md#control-using-contour-shuttlexpress-via-webhid)                                                                          |
 | `?mode=pedal`           | Controlled by any MIDI device outputting note values between 0 - 127 of CC notes on channel 8. Analogue Expression pedals work well with TRS-USB midi-converters. [See configuration details](prompter.md#control-using-midi-input-modepedal) |
 | `?mode=joycon`          | Controlled by Nintendo Switch Joycon, using the HTML5 GamePad API. [See configuration details](prompter.md#control-using-nintendo-joycon-gamepad)                                                                                             |
+| `?mode=xbox`            | Controlled by Xbox controller, using the HTML5 GamePad API. [See configuration details](prompter.md#control-using-xbox-controller-modexbox)                                                                                                    |
 
 #### Control using mouse \(scroll wheel\)
 
@@ -197,3 +198,47 @@ You can turn on `?debug=1` to see how your input maps to an output.
 | _"I can't reach max speed backwards"_                                                       | Increase `joycon_rangeRevMin`                                                                                                                                                                                                                   |
 | _"I can't reach max speed forwards"_                                                        | Decrease `joycon_rangeFwdMax`                                                                                                                                                                                                                   |
 | _"As I find a good speed, it varies a bit in speed up/down even if I hold my finger still"_ | Use `?debug=1` to see what speed is calculated in the position the presenter wants to rest their finger in. Add more of that number in a sequence in the `joycon_speedMap` to flatten out the speed curve, i.e. `[1, 2, 3, 4, 4, 4, 4, 5, ...]` |
+
+#### Control using Xbox controller \(_?mode=xbox_\)
+
+This mode uses the browser's Gamepad API to control the prompter with an Xbox controller. It supports Xbox One, Xbox Series X|S, and compatible third-party controllers.
+
+The controller can be connected via Bluetooth or USB. **Note:** On macOS, Xbox controllers may not be recognized over USB due to driver limitations; Bluetooth is recommended.
+
+**Scroll control:**
+
+- **Right Trigger (RT):** Scroll forward - speed is proportional to trigger pressure
+- **Left Trigger (LT):** Scroll backward - speed is proportional to trigger pressure
+
+**Button map:**
+
+| **Button**        | **Action**                |
+| :---------------- | :------------------------ |
+| A                 | Take (go to next part)    |
+| B                 | Go to the "On-air" story  |
+| X                 | Go to the previous story  |
+| Y                 | Go to the following story |
+| LB (Left Bumper)  | Go to the top             |
+| RB (Right Bumper) | Go to the "Next" story    |
+| D-Pad Up          | Scroll up (fine control)  |
+| D-Pad Down        | Scroll down (fine control)|
+
+**Configuration parameters:**
+
+| Query parameter        | Type             | Description                                                                                                                                            | Default                      |
+| :--------------------- | :--------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------- |
+| `xbox_speedMap`        | Array of numbers | Speeds to scroll by (px per frame, ~60fps) when scrolling forwards. Values are interpolated using a spline curve based on trigger pressure.            | `[2, 3, 5, 6, 8, 12, 18, 45]` |
+| `xbox_reverseSpeedMap` | Array of numbers | Same as `xbox_speedMap` but for the backwards range (left trigger).                                                                                    | `[2, 3, 5, 6, 8, 12, 18, 45]` |
+| `xbox_triggerDeadZone` | number           | Dead zone for the triggers, to prevent accidental scrolling. Value between 0 and 1.                                                                    | `0.1`                        |
+
+You can turn on `?debug=1` to see how your trigger input maps to scroll speed.
+
+**Calibration guide:**
+
+| **Symptom**                                                  | **Adjustment**                                                                                                              |
+| :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+| _"It starts scrolling when I'm not touching the trigger"_    | Increase `xbox_triggerDeadZone` (e.g., `0.15` or `0.2`)                                                                     |
+| _"I have to press too hard before it starts moving"_         | Decrease `xbox_triggerDeadZone` (e.g., `0.05`)                                                                              |
+| _"It scrolls too fast"_                                      | Use smaller values in `xbox_speedMap`, e.g., `[1, 2, 3, 4, 5, 8, 12, 30]`                                                   |
+| _"It scrolls too slow"_                                      | Use larger values in `xbox_speedMap`, e.g., `[3, 6, 10, 15, 25, 40, 60, 100]`                                               |
+| _"Speed jumps too quickly from slow to fast"_                | Add more intermediate values to `xbox_speedMap` to create a smoother curve, e.g., `[1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30]`   |
