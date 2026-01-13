@@ -5,6 +5,11 @@ export interface ITTimersContext {
 	 * @param index Number of the timer to retrieve
 	 */
 	getTimer(index: 1 | 2 | 3): IPlaylistTTimer
+
+	/**
+	 * Clear all T-timers
+	 */
+	clearAllTimers(): void
 }
 
 export interface IPlaylistTTimer {
