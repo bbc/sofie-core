@@ -1,6 +1,17 @@
 import { useMemo } from 'react'
 import classNames from 'classnames'
 
+/**
+ * Layout constants for the column-packed grid component.
+ * These define the pixel heights used for bin-packing calculations.
+ */
+/** Height in pixels for a group header (checkbox + label) */
+const GROUP_HEADER_HEIGHT = 40
+/** Base height in pixels for an individual item (checkbox + label) */
+const ITEM_HEIGHT_BASE = 30
+/** Extra spacing in pixels after each group */
+const GROUP_SPACING = 10
+
 export interface ColumnPackedGridGroup {
 	/** Group identifier (e.g., source layer type) */
 	id: string
@@ -67,10 +78,6 @@ function packIntoColumns<TItem>(
 		items: [],
 		height: 0,
 	}))
-
-	const GROUP_HEADER_HEIGHT = 40 // Height for group checkbox + label
-	const ITEM_HEIGHT_BASE = 30 // Base height for checkbox + label
-	const GROUP_SPACING = 10 // Extra spacing after group
 
 	// Helper to find column with minimum height
 	const getMinHeightColumn = () => columns.reduce((min, col) => (col.height < min.height ? col : min))
