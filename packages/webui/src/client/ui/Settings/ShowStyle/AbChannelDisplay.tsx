@@ -45,10 +45,18 @@ export function AbChannelDisplaySettings({ showStyleBase }: Readonly<AbChannelDi
 		if (!blueprintDefault || !showStyleBase.abChannelDisplay) return false
 
 		const current = showStyleBase.abChannelDisplay
+
+		// Compare arrays as sets (order-independent equality, assumes no duplicates)
+		const arraysEqual = <T,>(a: T[] = [], b: T[] = []): boolean => {
+			if (a.length !== b.length) return false
+			const setB = new Set(b)
+			return a.every((item) => setB.has(item))
+		}
+
 		return (
-			JSON.stringify(current.sourceLayerIds.sort()) !== JSON.stringify(blueprintDefault.sourceLayerIds.sort()) ||
-			JSON.stringify(current.sourceLayerTypes.sort()) !== JSON.stringify(blueprintDefault.sourceLayerTypes.sort()) ||
-			JSON.stringify(current.outputLayerIds.sort()) !== JSON.stringify(blueprintDefault.outputLayerIds.sort()) ||
+			!arraysEqual(current.sourceLayerIds, blueprintDefault.sourceLayerIds) ||
+			!arraysEqual(current.sourceLayerTypes, blueprintDefault.sourceLayerTypes) ||
+			!arraysEqual(current.outputLayerIds, blueprintDefault.outputLayerIds) ||
 			current.showOnDirectorScreen !== blueprintDefault.showOnDirectorScreen
 		)
 	}, [showStyleBase.abChannelDisplay, blueprintDefault])
