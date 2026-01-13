@@ -205,9 +205,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 	const generatedUrl = useMemo(() => generatePrompterUrl(studioId, config), [config, studioId])
 
 	return (
-		<div className="prompter-config-form mt-4">
-			<h3>{t('Prompter Screen')}</h3>
-
+		<div className="prompter-config-form">
 			{/* Display Options Section */}
 			<div className="mb-3">
 				<Form.Check
