@@ -423,6 +423,68 @@ function DirectorScreenRender({
 
 	const timingDurations = useTiming()
 
+	// Compute current and next clip player ids (for pieces with AB sessions)
+	const currentClipPlayer: string | undefined = useTracker(() => {
+		if (!currentPartInstance || !currentShowStyleBase || !playlist?.assignedAbSessions) return undefined
+		const config = currentShowStyleBase.abChannelDisplay
+		const instances = PieceInstances.find({
+			partInstanceId: currentPartInstance.instance._id,
+			reset: { $ne: true },
+		}).fetch()
+		for (const pi of instances) {
+			// Use configuration to determine if this piece should display AB channel
+			if (!shouldDisplayAbChannel(pi, currentShowStyleBase, config)) continue
+			const ab = pi.piece.abSessions
+			if (!ab || ab.length === 0) continue
+			for (const s of ab) {
+				const pool = playlist.assignedAbSessions?.[s.poolName]
+				if (!pool) continue
+				const matches: ABSessionAssignment[] = []
+				for (const key in pool) {
+					const a = pool[key]
+					if (a && a.sessionName === s.sessionName) matches.push(a)
+				}
+				const live = matches.find((m) => !m.lookahead)
+				const la = matches.find((m) => m.lookahead)
+				if (live) return String(live.playerId)
+				if (la) return String(la.playerId)
+			}
+		}
+		return undefined
+	}, [currentPartInstance?.instance._id, currentShowStyleBase?._id, playlist?.assignedAbSessions])
+
+	const nextClipPlayer: string | undefined = useTracker(() => {
+		if (!nextPartInstance || !nextShowStyleBaseId || !playlist?.assignedAbSessions) return undefined
+		// We need the ShowStyleBase to resolve sourceLayer types
+		const ssb = UIShowStyleBases.findOne(nextShowStyleBaseId)
+		if (!ssb) return undefined
+		const config = ssb.abChannelDisplay
+		const instances = PieceInstances.find({
+			partInstanceId: nextPartInstance.instance._id,
+			reset: { $ne: true },
+		}).fetch()
+		for (const pi of instances) {
+			// Use configuration to determine if this piece should display AB channel
+			if (!shouldDisplayAbChannel(pi, ssb, config)) continue
+			const ab = pi.piece.abSessions
+			if (!ab || ab.length === 0) continue
+			for (const s of ab) {
+				const pool = playlist.assignedAbSessions?.[s.poolName]
+				if (!pool) continue
+				const matches: ABSessionAssignment[] = []
+				for (const key in pool) {
+					const a = pool[key]
+					if (a && a.sessionName === s.sessionName) matches.push(a)
+				}
+				const live = matches.find((m) => !m.lookahead)
+				const la = matches.find((m) => m.lookahead)
+				if (live) return String(live.playerId)
+				if (la) return String(la.playerId)
+			}
+		}
+		return undefined
+	}, [nextPartInstance?.instance._id, nextShowStyleBaseId, playlist?.assignedAbSessions])
+
 	if (playlist && playlistId && segments) {
 		const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing) || 0
 		const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
@@ -440,68 +502,6 @@ function DirectorScreenRender({
 				</div>
 			)
 		}
-
-		// Compute current and next clip player ids (for pieces with AB sessions)
-		const currentClipPlayer: string | undefined = useTracker(() => {
-			if (!currentPartInstance || !currentShowStyleBase || !playlist?.assignedAbSessions) return undefined
-			const config = currentShowStyleBase.abChannelDisplay
-			const instances = PieceInstances.find({
-				partInstanceId: currentPartInstance.instance._id,
-				reset: { $ne: true },
-			}).fetch()
-			for (const pi of instances) {
-				// Use configuration to determine if this piece should display AB channel
-				if (!shouldDisplayAbChannel(pi, currentShowStyleBase, config)) continue
-				const ab = pi.piece.abSessions
-				if (!ab || ab.length === 0) continue
-				for (const s of ab) {
-					const pool = playlist.assignedAbSessions?.[s.poolName]
-					if (!pool) continue
-					const matches: ABSessionAssignment[] = []
-					for (const key in pool) {
-						const a = pool[key]
-						if (a && a.sessionName === s.sessionName) matches.push(a)
-					}
-					const live = matches.find((m) => !m.lookahead)
-					const la = matches.find((m) => m.lookahead)
-					if (live) return String(live.playerId)
-					if (la) return String(la.playerId)
-				}
-			}
-			return undefined
-		}, [currentPartInstance?.instance._id, currentShowStyleBase?._id, playlist?.assignedAbSessions])
-
-		const nextClipPlayer: string | undefined = useTracker(() => {
-			if (!nextPartInstance || !nextShowStyleBaseId || !playlist?.assignedAbSessions) return undefined
-			// We need the ShowStyleBase to resolve sourceLayer types
-			const ssb = UIShowStyleBases.findOne(nextShowStyleBaseId)
-			if (!ssb) return undefined
-			const config = ssb.abChannelDisplay
-			const instances = PieceInstances.find({
-				partInstanceId: nextPartInstance.instance._id,
-				reset: { $ne: true },
-			}).fetch()
-			for (const pi of instances) {
-				// Use configuration to determine if this piece should display AB channel
-				if (!shouldDisplayAbChannel(pi, ssb, config)) continue
-				const ab = pi.piece.abSessions
-				if (!ab || ab.length === 0) continue
-				for (const s of ab) {
-					const pool = playlist.assignedAbSessions?.[s.poolName]
-					if (!pool) continue
-					const matches: ABSessionAssignment[] = []
-					for (const key in pool) {
-						const a = pool[key]
-						if (a && a.sessionName === s.sessionName) matches.push(a)
-					}
-					const live = matches.find((m) => !m.lookahead)
-					const la = matches.find((m) => m.lookahead)
-					if (live) return String(live.playerId)
-					if (la) return String(la.playerId)
-				}
-			}
-			return undefined
-		}, [nextPartInstance?.instance._id, nextShowStyleBaseId, playlist?.assignedAbSessions])
 
 		// Precompute player icon elements to avoid nested ternaries in JSX
 		let currentPlayerEl: JSX.Element | null = null
