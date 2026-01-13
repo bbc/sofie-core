@@ -7,6 +7,7 @@ import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settin
 import { ColumnPackedGrid, ColumnPackedGridGroup, ColumnPackedGridItem } from '../components/ColumnPackedGrid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { sourceLayerTypeString } from '../../../lib/rundown.js'
 import '../components/ColumnPackedGrid.scss'
 import './AbChannelDisplay.scss'
 
@@ -27,24 +28,8 @@ export function AbChannelDisplaySettings({ showStyleBase }: Readonly<AbChannelDi
 		[showStyleBase.outputLayersWithOverrides]
 	)
 
-	const sourceLayerTypeLabels = useMemo<Partial<Record<SourceLayerType, string>>>(
-		() => ({
-			[SourceLayerType.UNKNOWN]: 'Unknown',
-			[SourceLayerType.CAMERA]: 'Camera',
-			[SourceLayerType.VT]: 'VT',
-			[SourceLayerType.REMOTE]: 'Remote',
-			[SourceLayerType.SCRIPT]: 'Script',
-			[SourceLayerType.GRAPHICS]: 'Graphics',
-			[SourceLayerType.SPLITS]: 'Splits',
-			[SourceLayerType.AUDIO]: 'Audio',
-			[SourceLayerType.LOWER_THIRD]: 'Lower Third',
-			[SourceLayerType.LIVE_SPEAK]: 'Live Speak',
-			[SourceLayerType.TRANSITION]: 'Transition',
-			[SourceLayerType.LIGHTS]: 'Lights',
-			[SourceLayerType.LOCAL]: 'Local',
-		}),
-		[]
-	)
+	// Helper to get translatable source layer type labels
+	const getSourceLayerTypeLabel = useCallback((type: SourceLayerType): string => sourceLayerTypeString(t, type), [t])
 
 	const blueprintDefault = showStyleBase.blueprintAbChannelDisplay
 	const config = showStyleBase.abChannelDisplay ??
@@ -115,7 +100,7 @@ export function AbChannelDisplaySettings({ showStyleBase }: Readonly<AbChannelDi
 		// Convert to ColumnPackedGridGroup format
 		return Array.from(grouped.entries()).map(([type, layerIds]) => ({
 			id: String(type),
-			title: sourceLayerTypeLabels[type] ?? String(type),
+			title: getSourceLayerTypeLabel(type),
 			itemKeys: layerIds,
 			isGroupSelected: config.sourceLayerTypes.includes(type),
 			onGroupToggle: (groupId: string, checked: boolean) => {
@@ -129,7 +114,7 @@ export function AbChannelDisplaySettings({ showStyleBase }: Readonly<AbChannelDi
 				}
 			},
 		}))
-	}, [sourceLayers, sourceLayerTypeLabels, config.sourceLayerTypes, updateConfig])
+	}, [sourceLayers, getSourceLayerTypeLabel, config.sourceLayerTypes, updateConfig])
 
 	// Prepare source layer items for rendering
 	const sourceLayerItems = useMemo<ColumnPackedGridItem<string>[]>(() => {
