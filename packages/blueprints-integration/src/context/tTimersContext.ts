@@ -13,6 +13,12 @@ export interface IPlaylistTTimer {
 	/** The label of the T-timer */
 	readonly label: string
 
+	/**
+	 * The current state of the T-timer
+	 * Null if the T-timer is not initialized
+	 */
+	readonly state: IPlaylistTTimerState | null
+
 	/** Set the label of the T-timer */
 	setLabel(label: string): void
 
@@ -20,18 +26,52 @@ export interface IPlaylistTTimer {
 	clearTimer(): void
 
 	/**
+	 * Start a countdown timer
+	 * @param duration Duration of the countdown in milliseconds
+	 * @param options Options for the countdown
+	 */
+	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void
+
+	/**
+	 * Start a free-running timer
+	 */
+	startFreeRun(options?: { startPaused?: boolean }): void
+
+	/**
 	 * If the current mode supports being paused, pause the timer
-	 * Note: This only works for the countdown and freerun modes
+	 * Note: This is supported by the countdown and freerun modes
 	 * @returns True if the timer was paused, false if it could not be paused
 	 */
 	pause(): boolean
 
 	/**
 	 * If the timer can be restarted, restart it
-	 * Note: This only works for the countdown mode
+	 * Note: This is supported by the countdown mode
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */
 	restart(): boolean
+}
 
-	// TODO
+export type IPlaylistTTimerState = IPlaylistTTimerStateCountdown | IPlaylistTTimerStateFreeRun
+
+export interface IPlaylistTTimerStateCountdown {
+	/** The mode of the T-timer */
+	readonly mode: 'countdown'
+	/** The current time of the countdown, in milliseconds */
+	readonly currentTime: number
+	/** The total duration of the countdown, in milliseconds */
+	readonly duration: number
+	/** Whether the timer is currently paused */
+	readonly paused: boolean
+
+	/** If the countdown is set to stop at zero, or continue into negative values */
+	readonly stopAtZero: boolean
+}
+export interface IPlaylistTTimerStateFreeRun {
+	/** The mode of the T-timer */
+	readonly mode: 'freerun'
+	/** The current time of the freerun, in milliseconds */
+	readonly currentTime: number
+	/** Whether the timer is currently paused */
+	readonly paused: boolean
 }
