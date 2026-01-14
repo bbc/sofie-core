@@ -83,7 +83,7 @@ export interface IPlaylistTTimerStateCountdown {
 }
 export interface IPlaylistTTimerStateFreeRun {
 	/** The mode of the T-timer */
-	readonly mode: 'freerun'
+	readonly mode: 'freeRun'
 	/** The current time of the freerun, in milliseconds */
 	readonly currentTime: number
 	/** Whether the timer is currently paused */

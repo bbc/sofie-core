@@ -98,25 +98,31 @@ export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCoun
 
 export interface RundownTTimerModeFreeRun {
 	readonly type: 'freeRun'
-	/** Starting time (unix timestamp) */
+	/**
+	 * Starting time (unix timestamp)
+	 * This may not be the original start time, if the timer has been paused/resumed
+	 */
 	startTime: number
 	/**
 	 * Set to a timestamp to pause the timer at that timestamp
 	 * When unpausing, the `startTime` should be adjusted to account for the paused duration
 	 */
-	paused: number | null
+	pauseTime: number | null
 	/** The direction to count */
 	// direction: 'up' | 'down' // TODO: does this make sense?
 }
 export interface RundownTTimerModeCountdown {
 	readonly type: 'countdown'
-	/** The target time (unix timestamp) */
-	targetTime: number
+	/**
+	 * Starting time (unix timestamp)
+	 * This may not be the original start time, if the timer has been paused/resumed
+	 */
+	startTime: number
 	/**
 	 * Set to a timestamp to pause the timer at that timestamp
 	 * When unpausing, the `targetTime` should be adjusted to account for the paused duration
 	 */
-	paused: number | null
+	pauseTime: number | null
 	/**
 	 * The duration of the countdown in milliseconds
 	 */
