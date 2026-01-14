@@ -5,3 +5,7 @@ outputLayer: 'PGM'
 tags: ['camera']
 publicData:
   switcherSource: 1
+abSessions:
+  - poolName: 'VTR'
+    sessionName: 'clip_intro'
+    playerId: 1
