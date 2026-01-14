@@ -1,10 +1,12 @@
+export type IPlaylistTTimerIndex = 1 | 2 | 3
+
 export interface ITTimersContext {
 	/**
 	 * Get a T-timer by its index
 	 * Note: Index is 1-based (1, 2, 3)
 	 * @param index Number of the timer to retrieve
 	 */
-	getTimer(index: 1 | 2 | 3): IPlaylistTTimer
+	getTimer(index: IPlaylistTTimerIndex): IPlaylistTTimer
 
 	/**
 	 * Clear all T-timers
@@ -13,7 +15,7 @@ export interface ITTimersContext {
 }
 
 export interface IPlaylistTTimer {
-	readonly index: number
+	readonly index: IPlaylistTTimerIndex
 
 	/** The label of the T-timer */
 	readonly label: string
