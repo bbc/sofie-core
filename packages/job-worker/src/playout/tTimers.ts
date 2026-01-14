@@ -13,6 +13,11 @@ export function validateTTimerIndex(index: number): asserts index is RundownTTim
  */
 export function pauseTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): ReadonlyDeep<RundownTTimerMode> | null {
 	if (timer?.type === 'countdown' || timer?.type === 'freeRun') {
+		if (timer.pauseTime) {
+			// Already paused
+			return timer
+		}
+
 		return {
 			...timer,
 			pauseTime: getCurrentTime(),
@@ -29,7 +34,7 @@ export function pauseTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): Read
  */
 export function resumeTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): ReadonlyDeep<RundownTTimerMode> | null {
 	if (timer?.type === 'countdown' || timer?.type === 'freeRun') {
-		if (timer.pauseTime === null) {
+		if (!timer.pauseTime) {
 			// Already running
 			return timer
 		}
