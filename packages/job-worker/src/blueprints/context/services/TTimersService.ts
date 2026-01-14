@@ -64,14 +64,14 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 					mode: 'countdown',
 					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
 					duration: rawMode.duration,
-					paused: !rawMode.pauseTime,
+					paused: !!rawMode.pauseTime,
 					stopAtZero: rawMode.stopAtZero,
 				}
 			case 'freeRun':
 				return {
 					mode: 'freeRun',
 					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
-					paused: !rawMode.pauseTime,
+					paused: !!rawMode.pauseTime,
 				}
 			case undefined:
 				return null
