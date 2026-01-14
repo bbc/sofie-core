@@ -15,7 +15,7 @@ import {
 	resumeTTimer,
 	validateTTimerIndex,
 } from '../../../playout/tTimers.js'
-import { getCurrentTime } from '../../../lib/time.js'
+import { getCurrentTime } from '../../../lib/index.js'
 
 export class TTimersService {
 	readonly timers: [PlaylistTTimerImpl, PlaylistTTimerImpl, PlaylistTTimerImpl]
