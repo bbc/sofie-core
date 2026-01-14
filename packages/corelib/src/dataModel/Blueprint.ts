@@ -9,6 +9,8 @@ import { JSONSchema } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaType
 import { ProtectedString } from '../protectedString.js'
 import { BlueprintId } from './Ids.js'
 import type { PackageStatusMessage } from '@sofie-automation/shared-lib/dist/packageStatusMessages'
+import type { BlueprintErrorCode } from '@sofie-automation/shared-lib/dist/blueprintErrorMessages'
+import type { SystemErrorCode } from '@sofie-automation/shared-lib/dist/systemErrorMessages'
 
 export type BlueprintHash = ProtectedString<'BlueprintHash'>
 
@@ -59,6 +61,28 @@ export interface Blueprint {
 	 * Any empty strings will suppress the message from being shown.
 	 */
 	packageStatusMessages?: Partial<Record<PackageStatusMessage, string | undefined>>
+
+	/**
+	 * The blueprint provided alternate device error messages.
+	 * Keys are error code strings from TSR devices (e.g., 'DEVICE_ATEM_DISCONNECTED').
+	 * Any undefined/unset values will use the default messages from TSR.
+	 * Any empty strings will suppress the message from being shown.
+	 */
+	deviceErrorMessages?: Record<string, string | undefined>
+
+	/**
+	 * The blueprint provided alternate blueprint error messages
+	 * Any undefined/unset values will use the system default messages.
+	 * Any empty strings will suppress the message from being shown.
+	 */
+	blueprintErrorMessages?: Partial<Record<BlueprintErrorCode, string | undefined>>
+
+	/**
+	 * The blueprint provided alternate system error messages
+	 * Any undefined/unset values will use the system default messages.
+	 * Any empty strings will suppress the message from being shown.
+	 */
+	systemErrorMessages?: Partial<Record<SystemErrorCode, string | undefined>>
 }
 
 /** Describes the last state a Blueprint document was in when applying config changes */
