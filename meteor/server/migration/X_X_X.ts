@@ -69,7 +69,7 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 		},
 		migrate: async () => {
 			await RundownPlaylists.mutableCollection.updateAsync(
-				{ tTimers: { $exists: false } } as any,
+				{ tTimers: { $exists: false } },
 				{
 					$set: {
 						tTimers: [
