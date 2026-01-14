@@ -224,6 +224,16 @@ A fullscreen page which displays the prompter text for the currently active rund
 
 A fullscreen page, intended to be shown to the director. It displays countdown timers for the current and next items in the rundown. If no Rundown is active in a given studio, the [Screensaver](./sofie-views-and-screens.mdx#screensaver) will be shown.
 
+#### AB Channel Display
+
+When using the AB Resolver for video playback (where clips are automatically assigned to video server channels A, B, C, etc.), the Presenter Screen can display which channel is currently assigned to each clip. This helps the director and operators identify which video server output is playing or will play next.
+
+The AB Channel Display appears as a small icon (A, B, C, etc.) next to clips that have AB session assignments. This feature can be enabled and configured in the [Show Style settings](../configuration/settings-view.md#ab-channel-display).
+
+:::info
+AB Channel Display only appears for Pieces that have `abSessions` defined and where the ShowStyle's AB Channel Display configuration matches the Piece's source layer type or ID.
+:::
+
 ## Presenter View
 
 `/countdowns/:studioId/presenter`
