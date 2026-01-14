@@ -62,6 +62,7 @@ import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/c
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper.js'
 import { getExpectedLatency } from '@sofie-automation/corelib/dist/studio/playout'
+import { validateTTimerIndex } from '../../tTimers.js'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -861,7 +862,10 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	}
 
 	updateTTimer(timer: RundownTTimer): void {
-		// TODO
+		validateTTimerIndex(timer.index)
+
+		this.playlistImpl.tTimers[timer.index - 1] = timer
+		this.#playlistHasChanged = true
 	}
 
 	#lastMonotonicNowInPlayout = getCurrentTime()

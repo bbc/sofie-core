@@ -30,9 +30,9 @@ function makeMockPlaylist(): DBRundownPlaylist {
 		rundownIdsInOrder: [],
 
 		tTimers: [
-			{ index: 0, label: '', mode: null },
 			{ index: 1, label: '', mode: null },
 			{ index: 2, label: '', mode: null },
+			{ index: 3, label: '', mode: null },
 		],
 	})
 }

@@ -1,17 +1,25 @@
 import type {
 	IPlaylistTTimer,
 	IPlaylistTTimerState,
-	ITTimersContext,
 } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
 import type { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import type { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
+import {
+	calculateTTimerCurrentTime,
+	createCountdownTTimer,
+	createFreeRunTTimer,
+	pauseTTimer,
+	restartTTimer,
+	resumeTTimer,
+	validateTTimerIndex,
+} from '../../../playout/tTimers.js'
 
-export class TTimersService implements ITTimersContext {
+export class TTimersService {
 	readonly playoutModel: PlayoutModel
 
-	readonly timers: [IPlaylistTTimer, IPlaylistTTimer, IPlaylistTTimer]
+	readonly timers: [PlaylistTTimerImpl, PlaylistTTimerImpl, PlaylistTTimerImpl]
 
 	constructor(playoutModel: PlayoutModel) {
 		this.playoutModel = playoutModel
@@ -24,7 +32,7 @@ export class TTimersService implements ITTimersContext {
 	}
 
 	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
-		if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
+		validateTTimerIndex(index)
 		return this.timers[index - 1]
 	}
 	clearAllTimers(): void {
@@ -42,10 +50,6 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		return this.#playoutModel.playlist.tTimers[this.#index - 1]
 	}
 
-	// get hasChanged(): boolean {
-	// 	return this.#hasChanged
-	// }
-
 	get index(): RundownTTimerIndex {
 		return this.#modelTimer.index
 	}
@@ -56,9 +60,19 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		const rawMode = this.#modelTimer.mode
 		switch (rawMode?.type) {
 			case 'countdown':
-				return null
+				return {
+					mode: 'countdown',
+					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
+					duration: rawMode.duration,
+					paused: !rawMode.pauseTime,
+					stopAtZero: rawMode.stopAtZero,
+				}
 			case 'freeRun':
-				return null
+				return {
+					mode: 'freeRun',
+					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
+					paused: !rawMode.pauseTime,
+				}
 			case undefined:
 				return null
 			default:
@@ -71,7 +85,7 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		this.#playoutModel = playoutModel
 		this.#index = index
 
-		if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
+		validateTTimerIndex(index)
 	}
 
 	setLabel(label: string): void {
@@ -87,18 +101,50 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		})
 	}
 	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void {
-		throw new Error('Method not implemented.')
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: createCountdownTTimer(duration, {
+				stopAtZero: options?.stopAtZero ?? true,
+				startPaused: options?.startPaused ?? false,
+			}),
+		})
 	}
 	startFreeRun(options?: { startPaused?: boolean }): void {
-		throw new Error('Method not implemented.')
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: createFreeRunTTimer({
+				startPaused: options?.startPaused ?? false,
+			}),
+		})
 	}
 	pause(): boolean {
-		throw new Error('Method not implemented.')
+		const newTimer = pauseTTimer(this.#modelTimer.mode)
+		if (!newTimer) return false
+
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: newTimer,
+		})
+		return true
 	}
 	resume(): boolean {
-		throw new Error('Method not implemented.')
+		const newTimer = resumeTTimer(this.#modelTimer.mode)
+		if (!newTimer) return false
+
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: newTimer,
+		})
+		return true
 	}
 	restart(): boolean {
-		throw new Error('Method not implemented.')
+		const newTimer = restartTTimer(this.#modelTimer.mode)
+		if (!newTimer) return false
+
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: newTimer,
+		})
+		return true
 	}
 }
