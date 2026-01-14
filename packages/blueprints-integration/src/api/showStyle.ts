@@ -50,9 +50,11 @@ import type { ExpectedPackage } from '../package.js'
 import type { ABResolverConfiguration } from '../abPlayback.js'
 import type { SofieIngestSegment } from '../ingest-types.js'
 import { PackageStatusMessage } from '@sofie-automation/shared-lib/dist/packageStatusMessages'
+import { BlueprintErrorCode } from '@sofie-automation/shared-lib/dist/blueprintErrorMessages'
+import { SystemErrorCode } from '@sofie-automation/shared-lib/dist/systemErrorMessages'
 import { BlueprintPlayoutPersistentStore } from '../context/playoutStore.js'
 
-export { PackageStatusMessage }
+export { PackageStatusMessage, BlueprintErrorCode, SystemErrorCode }
 
 export type TimelinePersistentState = unknown
 
@@ -68,6 +70,57 @@ export interface ShowStyleBlueprintManifest<TRawConfig = IBlueprintConfig, TProc
 
 	/** Alternate package status messages, to override the builtin ones produced by Sofie */
 	packageStatusMessages?: Partial<Record<PackageStatusMessage, string | undefined>>
+
+	/**
+	 * Alternate device error messages, to override the default messages from TSR devices.
+	 * Keys are error code strings from TSR devices (e.g., 'DEVICE_ATEM_DISCONNECTED').
+	 * Import error codes from 'timeline-state-resolver' (e.g., AtemErrorCode, CasparCGErrorCode).
+	 *
+	 * Templates use {{variable}} syntax for interpolation with context values.
+	 *
+	 * @example
+	 * ```typescript
+	 * import { AtemErrorCode } from 'timeline-state-resolver'
+	 *
+	 * deviceErrorMessages: {
+	 *   [AtemErrorCode.DISCONNECTED]: 'Vision mixer offline - check network to {{host}}',
+	 *   [AtemErrorCode.PSU_FAULT]: 'PSU {{psuNumber}} needs attention',
+	 * }
+	 * ```
+	 */
+	deviceErrorMessages?: Record<string, string | undefined>
+
+	/** Alternate blueprint error messages, to override the builtin ones produced by Sofie */
+	blueprintErrorMessages?: Partial<Record<BlueprintErrorCode, string | undefined>>
+
+	/** Alternate system error messages, to override the builtin ones produced by Sofie */
+	systemErrorMessages?: Partial<Record<SystemErrorCode, string | undefined>>
+
+	/**
+	 * Optional function to dynamically resolve error messages.
+	 * Called before checking static error message records.
+	 * Return undefined to fall through to static messages.
+	 *
+	 * Use this for complex logic like pluralization or conditional messages:
+	 * @example
+	 * ```typescript
+	 * import { CasparCGErrorCode } from 'timeline-state-resolver'
+	 *
+	 * resolveErrorMessage: (errorCode, args) => {
+	 *   if (errorCode === CasparCGErrorCode.FILES_NOT_FOUND) {
+	 *     const count = args.count || 1
+	 *     return count === 1
+	 *       ? `Video ${args.fileName} not found on ${args.deviceName}`
+	 *       : `${count} videos not found on ${args.deviceName}`
+	 *   }
+	 *   return undefined // Use static message or default
+	 * }
+	 * ```
+	 */
+	resolveErrorMessage?: (
+		errorCode: string | BlueprintErrorCode | SystemErrorCode,
+		args: Record<string, unknown>
+	) => string | undefined
 
 	/** Translations connected to the studio (as stringified JSON) */
 	translations?: string
