@@ -128,8 +128,10 @@ export interface RundownTTimerModeCountdown {
 	stopAtZero: boolean
 }
 
+export type RundownTTimerIndex = 1 | 2 | 3
+
 export interface RundownTTimer {
-	readonly index: number
+	readonly index: RundownTTimerIndex
 
 	/** A label for the timer */
 	label: string

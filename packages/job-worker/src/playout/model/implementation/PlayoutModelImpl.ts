@@ -16,6 +16,7 @@ import {
 	DBRundownPlaylist,
 	QuickLoopMarker,
 	RundownHoldState,
+	RundownTTimer,
 	SelectedPartInstance,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { ReadonlyDeep } from 'type-fest'
@@ -875,6 +876,10 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	updateQuickLoopState(): void {
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedProps()
 		this.#playlistHasChanged = true
+	}
+
+	updateTTimer(timer: RundownTTimer): void {
+		// TODO
 	}
 
 	#lastMonotonicNowInPlayout = getCurrentTime()
