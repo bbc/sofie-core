@@ -220,7 +220,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 				)
 			}
 		},
-		[piece, timeScale, dragCtx]
+		[piece, timeScale, dragCtx, part]
 	)
 	const itemMouseUp = useCallback((e: any) => {
 		const eM = e as MouseEvent
