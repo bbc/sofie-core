@@ -31,6 +31,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 	const positionRef = useRef({ x: 0, y: 0 })
 	const segmentIdRef = useRef<undefined | SegmentId>(undefined)
 	const limitToPartRef = useRef<undefined | PartInstanceId>(undefined)
+	const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	const startDrag = useCallback(
 		(
@@ -42,6 +43,12 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 			limitToSegment?: SegmentId
 		) => {
 			if (pieceId) return // a drag is currently in progress....
+
+			// Clear any existing drag timeout from a previous drag
+			if (dragTimeoutRef.current) {
+				clearTimeout(dragTimeoutRef.current)
+				dragTimeoutRef.current = null
+			}
 
 			const inPoint = ogPiece.renderedInPoint ?? 0
 			segmentIdRef.current = limitToSegment
@@ -116,6 +123,11 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 			}
 
 			const cleanup = () => {
+				// Clear the drag timeout if it's still pending
+				if (dragTimeoutRef.current) {
+					clearTimeout(dragTimeoutRef.current)
+					dragTimeoutRef.current = null
+				}
 				// detach from the mouse
 				document.removeEventListener('mousemove', onMove)
 				document.removeEventListener('mouseup', onMouseUp)
@@ -129,7 +141,7 @@ export function DragContextProvider({ t, children }: PropsWithChildren<Props>): 
 			document.addEventListener('mousemove', onMove)
 			document.addEventListener('mouseup', onMouseUp)
 
-			setTimeout(() => {
+			dragTimeoutRef.current = setTimeout(() => {
 				// after the timeout we want to bail out in case something went wrong
 				cleanup()
 			}, DRAG_TIMEOUT)
