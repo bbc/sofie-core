@@ -50,7 +50,14 @@ export interface IPlaylistTTimer {
 	pause(): boolean
 
 	/**
-	 * If the timer can be restarted, restart it
+	 * If the current mode supports being paused, resume the timer
+	 * This is the opposite of `pause()`
+	 * @returns True if the timer was resumed, false if it could not be resumed
+	 */
+	resume(): boolean
+
+	/**
+	 * If the timer can be restarted, restore it to its initial/restarted state
 	 * Note: This is supported by the countdown mode
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */

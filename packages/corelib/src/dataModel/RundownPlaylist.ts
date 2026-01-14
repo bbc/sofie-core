@@ -231,7 +231,7 @@ export interface DBRundownPlaylist {
 	 * T-timers for the Playlist.
 	 * This is a fixed size pool with 3 being chosen as a likely good amount, that can be used for any purpose.
 	 */
-	ttimers: [RundownTTimer, RundownTTimer, RundownTTimer]
+	tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]
 }
 
 // Information about a 'selected' PartInstance for the Playlist
