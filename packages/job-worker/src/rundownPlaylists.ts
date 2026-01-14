@@ -236,7 +236,7 @@ export function produceRundownPlaylistInfoFromRundown(
 			nextPartInfo: null,
 			previousPartInfo: null,
 			rundownIdsInOrder: [],
-			ttimers: [
+			tTimers: [
 				{ index: 0, label: '', mode: null },
 				{ index: 1, label: '', mode: null },
 				{ index: 2, label: '', mode: null },
@@ -337,7 +337,7 @@ function defaultPlaylistForRundown(
 		nextPartInfo: null,
 		previousPartInfo: null,
 		rundownIdsInOrder: [],
-		ttimers: [
+		tTimers: [
 			{ index: 0, label: '', mode: null },
 			{ index: 1, label: '', mode: null },
 			{ index: 2, label: '', mode: null },

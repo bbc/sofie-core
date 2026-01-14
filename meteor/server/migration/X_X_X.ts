@@ -199,16 +199,16 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 		id: 'Add T-timers to RundownPlaylist',
 		canBeRunAutomatically: true,
 		validate: async () => {
-			const playlistCount = await RundownPlaylists.countDocuments({ ttimers: { $exists: false } })
+			const playlistCount = await RundownPlaylists.countDocuments({ tTimers: { $exists: false } })
 			if (playlistCount > 1) return `There are ${playlistCount} RundownPlaylists without T-timers`
 			return false
 		},
 		migrate: async () => {
 			await RundownPlaylists.mutableCollection.updateAsync(
-				{ ttimers: { $exists: false } },
+				{ tTimers: { $exists: false } },
 				{
 					$set: {
-						ttimers: [
+						tTimers: [
 							{ index: 0, label: '', mode: null },
 							{ index: 1, label: '', mode: null },
 							{ index: 2, label: '', mode: null },

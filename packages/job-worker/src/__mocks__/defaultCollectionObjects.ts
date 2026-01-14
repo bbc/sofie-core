@@ -45,7 +45,7 @@ export function defaultRundownPlaylist(_id: RundownPlaylistId, studioId: StudioI
 		},
 		rundownIdsInOrder: [],
 
-		ttimers: [
+		tTimers: [
 			{ index: 0, label: '', mode: null },
 			{ index: 1, label: '', mode: null },
 			{ index: 2, label: '', mode: null },
