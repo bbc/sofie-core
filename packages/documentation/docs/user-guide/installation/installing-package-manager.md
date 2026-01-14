@@ -1,12 +1,12 @@
 ---
-sidebar_position: 7
+sidebar_position: 70
 ---
 
 # Installing Package Manager
 
 ### Prerequisites
 
-- [Installed and running Sofie&nbsp;Core](installing-sofie-server-core.md)
+- [Installed and running Sofie&nbsp;Core](quick-install.md)
 - [Initial Sofie&nbsp;Core Setup](initial-sofie-core-setup.md)
 - [Installed and configured Demo Blueprints](https://github.com/SuperFlyTV/sofie-demo-blueprints)
 - [Installed, configured, and running CasparCG&nbsp;Server](installing-connections-and-additional-hardware/casparcg-server-installation.md) (Optional)
@@ -23,11 +23,6 @@ If you feel like you need multiple, then you likely want to run Package Manager 
 
 :::
 
-:::caution
-
-The Package Manager worker process is primarily tested on Windows only. It does run on Linux (without support for network shares), but has not been extensively tested.
-
-:::
 
 ## Installation For Development (Quick Start)
 
@@ -177,7 +172,7 @@ Note that each appContainer needs to use a different resourceId and will need it
 1. Scroll back to the top of the page and select `Proxy for thumbnails & preview` for both "Package Containers to use for previews" and "Package Containers to use for thumbnails".
 1. Your settings should look like this once all the above steps have been completed:
    ![Package Manager demo settings](/img/docs/Package_Manager_demo_settings.png)
-1. If Package Manager `start:single-app` is running, restart it. If not, start it (see the above [Installation instructions](#installation-quick-start) for the relevant command line).
+1. If Package Manager `start:single-app` is running, restart it. If not, start it (see the above [Installation instructions](#installation-for-development-quick-start) for the relevant command line).
 
 ### Separate HTTP proxy server
 
