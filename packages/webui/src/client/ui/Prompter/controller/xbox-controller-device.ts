@@ -40,6 +40,10 @@ export class XboxController extends ControllerAbstract {
 	private readonly takeDebounceTime = 500 // ms
 	private lastTakeTime = 0
 
+	// Bound event handlers for cleanup
+	private readonly onGamepadConnectedBound: (e: GamepadEvent) => void
+	private readonly onGamepadDisconnectedBound: (e: GamepadEvent) => void
+
 	constructor(view: PrompterViewContent) {
 		super()
 		this.prompterView = view
@@ -62,14 +66,20 @@ export class XboxController extends ControllerAbstract {
 			this.reverseSpeedMap
 		)
 
-		window.addEventListener('gamepadconnected', this.onGamepadConnected.bind(this))
-		window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected.bind(this))
+		this.onGamepadConnectedBound = this.onGamepadConnected.bind(this)
+		this.onGamepadDisconnectedBound = this.onGamepadDisconnected.bind(this)
+
+		window.addEventListener('gamepadconnected', this.onGamepadConnectedBound)
+		window.addEventListener('gamepaddisconnected', this.onGamepadDisconnectedBound)
 
 		// Start polling if a controller is already connected
 		this.startPolling()
 	}
 
 	public destroy(): void {
+		window.removeEventListener('gamepadconnected', this.onGamepadConnectedBound)
+		window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnectedBound)
+
 		if (this.updateSpeedHandle !== null) {
 			window.cancelAnimationFrame(this.updateSpeedHandle)
 			this.updateSpeedHandle = null

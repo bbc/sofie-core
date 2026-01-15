@@ -31,6 +31,9 @@ export class JoyConController extends ControllerAbstract {
 	private lastInputValue = ''
 	private lastButtonInputs: { [index: number]: { mode: JoyconMode; buttons: number[] } } = {}
 
+	// Bound event handler for cleanup
+	private readonly updateScrollPositionBound: (() => void) | undefined
+
 	constructor(view: PrompterViewContent) {
 		super()
 		this.prompterView = view
@@ -84,12 +87,22 @@ export class JoyConController extends ControllerAbstract {
 			this.reverseSpeedMap
 		)
 
-		window.addEventListener('gamepadconnected', this.updateScrollPosition.bind(this))
-		window.addEventListener('gamepaddisconnected', this.updateScrollPosition.bind(this))
+		this.updateScrollPositionBound = this.updateScrollPosition.bind(this)
+
+		window.addEventListener('gamepadconnected', this.updateScrollPositionBound)
+		window.addEventListener('gamepaddisconnected', this.updateScrollPositionBound)
 	}
 
 	public destroy(): void {
-		// Nothing
+		if (this.updateScrollPositionBound) {
+			window.removeEventListener('gamepadconnected', this.updateScrollPositionBound)
+			window.removeEventListener('gamepaddisconnected', this.updateScrollPositionBound)
+		}
+
+		if (this.updateSpeedHandle !== null) {
+			window.cancelAnimationFrame(this.updateSpeedHandle)
+			this.updateSpeedHandle = null
+		}
 	}
 	public onKeyDown(_e: KeyboardEvent): void {
 		// Nothing
