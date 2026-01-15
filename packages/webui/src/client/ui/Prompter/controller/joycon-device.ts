@@ -10,20 +10,20 @@ type JoyconMode = 'L' | 'R' | 'LR' | null
  * This class handles control of the prompter using
  */
 export class JoyConController extends ControllerAbstract {
-	private prompterView: PrompterViewContent
+	private readonly prompterView: PrompterViewContent
 
-	private invertJoystick = false // change scrolling direction for joystick
-	private rangeRevMin = -1 // pedal "all back" position, the max-reverse-position
-	private rangeNeutralMin = -0.25 // pedal "back" position where reverse-range transitions to the neutral x
-	private rangeNeutralMax = 0.25 // pedal "front" position where scrolling starts, the 0 speed origin
-	private rangeFwdMax = 1 // pedal "all front" position where scrolling is maxed out
-	private rightHandOffset = 1.4 // factor increased by 1.4 to account for the R joystick being less sensitive than L
-	private speedMap = [1, 2, 3, 4, 5, 8, 12, 30]
-	private reverseSpeedMap = [1, 2, 3, 4, 5, 8, 12, 30]
-	private deadBand = 0.25
+	private readonly invertJoystick: boolean // change scrolling direction for joystick
+	private readonly rangeRevMin: number // pedal "all back" position, the max-reverse-position
+	private readonly rangeNeutralMin: number // pedal "back" position where reverse-range transitions to the neutral x
+	private readonly rangeNeutralMax: number // pedal "front" position where scrolling starts, the 0 speed origin
+	private readonly rangeFwdMax: number // pedal "all front" position where scrolling is maxed out
+	private readonly rightHandOffset: number // factor increased by 1.4 to account for the R joystick being less sensitive than L
+	private readonly speedMap: number[]
+	private readonly reverseSpeedMap: number[]
+	private readonly deadBand: number
 
-	private speedSpline: Spline | undefined
-	private reverseSpeedSpline: Spline | undefined
+	private readonly speedSpline: Spline | undefined
+	private readonly reverseSpeedSpline: Spline | undefined
 
 	private updateSpeedHandle: number | null = null
 	private timestampOfLastUsedJoyconInput = 0
@@ -36,14 +36,14 @@ export class JoyConController extends ControllerAbstract {
 		this.prompterView = view
 
 		// assigns params from URL or falls back to the default
-		this.invertJoystick = view.configOptions.joycon_invertJoystick || this.invertJoystick
-		this.rangeRevMin = view.configOptions.joycon_rangeRevMin || this.rangeRevMin
-		this.rangeNeutralMin = view.configOptions.joycon_rangeNeutralMin || this.rangeNeutralMin
-		this.rangeNeutralMax = view.configOptions.joycon_rangeNeutralMax || this.rangeNeutralMax
-		this.rangeFwdMax = view.configOptions.joycon_rangeFwdMax || this.rangeFwdMax
-		this.rightHandOffset = view.configOptions.joycon_rightHandOffset || this.rightHandOffset
-		this.speedMap = view.configOptions.joycon_speedMap || this.speedMap
-		this.reverseSpeedMap = view.configOptions.joycon_reverseSpeedMap || this.reverseSpeedMap
+		this.invertJoystick = view.configOptions.joycon_invertJoystick || false
+		this.rangeRevMin = view.configOptions.joycon_rangeRevMin || -1
+		this.rangeNeutralMin = view.configOptions.joycon_rangeNeutralMin || -0.25
+		this.rangeNeutralMax = view.configOptions.joycon_rangeNeutralMax || 0.25
+		this.rangeFwdMax = view.configOptions.joycon_rangeFwdMax || 1
+		this.rightHandOffset = view.configOptions.joycon_rightHandOffset || 1.4
+		this.speedMap = view.configOptions.joycon_speedMap || [1, 2, 3, 4, 5, 8, 12, 30]
+		this.reverseSpeedMap = view.configOptions.joycon_reverseSpeedMap || [1, 2, 3, 4, 5, 8, 12, 30]
 		this.deadBand = Math.min(Math.abs(this.rangeNeutralMin), Math.abs(this.rangeNeutralMax))
 
 		// validate range settings, they need to be in sequence, or the logic will break

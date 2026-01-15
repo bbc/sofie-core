@@ -19,17 +19,17 @@ import { logger } from '../../../lib/logging.js'
  * - D-Pad Up/Down: Fine scroll control
  */
 export class XboxController extends ControllerAbstract {
-	private prompterView: PrompterViewContent
+	private readonly prompterView: PrompterViewContent
 
 	// Speed maps for trigger input (0-1 range)
-	private speedMap = [2, 3, 5, 6, 8, 12, 18, 45]
-	private reverseSpeedMap = [2, 3, 5, 6, 8, 12, 18, 45]
+	private readonly speedMap: number[]
+	private readonly reverseSpeedMap: number[]
 
 	// Trigger dead zones
-	private triggerDeadZone = 0.1
+	private readonly triggerDeadZone: number
 
-	private speedSpline: Spline | undefined
-	private reverseSpeedSpline: Spline | undefined
+	private readonly speedSpline: Spline | undefined
+	private readonly reverseSpeedSpline: Spline | undefined
 
 	private updateSpeedHandle: number | null = null
 	private currentPosition = 0
@@ -37,7 +37,7 @@ export class XboxController extends ControllerAbstract {
 	private lastButtonStates: { [index: number]: boolean[] } = {}
 
 	// Track if take was recently pressed to prevent rapid-fire
-	private takeDebounceTime = 500 // ms
+	private readonly takeDebounceTime = 500 // ms
 	private lastTakeTime = 0
 
 	constructor(view: PrompterViewContent) {
@@ -45,9 +45,9 @@ export class XboxController extends ControllerAbstract {
 		this.prompterView = view
 
 		// Assign params from URL or fall back to defaults
-		this.speedMap = view.configOptions.xbox_speedMap || this.speedMap
-		this.reverseSpeedMap = view.configOptions.xbox_reverseSpeedMap || this.reverseSpeedMap
-		this.triggerDeadZone = view.configOptions.xbox_triggerDeadZone ?? this.triggerDeadZone
+		this.speedMap = view.configOptions.xbox_speedMap || [2, 3, 5, 6, 8, 12, 18, 45]
+		this.reverseSpeedMap = view.configOptions.xbox_reverseSpeedMap || [2, 3, 5, 6, 8, 12, 18, 45]
+		this.triggerDeadZone = view.configOptions.xbox_triggerDeadZone ?? 0.1
 
 		// Create splines for smooth speed interpolation
 		// Forward speed spline (for right trigger, 0-1 range)
