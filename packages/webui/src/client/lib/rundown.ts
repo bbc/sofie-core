@@ -2,6 +2,7 @@ import _ from 'underscore'
 import { PieceUi, PartUi } from '../ui/SegmentTimeline/SegmentTimelineContainer.js'
 import { Timecode } from '@sofie-automation/corelib/dist/index'
 import { Settings } from '../lib/Settings.js'
+import { TFunction } from 'react-i18next'
 import {
 	SourceLayerType,
 	PieceLifespan,
@@ -49,6 +50,47 @@ import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownPlaylistClientUtil } from './rundownPlaylistUtil.js'
+
+/**
+ * Returns a human-readable, translatable string for a given SourceLayerType.
+ */
+export function sourceLayerTypeString(t: TFunction<'translation', undefined>, type: SourceLayerType): string {
+	switch (type) {
+		case SourceLayerType.CAMERA:
+			return t('Camera')
+		case SourceLayerType.GRAPHICS:
+			return t('Graphics')
+		case SourceLayerType.LIVE_SPEAK:
+			return t('Live Speak')
+		case SourceLayerType.LOWER_THIRD:
+			return t('Lower Third')
+		case SourceLayerType.REMOTE_SPEAK:
+			return t('Remote Speak')
+		case SourceLayerType.REMOTE:
+			return t('Remote Source')
+		case SourceLayerType.SCRIPT:
+			return t('Generic Script')
+		case SourceLayerType.SPLITS:
+			return t('Split Screen')
+		case SourceLayerType.VT:
+			return t('Clips')
+		case SourceLayerType.UNKNOWN:
+			return t('Unknown Layer')
+		case SourceLayerType.AUDIO:
+			return t('Audio Mixing')
+		case SourceLayerType.LIGHTS:
+			return t('Lighting')
+		case SourceLayerType.TRANSITION:
+			return t('Transition')
+		case SourceLayerType.LOCAL:
+			return t('Local')
+		case SourceLayerType.STUDIO_SCREEN:
+			return t('Studio Screen Graphics')
+		default:
+			assertNever(type)
+			return SourceLayerType[type]
+	}
+}
 
 export namespace RundownUtils {
 	export function padZeros(input: number, places?: number): string {

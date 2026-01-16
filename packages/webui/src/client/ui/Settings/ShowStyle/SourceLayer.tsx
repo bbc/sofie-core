@@ -3,9 +3,10 @@ import ClassNames from 'classnames'
 import { faPencilAlt, faTrash, faCheck, faExclamationTriangle, faPlus, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ISourceLayer, SourceLayerType } from '@sofie-automation/blueprints-integration'
-import { assertNever, literal, getRandomString } from '@sofie-automation/corelib/dist/lib'
+import { literal, getRandomString } from '@sofie-automation/corelib/dist/lib'
 import Tooltip from 'rc-tooltip'
-import { TFunction, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
+import { sourceLayerTypeString } from '../../../lib/rundown.js'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { getHelpMode } from '../../../lib/localStorage.js'
 import { doModalDialog } from '../../../lib/ModalDialog.js'
@@ -31,47 +32,8 @@ import {
 } from '../../../lib/Components/LabelAndOverrides.js'
 import { ShowStyleBases } from '../../../collections/index.js'
 
-function sourceLayerString(t: TFunction<'translation', undefined>, type: SourceLayerType) {
-	switch (type) {
-		case SourceLayerType.CAMERA:
-			return t('Camera')
-		case SourceLayerType.GRAPHICS:
-			return t('Graphics')
-		case SourceLayerType.LIVE_SPEAK:
-			return t('Live Speak')
-		case SourceLayerType.LOWER_THIRD:
-			return t('Lower Third')
-		// case SourceLayerType.MIC:
-		// 	return t('Studio Microphone')
-		case SourceLayerType.REMOTE_SPEAK:
-			return t('Remote Speak')
-		case SourceLayerType.REMOTE:
-			return t('Remote Source')
-		case SourceLayerType.SCRIPT:
-			return t('Generic Script')
-		case SourceLayerType.SPLITS:
-			return t('Split Screen')
-		case SourceLayerType.VT:
-			return t('Clips')
-		case SourceLayerType.UNKNOWN:
-			return t('Unknown Layer')
-		case SourceLayerType.AUDIO:
-			return t('Audio Mixing')
-		case SourceLayerType.LIGHTS:
-			return t('Lighting')
-		case SourceLayerType.TRANSITION:
-			return t('Transition')
-		// case SourceLayerType.LIGHTS:
-		// 	return t('Lights')
-		case SourceLayerType.LOCAL:
-			return t('Local')
-		case SourceLayerType.STUDIO_SCREEN:
-			return t('Studio Screen Graphics')
-		default:
-			assertNever(type)
-			return SourceLayerType[type]
-	}
-}
+// Re-export for local use, keeping the same name for minimal code changes
+const sourceLayerString = sourceLayerTypeString
 
 interface IStudioSourcesSettingsProps {
 	showStyleBase: DBShowStyleBase

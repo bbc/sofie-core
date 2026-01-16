@@ -109,6 +109,7 @@ export const IBlueprintPieceObjectsSampleKeys = allKeysOfObject<IBlueprintPiece>
 	userEditOperations: true,
 	userEditProperties: true,
 	excludeDuringPartKeepalive: true,
+	displayAbChannel: true,
 })
 
 // Compile a list of the keys which are allowed to be set
@@ -257,6 +258,7 @@ export function convertPieceToBlueprints(piece: ReadonlyDeep<PieceInstancePiece>
 		userEditOperations: translateUserEditsToBlueprint(piece.userEditOperations),
 		userEditProperties: translateUserEditPropertiesToBlueprint(piece.userEditProperties),
 		excludeDuringPartKeepalive: piece.excludeDuringPartKeepalive,
+		displayAbChannel: piece.displayAbChannel,
 	}
 
 	return obj
