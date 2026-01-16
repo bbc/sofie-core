@@ -209,8 +209,13 @@ body.no-overflow {
 	bottom: 0;
 	right: 0;
 
-	background:
-		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
+	background: linear-gradient(
+			-45deg,
+			$color-status-fatal 33%,
+			transparent 33%,
+			transparent 66%,
+			$color-status-fatal 66%
+		),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%);
@@ -266,7 +271,15 @@ body.no-overflow {
 
 		.timing__header__left {
 			text-align: left;
+			display: flex;
 		}
+
+		.timing__header__center {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
 		.timing__header__right {
 			display: grid;
 			grid-template-columns: auto auto;
@@ -1100,8 +1113,7 @@ svg.icon {
 		}
 		.segment-timeline__part {
 			.segment-timeline__part__invalid-cover {
-				background-image:
-					repeating-linear-gradient(
+				background-image: repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 4px,
@@ -1383,8 +1395,7 @@ svg.icon {
 						left: 2px;
 						right: 2px;
 						z-index: 3;
-						background:
-							repeating-linear-gradient(
+						background: repeating-linear-gradient(
 								45deg,
 								var(--invalid-reason-color-opaque) 0,
 								var(--invalid-reason-color-opaque) 5px,
@@ -1566,8 +1577,7 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				background-image:
-					repeating-linear-gradient(
+				background-image: repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
@@ -3573,3 +3583,57 @@ svg.icon {
 }
 
 @import 'rundownOverview';
+
+.rundown-header .timing__header_t-timers {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	margin-right: 1em;
+	padding-left: 1em;
+	text-align: right;
+	align-self: center;
+	width: fit-content;
+
+	.timing__header_t-timers__timer {
+		display: flex;
+		gap: 0.5em;
+		justify-content: space-between;
+		align-items: baseline;
+
+		.timing__header_t-timers__timer__label {
+			font-size: 0.7em;
+			color: #b8b8b8;
+			text-transform: uppercase;
+		}
+
+		.timing__header_t-timers__timer__value {
+			font-family:
+				'Roboto',
+				Helvetica Neue,
+				Arial,
+				sans-serif;
+			font-variant-numeric: tabular-nums;
+			font-weight: 500;
+			color: $general-clock;
+			font-size: 1.1em;
+		}
+
+		.timing__header_t-timers__timer__sign {
+			margin-right: 0.2em;
+			font-weight: 700;
+			color: #fff;
+		}
+
+		.timing__header_t-timers__timer__part {
+			color: white;
+			&.timing__header_t-timers__timer__part--dimmed {
+				color: #888; // Dimmed color for "00"
+				font-weight: 400;
+			}
+		}
+		.timing__header_t-timers__timer__separator {
+			margin: 0 0.05em;
+			color: #888;
+		}
+	}
+}
