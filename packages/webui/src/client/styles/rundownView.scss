@@ -209,8 +209,13 @@ body.no-overflow {
 	bottom: 0;
 	right: 0;
 
-	background:
-		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
+	background: linear-gradient(
+			-45deg,
+			$color-status-fatal 33%,
+			transparent 33%,
+			transparent 66%,
+			$color-status-fatal 66%
+		),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
 		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%);
@@ -1100,8 +1105,7 @@ svg.icon {
 		}
 		.segment-timeline__part {
 			.segment-timeline__part__invalid-cover {
-				background-image:
-					repeating-linear-gradient(
+				background-image: repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 4px,
@@ -1383,8 +1387,7 @@ svg.icon {
 						left: 2px;
 						right: 2px;
 						z-index: 3;
-						background:
-							repeating-linear-gradient(
+						background: repeating-linear-gradient(
 								45deg,
 								var(--invalid-reason-color-opaque) 0,
 								var(--invalid-reason-color-opaque) 5px,
@@ -1566,8 +1569,7 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				background-image:
-					repeating-linear-gradient(
+				background-image: repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
@@ -3573,3 +3575,38 @@ svg.icon {
 }
 
 @import 'rundownOverview';
+
+.rundown-header .rundown-header-timers {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	margin-right: 1em;
+	text-align: right;
+	// Ensure it sits well in the header row
+	align-self: center;
+
+	.rundown-header-timer {
+		display: flex;
+		gap: 0.5em;
+		justify-content: flex-end;
+		align-items: baseline;
+		line-height: 1.1;
+
+		.timer-label {
+			font-size: 0.7em;
+			color: #b8b8b8;
+			text-transform: uppercase;
+		}
+
+		.timer-value {
+			font-family:
+				'Roboto',
+				Helvetica Neue,
+				Arial,
+				sans-serif;
+			font-variant-numeric: tabular-nums;
+			font-weight: 500;
+			color: $general-clock;
+		}
+	}
+}
