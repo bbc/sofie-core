@@ -12,6 +12,7 @@ import { PlaylistStartTiming } from '../RundownTiming/PlaylistStartTiming'
 import { RundownName } from '../RundownTiming/RundownName'
 import { TimeOfDay } from '../RundownTiming/TimeOfDay'
 import { useTiming } from '../RundownTiming/withTiming'
+import { RundownHeaderTimers } from './RundownHeaderTimers'
 
 interface ITimingDisplayProps {
 	rundownPlaylist: DBRundownPlaylist
@@ -50,6 +51,7 @@ export function TimingDisplay({
 			<div className="timing__header__left">
 				<PlaylistStartTiming rundownPlaylist={rundownPlaylist} hideDiff={true} />
 				<RundownName rundownPlaylist={rundownPlaylist} currentRundown={currentRundown} rundownCount={rundownCount} />
+				<RundownHeaderTimers tTimers={rundownPlaylist.tTimers} />
 			</div>
 			<div className="timing__header__center">
 				<TimeOfDay />
