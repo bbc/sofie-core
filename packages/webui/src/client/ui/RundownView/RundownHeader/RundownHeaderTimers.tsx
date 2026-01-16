@@ -32,8 +32,10 @@ interface ISingleTimerProps {
 	timer: RundownTTimer
 }
 
-function SingleTimer({ timer }: ISingleTimerProps) {
+function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const now = getCurrentTime()
+	const mode = timer.mode
+	if (!mode) return null
 
 	const isRunning = !!timer.state && !timer.state.paused
 
@@ -49,19 +51,24 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 		<Countdown
 			label={timer.label}
 			className={classNames('rundown-header__clocks-timers__timer', {
-				'rundown-header__clocks-timers__timer__countdown': timer.mode!.type === 'countdown',
-				'rundown-header__clocks-timers__timer__freeRun': timer.mode!.type === 'freeRun',
+				'rundown-header__clocks-timers__timer__countdown': mode.type === 'countdown',
+				'rundown-header__clocks-timers__timer__freeRun': mode.type === 'freeRun',
 				'rundown-header__clocks-timers__timer__isRunning': isRunning,
 				'rundown-header__clocks-timers__timer__isPaused': !isRunning,
-				'rundown-header__clocks-timers__timer__isCountingDown': timer.mode!.type === 'countdown' && isCountingDown,
-				'rundown-header__clocks-timers__timer__isCountingUp': timer.mode!.type === 'countdown' && !isCountingDown,
+				'rundown-header__clocks-timers__timer__isCountingDown': mode.type === 'countdown' && isCountingDown,
+				'rundown-header__clocks-timers__timer__isCountingUp': mode.type === 'countdown' && !isCountingDown,
 				'rundown-header__clocks-timers__timer__isComplete':
-					timer.mode!.type === 'countdown' && timer.state !== null && diff <= 0,
+					mode.type === 'countdown' && timer.state !== null && diff <= 0,
 			})}
 		>
 			<span className="rundown-header__clocks-timers__timer__sign">{timerSign}</span>
-			{parts.map((p, i) => (
-				<React.Fragment key={i}>
+			{(() => {
+				let cursor = 0
+				return parts.map((p, i) => {
+					const key = `${timer.index}-${cursor}-${p}`
+					cursor += p.length + 1
+					return (
+						<React.Fragment key={key}>
 					<span
 						className={classNames('rundown-header__clocks-timers__timer__part', {
 							'rundown-header__clocks-timers__timer__part--dimmed': Math.abs(diff) < [3600000, 60000, 1][i],
@@ -70,14 +77,16 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 						{p}
 					</span>
 					{i < parts.length - 1 && <span className="rundown-header__clocks-timers__timer__separator">:</span>}
-				</React.Fragment>
-			))}
+						</React.Fragment>
+					)
+				})
+			})()}
 		</Countdown>
 	)
 }
 
 function calculateDiff(timer: RundownTTimer, now: number): number {
-	if (!timer.state || timer.state.paused === undefined) {
+	if (!timer.state) {
 		return 0
 	}
 
