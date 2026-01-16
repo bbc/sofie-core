@@ -33,6 +33,7 @@ import { NoteSeverity, StatusCode } from '@sofie-automation/blueprints-integrati
 import { getIgnorePieceContentStatus } from '../../lib/localStorage.js'
 import { Notifications, RundownPlaylists } from '../../collections/index.js'
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
+import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import {
 	PartId,
 	PeripheralDeviceId,
@@ -52,6 +53,8 @@ import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/Part
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import { DBNotificationTargetType } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 import { UIPieceContentStatus } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
+import { ErrorMessageResolver } from '@sofie-automation/corelib/dist/ErrorMessageResolver'
+import type { DeviceStatusError } from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
 
 export const onRONotificationClick = new ReactiveVar<((e: RONotificationEvent) => void) | undefined>(undefined)
 export const reloadRundownPlaylistClick = new ReactiveVar<((e: any) => void) | undefined>(undefined)
@@ -83,6 +86,7 @@ function getNoticeLevelForNoteSeverity(type: NoteSeverity): NoticeLevel {
 
 class RundownViewNotifier extends WithManagedTracker {
 	private readonly userPermissions: Readonly<UserPermissions>
+	private readonly showStyleBase: UIShowStyleBase
 
 	private _notificationList: NotificationList
 	private _notifier: NotifierHandle
@@ -111,9 +115,15 @@ class RundownViewNotifier extends WithManagedTracker {
 	private _unsentExternalMessagesStatus: Notification | undefined = undefined
 	private _unsentExternalMessageStatusDep: Tracker.Dependency
 
-	constructor(playlistId: RundownPlaylistId | undefined, studio: UIStudio, userPermissions: Readonly<UserPermissions>) {
+	constructor(
+		playlistId: RundownPlaylistId | undefined,
+		studio: UIStudio,
+		showStyleBase: UIShowStyleBase,
+		userPermissions: Readonly<UserPermissions>
+	) {
 		super()
 		this.userPermissions = userPermissions
+		this.showStyleBase = showStyleBase
 
 		this._notificationList = new NotificationList([])
 		this._mediaStatusDep = new Tracker.Dependency()
@@ -813,6 +823,39 @@ class RundownViewNotifier extends WithManagedTracker {
 		if (!device.connected) {
 			return t('Device {{deviceName}} is disconnected', { deviceName: device.name })
 		}
+
+		// If we have structured errors, use ErrorMessageResolver to apply blueprint customizations
+		if (device.status.errors && device.status.errors.length > 0) {
+			const resolver = new ErrorMessageResolver({
+				_id: this.showStyleBase._id as any, // UIShowStyleBase._id is compatible
+				deviceErrorMessages: this.showStyleBase.deviceErrorMessages,
+			})
+
+			const messages = device.status.errors
+				.map((error: DeviceStatusError) => {
+					// TSR already provides formatted messages in device.status.messages for backward compatibility
+					// We pass the error code as the default, letting ErrorMessageResolver handle the fallback chain
+					const resolved = resolver.getDeviceErrorMessage(
+						error.code,
+						{
+							deviceName: device.name,
+							deviceId: unprotectString(device._id),
+							...error.context,
+						},
+						error.code // Fallback to error code if no customization exists
+					)
+					// null means suppressed (empty string blueprint message), filter it out
+					if (!resolved) return null
+					return translateMessage(resolved, t)
+				})
+				.filter((msg): msg is string => msg !== null && msg !== '')
+
+			if (messages.length > 0) {
+				return `${device.name}: ` + messages.join(', ')
+			}
+		}
+
+		// Fall back to pre-formatted messages
 		return `${device.name}: ` + (device.status.messages || ['']).join(', ')
 	}
 }
@@ -826,18 +869,19 @@ interface RundownNotifierProps {
 	// }
 	playlistId: RundownPlaylistId
 	studio: UIStudio
+	showStyleBase: UIShowStyleBase
 }
 
-export function RundownNotifier({ playlistId, studio }: RundownNotifierProps): JSX.Element | null {
+export function RundownNotifier({ playlistId, studio, showStyleBase }: RundownNotifierProps): JSX.Element | null {
 	const userPermissions = useContext(UserPermissionsContext)
 
 	React.useEffect(() => {
-		const notifier = new RundownViewNotifier(playlistId, studio, userPermissions)
+		const notifier = new RundownViewNotifier(playlistId, studio, showStyleBase, userPermissions)
 
 		return () => {
 			notifier.stop()
 		}
-	}, [playlistId, studio._id, userPermissions])
+	}, [playlistId, studio._id, showStyleBase._id, userPermissions])
 
 	return null
 }

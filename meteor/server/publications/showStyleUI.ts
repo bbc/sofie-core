@@ -1,10 +1,11 @@
-import { ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { BlueprintId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { ReadonlyDeep } from 'type-fest'
 import { CustomCollectionName, MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
+import { Blueprint } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
 import { Complete, literal } from '@sofie-automation/corelib/dist/lib'
 import {
 	meteorCustomPublish,
@@ -12,7 +13,7 @@ import {
 	setUpOptimizedObserverArray,
 	TriggerUpdate,
 } from '../lib/customPublication'
-import { ShowStyleBases } from '../collections'
+import { Blueprints, ShowStyleBases } from '../collections'
 import { check } from 'meteor/check'
 import { triggerWriteAccessBecauseNoCheckNecessary } from '../security/securityVerify'
 
@@ -26,13 +27,26 @@ interface UIShowStyleBaseUpdateProps {
 	invalidateShowStyle: boolean
 }
 
-type ShowStyleBaseFields = '_id' | 'name' | 'outputLayersWithOverrides' | 'sourceLayersWithOverrides' | 'hotkeyLegend'
+type ShowStyleBaseFields =
+	| '_id'
+	| 'name'
+	| 'outputLayersWithOverrides'
+	| 'sourceLayersWithOverrides'
+	| 'hotkeyLegend'
+	| 'blueprintId'
 const fieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBShowStyleBase, ShowStyleBaseFields>>>({
 	_id: 1,
 	name: 1,
 	outputLayersWithOverrides: 1,
 	sourceLayersWithOverrides: 1,
 	hotkeyLegend: 1,
+	blueprintId: 1,
+})
+
+type BlueprintFields = '_id' | 'deviceErrorMessages'
+const blueprintFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<Blueprint, BlueprintFields>>>({
+	_id: 1,
+	deviceErrorMessages: 1,
 })
 
 async function setupUIShowStyleBasePublicationObservers(
@@ -68,6 +82,15 @@ async function manipulateUIShowStyleBasePublicationData(
 		| undefined
 	if (!showStyleBase) return []
 
+	// Fetch deviceErrorMessages from the blueprint
+	let deviceErrorMessages: Record<string, string | undefined> | undefined
+	if (showStyleBase.blueprintId) {
+		const blueprint = (await Blueprints.findOneAsync(showStyleBase.blueprintId, {
+			projection: blueprintFieldSpecifier,
+		})) as Pick<Blueprint, BlueprintFields> | undefined
+		deviceErrorMessages = blueprint?.deviceErrorMessages
+	}
+
 	const resolvedOutputLayers = applyAndValidateOverrides(showStyleBase.outputLayersWithOverrides).obj
 	const resolvedSourceLayers = applyAndValidateOverrides(showStyleBase.sourceLayersWithOverrides).obj
 
@@ -78,6 +101,7 @@ async function manipulateUIShowStyleBasePublicationData(
 			sourceLayers: resolvedSourceLayers,
 			outputLayers: resolvedOutputLayers,
 			hotkeyLegend: showStyleBase.hotkeyLegend,
+			deviceErrorMessages,
 		}),
 	]
 }

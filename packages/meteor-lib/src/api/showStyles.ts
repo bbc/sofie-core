@@ -44,6 +44,14 @@ export interface UIShowStyleBase {
 	outputLayers: OutputLayers
 	/** "Layers" in the GUI */
 	sourceLayers: SourceLayers
+
+	/**
+	 * The blueprint provided alternate device error messages.
+	 * Keys are error code strings from TSR devices (e.g., 'DEVICE_ATEM_DISCONNECTED').
+	 * Any undefined/unset values will use the default messages from TSR.
+	 * Any empty strings will suppress the message from being shown.
+	 */
+	deviceErrorMessages?: Record<string, string | undefined>
 }
 
 export interface CreateAdlibTestingRundownOption {

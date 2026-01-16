@@ -1554,7 +1554,11 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 									</ErrorBoundary>
 									<ErrorBoundary>
 										{this.props.playlist && this.props.studio && this.props.showStyleBase && (
-											<RundownNotifier playlistId={this.props.playlist._id} studio={this.props.studio} />
+											<RundownNotifier
+												playlistId={this.props.playlist._id}
+												studio={this.props.studio}
+												showStyleBase={this.props.showStyleBase}
+											/>
 										)}
 									</ErrorBoundary>
 								</div>

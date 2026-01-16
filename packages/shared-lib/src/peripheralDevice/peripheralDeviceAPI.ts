@@ -3,6 +3,9 @@ import { PeripheralDeviceId, RundownPlaylistId, PartInstanceId, PieceInstanceId 
 import { StatusCode } from '../lib/status.js'
 import { DeviceStatusError } from 'timeline-state-resolver-types'
 
+// Re-export for use in UI components
+export { DeviceStatusError }
+
 export interface PartPlaybackCallbackData {
 	rundownPlaylistId: RundownPlaylistId
 	partInstanceId: PartInstanceId
