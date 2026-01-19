@@ -28,11 +28,16 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { selectNewPartWithOffsets } from '../../playout/moveNextPart.js'
 import { getOrderedPartsAfterPlayhead } from '../../playout/lookahead/util.js'
 import { convertPartToBlueprints } from './lib.js'
+import { TTimersService } from './services/TTimersService.js'
+import type { IPlaylistTTimer } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
+import type { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 export class OnSetAsNextContext
 	extends ShowStyleUserContext
 	implements IOnSetAsNextContext, IEventContext, IPartAndPieceInstanceActionContext
 {
+	readonly #tTimersService: TTimersService
+
 	public pendingMoveNextPart: { selectedPart: ReadonlyDeep<DBPart> | null } | undefined = undefined
 
 	constructor(
@@ -45,6 +50,7 @@ export class OnSetAsNextContext
 		public readonly manuallySelected: boolean
 	) {
 		super(contextInfo, context, showStyle, watchedPackages)
+		this.#tTimersService = new TTimersService(playoutModel)
 	}
 
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
@@ -158,5 +164,12 @@ export class OnSetAsNextContext
 
 	getCurrentTime(): number {
 		return getCurrentTime()
+	}
+
+	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
+		return this.#tTimersService.getTimer(index)
+	}
+	clearAllTimers(): void {
+		this.#tTimersService.clearAllTimers()
 	}
 }

@@ -618,6 +618,7 @@ describe('cronjobs', () => {
 					type: PlaylistTimingType.None,
 				},
 				activationId: protectString(''),
+				tTimers: [] as any,
 			})
 
 			return {

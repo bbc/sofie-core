@@ -16,6 +16,7 @@ import {
 	DBRundownPlaylist,
 	QuickLoopMarker,
 	RundownHoldState,
+	RundownTTimer,
 	SelectedPartInstance,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { ReadonlyDeep } from 'type-fest'
@@ -71,6 +72,7 @@ import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper.js'
 import { getExpectedLatency } from '@sofie-automation/corelib/dist/studio/playout'
 import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
+import { validateTTimerIndex } from '../../tTimers.js'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -874,6 +876,13 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	updateQuickLoopState(): void {
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedProps()
+		this.#playlistHasChanged = true
+	}
+
+	updateTTimer(timer: RundownTTimer): void {
+		validateTTimerIndex(timer.index)
+
+		this.playlistImpl.tTimers[timer.index - 1] = timer
 		this.#playlistHasChanged = true
 	}
 
