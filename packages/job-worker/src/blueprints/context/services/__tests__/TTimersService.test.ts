@@ -1,0 +1,734 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { useFakeCurrentTime, useRealCurrentTime } from '../../../../__mocks__/time.js'
+import { TTimersService, PlaylistTTimerImpl } from '../TTimersService.js'
+import type { PlayoutModel } from '../../../../playout/model/PlayoutModel.js'
+import type { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { mock, MockProxy } from 'jest-mock-extended'
+import type { ReadonlyDeep } from 'type-fest'
+
+function createMockPlayoutModel(tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]): MockProxy<PlayoutModel> {
+	const mockPlayoutModel = mock<PlayoutModel>()
+	const mockPlaylist = {
+		tTimers,
+	} as unknown as ReadonlyDeep<DBRundownPlaylist>
+
+	Object.defineProperty(mockPlayoutModel, 'playlist', {
+		get: () => mockPlaylist,
+		configurable: true,
+	})
+
+	return mockPlayoutModel
+}
+
+function createEmptyTTimers(): [RundownTTimer, RundownTTimer, RundownTTimer] {
+	return [
+		{ index: 1, label: 'Timer 1', mode: null },
+		{ index: 2, label: 'Timer 2', mode: null },
+		{ index: 3, label: 'Timer 3', mode: null },
+	]
+}
+
+describe('TTimersService', () => {
+	beforeEach(() => {
+		useFakeCurrentTime(10000)
+	})
+
+	afterEach(() => {
+		useRealCurrentTime()
+	})
+
+	describe('constructor', () => {
+		it('should create three timer instances', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+
+			const service = new TTimersService(mockPlayoutModel)
+
+			expect(service.timers).toHaveLength(3)
+			expect(service.timers[0]).toBeInstanceOf(PlaylistTTimerImpl)
+			expect(service.timers[1]).toBeInstanceOf(PlaylistTTimerImpl)
+			expect(service.timers[2]).toBeInstanceOf(PlaylistTTimerImpl)
+		})
+	})
+
+	describe('getTimer', () => {
+		it('should return the correct timer for index 1', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const service = new TTimersService(mockPlayoutModel)
+
+			const timer = service.getTimer(1)
+
+			expect(timer).toBe(service.timers[0])
+		})
+
+		it('should return the correct timer for index 2', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const service = new TTimersService(mockPlayoutModel)
+
+			const timer = service.getTimer(2)
+
+			expect(timer).toBe(service.timers[1])
+		})
+
+		it('should return the correct timer for index 3', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const service = new TTimersService(mockPlayoutModel)
+
+			const timer = service.getTimer(3)
+
+			expect(timer).toBe(service.timers[2])
+		})
+
+		it('should throw for invalid index', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const service = new TTimersService(mockPlayoutModel)
+
+			expect(() => service.getTimer(0 as RundownTTimerIndex)).toThrow('T-timer index out of range: 0')
+			expect(() => service.getTimer(4 as RundownTTimerIndex)).toThrow('T-timer index out of range: 4')
+		})
+	})
+
+	describe('clearAllTimers', () => {
+		it('should call clearTimer on all timers', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			tTimers[1].mode = { type: 'countdown', startTime: 5000, pauseTime: null, duration: 60000, stopAtZero: true }
+
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const service = new TTimersService(mockPlayoutModel)
+
+			service.clearAllTimers()
+
+			// updateTTimer should have been called 3 times (once for each timer)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledTimes(3)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
+				expect.objectContaining({ index: 1, mode: null })
+			)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
+				expect.objectContaining({ index: 2, mode: null })
+			)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
+				expect.objectContaining({ index: 3, mode: null })
+			)
+		})
+	})
+})
+
+describe('PlaylistTTimerImpl', () => {
+	beforeEach(() => {
+		useFakeCurrentTime(10000)
+	})
+
+	afterEach(() => {
+		useRealCurrentTime()
+	})
+
+	describe('getters', () => {
+		it('should return the correct index', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+
+			expect(timer.index).toBe(2)
+		})
+
+		it('should return the correct label', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[1].label = 'Custom Label'
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+
+			expect(timer.label).toBe('Custom Label')
+		})
+
+		it('should return null state when no mode is set', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toBeNull()
+		})
+
+		it('should return running freeRun state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'freeRun',
+				currentTime: 5000, // 10000 - 5000
+				paused: false, // pauseTime is null = running
+			})
+		})
+
+		it('should return paused freeRun state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: 8000 }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'freeRun',
+				currentTime: 3000, // 8000 - 5000
+				paused: true, // pauseTime is set = paused
+			})
+		})
+
+		it('should return running countdown state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'countdown',
+				startTime: 5000,
+				pauseTime: null,
+				duration: 60000,
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'countdown',
+				currentTime: 5000, // 10000 - 5000
+				duration: 60000,
+				paused: false, // pauseTime is null = running
+				stopAtZero: true,
+			})
+		})
+
+		it('should return paused countdown state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'countdown',
+				startTime: 5000,
+				pauseTime: 7000,
+				duration: 60000,
+				stopAtZero: false,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'countdown',
+				currentTime: 2000, // 7000 - 5000
+				duration: 60000,
+				paused: true, // pauseTime is set = paused
+				stopAtZero: false,
+			})
+		})
+
+		it('should return timeOfDay state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000, // 10 seconds in the future
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'timeOfDay',
+				currentTime: 10000, // targetTime - getCurrentTime() = 20000 - 10000
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			})
+		})
+
+		it('should return timeOfDay state with numeric targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			const targetTimestamp = 1737331200000
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: targetTimestamp,
+				targetRaw: targetTimestamp,
+				stopAtZero: false,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'timeOfDay',
+				currentTime: targetTimestamp - 10000, // targetTime - getCurrentTime()
+				targetTime: targetTimestamp,
+				targetRaw: targetTimestamp,
+				stopAtZero: false,
+			})
+		})
+	})
+
+	describe('setLabel', () => {
+		it('should update the label', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.setLabel('New Label')
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'New Label',
+				mode: null,
+			})
+		})
+	})
+
+	describe('clearTimer', () => {
+		it('should clear the timer mode', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.clearTimer()
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+			})
+		})
+	})
+
+	describe('startCountdown', () => {
+		it('should start a running countdown with default options', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startCountdown(60000)
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'countdown',
+					startTime: 10000,
+					pauseTime: null,
+					duration: 60000,
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should start a paused countdown', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startCountdown(30000, { startPaused: true, stopAtZero: false })
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'countdown',
+					startTime: 10000,
+					pauseTime: 10000,
+					duration: 30000,
+					stopAtZero: false,
+				},
+			})
+		})
+	})
+
+	describe('startFreeRun', () => {
+		it('should start a running free-run timer', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startFreeRun()
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'freeRun',
+					startTime: 10000,
+					pauseTime: null,
+				},
+			})
+		})
+
+		it('should start a paused free-run timer', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startFreeRun({ startPaused: true })
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'freeRun',
+					startTime: 10000,
+					pauseTime: 10000,
+				},
+			})
+		})
+	})
+
+	describe('startTimeOfDay', () => {
+		it('should start a timeOfDay timer with time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('15:30')
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '15:30',
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should start a timeOfDay timer with numeric timestamp', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const targetTimestamp = 1737331200000
+
+			timer.startTimeOfDay(targetTimestamp)
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: targetTimestamp,
+					targetRaw: targetTimestamp,
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should start a timeOfDay timer with stopAtZero false', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('18:00', { stopAtZero: false })
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: expect.objectContaining({
+					type: 'timeOfDay',
+					targetRaw: '18:00',
+					stopAtZero: false,
+				}),
+			})
+		})
+
+		it('should start a timeOfDay timer with 12-hour format', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('5:30pm')
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: expect.objectContaining({
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '5:30pm',
+					stopAtZero: true,
+				}),
+			})
+		})
+
+		it('should throw for invalid time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(() => timer.startTimeOfDay('invalid')).toThrow('Unable to parse target time for timeOfDay T-timer')
+		})
+
+		it('should throw for empty time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(() => timer.startTimeOfDay('')).toThrow('Unable to parse target time for timeOfDay T-timer')
+		})
+	})
+
+	describe('pause', () => {
+		it('should pause a running freeRun timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.pause()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'freeRun',
+					startTime: 5000,
+					pauseTime: 10000,
+				},
+			})
+		})
+
+		it('should pause a running countdown timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'countdown', startTime: 5000, pauseTime: null, duration: 60000, stopAtZero: true }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.pause()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'countdown',
+					startTime: 5000,
+					pauseTime: 10000,
+					duration: 60000,
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should return false for timer with no mode', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.pause()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should return false for timeOfDay timer (does not support pause)', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.pause()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('resume', () => {
+		it('should resume a paused freeRun timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: 8000 }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.resume()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'freeRun',
+					startTime: 7000, // adjusted for pause duration
+					pauseTime: null,
+				},
+			})
+		})
+
+		it('should return true but not change a running timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.resume()
+
+			// Returns true because timer supports resume, but it's already running
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalled()
+		})
+
+		it('should return false for timer with no mode', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.resume()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should return false for timeOfDay timer (does not support resume)', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.resume()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('restart', () => {
+		it('should restart a countdown timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'countdown', startTime: 5000, pauseTime: null, duration: 60000, stopAtZero: true }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'countdown',
+					startTime: 10000, // reset to now
+					pauseTime: null,
+					duration: 60000,
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should restart a paused countdown timer (stays paused)', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'countdown',
+				startTime: 5000,
+				pauseTime: 8000,
+				duration: 60000,
+				stopAtZero: false,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'countdown',
+					startTime: 10000,
+					pauseTime: 10000, // also reset to now (paused at start)
+					duration: 60000,
+					stopAtZero: false,
+				},
+			})
+		})
+
+		it('should return false for freeRun timer', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should restart a timeOfDay timer with valid targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 5000, // old target time
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '15:30',
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should return false for timeOfDay timer with invalid targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 5000,
+				targetRaw: 'invalid-time-string',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should return false for timer with no mode', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('constructor validation', () => {
+		it('should throw for invalid index', () => {
+			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+
+			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 0 as RundownTTimerIndex)).toThrow(
+				'T-timer index out of range: 0'
+			)
+			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 4 as RundownTTimerIndex)).toThrow(
+				'T-timer index out of range: 4'
+			)
+		})
+	})
+})

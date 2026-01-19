@@ -315,6 +315,11 @@ describe('SyncChangesToPartInstancesWorker', () => {
 				modified: 0,
 				timing: { type: PlaylistTimingType.None },
 				rundownIdsInOrder: [],
+				tTimers: [
+					{ index: 1, label: '', mode: null },
+					{ index: 2, label: '', mode: null },
+					{ index: 3, label: '', mode: null },
+				],
 			}
 
 			const segmentModel = new PlayoutSegmentModelImpl(segment, [part0])

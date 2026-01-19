@@ -31,8 +31,13 @@ import {
 import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 import { getOrderedPartsAfterPlayhead } from '../../playout/lookahead/util.js'
 import { convertPartToBlueprints } from './lib.js'
+import type { IPlaylistTTimer } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
+import { TTimersService } from './services/TTimersService.js'
+import type { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContext, IEventContext {
+	readonly #tTimersService: TTimersService
+
 	public isTakeAborted: boolean
 	public partToQueueAfterTake: QueueablePartAndPieces | undefined
 
@@ -61,6 +66,7 @@ export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContex
 	) {
 		super(contextInfo, _context, showStyle, watchedPackages)
 		this.isTakeAborted = false
+		this.#tTimersService = new TTimersService(_playoutModel)
 	}
 
 	async getUpcomingParts(limit: number = 5): Promise<ReadonlyDeep<IBlueprintPart[]>> {
@@ -183,5 +189,12 @@ export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContex
 
 	getCurrentTime(): number {
 		return getCurrentTime()
+	}
+
+	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
+		return this.#tTimersService.getTimer(index)
+	}
+	clearAllTimers(): void {
+		this.#tTimersService.clearAllTimers()
 	}
 }
