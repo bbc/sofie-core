@@ -146,8 +146,6 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		return keys.map(({ packageId }) => {
 			const p = packagesWithWorkStatuses[packageId]
 
-			console.log('p', p)
-
 			return p.package ? (
 				<PackageStatus key={packageId} package={p.package} statuses={p.statuses} device={p.device} />
 			) : (

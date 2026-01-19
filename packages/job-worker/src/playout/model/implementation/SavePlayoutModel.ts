@@ -239,7 +239,6 @@ export async function writeExpectedPackagesForPlayoutSources(
 			updateOne: {
 				filter: { _id: packageId },
 				update: {
-					// TODO - test this
 					$addToSet: {
 						'playoutSources.pieceInstanceIds': { $each: pieceInstanceIds },
 					},

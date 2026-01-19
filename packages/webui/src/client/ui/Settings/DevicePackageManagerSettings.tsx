@@ -57,7 +57,9 @@ export const DevicePackageManagerSettings: React.FC<IDevicePackageManagerSetting
 						})
 					})
 					.finally(() => {
-						reloadingNow.current = null
+						if (reloadingNow.current === deviceId) {
+							reloadingNow.current = null
+						}
 					})
 			},
 			[deviceId]

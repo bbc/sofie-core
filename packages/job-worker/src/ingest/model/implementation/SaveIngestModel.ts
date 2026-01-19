@@ -125,7 +125,7 @@ export async function writeExpectedPackagesChangesForRundown(
 				playoutSources: 1, // This feels a bit excessive, but the whole object is needed for `isPackageReferencedByPlayout`
 			},
 		}
-	)) as Pick<ExpectedPackageDB, '_id' | 'created' | 'playoutSources'>[]
+	)) as Pick<ExpectedPackageDB, '_id' | 'playoutSources'>[]
 	const existingDocsMap = normalizeArrayToMap(existingDocs, '_id')
 
 	const packagesToSave = new Map<ExpectedPackageId, Omit<ExpectedPackageDB, 'playoutSources'>>()

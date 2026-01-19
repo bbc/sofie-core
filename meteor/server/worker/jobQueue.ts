@@ -193,7 +193,7 @@ export class WorkerJobQueueManager {
 			})
 		} else {
 			// There should be a worker waiting, its `getNextJob` might not have reached us yet
-			// So we psuh a `null` job at the start so that it interrupts immediately
+			// So we push a `null` job at the start so that it interrupts immediately
 			queue.jobsHighPriority.unshift(null)
 		}
 	}

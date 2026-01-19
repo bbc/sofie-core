@@ -55,7 +55,7 @@ export async function onUpdatedPackageInfo(packageId: ExpectedPackageId, _doc: P
 const pendingRundownPackageUpdates = new Map<RundownId, Array<ExpectedPackageId>>()
 function onUpdatedPackageInfoForRundownDebounce(pkg: ExpectedPackageDB) {
 	if (!pkg.rundownId) {
-		logger.error(`Updating ExpectedPackage "${pkg._id}" for Rundown "${pkg.rundownId}" not possible`)
+		logger.error(`Updating ExpectedPackage "${pkg._id}" not possibe: missing rundownId`)
 		return
 	}
 

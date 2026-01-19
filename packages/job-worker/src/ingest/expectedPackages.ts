@@ -273,7 +273,6 @@ export function updateBaselineExpectedPackagesOnStudio(
 }
 
 export function sanitiseExpectedPackages(expectedPackages: ExpectedPackage.Any[] | undefined): void {
-	// Fill in ids of unnamed expectedPackage
 	if (expectedPackages) {
 		for (const expectedPackage of expectedPackages) {
 			expectedPackage.contentVersionHash = getContentVersionHash(expectedPackage)

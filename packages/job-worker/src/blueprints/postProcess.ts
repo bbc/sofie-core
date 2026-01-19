@@ -137,7 +137,7 @@ export function postProcessPieces(
 		)
 		piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
 
-		// Fill in ids of unnamed expectedPackages
+		// Fill in contentVersionHash of expectedPackages
 		sanitiseExpectedPackages(piece.expectedPackages)
 
 		return piece
@@ -267,7 +267,7 @@ export function postProcessAdLibPieces(
 		)
 		piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
 
-		// Fill in ids of unnamed expectedPackages
+		// Fill in contentVersionHash of expectedPackages
 		sanitiseExpectedPackages(piece.expectedPackages)
 
 		return piece
@@ -304,7 +304,7 @@ export function postProcessGlobalAdLibActions(
 			`${rundownId}_${blueprintId}_global_adlib_action_${action.externalId}`
 		)
 
-		// Fill in ids of unnamed expectedPackages
+		// Fill in contentVersionHash of expectedPackages
 		sanitiseExpectedPackages(action.expectedPackages)
 
 		return literal<RundownBaselineAdLibAction>({
@@ -345,7 +345,7 @@ export function postProcessAdLibActions(
 			`${rundownId}_${blueprintId}_${partId}_adlib_action_${action.externalId}`
 		)
 
-		// Fill in ids of unnamed expectedPackages
+		// Fill in contentVersionHash of expectedPackages
 		sanitiseExpectedPackages(action.expectedPackages)
 
 		return literal<AdLibAction>({
@@ -428,7 +428,7 @@ export function postProcessGlobalPieces(
 		)
 		piece.timelineObjectsString = serializePieceTimelineObjectsBlob(timelineObjects)
 
-		// Fill in ids of unnamed expectedPackages
+		// Fill in contentVersionHash of expectedPackages
 		sanitiseExpectedPackages(piece.expectedPackages)
 
 		return piece
@@ -504,7 +504,7 @@ export function postProcessBucketAdLib(
 		name: name || itemOrig.name,
 		timelineObjectsString: EmptyPieceTimelineObjectsBlob,
 	}
-	// Fill in ids of unnamed expectedPackages
+	// Fill in contentVersionHash of expectedPackages
 	sanitiseExpectedPackages(piece.expectedPackages)
 
 	const timelineObjects = postProcessTimelineObjects(piece._id, blueprintId, itemOrig.content.timelineObjects)
@@ -553,7 +553,7 @@ export function postProcessBucketAction(
 		...processAdLibActionITranslatableMessages(itemOrig, blueprintId, rank, label),
 	}
 
-	// Fill in ids of unnamed expectedPackages
+	// Fill in contentVersionHash of expectedPackages
 	sanitiseExpectedPackages(action.expectedPackages)
 
 	return action

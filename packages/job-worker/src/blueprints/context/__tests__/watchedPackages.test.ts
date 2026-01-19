@@ -204,7 +204,7 @@ describe('WatchedPackagesHelper', () => {
 			expect(helper2.hasPackage(packageId)).toBe(true)
 		})
 
-		it('does not return package info for packages with listenToPackageInfoUpdates: false', async () => {
+		it('does return package info for packages with listenToPackageInfoUpdates: false', async () => {
 			const context = setupDefaultJobEnvironment()
 			const rundownId = protectString<RundownId>('rundown1')
 			const packageId = protectString<ExpectedPackageId>('pkg1')

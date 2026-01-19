@@ -191,7 +191,6 @@ describe('hashObj', () => {
 		})
 
 		test('false should be different from 0', () => {
-			// This might fail - need to check if conversion is correct
 			expect(hashObj(false)).not.toBe(hashObj(0))
 		})
 	})

@@ -171,6 +171,10 @@ export function getExpectedPackageId(
 	return protectString(`${parentId}_${getHash(objHash)}`)
 }
 
+/**
+ * Returns true if the expected package is referenced by any playout PieceInstances
+ * @returns boolean
+ */
 export function isPackageReferencedByPlayout(expectedPackage: Pick<ExpectedPackageDB, 'playoutSources'>): boolean {
 	return expectedPackage.playoutSources.pieceInstanceIds.length > 0
 }

@@ -11,7 +11,7 @@ import { MockJobContext, setupDefaultJobEnvironment } from '../../__mocks__/cont
 import { ReadonlyDeep } from 'type-fest'
 import { IngestPartModel } from '../model/IngestPartModel.js'
 
-describe('Expected Media Items', () => {
+describe('Expected Playout Items', () => {
 	let context: MockJobContext
 	beforeAll(async () => {
 		context = setupDefaultJobEnvironment()
@@ -111,7 +111,7 @@ describe('Expected Media Items', () => {
 		return { part, pieces, adLibPieces }
 	}
 
-	test('Generates ExpectedPackages for a Part', async () => {
+	test('Generates for a Part', async () => {
 		const setExpectedPlayoutItems = jest.fn()
 
 		const { part, pieces, adLibPieces } = getMockPartContent()

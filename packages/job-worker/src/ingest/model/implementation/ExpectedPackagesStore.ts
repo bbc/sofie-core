@@ -17,7 +17,7 @@ export class ExpectedPackagesStore<TPackageSource extends { fromPieceType: Expec
 	}
 	get expectedPackages(): ReadonlyDeep<IngestExpectedPackage<TPackageSource>[]> {
 		// Typescript is not happy because of the generic
-		return this.#expectedPackages as any
+		return this.#expectedPackages as ReadonlyDeep<IngestExpectedPackage<TPackageSource>>[]
 	}
 
 	get hasChanges(): boolean {

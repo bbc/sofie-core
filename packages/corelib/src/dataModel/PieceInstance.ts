@@ -76,6 +76,11 @@ export interface PieceInstance {
 	plannedStartedPlayback?: Time
 	plannedStoppedPlayback?: Time
 
+	/**
+	 * The IDs of ExpectedPackages that are needed for this PieceInstance
+	 * This matches the data on `this.piece.expectedPackages`, resolved to the full database IDs
+	 * Future: This should replace the expectedPackages on Piece entirely
+	 */
 	neededExpectedPackageIds?: ExpectedPackageId[]
 }
 

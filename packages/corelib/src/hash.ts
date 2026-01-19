@@ -13,7 +13,7 @@ export function hashObj(obj: any): string {
 
 	if (Array.isArray(obj)) {
 		// For arrays, we care about the order, and should preserve undefined
-		const strs = obj.map((val, i) => hashObj(`${i}:${hashObj(val)}`))
+		const strs = obj.map((val, i) => `${i}:${hashObj(val)}`)
 
 		return getHash(strs.join('|'))
 	} else if (typeof obj === 'object') {
