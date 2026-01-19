@@ -94,7 +94,7 @@ export interface QuickLoopProps {
 	forceAutoNext: ForceQuickLoopAutoNext
 }
 
-export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCountdown
+export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCountdown | RundownTTimerModeTimeOfDay
 
 export interface RundownTTimerModeFreeRun {
 	readonly type: 'freeRun'
@@ -131,7 +131,24 @@ export interface RundownTTimerModeCountdown {
 	/**
 	 * If the countdown should stop at zero, or continue into negative values
 	 */
-	stopAtZero: boolean
+	readonly stopAtZero: boolean
+}
+export interface RundownTTimerModeTimeOfDay {
+	readonly type: 'timeOfDay'
+
+	/** The target timestamp of the timer, in milliseconds */
+	targetTime: number
+
+	/**
+	 * The raw target string of the timer, as provided when setting the timer
+	 * (e.g. "14:30", "2023-12-31T23:59:59Z", or a timestamp number)
+	 */
+	readonly targetRaw: string | number
+
+	/**
+	 * If the countdown should stop at zero, or continue into negative values
+	 */
+	readonly stopAtZero: boolean
 }
 
 export type RundownTTimerIndex = 1 | 2 | 3

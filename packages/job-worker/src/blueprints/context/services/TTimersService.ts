@@ -10,11 +10,13 @@ import {
 	calculateTTimerCurrentTime,
 	createCountdownTTimer,
 	createFreeRunTTimer,
+	createTimeOfDayTTimer,
 	pauseTTimer,
 	restartTTimer,
 	resumeTTimer,
 	validateTTimerIndex,
 } from '../../../playout/tTimers.js'
+import { getCurrentTime } from '../../../lib/time.js'
 
 export class TTimersService {
 	readonly playoutModel: PlayoutModel
@@ -73,6 +75,14 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
 					paused: !!rawMode.pauseTime,
 				}
+			case 'timeOfDay':
+				return {
+					mode: 'timeOfDay',
+					currentTime: rawMode.targetTime - getCurrentTime(),
+					targetTime: rawMode.targetTime,
+					targetRaw: rawMode.targetRaw,
+					stopAtZero: rawMode.stopAtZero,
+				}
 			case undefined:
 				return null
 			default:
@@ -106,6 +116,14 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 			mode: createCountdownTTimer(duration, {
 				stopAtZero: options?.stopAtZero ?? true,
 				startPaused: options?.startPaused ?? false,
+			}),
+		})
+	}
+	startTimeOfDay(targetTime: string | number, options?: { stopAtZero?: boolean }): void {
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			mode: createTimeOfDayTTimer(targetTime, {
+				stopAtZero: options?.stopAtZero ?? true,
 			}),
 		})
 	}

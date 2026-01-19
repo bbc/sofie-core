@@ -1,6 +1,7 @@
 import type { RundownTTimerIndex, RundownTTimerMode } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { getCurrentTime } from '../lib/index.js'
 import type { ReadonlyDeep } from 'type-fest'
+import * as chrono from 'chrono-node'
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
 	if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
@@ -64,6 +65,15 @@ export function restartTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): Re
 			startTime: getCurrentTime(),
 			pauseTime: timer.pauseTime ? getCurrentTime() : null,
 		}
+	} else if (timer?.type === 'timeOfDay') {
+		const nextTime = calculateNextTimeOfDayTarget(timer.targetRaw)
+		// If we can't calculate the next time, we can't restart
+		if (nextTime === null || nextTime === timer.targetTime) return null
+
+		return {
+			...timer,
+			targetTime: nextTime,
+		}
 	} else {
 		return null
 	}
@@ -95,6 +105,23 @@ export function createCountdownTTimer(
 	}
 }
 
+export function createTimeOfDayTTimer(
+	targetTime: string | number,
+	options: {
+		stopAtZero: boolean
+	}
+): ReadonlyDeep<RundownTTimerMode> {
+	const nextTime = calculateNextTimeOfDayTarget(targetTime)
+	if (nextTime === null) throw new Error('Unable to parse target time for timeOfDay T-timer')
+
+	return {
+		type: 'timeOfDay',
+		targetTime: nextTime,
+		targetRaw: targetTime,
+		stopAtZero: !!options.stopAtZero,
+	}
+}
+
 /**
  * Create a new free-running T-timer
  * @param index Timer index
@@ -121,4 +148,25 @@ export function calculateTTimerCurrentTime(startTime: number, pauseTime: number 
 	} else {
 		return getCurrentTime() - startTime
 	}
+}
+
+/**
+ * Calculate the next target time for a timeOfDay T-timer
+ * @param targetTime The target time, as a string or timestamp number
+ * @returns The next target timestamp in milliseconds, or null if it could not be calculated
+ */
+export function calculateNextTimeOfDayTarget(targetTime: string | number): number | null {
+	if (typeof targetTime === 'number') {
+		// This should be a unix timestamp
+		return targetTime
+	}
+
+	// Verify we have a string worth parsing
+	if (typeof targetTime !== 'string' || !targetTime) return null
+
+	const parsed = chrono.parseDate(targetTime, undefined, {
+		// Always look ahead for the next occurrence
+		forwardDate: true,
+	})
+	return parsed ? parsed.getTime() : null
 }

@@ -40,6 +40,13 @@ export interface IPlaylistTTimer {
 	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void
 
 	/**
+	 * Start a timeOfDay timer, counting towards the target time
+	 * This will throw if it is unable to parse the target time
+	 * @param targetTime The target time, as a string (e.g. "14:30", "2023-12-31T23:59:59Z") or a timestamp number
+	 */
+	startTimeOfDay(targetTime: string | number, options?: { stopAtZero?: boolean }): void
+
+	/**
 	 * Start a free-running timer
 	 */
 	startFreeRun(options?: { startPaused?: boolean }): void
@@ -60,13 +67,16 @@ export interface IPlaylistTTimer {
 
 	/**
 	 * If the timer can be restarted, restore it to its initial/restarted state
-	 * Note: This is supported by the countdown mode
+	 * Note: This is supported by the countdown and timeOfDay modes
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */
 	restart(): boolean
 }
 
-export type IPlaylistTTimerState = IPlaylistTTimerStateCountdown | IPlaylistTTimerStateFreeRun
+export type IPlaylistTTimerState =
+	| IPlaylistTTimerStateCountdown
+	| IPlaylistTTimerStateFreeRun
+	| IPlaylistTTimerStateTimeOfDay
 
 export interface IPlaylistTTimerStateCountdown {
 	/** The mode of the T-timer */
@@ -88,4 +98,22 @@ export interface IPlaylistTTimerStateFreeRun {
 	readonly currentTime: number
 	/** Whether the timer is currently paused */
 	readonly paused: boolean
+}
+
+export interface IPlaylistTTimerStateTimeOfDay {
+	/** The mode of the T-timer */
+	readonly mode: 'timeOfDay'
+	/** The current remaining time of the timer, in milliseconds */
+	readonly currentTime: number
+	/** The target timestamp of the timer, in milliseconds */
+	readonly targetTime: number
+
+	/**
+	 * The raw target string of the timer, as provided when setting the timer
+	 * (e.g. "14:30", "2023-12-31T23:59:59Z", or a timestamp number)
+	 */
+	readonly targetRaw: string | number
+
+	/** If the countdown is set to stop at zero, or continue into negative values */
+	readonly stopAtZero: boolean
 }

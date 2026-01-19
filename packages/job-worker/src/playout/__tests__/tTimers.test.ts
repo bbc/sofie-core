@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { useFakeCurrentTime, useRealCurrentTime, adjustFakeTime } from '../../__mocks__/time.js'
 import {
 	validateTTimerIndex,
@@ -7,8 +8,13 @@ import {
 	createCountdownTTimer,
 	createFreeRunTTimer,
 	calculateTTimerCurrentTime,
+	calculateNextTimeOfDayTarget,
+	createTimeOfDayTTimer,
 } from '../tTimers.js'
-import type { RundownTTimerMode } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type {
+	RundownTTimerMode,
+	RundownTTimerModeTimeOfDay,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 describe('tTimers utils', () => {
 	beforeEach(() => {
@@ -346,6 +352,250 @@ describe('tTimers utils', () => {
 			adjustFakeTime(2000) // Now at 12000
 
 			expect(calculateTTimerCurrentTime(startTime, null)).toBe(7000)
+		})
+	})
+
+	describe('calculateNextTimeOfDayTarget', () => {
+		// Mock date to 2026-01-19 10:00:00 UTC for predictable tests
+		const MOCK_DATE = new Date('2026-01-19T10:00:00Z').getTime()
+
+		beforeEach(() => {
+			jest.useFakeTimers()
+			jest.setSystemTime(MOCK_DATE)
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		it('should return number input unchanged (unix timestamp)', () => {
+			const timestamp = 1737331200000 // Some future timestamp
+			expect(calculateNextTimeOfDayTarget(timestamp)).toBe(timestamp)
+		})
+
+		it('should return null for null/undefined/empty input', () => {
+			expect(calculateNextTimeOfDayTarget('' as string)).toBeNull()
+			expect(calculateNextTimeOfDayTarget('   ')).toBeNull()
+		})
+
+		// 24-hour time formats
+		it('should parse 24-hour time HH:mm', () => {
+			const result = calculateNextTimeOfDayTarget('13:34')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T13:34:00.000Z')
+		})
+
+		it('should parse 24-hour time H:mm (single digit hour)', () => {
+			const result = calculateNextTimeOfDayTarget('9:05')
+			expect(result).not.toBeNull()
+			// 9:05 is in the past (before 10:00), so chrono bumps to tomorrow
+			expect(new Date(result!).toISOString()).toBe('2026-01-20T09:05:00.000Z')
+		})
+
+		it('should parse 24-hour time with seconds HH:mm:ss', () => {
+			const result = calculateNextTimeOfDayTarget('14:30:45')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T14:30:45.000Z')
+		})
+
+		// 12-hour time formats
+		it('should parse 12-hour time with pm', () => {
+			const result = calculateNextTimeOfDayTarget('5:13pm')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T17:13:00.000Z')
+		})
+
+		it('should parse 12-hour time with PM (uppercase)', () => {
+			const result = calculateNextTimeOfDayTarget('5:13PM')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T17:13:00.000Z')
+		})
+
+		it('should parse 12-hour time with am', () => {
+			const result = calculateNextTimeOfDayTarget('9:30am')
+			expect(result).not.toBeNull()
+			// 9:30am is in the past (before 10:00), so chrono bumps to tomorrow
+			expect(new Date(result!).toISOString()).toBe('2026-01-20T09:30:00.000Z')
+		})
+
+		it('should parse 12-hour time with space before am/pm', () => {
+			const result = calculateNextTimeOfDayTarget('3:45 pm')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:45:00.000Z')
+		})
+
+		it('should parse 12-hour time with seconds', () => {
+			const result = calculateNextTimeOfDayTarget('11:30:15pm')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T23:30:15.000Z')
+		})
+
+		// Date + time formats
+		it('should parse date with time (slash separator)', () => {
+			const result = calculateNextTimeOfDayTarget('1/19/2026 15:43')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:43:00.000Z')
+		})
+
+		it('should parse date with time and seconds', () => {
+			const result = calculateNextTimeOfDayTarget('1/19/2026 15:43:30')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:43:30.000Z')
+		})
+
+		it('should parse date with 12-hour time', () => {
+			const result = calculateNextTimeOfDayTarget('1/19/2026 3:43pm')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:43:00.000Z')
+		})
+
+		// ISO 8601 format
+		it('should parse ISO 8601 format', () => {
+			const result = calculateNextTimeOfDayTarget('2026-01-19T15:43:00')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:43:00.000Z')
+		})
+
+		it('should parse ISO 8601 with timezone', () => {
+			const result = calculateNextTimeOfDayTarget('2026-01-19T15:43:00+01:00')
+			expect(result).not.toBeNull()
+			// +01:00 means the time is 1 hour ahead of UTC, so 15:43 +01:00 = 14:43 UTC
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T14:43:00.000Z')
+		})
+
+		// Natural language formats (chrono-node strength)
+		it('should parse natural language date', () => {
+			const result = calculateNextTimeOfDayTarget('January 19, 2026 at 3:30pm')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T15:30:00.000Z')
+		})
+
+		it('should parse "noon"', () => {
+			const result = calculateNextTimeOfDayTarget('noon')
+			expect(result).not.toBeNull()
+			expect(new Date(result!).toISOString()).toBe('2026-01-19T12:00:00.000Z')
+		})
+
+		it('should parse "midnight"', () => {
+			const result = calculateNextTimeOfDayTarget('midnight')
+			expect(result).not.toBeNull()
+			// Midnight is in the past (before 10:00), so chrono bumps to tomorrow
+			expect(new Date(result!).toISOString()).toBe('2026-01-20T00:00:00.000Z')
+		})
+
+		// Edge cases
+		it('should return null for invalid time string', () => {
+			expect(calculateNextTimeOfDayTarget('not a time')).toBeNull()
+		})
+
+		it('should return null for gibberish', () => {
+			expect(calculateNextTimeOfDayTarget('asdfghjkl')).toBeNull()
+		})
+	})
+
+	describe('createTimeOfDayTTimer', () => {
+		// Mock date to 2026-01-19 10:00:00 UTC for predictable tests
+		const MOCK_DATE = new Date('2026-01-19T10:00:00Z').getTime()
+
+		beforeEach(() => {
+			jest.useFakeTimers()
+			jest.setSystemTime(MOCK_DATE)
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		it('should create a timeOfDay timer with valid time string', () => {
+			const result = createTimeOfDayTTimer('15:30', { stopAtZero: true })
+
+			expect(result).toEqual({
+				type: 'timeOfDay',
+				stopAtZero: true,
+				targetTime: expect.any(Number), // new target time
+				targetRaw: '15:30',
+			})
+		})
+
+		it('should create a timeOfDay timer with numeric timestamp', () => {
+			const timestamp = 1737331200000
+			const result = createTimeOfDayTTimer(timestamp, { stopAtZero: false })
+
+			expect(result).toEqual({
+				type: 'timeOfDay',
+				targetTime: timestamp,
+				targetRaw: timestamp,
+				stopAtZero: false,
+			})
+		})
+
+		it('should throw for invalid time string', () => {
+			expect(() => createTimeOfDayTTimer('invalid', { stopAtZero: true })).toThrow(
+				'Unable to parse target time for timeOfDay T-timer'
+			)
+		})
+
+		it('should throw for empty string', () => {
+			expect(() => createTimeOfDayTTimer('', { stopAtZero: true })).toThrow(
+				'Unable to parse target time for timeOfDay T-timer'
+			)
+		})
+	})
+
+	describe('restartTTimer with timeOfDay', () => {
+		// Mock date to 2026-01-19 10:00:00 UTC for predictable tests
+		const MOCK_DATE = new Date('2026-01-19T10:00:00Z').getTime()
+
+		beforeEach(() => {
+			jest.useFakeTimers()
+			jest.setSystemTime(MOCK_DATE)
+		})
+
+		afterEach(() => {
+			jest.useRealTimers()
+		})
+
+		it('should restart a timeOfDay timer with valid targetRaw', () => {
+			const timer: RundownTTimerMode = {
+				type: 'timeOfDay',
+				targetTime: 1737300000000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+
+			const result = restartTTimer(timer)
+
+			expect(result).toEqual({
+				...timer,
+				targetTime: expect.any(Number), // new target time
+			})
+			expect((result as RundownTTimerModeTimeOfDay).targetTime).toBeGreaterThan(timer.targetTime)
+		})
+
+		it('should return null for timeOfDay timer with invalid targetRaw', () => {
+			const timer: RundownTTimerMode = {
+				type: 'timeOfDay',
+				targetTime: 1737300000000,
+				targetRaw: 'invalid',
+				stopAtZero: true,
+			}
+
+			const result = restartTTimer(timer)
+
+			expect(result).toBeNull()
+		})
+
+		it('should return null for timeOfDay timer with unix timestamp', () => {
+			const timer: RundownTTimerMode = {
+				type: 'timeOfDay',
+				targetTime: 1737300000000,
+				targetRaw: 1737300000000,
+				stopAtZero: true,
+			}
+
+			const result = restartTTimer(timer)
+
+			expect(result).toBeNull()
 		})
 	})
 })

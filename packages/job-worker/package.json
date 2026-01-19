@@ -45,6 +45,7 @@
 		"@sofie-automation/corelib": "1.53.0-in-development",
 		"@sofie-automation/shared-lib": "1.53.0-in-development",
 		"amqplib": "^0.10.5",
+		"chrono-node": "^2.9.0",
 		"deepmerge": "^4.3.1",
 		"elastic-apm-node": "^4.11.0",
 		"mongodb": "^6.12.0",

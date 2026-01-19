@@ -216,6 +216,47 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: false,
 			})
 		})
+
+		it('should return timeOfDay state', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000, // 10 seconds in the future
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'timeOfDay',
+				currentTime: 10000, // targetTime - getCurrentTime() = 20000 - 10000
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			})
+		})
+
+		it('should return timeOfDay state with numeric targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			const targetTimestamp = 1737331200000
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: targetTimestamp,
+				targetRaw: targetTimestamp,
+				stopAtZero: false,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(timer.state).toEqual({
+				mode: 'timeOfDay',
+				currentTime: targetTimestamp - 10000, // targetTime - getCurrentTime()
+				targetTime: targetTimestamp,
+				targetRaw: targetTimestamp,
+				stopAtZero: false,
+			})
+		})
 	})
 
 	describe('setLabel', () => {
@@ -331,6 +372,100 @@ describe('PlaylistTTimerImpl', () => {
 		})
 	})
 
+	describe('startTimeOfDay', () => {
+		it('should start a timeOfDay timer with time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('15:30')
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '15:30',
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should start a timeOfDay timer with numeric timestamp', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const targetTimestamp = 1737331200000
+
+			timer.startTimeOfDay(targetTimestamp)
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: targetTimestamp,
+					targetRaw: targetTimestamp,
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should start a timeOfDay timer with stopAtZero false', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('18:00', { stopAtZero: false })
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: expect.objectContaining({
+					type: 'timeOfDay',
+					targetRaw: '18:00',
+					stopAtZero: false,
+				}),
+			})
+		})
+
+		it('should start a timeOfDay timer with 12-hour format', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			timer.startTimeOfDay('5:30pm')
+
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: expect.objectContaining({
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '5:30pm',
+					stopAtZero: true,
+				}),
+			})
+		})
+
+		it('should throw for invalid time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(() => timer.startTimeOfDay('invalid')).toThrow('Unable to parse target time for timeOfDay T-timer')
+		})
+
+		it('should throw for empty time string', () => {
+			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			expect(() => timer.startTimeOfDay('')).toThrow('Unable to parse target time for timeOfDay T-timer')
+		})
+	})
+
 	describe('pause', () => {
 		it('should pause a running freeRun timer', () => {
 			const tTimers = createEmptyTTimers()
@@ -384,6 +519,23 @@ describe('PlaylistTTimerImpl', () => {
 			expect(result).toBe(false)
 			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
 		})
+
+		it('should return false for timeOfDay timer (does not support pause)', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.pause()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
 	})
 
 	describe('resume', () => {
@@ -422,6 +574,23 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.resume()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should return false for timeOfDay timer (does not support resume)', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 20000,
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
 			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
 
@@ -486,6 +655,49 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return false for freeRun timer', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun', startTime: 5000, pauseTime: null }
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(false)
+			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+		})
+
+		it('should restart a timeOfDay timer with valid targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 5000, // old target time
+				targetRaw: '15:30',
+				stopAtZero: true,
+			}
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const result = timer.restart()
+
+			expect(result).toBe(true)
+			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: {
+					type: 'timeOfDay',
+					targetTime: expect.any(Number), // new target time
+					targetRaw: '15:30',
+					stopAtZero: true,
+				},
+			})
+		})
+
+		it('should return false for timeOfDay timer with invalid targetRaw', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].mode = {
+				type: 'timeOfDay',
+				targetTime: 5000,
+				targetRaw: 'invalid-time-string',
+				stopAtZero: true,
+			}
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
 			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
 
