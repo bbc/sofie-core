@@ -28,17 +28,43 @@ export async function handleSetNextPart(context: JobContext, data: SetNextPartPr
 			const playlist = playoutModel.playlist
 
 			if (!playlist.activationId) throw UserError.create(UserErrorMessage.InactiveRundown, undefined, 412)
-			if (playlist.holdState && playlist.holdState !== RundownHoldState.COMPLETE) {
+			if (playlist.holdState && playlist.holdState !== RundownHoldState.COMPLETE)
 				throw UserError.create(UserErrorMessage.DuringHold, undefined, 412)
-			}
+			if (
+				data.nextPartInstanceId &&
+				playlist.nextPartInfo?.partInstanceId &&
+				playlist.nextPartInfo?.partInstanceId !== data.nextPartInstanceId
+			)
+				throw UserError.create(UserErrorMessage.PartNotFound, undefined, 412)
 		},
 		async (playoutModel) => {
 			// Ensure the part is playable and found
-			const nextPart = playoutModel.findPart(data.nextPartId)
-			if (!nextPart) throw UserError.create(UserErrorMessage.PartNotFound, undefined, 404)
-			if (!isPartPlayable(nextPart)) throw UserError.create(UserErrorMessage.PartNotPlayable, undefined, 412)
+			if (data.nextPartId) {
+				const nextPart = playoutModel.findPart(data.nextPartId)
+				if (!nextPart) throw UserError.create(UserErrorMessage.PartNotFound, undefined, 404)
+				if (!isPartPlayable(nextPart)) throw UserError.create(UserErrorMessage.PartNotPlayable, undefined, 412)
 
-			await setNextPartFromPart(context, playoutModel, nextPart, data.setManually ?? false, data.nextTimeOffset)
+				await setNextPartFromPart(
+					context,
+					playoutModel,
+					nextPart,
+					data.setManually ?? false,
+					data.nextTimeOffset
+				)
+			} else if (data.nextPartInstanceId) {
+				const nextPartInstance = await context.directCollections.PartInstances.findOne({
+					_id: data.nextPartInstanceId,
+				})
+				if (!nextPartInstance) throw UserError.create(UserErrorMessage.PartNotFound, undefined, 404)
+
+				await setNextPartFromPart(
+					context,
+					playoutModel,
+					nextPartInstance,
+					data.setManually ?? false,
+					data.nextTimeOffset
+				)
+			}
 
 			await updateTimeline(context, playoutModel)
 		}

@@ -19,9 +19,10 @@ import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataMo
 import * as RundownResolver from '../../lib/RundownResolver.js'
 import { SelectedElement } from '../RundownView/SelectedElementsContext.js'
 import { PieceExtended } from '../../lib/RundownResolver.js'
+import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance.js'
 
 interface IProps {
-	onSetNext: (part: DBPart | undefined, e: any, offset?: number, take?: boolean) => void
+	onSetNext: (partInstance: DBPartInstance | DBPart | undefined, e: any, offset?: number, take?: boolean) => void
 	onSetNextSegment: (segmentId: SegmentId, e: any) => void
 	onQueueNextSegment: (segmentId: SegmentId | null, e: any) => void
 	onSetQuickLoopStart: (marker: QuickLoopMarker | null, e: any) => void
@@ -134,15 +135,49 @@ export const SegmentContextMenu = withTranslation()(
 								{startsAt !== null && part && this.props.enablePlayFromAnywhere ? (
 									<>
 										<MenuItem
-											onClick={(e) => this.onSetAsNextFromHere(part.instance.part, e)}
-											disabled={isCurrentPart || !!part.instance.orphaned || !canSetAsNext}
+											onClick={(e) => {
+												console.log('Next part vs current part comparison', {
+													playlistNextPartInstanceId: this.props.playlist?.nextPartInfo?.partInstanceId,
+													currentPartInstanceId: part.instance._id,
+													nextPartExists: Boolean(this.props.playlist?.nextPartInfo?.partInstanceId),
+													areDifferent: this.props.playlist?.nextPartInfo?.partInstanceId
+														? this.props.playlist?.nextPartInfo?.partInstanceId !== part.instance._id
+														: false,
+												})
+
+												return this.onSetAsNextFromHere(
+													part.instance,
+													this.props.playlist?.nextPartInfo?.partInstanceId
+														? this.props.playlist?.nextPartInfo?.partInstanceId === part.instance._id
+														: false,
+													e
+												)
+											}}
+											disabled={
+												isCurrentPart ||
+												(!!part.instance.orphaned &&
+													this.props.playlist.nextPartInfo?.partInstanceId !== part.instance._id) ||
+												!canSetAsNext
+											}
 										>
 											<span dangerouslySetInnerHTML={{ __html: t('Set <strong>Next</strong> Here') }}></span> (
 											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
 										</MenuItem>
 										<MenuItem
-											onClick={(e) => this.onPlayFromHere(part.instance.part, e)}
-											disabled={!!part.instance.orphaned || !canSetAsNext}
+											onClick={(e) =>
+												this.onPlayFromHere(
+													part.instance,
+													this.props.playlist?.nextPartInfo?.partInstanceId
+														? this.props.playlist?.nextPartInfo?.partInstanceId !== part.instance._id
+														: false,
+													e
+												)
+											}
+											disabled={
+												(!!part.instance.orphaned &&
+													this.props.playlist.nextPartInfo?.partInstanceId !== part.instance._id) ||
+												!canSetAsNext
+											}
 										>
 											<span>{t('Play from Here')}</span> (
 											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
@@ -269,14 +304,22 @@ export const SegmentContextMenu = withTranslation()(
 			}
 		}
 
-		private onSetAsNextFromHere = (part: DBPart, e: React.MouseEvent | React.TouchEvent) => {
+		private onSetAsNextFromHere = (
+			partInstance: DBPartInstance,
+			isNextInstance: boolean,
+			e: React.MouseEvent | React.TouchEvent
+		) => {
 			const offset = this.getTimePosition()
-			this.props.onSetNext(part, e, offset || 0)
+			this.props.onSetNext(isNextInstance ? partInstance : partInstance.part, e, offset || 0)
 		}
 
-		private onPlayFromHere = (part: DBPart, e: React.MouseEvent | React.TouchEvent) => {
+		private onPlayFromHere = (
+			partInstance: DBPartInstance,
+			isNextInstance: boolean,
+			e: React.MouseEvent | React.TouchEvent
+		) => {
 			const offset = this.getTimePosition()
-			this.props.onSetNext(part, e, offset || 0, true)
+			this.props.onSetNext(isNextInstance ? partInstance : partInstance.part, e, offset || 0, true)
 		}
 
 		private getPartStartsAt = (): number | null => {
