@@ -13,12 +13,13 @@ import {
 import { ITriggerIngestChangeContext } from './executeTsrActionContext.js'
 import { BlueprintQuickLookInfo } from './quickLoopInfo.js'
 import { ReadonlyDeep } from 'type-fest'
+import type { ITTimersContext } from './tTimersContext.js'
 
 /**
  * Context in which 'current' is the part currently on air, and 'next' is the partInstance being set as Next
  * This is similar to `IPartAndPieceActionContext`, but has more limits on what is allowed to be changed.
  */
-export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContext, ITriggerIngestChangeContext {
+export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContext, ITriggerIngestChangeContext, ITTimersContext {
 	/** Information about the current loop, if there is one */
 	readonly quickLoopInfo: BlueprintQuickLookInfo | null
 
