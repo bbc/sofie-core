@@ -9,7 +9,7 @@ import {
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	IEventContext,
 	IOnSetAsNextContext,
 } from '@sofie-automation/blueprints-integration'
@@ -75,7 +75,7 @@ export class OnSetAsNextContext
 		return this.partAndPieceInstanceService.getResolvedPieceInstances(part)
 	}
 
-	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined> {
+	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
 		return this.partAndPieceInstanceService.getSegment(segment)
 	}
 
