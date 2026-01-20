@@ -224,6 +224,51 @@ the table header.
 
 The Rundown View also has a panel that presents this information in the [context of the current Rundown](#media-status-panel).
 
+### Available screens View
+
+`/countdowns/:studioId`
+
+The "Available screens" view provides a centralized location to discover and configure all available screens for a given studio. This page is particularly useful for setting up displays in a studio environment, as it allows you to:
+
+- Access quick links to common screens (Director, Overlay, Multiview, Active Rundown)
+- Configure screens with custom parameters before opening them
+- Generate properly formatted URLs with all desired options
+
+#### Quick Links
+
+The Quick Links section provides direct access to screens that don't require configuration:
+
+- **Director Screen** - Shows countdown timers for the director
+- **Overlay Screen** - Transparent overlay for presenter displays
+- **All Screens in a MultiViewer** - Grid view of all screens simultaneously
+- **Active Rundown View** - Currently active rundown for secondary monitors
+
+#### Configurable Screens
+
+The Configurable Screens section uses collapsible accordion panels that let you customize settings before opening a screen:
+
+**Presenter Screen Configuration**
+- Select a specific Presenter Layout from available layouts for the Show Style
+- Generates URL with `presenterLayout` parameter
+
+**Camera Screen Configuration**
+- Filter by specific Source Layer IDs (e.g., cameras, DVEs)
+- Filter by Studio Labels to show only relevant cameras
+- Enable fullscreen mode for mobile devices
+- Generates URL with `sourceLayerIds`, `studioLabels`, and `fullscreen` parameters
+
+**Prompter Configuration**
+- Configure display options (mirroring, font size, margins, read marker position)
+- Select control modes (mouse, keyboard, shuttle devices, MIDI pedal, Joy-Con, Xbox controller)
+- Fine-tune controller parameters (speed maps, dead zones, ranges)
+- Generates URL with all selected parameters
+
+Each configuration form generates a complete URL that can be copied or opened directly. This eliminates the need to manually construct query strings for complex screen configurations.
+
+:::tip
+Bookmark the "Available screens" view for your studio (e.g., `/countdowns/studio0`) for quick access when setting up displays or troubleshooting screen configurations.
+:::
+
 ## Sofie Screens
 
 ### Prompter Screen
