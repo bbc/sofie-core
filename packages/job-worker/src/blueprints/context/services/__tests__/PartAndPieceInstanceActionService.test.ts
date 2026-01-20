@@ -160,7 +160,8 @@ describe('Test blueprint api context', () => {
 			rundown.rundown.showStyleBaseId
 		)
 
-		const service = new PartAndPieceInstanceActionService(jobContext, playoutModel, showStyle, rundown)
+		// TODO - some tests for previous
+		const service = new PartAndPieceInstanceActionService(jobContext, playoutModel, showStyle, rundown, false)
 
 		return {
 			playlist,

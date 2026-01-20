@@ -316,7 +316,7 @@ async function executeOnTakeCallback(
 			playoutModel,
 			showStyle,
 			watchedPackagesHelper,
-			new PartAndPieceInstanceActionService(context, playoutModel, showStyle, currentRundown)
+			new PartAndPieceInstanceActionService(context, playoutModel, showStyle, currentRundown, true)
 		)
 		try {
 			const blueprintPersistentState = new PersistentPlayoutStateStore(

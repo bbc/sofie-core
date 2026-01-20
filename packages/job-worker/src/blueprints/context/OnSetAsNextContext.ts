@@ -63,19 +63,21 @@ export class OnSetAsNextContext
 		return getOrderedPartsAfterPlayhead(this.jobContext, this.playoutModel, limit).map(convertPartToBlueprints)
 	}
 
-	async getPartInstance(part: 'current' | 'next'): Promise<IBlueprintPartInstance<unknown> | undefined> {
+	async getPartInstance(part: 'previous' | 'current' | 'next'): Promise<IBlueprintPartInstance<unknown> | undefined> {
 		return this.partAndPieceInstanceService.getPartInstance(part)
 	}
 
-	async getPieceInstances(part: 'current' | 'next'): Promise<IBlueprintPieceInstance<unknown>[]> {
+	async getPieceInstances(part: 'previous' | 'current' | 'next'): Promise<IBlueprintPieceInstance<unknown>[]> {
 		return this.partAndPieceInstanceService.getPieceInstances(part)
 	}
 
-	async getResolvedPieceInstances(part: 'current' | 'next'): Promise<IBlueprintResolvedPieceInstance<unknown>[]> {
+	async getResolvedPieceInstances(
+		part: 'previous' | 'current' | 'next'
+	): Promise<IBlueprintResolvedPieceInstance<unknown>[]> {
 		return this.partAndPieceInstanceService.getResolvedPieceInstances(part)
 	}
 
-	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
+	async getSegment(segment: 'previous' | 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
 		return this.partAndPieceInstanceService.getSegment(segment)
 	}
 

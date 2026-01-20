@@ -90,7 +90,8 @@ export class PartAndPieceInstanceActionService {
 		context: JobContext,
 		playoutModel: PlayoutModel,
 		showStyle: ReadonlyDeep<ProcessedShowStyleCompound>,
-		private readonly _rundown: PlayoutRundownModel
+		private readonly _rundown: PlayoutRundownModel,
+		public readonly allowFetchingPrevious: boolean
 	) {
 		this._context = context
 		this._playoutModel = playoutModel
@@ -105,12 +106,18 @@ export class PartAndPieceInstanceActionService {
 		}
 	}
 
-	#getPartInstance(part: 'current' | 'next'): PlayoutPartInstanceModel | null {
+	#getPartInstance(part: 'previous' | 'current' | 'next'): PlayoutPartInstanceModel | null {
 		switch (part) {
 			case 'current':
 				return this._playoutModel.currentPartInstance
 			case 'next':
 				return this._playoutModel.nextPartInstance
+			case 'previous':
+				if (this.allowFetchingPrevious) {
+					return this._playoutModel.previousPartInstance
+				} else {
+					throw new Error('Fetching previous part is not allowed')
+				}
 			default:
 				assertNever(part)
 				logger.warn(`Blueprint action requested unknown PartInstance "${part}"`)
@@ -118,16 +125,16 @@ export class PartAndPieceInstanceActionService {
 		}
 	}
 
-	async getPartInstance(part: 'current' | 'next'): Promise<IBlueprintPartInstance | undefined> {
+	async getPartInstance(part: 'previous' | 'current' | 'next'): Promise<IBlueprintPartInstance | undefined> {
 		const partInstance = this.#getPartInstance(part)
 
 		return partInstance ? convertPartInstanceToBlueprints(partInstance.partInstance) : undefined
 	}
-	async getPieceInstances(part: 'current' | 'next'): Promise<IBlueprintPieceInstance[]> {
+	async getPieceInstances(part: 'previous' | 'current' | 'next'): Promise<IBlueprintPieceInstance[]> {
 		const partInstance = this.#getPartInstance(part)
 		return partInstance?.pieceInstances?.map((p) => convertPieceInstanceToBlueprints(p.pieceInstance)) ?? []
 	}
-	async getResolvedPieceInstances(part: 'current' | 'next'): Promise<IBlueprintResolvedPieceInstance[]> {
+	async getResolvedPieceInstances(part: 'previous' | 'current' | 'next'): Promise<IBlueprintResolvedPieceInstance[]> {
 		const partInstance = this.#getPartInstance(part)
 		if (!partInstance) {
 			return []
@@ -140,7 +147,7 @@ export class PartAndPieceInstanceActionService {
 		)
 		return resolvedInstances.map(convertResolvedPieceInstanceToBlueprints)
 	}
-	getSegment(segment: 'current' | 'next'): IBlueprintSegmentDB | undefined {
+	getSegment(segment: 'previous' | 'current' | 'next'): IBlueprintSegmentDB | undefined {
 		const partInstance = this.#getPartInstance(segment)
 		if (!partInstance) return undefined
 

@@ -1,17 +1,17 @@
-import { IEventContext, IShowStyleUserContext, Time } from '../index.js'
-import { IPartAndPieceActionContext } from './partsAndPieceActionContext.js'
+import { IEventContext, IShowStyleUserContext } from '../index.js'
+import { IRundownDataLookup } from './rundownDataLookup.js'
 import { IExecuteTSRActionsContext } from './executeTsrActionContext.js'
+import { IPartAndPieceActionContext } from './partsAndPieceActionContext.js'
 
 /**
- * Context in which 'current' is the partInstance we're leaving, and 'next' is the partInstance we're taking
+ * Context in which 'current' is the partInstance we're leaving, and 'next' is the partInstance we're taking.
  */
 export interface IOnTakeContext
-	extends IPartAndPieceActionContext,
+	extends IRundownDataLookup,
+		IPartAndPieceActionContext<'previous' | 'current' | 'next'>,
 		IShowStyleUserContext,
 		IEventContext,
 		IExecuteTSRActionsContext {
-	/** Inform core that a take out of the taken partinstance should be blocked until the specified time */
-	blockTakeUntil(time: Time | null): Promise<void>
 	/**
 	 * Prevent the take.
 	 * All modifications to the pieceInstances and partInstance done through this context will be persisted,

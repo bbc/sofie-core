@@ -1,4 +1,4 @@
-import type { DatastorePersistenceMode, Time } from '../common.js'
+import type { DatastorePersistenceMode } from '../common.js'
 import type { IEventContext } from './index.js'
 import type { IShowStyleUserContext } from './showStyleContext.js'
 import { IPartAndPieceActionContext } from './partsAndPieceActionContext.js'
@@ -20,22 +20,20 @@ export interface IDataStoreMethods {
 }
 export interface IDataStoreActionExecutionContext extends IDataStoreMethods, IShowStyleUserContext, IEventContext {}
 
+/**
+ * Context for executing adlib actions.
+ */
 export interface IActionExecutionContext
-	extends IShowStyleUserContext,
+	extends IPartAndPieceActionContext,
+		IShowStyleUserContext,
 		IEventContext,
 		IDataStoreMethods,
-		IPartAndPieceActionContext,
 		IExecuteTSRActionsContext,
 		IRouteSetMethods {
-	/** Fetch the showstyle config for the specified part */
-	// getNextShowStyleConfig(): Readonly<{ [key: string]: ConfigItemValue }>
-
 	/** Move the next part through the rundown. Can move by either a number of parts, or segments in either direction. */
 	moveNextPart(partDelta: number, segmentDelta: number, ignoreQuickloop?: boolean): Promise<void>
 	/** Set flag to perform take after executing the current action. Returns state of the flag after each call. */
 	takeAfterExecuteAction(take: boolean): Promise<boolean>
-	/** Inform core that a take out of the current partinstance should be blocked until the specified time */
-	blockTakeUntil(time: Time | null): Promise<void>
 
 	/** Insert a queued part to follow the current part */
 	queuePart(part: IBlueprintPart, pieces: IBlueprintPiece[]): Promise<IBlueprintPartInstance>
