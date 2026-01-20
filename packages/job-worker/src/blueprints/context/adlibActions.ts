@@ -14,7 +14,7 @@ import {
 	TSR,
 	IBlueprintPlayoutDevice,
 	StudioRouteSet,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 } from '@sofie-automation/blueprints-integration'
 import { PartInstanceId, PeripheralDeviceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
@@ -136,7 +136,7 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		return this.partAndPieceInstanceService.getResolvedPieceInstances(part)
 	}
 
-	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined> {
+	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
 		return this.partAndPieceInstanceService.getSegment(segment)
 	}
 
