@@ -128,9 +128,11 @@ export const SegmentContextMenu = withTranslation()(
 									onClick={(e) => this.props.onSetNext(part.instance.part, e)}
 									disabled={!!part.instance.orphaned || !canSetAsNext}
 								>
-									<span dangerouslySetInnerHTML={{ __html: t('Set this part as <strong>Next</strong>') }}></span>
-									{startsAt !== null &&
-										'\u00a0(' + RundownUtils.formatTimeToShortTime(Math.floor(startsAt / 1000) * 1000) + ')'}
+									<span
+										dangerouslySetInnerHTML={{
+											__html: t(`Set part as <strong>Next</strong>`),
+										}}
+									></span>
 								</MenuItem>
 								{startsAt !== null && part && this.props.enablePlayFromAnywhere ? (
 									<>
@@ -160,8 +162,13 @@ export const SegmentContextMenu = withTranslation()(
 												!canSetAsNext
 											}
 										>
-											<span dangerouslySetInnerHTML={{ __html: t('Set <strong>Next</strong> Here') }}></span> (
-											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
+											<span
+												dangerouslySetInnerHTML={{
+													__html: t(
+														`Set part from ${RundownUtils.formatTimeToShortTime(Math.floor(timecode / 1000) * 1000)} as <strong>Next</strong>`
+													),
+												}}
+											></span>
 										</MenuItem>
 										<MenuItem
 											onClick={(e) =>
@@ -179,8 +186,9 @@ export const SegmentContextMenu = withTranslation()(
 												!canSetAsNext
 											}
 										>
-											<span>{t('Play from Here')}</span> (
-											{RundownUtils.formatTimeToShortTime(Math.floor((startsAt + timecode) / 1000) * 1000)})
+											<span>
+												{t(`Play part from ${RundownUtils.formatTimeToShortTime(Math.floor(timecode / 1000) * 1000)}`)}
+											</span>
 										</MenuItem>
 									</>
 								) : null}
