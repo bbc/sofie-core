@@ -27,7 +27,6 @@ export async function handleSetNextPart(context: JobContext, data: SetNextPartPr
 		data,
 		async (playoutModel) => {
 			const playlist = playoutModel.playlist
-
 			if (!playlist.activationId) throw UserError.create(UserErrorMessage.InactiveRundown, undefined, 412)
 			if (playlist.holdState && playlist.holdState !== RundownHoldState.COMPLETE) {
 				throw UserError.create(UserErrorMessage.DuringHold, undefined, 412)
@@ -46,10 +45,11 @@ export async function handleSetNextPart(context: JobContext, data: SetNextPartPr
 				})
 				if (!nextPartInstance) throw UserError.create(UserErrorMessage.PartNotFound, undefined, 404)
 
-				// Determine if we need the part itself or can use the instance
+				// Determine if we need the part itself or can use the instance (We can't reuse the currently playing instance)
 				if (
 					!playlist.nextPartInfo?.partInstanceId ||
-					playlist.nextPartInfo.partInstanceId !== data.nextPartInstanceId
+					!playlist.currentPartInfo?.partInstanceId ||
+					playlist.currentPartInfo?.partInstanceId === data.nextPartInstanceId
 				) {
 					nextPartId = nextPartInstance.part._id
 				} else {

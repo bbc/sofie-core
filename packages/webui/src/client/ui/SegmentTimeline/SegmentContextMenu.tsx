@@ -150,7 +150,7 @@ export const SegmentContextMenu = withTranslation()(
 												onClick={(e) =>
 													this.onSetAsNextFromHere(
 														part.instance,
-														this.props.playlist?.nextPartInfo?.partInstanceId ?? null,
+														this.props.playlist?.currentPartInfo?.partInstanceId ?? null,
 														e
 													)
 												}
@@ -302,28 +302,33 @@ export const SegmentContextMenu = withTranslation()(
 			}
 		}
 		private getIsPlayFromAnywhereDisabled(): boolean {
-			const playlist = this.props.playlist
-			const partInstance = this.getPartFromContext()?.instance
+			// TODO: Remove before merge if we allow the reuse of the current part, even with the buggy UI. As alternative we could disable the set next and leave the play function.
 
-			if (playlist && playlist?.activationId) {
-				if (!partInstance) return true
-				else {
-					const timings = partInstance.timings
+			// const playlist = this.props.playlist
+			// const partInstance = this.getPartFromContext()?.instance
 
-					return timings?.take !== undefined
-				}
-			}
+			// if (playlist && playlist?.activationId) {
+			// 	if (!partInstance) return true
+			// 	else {
+			// 		return partInstance._id === playlist.currentPartInfo?.partInstanceId
+			// 	}
+			// }
 			return false
 		}
 
 		private onSetAsNextFromHere = (
 			partInstance: DBPartInstance,
-			nextPartInstanceId: PartInstanceId | null,
+			currentPartInstanceId: PartInstanceId | null,
 			e: React.MouseEvent | React.TouchEvent
 		) => {
-			const isNextInstance = partInstance._id === nextPartInstanceId
+			const partInstanceAvailableForPlayout = partInstance.timings?.take !== undefined
+			const isCurrentPartInstance = partInstance._id === currentPartInstanceId
 			const offset = this.getTimePosition()
-			this.props.onSetNext(isNextInstance ? partInstance : partInstance.part, e, offset || 0)
+			this.props.onSetNext(
+				partInstanceAvailableForPlayout && isCurrentPartInstance ? partInstance : partInstance.part,
+				e,
+				offset || 0
+			)
 		}
 
 		private onPlayFromHere = (
