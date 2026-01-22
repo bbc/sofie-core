@@ -24,6 +24,7 @@ import { LookaheadTimelineObject } from './findObjects.js'
 import { hasPieceInstanceDefinitelyEnded } from '../timeline/lib.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { ReadonlyDeep } from 'type-fest'
+import { filterPieceInstancesForNextPartWithOffset } from './lookaheadOffset'
 
 const LOOKAHEAD_OBJ_PRIORITY = 0.1
 
@@ -139,7 +140,10 @@ export async function getLookeaheadObjects(
 						part: partInstancesInfo0.next.partInstance,
 						onTimeline: !!partInstancesInfo0.current?.partInstance?.part?.autoNext, //TODO -QL
 						nowInPart: partInstancesInfo0.next.partTimes.nowInPart,
-						allPieces: partInstancesInfo0.next.pieceInstances,
+						allPieces: filterPieceInstancesForNextPartWithOffset(
+							partInstancesInfo0.next.pieceInstances,
+							playoutModel.playlist.nextTimeOffset
+						),
 						calculatedTimings: partInstancesInfo0.next.calculatedTimings,
 					},
 					false
