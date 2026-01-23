@@ -150,11 +150,12 @@ export const SegmentContextMenu = withTranslation()(
 												onClick={(e) =>
 													this.onSetAsNextFromHere(
 														part.instance,
+														this.props.playlist?.nextPartInfo?.partInstanceId ?? null,
 														this.props.playlist?.currentPartInfo?.partInstanceId ?? null,
 														e
 													)
 												}
-												disabled={this.getIsPlayFromAnywhereDisabled()}
+												disabled={this.getIsPlayFromHereDisabled()}
 											>
 												<span
 													dangerouslySetInnerHTML={{
@@ -172,7 +173,7 @@ export const SegmentContextMenu = withTranslation()(
 														e
 													)
 												}
-												disabled={this.getIsPlayFromAnywhereDisabled()}
+												disabled={this.getIsPlayFromHereDisabled()}
 											>
 												<span>
 													{t(
@@ -301,31 +302,35 @@ export const SegmentContextMenu = withTranslation()(
 				return null
 			}
 		}
-		private getIsPlayFromAnywhereDisabled(): boolean {
-			// TODO: Remove before merge if we allow the reuse of the current part, even with the buggy UI. As alternative we could disable the set next and leave the play function.
+		private getIsPlayFromHereDisabled(): boolean {
+			const offset = this.getTimePosition() ?? 0
+			const playlist = this.props.playlist
+			const partInstance = this.getPartFromContext()?.instance
+			const isSelectedTimeWithinBounds = (partInstance?.part.expectedDuration ?? 0) < offset
 
-			// const playlist = this.props.playlist
-			// const partInstance = this.getPartFromContext()?.instance
-
-			// if (playlist && playlist?.activationId) {
-			// 	if (!partInstance) return true
-			// 	else {
-			// 		return partInstance._id === playlist.currentPartInfo?.partInstanceId
-			// 	}
-			// }
+			if (playlist && playlist?.activationId) {
+				if (!partInstance) return true
+				else {
+					return isSelectedTimeWithinBounds && partInstance._id === playlist.currentPartInfo?.partInstanceId
+				}
+			}
 			return false
 		}
 
 		private onSetAsNextFromHere = (
 			partInstance: DBPartInstance,
+			nextPartInstanceId: PartInstanceId | null,
 			currentPartInstanceId: PartInstanceId | null,
 			e: React.MouseEvent | React.TouchEvent
 		) => {
 			const partInstanceAvailableForPlayout = partInstance.timings?.take !== undefined
 			const isCurrentPartInstance = partInstance._id === currentPartInstanceId
+			const isNextInstance = partInstance._id === nextPartInstanceId
 			const offset = this.getTimePosition()
 			this.props.onSetNext(
-				partInstanceAvailableForPlayout && isCurrentPartInstance ? partInstance : partInstance.part,
+				(partInstanceAvailableForPlayout && !isCurrentPartInstance) || isNextInstance
+					? partInstance
+					: partInstance.part,
 				e,
 				offset || 0
 			)
