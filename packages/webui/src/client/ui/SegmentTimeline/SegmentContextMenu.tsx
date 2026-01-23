@@ -173,7 +173,7 @@ export const SegmentContextMenu = withTranslation()(
 														e
 													)
 												}
-												disabled={this.getIsPlayFromHereDisabled()}
+												disabled={this.getIsPlayFromHereDisabled(true)}
 											>
 												<span>
 													{t(
@@ -302,16 +302,23 @@ export const SegmentContextMenu = withTranslation()(
 				return null
 			}
 		}
-		private getIsPlayFromHereDisabled(): boolean {
+		private getIsPlayFromHereDisabled(take: boolean = false): boolean {
 			const offset = this.getTimePosition() ?? 0
 			const playlist = this.props.playlist
 			const partInstance = this.getPartFromContext()?.instance
-			const isSelectedTimeWithinBounds = (partInstance?.part.expectedDuration ?? 0) < offset
+			const isSelectedTimeWithinBounds =
+				(partInstance?.part.expectedDuration ??
+					partInstance?.part.displayDuration ??
+					partInstance?.part.expectedDurationWithTransition ??
+					0) < offset
 
-			if (playlist && playlist?.activationId) {
+			if (playlist && playlist?.activationId && (!take || !!partInstance?.orphaned)) {
 				if (!partInstance) return true
 				else {
-					return isSelectedTimeWithinBounds && partInstance._id === playlist.currentPartInfo?.partInstanceId
+					return (
+						(isSelectedTimeWithinBounds && partInstance._id === playlist.currentPartInfo?.partInstanceId) ||
+						(!!partInstance.orphaned && partInstance._id === playlist.currentPartInfo?.partInstanceId)
+					)
 				}
 			}
 			return false
