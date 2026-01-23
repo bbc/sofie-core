@@ -89,7 +89,7 @@ export function generateFakeObectsString(
 export const partDuration = 3000
 export const lookaheadOffsetTestConstants = {
 	multiLayerPart: {
-		nowInPart: 0,
+		partTimes: { nowInPart: 0 },
 		partInstance: {
 			_id: protectString('pLookahead_ml_instance'),
 			part: {
@@ -142,7 +142,7 @@ export const lookaheadOffsetTestConstants = {
 		regenerateTimelineAt: undefined,
 	},
 	multiLayerPartWhile: {
-		nowInPart: 0,
+		partTimes: { nowInPart: 0 },
 		partInstance: {
 			_id: protectString('pLookahead_ml_while_instance'),
 			part: {
@@ -198,7 +198,7 @@ export const lookaheadOffsetTestConstants = {
 		regenerateTimelineAt: undefined,
 	},
 	singleLayerPart: {
-		nowInPart: 0,
+		partTimes: { nowInPart: 0 },
 		partInstance: {
 			_id: protectString('pLookahead_sl_instance'),
 			part: {
@@ -252,7 +252,7 @@ export const lookaheadOffsetTestConstants = {
 		regenerateTimelineAt: undefined,
 	},
 	singleLayerPartWhile: {
-		nowInPart: 0,
+		partTimes: { nowInPart: 0 },
 		partInstance: {
 			_id: protectString('pLookahead_sl_while_instance'),
 			part: {

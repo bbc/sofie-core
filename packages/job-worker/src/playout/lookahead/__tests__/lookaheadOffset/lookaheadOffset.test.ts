@@ -170,7 +170,7 @@ describe('lookahead offset integration', () => {
 
 		const res = await getLookeaheadObjects(context, playoutModel, {
 			next: {
-				nowInPart: 0,
+				partTimes: { nowInPart: 0 },
 				partInstance: {
 					_id: protectString('pNextInstance'),
 					part: {
