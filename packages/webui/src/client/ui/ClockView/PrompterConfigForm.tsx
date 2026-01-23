@@ -114,6 +114,24 @@ function addParam(params: URLSearchParams, key: string, value: string | number |
 	}
 }
 
+/**
+ * Safe integer parser that returns null for empty or non-numeric input
+ */
+function parseIntOrNull(value: string): number | null {
+	if (!value) return null
+	const n = Number.parseInt(value, 10)
+	return Number.isNaN(n) ? null : n
+}
+
+/**
+ * Safe float parser that returns null for empty or non-numeric input
+ */
+function parseFloatOrNull(value: string): number | null {
+	if (!value) return null
+	const n = Number.parseFloat(value)
+	return Number.isNaN(n) ? null : n
+}
+
 /** Build mode string from mode selections */
 function buildModeString(config: PrompterConfigState): string {
 	const modes: string[] = []
@@ -244,9 +262,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 										size="sm"
 										placeholder="14"
 										value={config.fontsize ?? ''}
-										onChange={(e) =>
-											updateConfig('fontsize', e.target.value ? Number.parseInt(e.target.value, 10) : null)
-										}
+										onChange={(e) => updateConfig('fontsize', parseIntOrNull(e.target.value))}
 									/>
 									<Form.Text className="text-muted">{t('14 = 7 lines, 20 = 5 lines')}</Form.Text>
 								</Form.Group>
@@ -257,9 +273,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 										size="sm"
 										placeholder="0"
 										value={config.margin ?? ''}
-										onChange={(e) =>
-											updateConfig('margin', e.target.value ? Number.parseInt(e.target.value, 10) : null)
-										}
+										onChange={(e) => updateConfig('margin', parseIntOrNull(e.target.value))}
 									/>
 								</Form.Group>
 							</div>
@@ -445,9 +459,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="0"
 											value={config.pedal_rangeRevMin ?? ''}
-											onChange={(e) =>
-												updateConfig('pedal_rangeRevMin', e.target.value ? Number.parseInt(e.target.value, 10) : null)
-											}
+											onChange={(e) => updateConfig('pedal_rangeRevMin', parseIntOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -457,12 +469,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="35"
 											value={config.pedal_rangeNeutralMin ?? ''}
-											onChange={(e) =>
-												updateConfig(
-													'pedal_rangeNeutralMin',
-													e.target.value ? Number.parseInt(e.target.value, 10) : null
-												)
-											}
+											onChange={(e) => updateConfig('pedal_rangeNeutralMin', parseIntOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -472,12 +479,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="80"
 											value={config.pedal_rangeNeutralMax ?? ''}
-											onChange={(e) =>
-												updateConfig(
-													'pedal_rangeNeutralMax',
-													e.target.value ? Number.parseInt(e.target.value, 10) : null
-												)
-											}
+											onChange={(e) => updateConfig('pedal_rangeNeutralMax', parseIntOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -487,9 +489,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="127"
 											value={config.pedal_rangeFwdMax ?? ''}
-											onChange={(e) =>
-												updateConfig('pedal_rangeFwdMax', e.target.value ? Number.parseInt(e.target.value, 10) : null)
-											}
+											onChange={(e) => updateConfig('pedal_rangeFwdMax', parseIntOrNull(e.target.value))}
 										/>
 									</Form.Group>
 								</div>
@@ -539,12 +539,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="1.4"
 											value={config.joycon_rightHandOffset ?? ''}
-											onChange={(e) =>
-												updateConfig(
-													'joycon_rightHandOffset',
-													e.target.value ? Number.parseFloat(e.target.value) : null
-												)
-											}
+											onChange={(e) => updateConfig('joycon_rightHandOffset', parseFloatOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -566,9 +561,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="-1"
 											value={config.joycon_rangeRevMin ?? ''}
-											onChange={(e) =>
-												updateConfig('joycon_rangeRevMin', e.target.value ? Number.parseFloat(e.target.value) : null)
-											}
+											onChange={(e) => updateConfig('joycon_rangeRevMin', parseFloatOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -579,12 +572,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="-0.25"
 											value={config.joycon_rangeNeutralMin ?? ''}
-											onChange={(e) =>
-												updateConfig(
-													'joycon_rangeNeutralMin',
-													e.target.value ? Number.parseFloat(e.target.value) : null
-												)
-											}
+											onChange={(e) => updateConfig('joycon_rangeNeutralMin', parseFloatOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -595,12 +583,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="0.25"
 											value={config.joycon_rangeNeutralMax ?? ''}
-											onChange={(e) =>
-												updateConfig(
-													'joycon_rangeNeutralMax',
-													e.target.value ? Number.parseFloat(e.target.value) : null
-												)
-											}
+											onChange={(e) => updateConfig('joycon_rangeNeutralMax', parseFloatOrNull(e.target.value))}
 										/>
 									</Form.Group>
 									<Form.Group className="mb-2">
@@ -611,9 +594,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 											size="sm"
 											placeholder="1"
 											value={config.joycon_rangeFwdMax ?? ''}
-											onChange={(e) =>
-												updateConfig('joycon_rangeFwdMax', e.target.value ? Number.parseFloat(e.target.value) : null)
-											}
+											onChange={(e) => updateConfig('joycon_rangeFwdMax', parseFloatOrNull(e.target.value))}
 										/>
 									</Form.Group>
 								</div>
@@ -662,9 +643,7 @@ export function PrompterConfigForm({ studioId }: Readonly<{ studioId: StudioId }
 									size="sm"
 									placeholder="0.1"
 									value={config.xbox_triggerDeadZone ?? ''}
-									onChange={(e) =>
-										updateConfig('xbox_triggerDeadZone', e.target.value ? Number.parseFloat(e.target.value) : null)
-									}
+									onChange={(e) => updateConfig('xbox_triggerDeadZone', parseFloatOrNull(e.target.value))}
 								/>
 								<Form.Text className="text-muted">{t('Value between 0 and 1')}</Form.Text>
 							</Form.Group>
