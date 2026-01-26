@@ -41,11 +41,12 @@ jobs:
         run: |
           corepack enable
 
+          yarn config set cacheFolder /home/runner/lint-core-cache
+          yarn
+
           # setup zodern:types. No linters are setup, so this simply installs the packages
           yarn meteor lint
 
-          yarn config set cacheFolder /home/runner/lint-core-cache
-          yarn
           yarn build:packages
         env:
           CI: true

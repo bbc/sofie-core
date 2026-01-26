@@ -123,10 +123,11 @@ jobs:
         run: |
           corepack enable
 
+          yarn install
+
           # setup zodern:types. No linters are setup, so this simply installs the packages
           yarn meteor lint
 
-          yarn install
       - name: Build libs
         run: |
           yarn build:packages
