@@ -5,6 +5,7 @@ import { IPartAndPieceActionContext } from './partsAndPieceActionContext.js'
 import { IExecuteTSRActionsContext } from './executeTsrActionContext.js'
 import { IBlueprintPart, IBlueprintPartInstance, IBlueprintPiece } from '../index.js'
 import { IRouteSetMethods } from './routeSetContext.js'
+import { ITTimersContext } from './tTimersContext.js'
 
 /** Actions */
 export interface IDataStoreMethods {
@@ -26,7 +27,8 @@ export interface IActionExecutionContext
 		IDataStoreMethods,
 		IPartAndPieceActionContext,
 		IExecuteTSRActionsContext,
-		IRouteSetMethods {
+		IRouteSetMethods,
+		ITTimersContext {
 	/** Fetch the showstyle config for the specified part */
 	// getNextShowStyleConfig(): Readonly<{ [key: string]: ConfigItemValue }>
 

@@ -1208,6 +1208,7 @@ __metadata:
     "@sofie-automation/corelib": "npm:1.53.0-in-development"
     "@sofie-automation/shared-lib": "npm:1.53.0-in-development"
     amqplib: "npm:^0.10.5"
+    chrono-node: "npm:^2.9.0"
     deepmerge: "npm:^4.3.1"
     elastic-apm-node: "npm:^4.11.0"
     mongodb: "npm:^6.12.0"
@@ -2896,6 +2897,13 @@ __metadata:
   version: 2.0.0
   resolution: "chownr@npm:2.0.0"
   checksum: 10/c57cf9dd0791e2f18a5ee9c1a299ae6e801ff58fee96dc8bfd0dcb4738a6ce58dd252a3605b1c93c6418fe4f9d5093b28ffbf4d66648cb2a9c67eaef9679be2f
+  languageName: node
+  linkType: hard
+
+"chrono-node@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "chrono-node@npm:2.9.0"
+  checksum: 10/a30bbaa67f9a127e711db6e694ee4c89292d8f533dbfdc3d7cb34f479728e02e377f682e75ad84dd4b6a16016c248a5e85fb453943b96f93f5993f5ccddc6d08
   languageName: node
   linkType: hard
 

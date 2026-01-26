@@ -94,6 +94,81 @@ export interface QuickLoopProps {
 	forceAutoNext: ForceQuickLoopAutoNext
 }
 
+export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCountdown | RundownTTimerModeTimeOfDay
+
+export interface RundownTTimerModeFreeRun {
+	readonly type: 'freeRun'
+	/**
+	 * Starting time (unix timestamp)
+	 * This may not be the original start time, if the timer has been paused/resumed
+	 */
+	startTime: number
+	/**
+	 * Set to a timestamp to pause the timer at that timestamp
+	 * When unpausing, the `startTime` should be adjusted to account for the paused duration
+	 */
+	pauseTime: number | null
+	/** The direction to count */
+	// direction: 'up' | 'down' // TODO: does this make sense?
+}
+export interface RundownTTimerModeCountdown {
+	readonly type: 'countdown'
+	/**
+	 * Starting time (unix timestamp)
+	 * This may not be the original start time, if the timer has been paused/resumed
+	 */
+	startTime: number
+	/**
+	 * Set to a timestamp to pause the timer at that timestamp
+	 * When unpausing, the `targetTime` should be adjusted to account for the paused duration
+	 */
+	pauseTime: number | null
+	/**
+	 * The duration of the countdown in milliseconds
+	 */
+	readonly duration: number
+
+	/**
+	 * If the countdown should stop at zero, or continue into negative values
+	 */
+	readonly stopAtZero: boolean
+}
+export interface RundownTTimerModeTimeOfDay {
+	readonly type: 'timeOfDay'
+
+	/** The target timestamp of the timer, in milliseconds */
+	targetTime: number
+
+	/**
+	 * The raw target string of the timer, as provided when setting the timer
+	 * (e.g. "14:30", "2023-12-31T23:59:59Z", or a timestamp number)
+	 */
+	readonly targetRaw: string | number
+
+	/**
+	 * If the countdown should stop at zero, or continue into negative values
+	 */
+	readonly stopAtZero: boolean
+}
+
+export type RundownTTimerIndex = 1 | 2 | 3
+
+export interface RundownTTimer {
+	readonly index: RundownTTimerIndex
+
+	/** A label for the timer */
+	label: string
+
+	/** The current mode of the timer, or null if not configured */
+	mode: RundownTTimerMode | null
+
+	/*
+	 * Future ideas:
+	 * allowUiControl: boolean
+	 * display: { ... } // some kind of options for how to display in the ui
+	 */
+}
+
 export interface DBRundownPlaylist {
 	_id: RundownPlaylistId
 	/** External ID (source) of the playlist */
@@ -176,6 +251,12 @@ export interface DBRundownPlaylist {
 	trackedAbSessions?: ABSessionInfo[]
 	/** AB playback sessions assigned in the last timeline generation */
 	assignedAbSessions?: Record<string, ABSessionAssignments>
+
+	/**
+	 * T-timers for the Playlist.
+	 * This is a fixed size pool with 3 being chosen as a likely good amount, that can be used for any purpose.
+	 */
+	tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]
 }
 
 // Information about a 'selected' PartInstance for the Playlist
