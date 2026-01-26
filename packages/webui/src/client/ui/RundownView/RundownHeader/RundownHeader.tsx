@@ -107,7 +107,7 @@ export function RundownHeader({
 	const rundownTimesInfo = checkRundownTimes(playlist.timing)
 
 	useEffect(() => {
-		console.debug(`Rundown T-Timers Info: `, playlist.tTimers)
+		console.debug(`Rundown T-Timers Info: `, JSON.stringify(playlist.tTimers, undefined, 2))
 	}, [playlist.tTimers])
 
 	return (
