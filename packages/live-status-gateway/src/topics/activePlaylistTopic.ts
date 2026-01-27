@@ -50,8 +50,6 @@ const PLAYLIST_KEYS = [
 	'timing',
 	'startedPlayback',
 	'quickLoop',
-	'assignedAbSessions',
-	'trackedAbSessions',
 ] as const
 type Playlist = PickKeys<DBRundownPlaylist, typeof PLAYLIST_KEYS>
 
