@@ -1,6 +1,6 @@
 import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { DBPart, PartInvalidReason } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import {
 	deserializePieceTimelineObjectsBlob,
@@ -35,6 +35,7 @@ import {
 	IBlueprintAdLibPieceDB,
 	IBlueprintConfig,
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPartDB,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
@@ -51,6 +52,7 @@ import {
 	IBlueprintShowStyleVariant,
 	IOutputLayer,
 	ISourceLayer,
+	NoteSeverity,
 	PieceAbSessionInfo,
 	RundownPlaylistTiming,
 } from '@sofie-automation/blueprints-integration'
@@ -209,6 +211,7 @@ export function convertPartInstanceToBlueprints(partInstance: ReadonlyDeep<DBPar
 		previousPartEndState: clone(partInstance.previousPartEndState),
 		orphaned: partInstance.orphaned,
 		blockTakeUntil: partInstance.blockTakeUntil,
+		invalidReason: partInstance.invalidReason ? clone(partInstance.invalidReason.message) : undefined,
 	}
 
 	return obj
@@ -366,6 +369,7 @@ export function convertAdLibActionToBlueprints(action: ReadonlyDeep<AdLibAction>
 		privateData: clone(action.privateData),
 		publicData: clone(action.publicData),
 		partId: unprotectString(action.partId),
+		invalid: action.invalid,
 		allVariants: action.allVariants,
 		userDataManifest: clone(action.userDataManifest),
 		display: clone<IBlueprintActionManifestDisplay | IBlueprintActionManifestDisplayContent>(action.display), // TODO - type mismatch
@@ -553,27 +557,28 @@ function translateUserEditsToBlueprint(
 		userEdits.map((userEdit) => {
 			switch (userEdit.type) {
 				case UserEditingType.ACTION:
-					return {
+					return literal<UserEditingDefinitionAction>({
 						type: UserEditingType.ACTION,
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
 						icon: userEdit.icon,
 						iconInactive: userEdit.iconInactive,
 						isActive: userEdit.isActive,
-					} satisfies Complete<UserEditingDefinitionAction>
+					})
 				case UserEditingType.FORM:
-					return {
+					return literal<UserEditingDefinitionForm>({
 						type: UserEditingType.FORM,
 						id: userEdit.id,
 						label: omit(userEdit.label, 'namespaces'),
 						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
-					} satisfies Complete<UserEditingDefinitionForm>
+					})
 				case UserEditingType.SOFIE:
-					return {
+					return literal<UserEditingDefinitionSofieDefault>({
 						type: UserEditingType.SOFIE,
 						id: userEdit.id,
-					} satisfies Complete<UserEditingDefinitionSofieDefault>
+						limitToCurrentPart: userEdit.limitToCurrentPart,
+					})
 				default:
 					assertNever(userEdit)
 					return undefined
@@ -615,28 +620,29 @@ export function translateUserEditsFromBlueprint(
 		userEdits.map((userEdit) => {
 			switch (userEdit.type) {
 				case UserEditingType.ACTION:
-					return {
+					return literal<CoreUserEditingDefinitionAction>({
 						type: UserEditingType.ACTION,
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						icon: userEdit.icon,
 						iconInactive: userEdit.iconInactive,
 						isActive: userEdit.isActive,
-					} satisfies Complete<CoreUserEditingDefinitionAction>
+					})
 				case UserEditingType.FORM:
-					return {
+					return literal<CoreUserEditingDefinitionForm>({
 						type: UserEditingType.FORM,
 						id: userEdit.id,
 						label: wrapTranslatableMessageFromBlueprints(userEdit.label, blueprintIds),
 						schema: clone(userEdit.schema),
 						currentValues: clone(userEdit.currentValues),
 						translationNamespaces: unprotectStringArray(blueprintIds),
-					} satisfies Complete<CoreUserEditingDefinitionForm>
+					})
 				case UserEditingType.SOFIE:
-					return {
+					return literal<CoreUserEditingDefinitionSofie>({
 						type: UserEditingType.SOFIE,
 						id: userEdit.id,
-					} satisfies Complete<CoreUserEditingDefinitionSofie>
+						limitToCurrentPart: userEdit.limitToCurrentPart,
+					})
 				default:
 					assertNever(userEdit)
 					return undefined
@@ -701,6 +707,39 @@ export function convertPartialBlueprintMutablePartToCore(
 
 	return playoutUpdatePart
 }
+
+export interface PlayoutMutatablePartInstance extends Omit<IBlueprintMutatablePartInstance, 'invalidReason'> {
+	invalidReason?: PartInvalidReason
+}
+
+/**
+ * Converts a partial IBlueprintMutatablePartInstance and wraps translatable messages with blueprint namespace
+ */
+export function convertPartialBlueprintMutatablePartInstanceToCore(
+	instanceProps: Partial<IBlueprintMutatablePartInstance>,
+	blueprintId: BlueprintId
+): Partial<PlayoutMutatablePartInstance> {
+	const result: Partial<PlayoutMutatablePartInstance> = {
+		...instanceProps,
+		invalidReason: undefined,
+	}
+
+	if (instanceProps.invalidReason) {
+		result.invalidReason = {
+			message: wrapTranslatableMessageFromBlueprints(instanceProps.invalidReason, [blueprintId]),
+			severity: NoteSeverity.ERROR,
+		}
+	} else if ('invalidReason' in instanceProps) {
+		// Explicitly clearing invalidReason
+		result.invalidReason = undefined
+	} else {
+		// Not touching invalidReason at all
+		delete result.invalidReason
+	}
+
+	return result
+}
+
 export function createBlueprintQuickLoopInfo(playlist: ReadonlyDeep<DBRundownPlaylist>): BlueprintQuickLookInfo | null {
 	const playlistLoopProps = playlist.quickLoop
 	if (!playlistLoopProps) return null

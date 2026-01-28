@@ -23,6 +23,7 @@ import { AutoNextStatus } from '../RundownView/RundownTiming/AutoNextStatus.js'
 import { RundownTimingContext, getPartInstanceTimingId } from '../../lib/rundownTiming.js'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { LoopingIcon } from '../../lib/ui/icons/looping.js'
+import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../lib/partInstanceUtil.js'
 
 interface IProps {
 	className?: string
@@ -124,7 +125,9 @@ export function StoryboardPart({
 
 	useRundownViewEventBusListener(RundownViewEvents.HIGHLIGHT, onHighlight)
 
-	const isInvalid = part.instance.part.invalid
+	// Get effective invalidReason: planned (Part) takes precedence over runtime (PartInstance)
+	const effectiveInvalidReason = getEffectiveInvalidReason(part.instance)
+	const isInvalid = isPartInstanceInvalid(part.instance)
 	const isFloated = part.instance.part.floated
 	const isInsideQuickLoop = timingDurations.partsInQuickLoop?.[getPartInstanceTimingId(part.instance)] ?? false
 	const isOutsideActiveQuickLoop = !isInsideQuickLoop && isPlaylistLooping && !isNextPart
@@ -140,7 +143,7 @@ export function StoryboardPart({
 						'invert-flash': highlight,
 						'segment-storyboard__part--next': isNextPart,
 						'segment-storyboard__part--live': isLivePart,
-						'segment-storyboard__part--invalid': part.instance.part.invalid,
+						'segment-storyboard__part--invalid': isInvalid,
 						'segment-storyboard__part--outside-quickloop': isOutsideActiveQuickLoop,
 						'segment-storyboard__part--quickloop-start': isQuickLoopStart,
 						'segment-storyboard__part--quickloop-end': isQuickLoopEnd,
@@ -177,7 +180,7 @@ export function StoryboardPart({
 				</>
 			)}
 			{isInvalid ? (
-				<InvalidPartCover className="segment-storyboard__part__invalid-cover" part={part.instance.part} />
+				<InvalidPartCover className="segment-storyboard__part__invalid-cover" invalidReason={effectiveInvalidReason} />
 			) : null}
 			{isFloated ? <div className="segment-storyboard__part__floated-cover"></div> : null}
 			<div className="segment-storyboard__part__title">{part.instance.part.title}</div>
@@ -185,7 +188,7 @@ export function StoryboardPart({
 			<div
 				className={classNames('segment-storyboard__part__next-line', {
 					'segment-storyboard__part__next-line--autonext': willBeAutoNextedInto,
-					'segment-storyboard__part__next-line--invalid': part.instance.part.invalid,
+					'segment-storyboard__part__next-line--invalid': isInvalid,
 					'segment-storyboard__part__next-line--next': isNextPart,
 					'segment-storyboard__part__next-line--live': isLivePart,
 					'segment-storyboard__part__next-line--quickloop-start': isQuickLoopStart,
