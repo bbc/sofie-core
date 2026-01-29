@@ -54,12 +54,12 @@ A few things need to be added to an existing integration to enable the Shared Ha
       - The addresses you return for each Address State must be unique to that Address State and you must be able to connect them with updates you receive from the device
       - The Address State must include the values you want to use to establish when control should be reasserted
 2. Process updates from the external device
-      - After receiving an update from a device it has to converted into Address States and Addresses
+      - After receiving an update from a device it has to be converted into Address States and Addresses
       - Call `this.context.setAddressState` for each updated Address State
 3. Implement `addressStateReassertsControl` method
       - Your implementation will be given an old address state and a new one, it is up to you to tell the TSR whether this change in address state implies that control should be reasserted.
 4. Implement `diffAddressStates` method
-      - Your implementaiton must be able to take in 2 Address States and return a boolean value `true` if the 2 Address States are different and `false` if they are equivalent.
+      - Your implementation must be able to take in 2 Address States and return a boolean value `true` if the 2 Address States are different and `false` if they are equivalent.
 5. Implement `applyAddressState` method
       - In this method you should copy the contents from an Address State onto the Device State output of your `convertTimelineStateToDeviceState` implementation
 
