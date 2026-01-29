@@ -203,8 +203,8 @@ function timelineTriggerTimeInner(
 		}
 		if (tlChanged) {
 			const timelineHash = studioPlayoutModel.setTimeline(
-				timelineObjs, 
-				timeline.generationVersions, 
+				timelineObjs,
+				timeline.generationVersions,
 				timeline.regenerateTimelineToken
 			).timelineHash
 

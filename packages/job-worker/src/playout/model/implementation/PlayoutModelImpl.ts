@@ -77,6 +77,7 @@ import {
 	flattenAndProcessTimelineObjects,
 	preserveOrReplaceNowTimesInObjects,
 	logAnyRemainingNowTimes,
+	getStudioTimeline,
 } from '../../timeline/generate.js'
 import { deNowifyMultiGatewayTimeline } from '../../timeline/multi-gateway.js'
 
@@ -953,15 +954,17 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 				versions,
 				objs: timelineObjs,
 				timingContext: timingInfo,
-				regenerateTimelineToken
-			} = await getTimelineRundown(this.context, this as PlayoutModel)
+				regenerateTimelineToken,
+			} = this.playlist.activationId
+				? await getTimelineRundown(this.context, this)
+				: await getStudioTimeline(this.context, this)
 
 			flattenAndProcessTimelineObjects(this.context, timelineObjs)
 
 			preserveOrReplaceNowTimesInObjects(this, timelineObjs)
 
 			if (this.isMultiGatewayMode) {
-				deNowifyMultiGatewayTimeline(this as PlayoutModel, timelineObjs, timingInfo)
+				deNowifyMultiGatewayTimeline(this, timelineObjs, timingInfo)
 
 				logAnyRemainingNowTimes(this.context, timelineObjs)
 			}
