@@ -20,15 +20,13 @@ export async function handleTTimerStartCountdown(_context: JobContext, data: TTi
 	return runJobWithPlayoutModel(_context, data, null, async (playoutModel) => {
 		validateTTimerIndex(data.timerIndex)
 
-		const timerMode = createCountdownTTimer(data.duration * 1000, {
-			stopAtZero: data.stopAtZero,
-			startPaused: data.startPaused,
-		})
-
 		const currentTimer = playoutModel.playlist.tTimers[data.timerIndex - 1]
 		playoutModel.updateTTimer({
 			...currentTimer,
-			mode: timerMode,
+			...createCountdownTTimer(data.duration * 1000, {
+				stopAtZero: data.stopAtZero,
+				startPaused: data.startPaused,
+			}),
 		})
 	})
 }
@@ -37,14 +35,12 @@ export async function handleTTimerStartFreeRun(_context: JobContext, data: TTime
 	return runJobWithPlayoutModel(_context, data, null, async (playoutModel) => {
 		validateTTimerIndex(data.timerIndex)
 
-		const timerMode = createFreeRunTTimer({
-			startPaused: data.startPaused,
-		})
-
 		const currentTimer = playoutModel.playlist.tTimers[data.timerIndex - 1]
 		playoutModel.updateTTimer({
 			...currentTimer,
-			mode: timerMode,
+			...createFreeRunTTimer({
+				startPaused: data.startPaused,
+			}),
 		})
 	})
 }
@@ -57,12 +53,9 @@ export async function handleTTimerPause(_context: JobContext, data: TTimerPauseP
 		const currentTimer = playoutModel.playlist.tTimers[timerIndex]
 		if (!currentTimer.mode) return
 
-		const newMode = pauseTTimer(currentTimer.mode)
-		if (newMode) {
-			playoutModel.updateTTimer({
-				...currentTimer,
-				mode: newMode,
-			})
+		const updatedTimer = pauseTTimer(currentTimer)
+		if (updatedTimer) {
+			playoutModel.updateTTimer(updatedTimer)
 		}
 	})
 }
@@ -75,12 +68,9 @@ export async function handleTTimerResume(_context: JobContext, data: TTimerResum
 		const currentTimer = playoutModel.playlist.tTimers[timerIndex]
 		if (!currentTimer.mode) return
 
-		const newMode = resumeTTimer(currentTimer.mode)
-		if (newMode) {
-			playoutModel.updateTTimer({
-				...currentTimer,
-				mode: newMode,
-			})
+		const updatedTimer = resumeTTimer(currentTimer)
+		if (updatedTimer) {
+			playoutModel.updateTTimer(updatedTimer)
 		}
 	})
 }
@@ -93,12 +83,9 @@ export async function handleTTimerRestart(_context: JobContext, data: TTimerRest
 		const currentTimer = playoutModel.playlist.tTimers[timerIndex]
 		if (!currentTimer.mode) return
 
-		const newMode = restartTTimer(currentTimer.mode)
-		if (newMode) {
-			playoutModel.updateTTimer({
-				...currentTimer,
-				mode: newMode,
-			})
+		const updatedTimer = restartTTimer(currentTimer)
+		if (updatedTimer) {
+			playoutModel.updateTTimer(updatedTimer)
 		}
 	})
 }
