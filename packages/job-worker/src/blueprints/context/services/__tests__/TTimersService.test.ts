@@ -40,9 +40,10 @@ describe('TTimersService', () => {
 
 	describe('constructor', () => {
 		it('should create three timer instances', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
 
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(timers, updateFn)
 
 			expect(service.timers).toHaveLength(3)
 			expect(service.timers[0]).toBeInstanceOf(PlaylistTTimerImpl)
@@ -51,10 +52,27 @@ describe('TTimersService', () => {
 		})
 	})
 
+	it('from playout model', () => {
+		const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+
+		const service = TTimersService.withPlayoutModel(mockPlayoutModel)
+		expect(service.timers).toHaveLength(3)
+
+		const timer = service.getTimer(1)
+		expect(timer.index).toBe(1)
+
+		timer.setLabel('New Label')
+		expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
+			expect.objectContaining({ index: 1, label: 'New Label' })
+		)
+	})
+
 	describe('getTimer', () => {
 		it('should return the correct timer for index 1', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
+
+			const service = new TTimersService(timers, updateFn)
 
 			const timer = service.getTimer(1)
 
@@ -62,8 +80,10 @@ describe('TTimersService', () => {
 		})
 
 		it('should return the correct timer for index 2', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
+
+			const service = new TTimersService(timers, updateFn)
 
 			const timer = service.getTimer(2)
 
@@ -71,8 +91,10 @@ describe('TTimersService', () => {
 		})
 
 		it('should return the correct timer for index 3', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
+
+			const service = new TTimersService(timers, updateFn)
 
 			const timer = service.getTimer(3)
 
@@ -80,8 +102,10 @@ describe('TTimersService', () => {
 		})
 
 		it('should throw for invalid index', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
+
+			const service = new TTimersService(timers, updateFn)
 
 			expect(() => service.getTimer(0 as RundownTTimerIndex)).toThrow('T-timer index out of range: 0')
 			expect(() => service.getTimer(4 as RundownTTimerIndex)).toThrow('T-timer index out of range: 4')
@@ -96,22 +120,18 @@ describe('TTimersService', () => {
 			tTimers[1].mode = { type: 'countdown', duration: 60000, stopAtZero: true }
 			tTimers[1].state = { paused: false, zeroTime: 65000 }
 
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const service = new TTimersService(mockPlayoutModel)
+			const timers = createEmptyTTimers()
+			const updateFn = jest.fn()
+
+			const service = new TTimersService(timers, updateFn)
 
 			service.clearAllTimers()
 
 			// updateTTimer should have been called 3 times (once for each timer)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledTimes(3)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
-				expect.objectContaining({ index: 1, mode: null })
-			)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
-				expect.objectContaining({ index: 2, mode: null })
-			)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith(
-				expect.objectContaining({ index: 3, mode: null })
-			)
+			expect(updateFn).toHaveBeenCalledTimes(3)
+			expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ index: 1, mode: null }))
+			expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ index: 2, mode: null }))
+			expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ index: 3, mode: null }))
 		})
 	})
 })
@@ -128,8 +148,8 @@ describe('PlaylistTTimerImpl', () => {
 	describe('getters', () => {
 		it('should return the correct index', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[1], updateFn)
 
 			expect(timer.index).toBe(2)
 		})
@@ -137,16 +157,17 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return the correct label', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[1].label = 'Custom Label'
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[1], updateFn)
 
 			expect(timer.label).toBe('Custom Label')
 		})
 
 		it('should return null state when no mode is set', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toBeNull()
 		})
@@ -155,8 +176,8 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 15000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'freeRun',
@@ -169,8 +190,8 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: true, duration: 3000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'freeRun',
@@ -187,8 +208,8 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 15000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'countdown',
@@ -207,8 +228,8 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: false,
 			}
 			tTimers[0].state = { paused: true, duration: 2000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'countdown',
@@ -227,8 +248,8 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 } // 10 seconds in the future
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'timeOfDay',
@@ -248,8 +269,8 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: false,
 			}
 			tTimers[0].state = { paused: false, zeroTime: targetTimestamp }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(timer.state).toEqual({
 				mode: 'timeOfDay',
@@ -264,12 +285,13 @@ describe('PlaylistTTimerImpl', () => {
 	describe('setLabel', () => {
 		it('should update the label', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.setLabel('New Label')
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'New Label',
 				mode: null,
@@ -283,12 +305,12 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.clearTimer()
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: null,
@@ -300,12 +322,13 @@ describe('PlaylistTTimerImpl', () => {
 	describe('startCountdown', () => {
 		it('should start a running countdown with default options', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startCountdown(60000)
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -319,12 +342,13 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should start a paused countdown', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startCountdown(30000, { startPaused: true, stopAtZero: false })
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -340,12 +364,13 @@ describe('PlaylistTTimerImpl', () => {
 	describe('startFreeRun', () => {
 		it('should start a running free-run timer', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startFreeRun()
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -357,12 +382,13 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should start a paused free-run timer', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startFreeRun({ startPaused: true })
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -376,12 +402,13 @@ describe('PlaylistTTimerImpl', () => {
 	describe('startTimeOfDay', () => {
 		it('should start a timeOfDay timer with time string', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startTimeOfDay('15:30')
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -398,13 +425,14 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should start a timeOfDay timer with numeric timestamp', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 			const targetTimestamp = 1737331200000
 
 			timer.startTimeOfDay(targetTimestamp)
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -421,12 +449,13 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should start a timeOfDay timer with stopAtZero false', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startTimeOfDay('18:00', { stopAtZero: false })
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: expect.objectContaining({
@@ -443,12 +472,13 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should start a timeOfDay timer with 12-hour format', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			timer.startTimeOfDay('5:30pm')
 
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: expect.objectContaining({
@@ -465,16 +495,18 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should throw for invalid time string', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(() => timer.startTimeOfDay('invalid')).toThrow('Unable to parse target time for timeOfDay T-timer')
 		})
 
 		it('should throw for empty time string', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			expect(() => timer.startTimeOfDay('')).toThrow('Unable to parse target time for timeOfDay T-timer')
 		})
@@ -485,13 +517,13 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.pause()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -505,13 +537,13 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'countdown', duration: 60000, stopAtZero: true }
 			tTimers[0].state = { paused: false, zeroTime: 70000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.pause()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -525,13 +557,14 @@ describe('PlaylistTTimerImpl', () => {
 
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.pause()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 
 		it('should return false for timeOfDay timer (does not support pause)', () => {
@@ -542,13 +575,13 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.pause()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -557,13 +590,13 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: true, duration: -3000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.resume()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -577,25 +610,26 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.resume()
 
 			// Returns true because timer supports resume, but it's already running
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalled()
+			expect(updateFn).toHaveBeenCalled()
 		})
 
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.resume()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 
 		it('should return false for timeOfDay timer (does not support resume)', () => {
@@ -606,13 +640,13 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.resume()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -621,13 +655,13 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'countdown', duration: 60000, stopAtZero: true }
 			tTimers[0].state = { paused: false, zeroTime: 40000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -647,13 +681,13 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: false,
 			}
 			tTimers[0].state = { paused: true, duration: 15000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -669,13 +703,13 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 
 		it('should restart a timeOfDay timer with valid targetRaw', () => {
@@ -686,13 +720,13 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 5000 } // old target time
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(true)
-			expect(mockPlayoutModel.updateTTimer).toHaveBeenCalledWith({
+			expect(updateFn).toHaveBeenCalledWith({
 				index: 1,
 				label: 'Timer 1',
 				mode: {
@@ -715,37 +749,25 @@ describe('PlaylistTTimerImpl', () => {
 				stopAtZero: true,
 			}
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
-			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+
+			const updateFn = jest.fn()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn)
 
 			const result = timer.restart()
 
 			expect(result).toBe(false)
-			expect(mockPlayoutModel.updateTTimer).not.toHaveBeenCalled()
-		})
-	})
-
-	describe('constructor validation', () => {
-		it('should throw for invalid index', () => {
-			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-
-			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 0 as RundownTTimerIndex)).toThrow(
-				'T-timer index out of range: 0'
-			)
-			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 4 as RundownTTimerIndex)).toThrow(
-				'T-timer index out of range: 4'
-			)
+			expect(updateFn).not.toHaveBeenCalled()
 		})
 	})
 })

@@ -135,6 +135,7 @@ export class SyncChangesToPartInstancesWorker {
 			},
 			this.#context.studio,
 			this.#showStyle,
+			this.#playoutModel.playlist,
 			instanceToSync.playoutRundownModel.rundown,
 			existingPartInstance,
 			proposedPieceInstances,
@@ -152,6 +153,11 @@ export class SyncChangesToPartInstancesWorker {
 				newResultData,
 				instanceToSync.playStatus
 			)
+
+			// Persist t-timer changes
+			for (const timer of syncContext.changedTTimers) {
+				this.#playoutModel.updateTTimer(timer)
+			}
 		} catch (err) {
 			logger.error(`Error in showStyleBlueprint.syncIngestUpdateToPartInstance: ${stringifyError(err)}`)
 

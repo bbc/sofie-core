@@ -18,18 +18,23 @@ import {
 import { getCurrentTime } from '../../../lib/time.js'
 
 export class TTimersService {
-	readonly playoutModel: PlayoutModel
-
 	readonly timers: [PlaylistTTimerImpl, PlaylistTTimerImpl, PlaylistTTimerImpl]
 
-	constructor(playoutModel: PlayoutModel) {
-		this.playoutModel = playoutModel
-
+	constructor(
+		timers: ReadonlyDeep<RundownTTimer[]>,
+		emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void
+	) {
 		this.timers = [
-			new PlaylistTTimerImpl(playoutModel, 1),
-			new PlaylistTTimerImpl(playoutModel, 2),
-			new PlaylistTTimerImpl(playoutModel, 3),
+			new PlaylistTTimerImpl(timers[0], emitChange),
+			new PlaylistTTimerImpl(timers[1], emitChange),
+			new PlaylistTTimerImpl(timers[2], emitChange),
 		]
+	}
+
+	static withPlayoutModel(playoutModel: PlayoutModel): TTimersService {
+		return new TTimersService(playoutModel.playlist.tTimers, (updatedTimer) => {
+			playoutModel.updateTTimer(updatedTimer)
+		})
 	}
 
 	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
@@ -44,22 +49,19 @@ export class TTimersService {
 }
 
 export class PlaylistTTimerImpl implements IPlaylistTTimer {
-	readonly #playoutModel: PlayoutModel
-	readonly #index: RundownTTimerIndex
+	readonly #emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void
 
-	get #modelTimer(): ReadonlyDeep<RundownTTimer> {
-		return this.#playoutModel.playlist.tTimers[this.#index - 1]
-	}
+	#timer: ReadonlyDeep<RundownTTimer>
 
 	get index(): RundownTTimerIndex {
-		return this.#modelTimer.index
+		return this.#timer.index
 	}
 	get label(): string {
-		return this.#modelTimer.label
+		return this.#timer.label
 	}
 	get state(): IPlaylistTTimerState | null {
-		const rawMode = this.#modelTimer.mode
-		const rawState = this.#modelTimer.state
+		const rawMode = this.#timer.mode
+		const rawState = this.#timer.state
 
 		if (!rawMode || !rawState) return null
 
@@ -94,70 +96,76 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		}
 	}
 
-	constructor(playoutModel: PlayoutModel, index: RundownTTimerIndex) {
-		this.#playoutModel = playoutModel
-		this.#index = index
-
-		validateTTimerIndex(index)
+	constructor(timer: ReadonlyDeep<RundownTTimer>, emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void) {
+		this.#timer = timer
+		this.#emitChange = emitChange
 	}
 
 	setLabel(label: string): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			label: label,
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	clearTimer(): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			mode: null,
 			state: null,
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			...createCountdownTTimer(duration, {
 				stopAtZero: options?.stopAtZero ?? true,
 				startPaused: options?.startPaused ?? false,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	startTimeOfDay(targetTime: string | number, options?: { stopAtZero?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			...createTimeOfDayTTimer(targetTime, {
 				stopAtZero: options?.stopAtZero ?? true,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	startFreeRun(options?: { startPaused?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			...createFreeRunTTimer({
 				startPaused: options?.startPaused ?? false,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	pause(): boolean {
-		const newTimer = pauseTTimer(this.#modelTimer)
+		const newTimer = pauseTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer(newTimer)
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 	resume(): boolean {
-		const newTimer = resumeTTimer(this.#modelTimer)
+		const newTimer = resumeTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer(newTimer)
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 	restart(): boolean {
-		const newTimer = restartTTimer(this.#modelTimer)
+		const newTimer = restartTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer(newTimer)
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 }
