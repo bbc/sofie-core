@@ -33,13 +33,13 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 
 	const now = Date.now()
 
-	const isRunning = timer.mode!.type === 'countdown' && timer.mode!.pauseTime === null
+	const isRunning = timer.state !== null && !timer.state.paused
 
-	const { diff, isNegative, isFreeRun } = calculateDiff(timer, now)
+	const diff = calculateDiff(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const parts = timeStr.split(':')
 
-	const timerSign = isFreeRun ? '+' : isNegative ? '-' : '+'
+	const timerSign = diff >= 0 ? '+' : '-'
 
 	return (
 		<div
@@ -51,7 +51,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 				'timing__header_t-timers__timer__isCountingDown': timer.mode!.type === 'countdown',
 				'timing__header_t-timers__timer__isCountingUp': timer.mode!.type === 'countdown',
 				'timing__header_t-timers__timer__isComplete':
-					timer.mode!.type === 'countdown' && timer.mode!.pauseTime !== null,
+					timer.mode!.type === 'countdown' && timer.state !== null && timer.state.paused,
 			})}
 		>
 			<span className="timing__header_t-timers__timer__label">{timer.label}</span>
@@ -74,27 +74,23 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 	)
 }
 
-function calculateDiff(
-	timer: RundownTTimer,
-	now: number
-): {
-	diff: number
-	isNegative: boolean
-	isFreeRun: boolean
-} {
-	if (timer.mode!.type === 'freeRun') {
-		const startTime = timer.mode!.startTime
-		const diff = now - startTime
-		return { diff, isNegative: false, isFreeRun: true }
-	} else if (timer.mode!.type === 'countdown') {
-		const endTime = timer.mode!.startTime + timer.mode!.duration
-		let diff = endTime - now
-
-		if (timer.mode!.stopAtZero && diff < 0) {
-			diff = 0
-		}
-
-		return { diff, isNegative: diff >= 0, isFreeRun: false }
+function calculateDiff(timer: RundownTTimer, now: number): number {
+	if (!timer.state) {
+		return 0
 	}
-	return { diff: 0, isNegative: false, isFreeRun: false }
+
+	// Get current time: either frozen duration or calculated from zeroTime
+	const currentTime = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
+
+	// Free run counts up, so negate to get positive elapsed time
+	if (timer.mode?.type === 'freeRun') {
+		return -currentTime
+	}
+
+	// Apply stopAtZero if configured
+	if (timer.mode?.stopAtZero && currentTime < 0) {
+		return 0
+	}
+
+	return currentTime
 }
