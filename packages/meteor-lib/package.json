@@ -42,13 +42,13 @@
 		"@sofie-automation/corelib": "26.3.0-0",
 		"@sofie-automation/shared-lib": "26.3.0-0",
 		"deep-extend": "0.6.0",
-		"semver": "^7.6.3",
-		"type-fest": "^4.33.0",
+		"semver": "^7.7.3",
+		"type-fest": "^4.41.0",
 		"underscore": "^1.13.7"
 	},
 	"devDependencies": {
 		"@types/deep-extend": "^0.6.2",
-		"@types/semver": "^7.5.8",
+		"@types/semver": "^7.7.1",
 		"@types/underscore": "^1.13.0"
 	},
 	"peerDependencies": {

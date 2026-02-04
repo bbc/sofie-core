@@ -65,9 +65,9 @@
 		"@sofie-automation/server-core-integration": "26.3.0-0",
 		"@sofie-automation/shared-lib": "26.3.0-0",
 		"tslib": "^2.8.1",
-		"type-fest": "^4.33.0",
+		"type-fest": "^4.41.0",
 		"underscore": "^1.13.7",
-		"winston": "^3.17.0"
+		"winston": "^3.19.0"
 	},
 	"prettier": "@sofie-automation/code-standard-preset/.prettierrc.json",
 	"lint-staged": {
