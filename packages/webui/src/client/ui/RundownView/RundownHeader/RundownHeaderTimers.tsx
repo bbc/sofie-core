@@ -11,30 +11,6 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
-	// TODO: Remove this mock data once verified
-	const mockTimers = React.useMemo<[RundownTTimer, RundownTTimer, RundownTTimer]>(() => {
-		const now = Date.now()
-		return [
-			{
-				index: 1,
-				label: 'Timer 1',
-				mode: { type: 'freeRun', startTime: now - 60000 },
-			},
-			{
-				index: 2,
-				label: 'Timer 2',
-				mode: { type: 'countdown', startTime: now, duration: 300000, pauseTime: null, stopAtZero: false },
-			},
-			{
-				index: 3,
-				label: 'Timer 3',
-				mode: { type: 'countdown', startTime: now - 10000, duration: 5000, pauseTime: null, stopAtZero: true },
-			},
-		]
-	}, [])
-
-	tTimers = mockTimers
-
 	const hasActiveTimers = tTimers.some((t) => t.mode)
 
 	if (!hasActiveTimers) return null
