@@ -26,7 +26,7 @@ Currently, there are three types of Blueprints:
 
 # Show Style Blueprints
 
-These blueprints interpret the data coming from the [NRCS](../../user-guide/installation/installing-a-gateway/rundown-or-newsroom-system-connection/intro.md), meaning that they need to support the particular data structures that a given Ingest Gateway uses to store incoming data from the Rundown editor. They will need to convert Rundown Pages, Cues, Items, pieces of show script and other types of objects into [Sofie concepts](../concepts-and-architecture.md) such as Segments, Parts, Pieces and AdLibs.
+These blueprints interpret the data coming from the [NRCS](../../user-guide/installation/installing-a-gateway/rundown-or-newsroom-system-connection/intro.md), meaning that they need to support the particular data structures that a given Ingest Gateway uses to store incoming data from the Rundown editor. They will need to convert Rundown Pages, Cues, Items, pieces of show script and other types of objects into [Sofie concepts](../../user-guide/concepts-and-architecture.md) such as Segments, Parts, Pieces and AdLibs.
 
 # Studio Blueprints
 
