@@ -386,21 +386,21 @@ export function usePresenterScreenSubscriptions(props: PresenterScreenProps): vo
 		[props.playlistId]
 	)
 
-	useSubscription(CorelibPubSub.rundownsInPlaylists, playlist ? [playlist._id] : [])
+	useSubscriptionIfEnabled(CorelibPubSub.rundownsInPlaylists, !!playlist, playlist ? [playlist._id] : [])
 
 	const { rundownIds, showStyleBaseIds, showStyleVariantIds } = useRundownAndShowStyleIdsForPlaylist(playlist?._id)
 
-	useSubscription(CorelibPubSub.segments, rundownIds, {})
-	useSubscription(CorelibPubSub.parts, rundownIds, null)
-	useSubscription(MeteorPubSub.uiParts, playlist?._id ?? null)
-	useSubscription(MeteorPubSub.uiPartInstances, playlist?.activationId ?? null)
-	useSubscription(CorelibPubSub.pieces, rundownIds, null)
+	useSubscriptionIfEnabled(CorelibPubSub.segments, rundownIds.length > 0, rundownIds, {})
+	useSubscriptionIfEnabled(CorelibPubSub.parts, rundownIds.length > 0, rundownIds, null)
+	useSubscriptionIfEnabled(MeteorPubSub.uiParts, !!playlist, playlist?._id ?? null)
+	useSubscriptionIfEnabled(MeteorPubSub.uiPartInstances, !!playlist?.activationId, playlist?.activationId ?? null)
+	useSubscriptionIfEnabled(CorelibPubSub.pieces, rundownIds.length > 0, rundownIds, null)
 	useSubscriptions(
 		MeteorPubSub.uiShowStyleBase,
 		showStyleBaseIds.map((id) => [id])
 	)
-	useSubscription(CorelibPubSub.showStyleVariants, null, showStyleVariantIds)
-	useSubscription(MeteorPubSub.rundownLayouts, showStyleBaseIds)
+	useSubscriptionIfEnabled(CorelibPubSub.showStyleVariants, showStyleVariantIds.length > 0, null, showStyleVariantIds)
+	useSubscriptionIfEnabled(MeteorPubSub.rundownLayouts, showStyleBaseIds.length > 0, showStyleBaseIds)
 
 	const { currentPartInstance, nextPartInstance } = useTracker(
 		() => {
