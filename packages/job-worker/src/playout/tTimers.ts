@@ -1,4 +1,9 @@
-import type { RundownTTimerIndex, RundownTTimerMode } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type {
+	RundownTTimerIndex,
+	RundownTTimerMode,
+	RundownTTimer,
+	TimerState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { getCurrentTime } from '../lib/index.js'
 import type { ReadonlyDeep } from 'type-fest'
 import * as chrono from 'chrono-node'
@@ -12,16 +17,16 @@ export function validateTTimerIndex(index: number): asserts index is RundownTTim
  * @param timer Timer to update
  * @returns If the timer supports pausing, the timer in paused state, otherwise null
  */
-export function pauseTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): ReadonlyDeep<RundownTTimerMode> | null {
-	if (timer?.type === 'countdown' || timer?.type === 'freeRun') {
-		if (timer.pauseTime) {
+export function pauseTTimer(timer: ReadonlyDeep<RundownTTimer>): ReadonlyDeep<RundownTTimer> | null {
+	if (!timer.mode || !timer.state) return null
+	if (timer.mode.type === 'countdown' || timer.mode.type === 'freeRun') {
+		if (timer.state.paused) {
 			// Already paused
 			return timer
 		}
-
 		return {
 			...timer,
-			pauseTime: getCurrentTime(),
+			state: { paused: true, duration: timer.state.zeroTime - getCurrentTime() },
 		}
 	} else {
 		return null
@@ -33,20 +38,17 @@ export function pauseTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): Read
  * @param timer Timer to update
  * @returns If the timer supports pausing, the timer in resumed state, otherwise null
  */
-export function resumeTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): ReadonlyDeep<RundownTTimerMode> | null {
-	if (timer?.type === 'countdown' || timer?.type === 'freeRun') {
-		if (!timer.pauseTime) {
+export function resumeTTimer(timer: ReadonlyDeep<RundownTTimer>): ReadonlyDeep<RundownTTimer> | null {
+	if (!timer.mode || !timer.state) return null
+	if (timer.mode.type === 'countdown' || timer.mode.type === 'freeRun') {
+		if (!timer.state.paused) {
 			// Already running
 			return timer
 		}
 
-		const pausedOffset = timer.startTime - timer.pauseTime
-		const newStartTime = getCurrentTime() + pausedOffset
-
 		return {
 			...timer,
-			startTime: newStartTime,
-			pauseTime: null,
+			state: { paused: false, zeroTime: timer.state.duration + getCurrentTime() },
 		}
 	} else {
 		return null
@@ -58,21 +60,23 @@ export function resumeTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): Rea
  * @param timer Timer to update
  * @returns If the timer supports restarting, the restarted timer, otherwise null
  */
-export function restartTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): ReadonlyDeep<RundownTTimerMode> | null {
-	if (timer?.type === 'countdown') {
+export function restartTTimer(timer: ReadonlyDeep<RundownTTimer>): ReadonlyDeep<RundownTTimer> | null {
+	if (!timer.mode || !timer.state) return null
+	if (timer.mode.type === 'countdown') {
 		return {
 			...timer,
-			startTime: getCurrentTime(),
-			pauseTime: timer.pauseTime ? getCurrentTime() : null,
+			state: timer.state.paused
+				? { paused: true, duration: timer.mode.duration }
+				: { paused: false, zeroTime: getCurrentTime() + timer.mode.duration },
 		}
-	} else if (timer?.type === 'timeOfDay') {
-		const nextTime = calculateNextTimeOfDayTarget(timer.targetRaw)
-		// If we can't calculate the next time, we can't restart
-		if (nextTime === null || nextTime === timer.targetTime) return null
+	} else if (timer.mode.type === 'timeOfDay') {
+		const nextTime = calculateNextTimeOfDayTarget(timer.mode.targetRaw)
+		// If we can't calculate the next time, or it's the same, we can't restart
+		if (nextTime === null || (timer.state.paused ? false : nextTime === timer.state.zeroTime)) return null
 
 		return {
 			...timer,
-			targetTime: nextTime,
+			state: { paused: false, zeroTime: nextTime },
 		}
 	} else {
 		return null
@@ -80,11 +84,10 @@ export function restartTTimer(timer: ReadonlyDeep<RundownTTimerMode> | null): Re
 }
 
 /**
- * Create a new countdown T-timer
- * @param index Timer index
+ * Create a new countdown T-timer mode and initial state
  * @param duration Duration in milliseconds
  * @param options Options for the countdown
- * @returns The created T-timer
+ * @returns The created T-timer mode and state
  */
 export function createCountdownTTimer(
 	duration: number,
@@ -92,16 +95,18 @@ export function createCountdownTTimer(
 		stopAtZero: boolean
 		startPaused: boolean
 	}
-): ReadonlyDeep<RundownTTimerMode> {
+): { mode: ReadonlyDeep<RundownTTimerMode>; state: ReadonlyDeep<TimerState> } {
 	if (duration <= 0) throw new Error('Duration must be greater than zero')
 
-	const now = getCurrentTime()
 	return {
-		type: 'countdown',
-		startTime: now,
-		pauseTime: options.startPaused ? now : null,
-		duration,
-		stopAtZero: !!options.stopAtZero,
+		mode: {
+			type: 'countdown',
+			duration,
+			stopAtZero: !!options.stopAtZero,
+		},
+		state: options.startPaused
+			? { paused: true, duration: duration }
+			: { paused: false, zeroTime: getCurrentTime() + duration },
 	}
 }
 
@@ -110,43 +115,35 @@ export function createTimeOfDayTTimer(
 	options: {
 		stopAtZero: boolean
 	}
-): ReadonlyDeep<RundownTTimerMode> {
+): { mode: ReadonlyDeep<RundownTTimerMode>; state: ReadonlyDeep<TimerState> } {
 	const nextTime = calculateNextTimeOfDayTarget(targetTime)
 	if (nextTime === null) throw new Error('Unable to parse target time for timeOfDay T-timer')
 
 	return {
-		type: 'timeOfDay',
-		targetTime: nextTime,
-		targetRaw: targetTime,
-		stopAtZero: !!options.stopAtZero,
+		mode: {
+			type: 'timeOfDay',
+			targetRaw: targetTime,
+			stopAtZero: !!options.stopAtZero,
+		},
+		state: { paused: false, zeroTime: nextTime },
 	}
 }
 
 /**
- * Create a new free-running T-timer
- * @param index Timer index
+ * Create a new free-running T-timer mode and initial state
  * @param options Options for the free-run
- * @returns The created T-timer
+ * @returns The created T-timer mode and state
  */
-export function createFreeRunTTimer(options: { startPaused: boolean }): ReadonlyDeep<RundownTTimerMode> {
+export function createFreeRunTTimer(options: { startPaused: boolean }): {
+	mode: ReadonlyDeep<RundownTTimerMode>
+	state: ReadonlyDeep<TimerState>
+} {
 	const now = getCurrentTime()
 	return {
-		type: 'freeRun',
-		startTime: now,
-		pauseTime: options.startPaused ? now : null,
-	}
-}
-
-/**
- * Calculate the current time of a T-timer
- * @param startTime The start time of the timer (unix timestamp)
- * @param pauseTime The pause time of the timer (unix timestamp) or null if not paused
- */
-export function calculateTTimerCurrentTime(startTime: number, pauseTime: number | null): number {
-	if (pauseTime) {
-		return pauseTime - startTime
-	} else {
-		return getCurrentTime() - startTime
+		mode: {
+			type: 'freeRun',
+		},
+		state: options.startPaused ? { paused: true, duration: 0 } : { paused: false, zeroTime: now },
 	}
 }
 

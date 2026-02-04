@@ -98,33 +98,11 @@ export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCoun
 
 export interface RundownTTimerModeFreeRun {
 	readonly type: 'freeRun'
-	/**
-	 * Starting time (unix timestamp)
-	 * This may not be the original start time, if the timer has been paused/resumed
-	 */
-	startTime: number
-	/**
-	 * Set to a timestamp to pause the timer at that timestamp
-	 * When unpausing, the `startTime` should be adjusted to account for the paused duration
-	 */
-	pauseTime: number | null
-	/** The direction to count */
-	// direction: 'up' | 'down' // TODO: does this make sense?
 }
 export interface RundownTTimerModeCountdown {
 	readonly type: 'countdown'
 	/**
-	 * Starting time (unix timestamp)
-	 * This may not be the original start time, if the timer has been paused/resumed
-	 */
-	startTime: number
-	/**
-	 * Set to a timestamp to pause the timer at that timestamp
-	 * When unpausing, the `targetTime` should be adjusted to account for the paused duration
-	 */
-	pauseTime: number | null
-	/**
-	 * The duration of the countdown in milliseconds
+	 * The original duration of the countdown in milliseconds, so that we know what value to reset to
 	 */
 	readonly duration: number
 
@@ -135,9 +113,6 @@ export interface RundownTTimerModeCountdown {
 }
 export interface RundownTTimerModeTimeOfDay {
 	readonly type: 'timeOfDay'
-
-	/** The target timestamp of the timer, in milliseconds */
-	targetTime: number
 
 	/**
 	 * The raw target string of the timer, as provided when setting the timer
@@ -151,6 +126,25 @@ export interface RundownTTimerModeTimeOfDay {
 	readonly stopAtZero: boolean
 }
 
+/**
+ * Timing state for a timer, optimized for efficient client rendering.
+ * When running, the client calculates current time from zeroTime.
+ * When paused, the duration is frozen and sent directly.
+ */
+export type TimerState =
+	| {
+			/** Whether the timer is paused */
+			paused: false
+			/** The absolute timestamp (ms) when the timer reaches/reached zero */
+			zeroTime: number
+	  }
+	| {
+			/** Whether the timer is paused */
+			paused: true
+			/** The frozen duration value in milliseconds */
+			duration: number
+	  }
+
 export type RundownTTimerIndex = 1 | 2 | 3
 
 export interface RundownTTimer {
@@ -159,8 +153,17 @@ export interface RundownTTimer {
 	/** A label for the timer */
 	label: string
 
-	/** The current mode of the timer, or null if not configured */
+	/** The current mode of the timer, or null if not configured
+	 *
+	 * This defines how the timer behaves
+	 */
 	mode: RundownTTimerMode | null
+
+	/** The current state of the timer, or null if not configured
+	 *
+	 * This contains the information needed to calculate the current time of the timer
+	 */
+	state: TimerState | null
 
 	/*
 	 * Future ideas:

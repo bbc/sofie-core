@@ -20,16 +20,19 @@ exports[`Test recieved mos ingest payloads mosRoCreate 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -329,16 +332,19 @@ exports[`Test recieved mos ingest payloads mosRoCreate: replace existing 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -630,16 +636,19 @@ exports[`Test recieved mos ingest payloads mosRoFullStory: Valid data 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -952,16 +961,19 @@ exports[`Test recieved mos ingest payloads mosRoReadyToAir: Update ro 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -1264,16 +1276,19 @@ exports[`Test recieved mos ingest payloads mosRoStatus: Update ro 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -1574,16 +1589,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryDelete: Remove segment 1`] 
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -1852,16 +1870,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryInsert: Into segment 1`] = 
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -2175,16 +2196,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryInsert: New segment 1`] = `
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -2506,16 +2530,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryMove: Move whole segment to
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -2820,16 +2847,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryMove: Within segment 1`] = 
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -3134,16 +3164,19 @@ exports[`Test recieved mos ingest payloads mosRoStoryReplace: Same segment 1`] =
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -3447,16 +3480,19 @@ exports[`Test recieved mos ingest payloads mosRoStorySwap: Swap across segments 
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -3753,16 +3789,19 @@ exports[`Test recieved mos ingest payloads mosRoStorySwap: Swap across segments2
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -4091,16 +4130,19 @@ exports[`Test recieved mos ingest payloads mosRoStorySwap: With first in same se
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {
@@ -4405,16 +4447,19 @@ exports[`Test recieved mos ingest payloads mosRoStorySwap: Within same segment 1
       "index": 1,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 2,
       "label": "",
       "mode": null,
+      "state": null,
     },
     {
       "index": 3,
       "label": "",
       "mode": null,
+      "state": null,
     },
   ],
   "timing": {

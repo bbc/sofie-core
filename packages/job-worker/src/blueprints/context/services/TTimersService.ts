@@ -7,7 +7,6 @@ import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import type { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
 import {
-	calculateTTimerCurrentTime,
 	createCountdownTTimer,
 	createFreeRunTTimer,
 	createTimeOfDayTTimer,
@@ -60,31 +59,35 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 	}
 	get state(): IPlaylistTTimerState | null {
 		const rawMode = this.#modelTimer.mode
-		switch (rawMode?.type) {
+		const rawState = this.#modelTimer.state
+
+		if (!rawMode || !rawState) return null
+
+		const currentTime = rawState.paused ? rawState.duration : rawState.zeroTime - getCurrentTime()
+
+		switch (rawMode.type) {
 			case 'countdown':
 				return {
 					mode: 'countdown',
-					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
+					currentTime,
 					duration: rawMode.duration,
-					paused: !!rawMode.pauseTime,
+					paused: rawState.paused,
 					stopAtZero: rawMode.stopAtZero,
 				}
 			case 'freeRun':
 				return {
 					mode: 'freeRun',
-					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
-					paused: !!rawMode.pauseTime,
+					currentTime,
+					paused: rawState.paused,
 				}
 			case 'timeOfDay':
 				return {
 					mode: 'timeOfDay',
-					currentTime: rawMode.targetTime - getCurrentTime(),
-					targetTime: rawMode.targetTime,
+					currentTime,
+					targetTime: rawState.paused ? 0 : rawState.zeroTime,
 					targetRaw: rawMode.targetRaw,
 					stopAtZero: rawMode.stopAtZero,
 				}
-			case undefined:
-				return null
 			default:
 				assertNever(rawMode)
 				return null
@@ -108,12 +111,13 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		this.#playoutModel.updateTTimer({
 			...this.#modelTimer,
 			mode: null,
+			state: null,
 		})
 	}
 	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void {
 		this.#playoutModel.updateTTimer({
 			...this.#modelTimer,
-			mode: createCountdownTTimer(duration, {
+			...createCountdownTTimer(duration, {
 				stopAtZero: options?.stopAtZero ?? true,
 				startPaused: options?.startPaused ?? false,
 			}),
@@ -122,7 +126,7 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 	startTimeOfDay(targetTime: string | number, options?: { stopAtZero?: boolean }): void {
 		this.#playoutModel.updateTTimer({
 			...this.#modelTimer,
-			mode: createTimeOfDayTTimer(targetTime, {
+			...createTimeOfDayTTimer(targetTime, {
 				stopAtZero: options?.stopAtZero ?? true,
 			}),
 		})
@@ -130,39 +134,30 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 	startFreeRun(options?: { startPaused?: boolean }): void {
 		this.#playoutModel.updateTTimer({
 			...this.#modelTimer,
-			mode: createFreeRunTTimer({
+			...createFreeRunTTimer({
 				startPaused: options?.startPaused ?? false,
 			}),
 		})
 	}
 	pause(): boolean {
-		const newTimer = pauseTTimer(this.#modelTimer.mode)
+		const newTimer = pauseTTimer(this.#modelTimer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#playoutModel.updateTTimer(newTimer)
 		return true
 	}
 	resume(): boolean {
-		const newTimer = resumeTTimer(this.#modelTimer.mode)
+		const newTimer = resumeTTimer(this.#modelTimer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#playoutModel.updateTTimer(newTimer)
 		return true
 	}
 	restart(): boolean {
-		const newTimer = restartTTimer(this.#modelTimer.mode)
+		const newTimer = restartTTimer(this.#modelTimer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#playoutModel.updateTTimer(newTimer)
 		return true
 	}
 }
