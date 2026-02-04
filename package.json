@@ -41,7 +41,7 @@
 		"lint-staged": "^15.5.2",
 		"rimraf": "^6.1.2",
 		"semver": "^7.7.3",
-		"snyk-nodejs-lockfile-parser": "^1.60.1"
+		"snyk-nodejs-lockfile-parser": "^2.5.0"
 	},
 	"packageManager": "yarn@4.12.0"
 }
