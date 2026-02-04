@@ -28,7 +28,7 @@
 		"i18n-extract-pot": "node ./scripts/extract-i18next-pot.mjs -f \"{./lib/**/*.+(ts|tsx),./server/**/*.+(ts|tsx),../packages/job-worker/src/**/*.+(ts|tsx),../packages/corelib/src/**/*.+(ts|tsx),../packages/webui/src/**/*.+(ts|tsx)}\" -o i18n/template.pot",
 		"i18n-compile-json": "node ./scripts/i18n-compile-json.mjs",
 		"visualize": "meteor --production --extra-packages bundle-visualizer",
-		"release": "standard-version --commit-all",
+		"release": "commit-and-tag-version --commit-all",
 		"prepareChangelog": "run release --prerelease --release-as patch",
 		"validate:all-dependencies": "run validate:prod-dependencies && run validate:dev-dependencies && run license-validate",
 		"validate:prod-dependencies": "yarn npm audit --environment production",
@@ -90,6 +90,7 @@
 		"@types/semver": "^7.7.1",
 		"@types/underscore": "^1.13.0",
 		"babel-jest": "^30.2.0",
+		"commit-and-tag-version": "^12.6.1",
 		"ejson": "^2.2.3",
 		"eslint": "^9.39.2",
 		"fast-clone": "^1.5.13",
@@ -100,7 +101,6 @@
 		"legally": "^3.5.10",
 		"open-cli": "^8.0.0",
 		"prettier": "^3.8.1",
-		"standard-version": "^9.5.0",
 		"ts-jest": "^29.4.6",
 		"typescript": "~5.7.3",
 		"yargs": "^17.7.2"
@@ -120,7 +120,7 @@
 			"server": "server/main.ts"
 		}
 	},
-	"standard-version": {
+	"commit-and-tag-version": {
 		"scripts": {
 			"postbump": "yarn libs:syncVersionsAndChangelogs && yarn install && git add yarn.lock"
 		}
