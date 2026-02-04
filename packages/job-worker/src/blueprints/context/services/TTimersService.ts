@@ -3,7 +3,10 @@ import type {
 	IPlaylistTTimerState,
 } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
 import type { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import type { TimerState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { assertNever, literal } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import type { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
 import {
@@ -14,21 +17,25 @@ import {
 	restartTTimer,
 	resumeTTimer,
 	validateTTimerIndex,
+	recalculateTTimerEstimates,
 } from '../../../playout/tTimers.js'
 import { getCurrentTime } from '../../../lib/time.js'
+import type { JobContext } from '../../../jobs/index.js'
 
 export class TTimersService {
 	readonly playoutModel: PlayoutModel
+	readonly jobContext: JobContext
 
 	readonly timers: [PlaylistTTimerImpl, PlaylistTTimerImpl, PlaylistTTimerImpl]
 
-	constructor(playoutModel: PlayoutModel) {
+	constructor(playoutModel: PlayoutModel, jobContext: JobContext) {
 		this.playoutModel = playoutModel
+		this.jobContext = jobContext
 
 		this.timers = [
-			new PlaylistTTimerImpl(playoutModel, 1),
-			new PlaylistTTimerImpl(playoutModel, 2),
-			new PlaylistTTimerImpl(playoutModel, 3),
+			new PlaylistTTimerImpl(playoutModel, jobContext, 1),
+			new PlaylistTTimerImpl(playoutModel, jobContext, 2),
+			new PlaylistTTimerImpl(playoutModel, jobContext, 3),
 		]
 	}
 
@@ -45,6 +52,7 @@ export class TTimersService {
 
 export class PlaylistTTimerImpl implements IPlaylistTTimer {
 	readonly #playoutModel: PlayoutModel
+	readonly #jobContext: JobContext
 	readonly #index: RundownTTimerIndex
 
 	get #modelTimer(): ReadonlyDeep<RundownTTimer> {
@@ -94,8 +102,9 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		}
 	}
 
-	constructor(playoutModel: PlayoutModel, index: RundownTTimerIndex) {
+	constructor(playoutModel: PlayoutModel, jobContext: JobContext, index: RundownTTimerIndex) {
 		this.#playoutModel = playoutModel
+		this.#jobContext = jobContext
 		this.#index = index
 
 		validateTTimerIndex(index)
@@ -159,5 +168,48 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 
 		this.#playoutModel.updateTTimer(newTimer)
 		return true
+	}
+
+	clearEstimate(): void {
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			anchorPartId: undefined,
+			estimateState: undefined,
+		})
+	}
+
+	setEstimateAnchorPart(partId: string): void {
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			anchorPartId: protectString<PartId>(partId),
+			estimateState: undefined, // Clear manual estimate
+		})
+
+		// Recalculate estimates immediately since we already have the playout model
+		recalculateTTimerEstimates(this.#jobContext, this.#playoutModel)
+	}
+
+	setEstimateTime(time: number, paused: boolean = false): void {
+		const estimateState: TimerState = paused
+			? literal<TimerState>({ paused: true, duration: time - getCurrentTime() })
+			: literal<TimerState>({ paused: false, zeroTime: time })
+
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			anchorPartId: undefined, // Clear automatic anchor
+			estimateState,
+		})
+	}
+
+	setEstimateDuration(duration: number, paused: boolean = false): void {
+		const estimateState: TimerState = paused
+			? literal<TimerState>({ paused: true, duration })
+			: literal<TimerState>({ paused: false, zeroTime: getCurrentTime() + duration })
+
+		this.#playoutModel.updateTTimer({
+			...this.#modelTimer,
+			anchorPartId: undefined, // Clear automatic anchor
+			estimateState,
+		})
 	}
 }

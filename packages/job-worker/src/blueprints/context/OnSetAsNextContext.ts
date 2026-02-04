@@ -50,7 +50,7 @@ export class OnSetAsNextContext
 		public readonly manuallySelected: boolean
 	) {
 		super(contextInfo, context, showStyle, watchedPackages)
-		this.#tTimersService = new TTimersService(playoutModel)
+		this.#tTimersService = new TTimersService(playoutModel, context)
 	}
 
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {

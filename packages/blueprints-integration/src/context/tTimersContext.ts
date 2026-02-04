@@ -71,6 +71,42 @@ export interface IPlaylistTTimer {
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */
 	restart(): boolean
+
+	/**
+	 * Clear any estimate (manual or anchor-based) for this timer
+	 * This removes both manual estimates set via setEstimateTime/setEstimateDuration
+	 * and automatic estimates based on anchor parts set via setEstimateAnchorPart.
+	 */
+	clearEstimate(): void
+
+	/**
+	 * Set the anchor part for automatic estimate calculation
+	 * When set, the server automatically calculates when we expect to reach this part
+	 * based on remaining part durations, and updates the estimate accordingly.
+	 * Clears any manual estimate set via setEstimateTime/setEstimateDuration.
+	 * @param partId The ID of the part to use as timing anchor
+	 */
+	setEstimateAnchorPart(partId: string): void
+
+	/**
+	 * Manually set the estimate as an absolute timestamp
+	 * Use this when you have custom logic for calculating when you expect to reach a timing point.
+	 * Clears any anchor part set via setAnchorPart.
+	 * @param time Unix timestamp (milliseconds) when we expect to reach the timing point
+	 * @param paused If true, we're currently delayed/pushing (estimate won't update with time passing).
+	 *               If false (default), we're progressing normally (estimate counts down in real-time).
+	 */
+	setEstimateTime(time: number, paused?: boolean): void
+
+	/**
+	 * Manually set the estimate as a relative duration from now
+	 * Use this when you want to express the estimate as "X milliseconds from now".
+	 * Clears any anchor part set via setAnchorPart.
+	 * @param duration Milliseconds until we expect to reach the timing point
+	 * @param paused If true, we're currently delayed/pushing (estimate won't update with time passing).
+	 *               If false (default), we're progressing normally (estimate counts down in real-time).
+	 */
+	setEstimateDuration(duration: number, paused?: boolean): void
 }
 
 export type IPlaylistTTimerState =
