@@ -51,9 +51,9 @@ export function TimingDisplay({
 			<div className="timing__header__left">
 				<PlaylistStartTiming rundownPlaylist={rundownPlaylist} hideDiff={true} />
 				<RundownName rundownPlaylist={rundownPlaylist} currentRundown={currentRundown} rundownCount={rundownCount} />
-				<RundownHeaderTimers tTimers={rundownPlaylist.tTimers} />
 			</div>
 			<div className="timing__header__center">
+				<RundownHeaderTimers tTimers={rundownPlaylist.tTimers} />
 				<TimeOfDay />
 			</div>
 			<div className="timing__header__right">
