@@ -48,7 +48,7 @@ export class RundownActivationContext extends RundownEventContext implements IRu
 		this._previousState = options.previousState
 		this._currentState = options.currentState
 
-		this.#tTimersService = TTimersService.withPlayoutModel(this._playoutModel)
+		this.#tTimersService = TTimersService.withPlayoutModel(this._playoutModel, this._context)
 	}
 
 	get previousState(): IRundownActivationContextState {

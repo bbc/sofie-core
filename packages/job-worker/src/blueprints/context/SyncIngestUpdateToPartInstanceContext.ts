@@ -3,6 +3,7 @@ import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceIns
 import { normalizeArrayToMap, omit } from '@sofie-automation/corelib/dist/lib'
 import { protectString, protectStringArray, unprotectStringArray } from '@sofie-automation/corelib/dist/protectedString'
 import { PlayoutPartInstanceModel } from '../../playout/model/PlayoutPartInstanceModel.js'
+import { PlayoutModel } from '../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
 import _ from 'underscore'
 import { ContextInfo } from './CommonContext.js'
@@ -45,6 +46,7 @@ export class SyncIngestUpdateToPartInstanceContext
 	implements ISyncIngestUpdateToPartInstanceContext
 {
 	readonly #context: JobContext
+	readonly #playoutModel: PlayoutModel
 	readonly #proposedPieceInstances: Map<PieceInstanceId, ReadonlyDeep<PieceInstance>>
 	readonly #tTimersService: TTimersService
 	readonly #changedTTimers = new Map<RundownTTimerIndex, RundownTTimer>()
@@ -61,6 +63,7 @@ export class SyncIngestUpdateToPartInstanceContext
 
 	constructor(
 		context: JobContext,
+		playoutModel: PlayoutModel,
 		contextInfo: ContextInfo,
 		studio: ReadonlyDeep<JobStudio>,
 		showStyleCompound: ReadonlyDeep<ProcessedShowStyleCompound>,
@@ -80,12 +83,18 @@ export class SyncIngestUpdateToPartInstanceContext
 		)
 
 		this.#context = context
+		this.#playoutModel = playoutModel
 		this.#partInstance = partInstance
 
 		this.#proposedPieceInstances = normalizeArrayToMap(proposedPieceInstances, '_id')
-		this.#tTimersService = new TTimersService(playlist.tTimers, (updatedTimer) => {
-			this.#changedTTimers.set(updatedTimer.index, updatedTimer)
-		})
+		this.#tTimersService = new TTimersService(
+			playlist.tTimers,
+			(updatedTimer) => {
+				this.#changedTTimers.set(updatedTimer.index, updatedTimer)
+			},
+			this.#playoutModel,
+			this.#context
+		)
 	}
 
 	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
