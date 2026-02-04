@@ -130,6 +130,7 @@ export class SyncChangesToPartInstancesWorker {
 
 		const syncContext = new SyncIngestUpdateToPartInstanceContext(
 			this.#context,
+			this.#playoutModel,
 			{
 				name: `Update to ${existingPartInstance.partInstance.part.externalId}`,
 				identifier: `rundownId=${existingPartInstance.partInstance.part.rundownId},segmentId=${existingPartInstance.partInstance.part.segmentId}`,
