@@ -842,4 +842,228 @@ describe('PlaylistTTimerImpl', () => {
 			expect(updateFn).not.toHaveBeenCalled()
 		})
 	})
+
+	describe('clearEstimate', () => {
+		it('should clear both anchorPartId and estimateState', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].anchorPartId = 'part1' as any
+			tTimers[0].estimateState = { paused: false, zeroTime: 50000 }
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.clearEstimate()
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: undefined,
+			})
+		})
+
+		it('should work when estimates are already cleared', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.clearEstimate()
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: undefined,
+			})
+		})
+	})
+
+	describe('setEstimateAnchorPart', () => {
+		it('should set anchorPartId and clear estimateState', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].estimateState = { paused: false, zeroTime: 50000 }
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateAnchorPart('part123')
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: 'part123',
+				estimateState: undefined,
+			})
+		})
+
+		it('should not queue job or throw error', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			// Should not throw
+			expect(() => timer.setEstimateAnchorPart('part456')).not.toThrow()
+
+			// Job queue should not be called (recalculate is called directly)
+			expect(mockJobContext.queueStudioJob).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('setEstimateTime', () => {
+		it('should set estimateState with absolute time (not paused)', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateTime(50000, false)
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: { paused: false, zeroTime: 50000 },
+			})
+		})
+
+		it('should set estimateState with absolute time (paused)', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateTime(50000, true)
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: { paused: true, duration: 40000 }, // 50000 - 10000 (current time)
+			})
+		})
+
+		it('should clear anchorPartId when setting manual estimate', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].anchorPartId = 'part1' as any
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateTime(50000)
+
+			expect(updateFn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					anchorPartId: undefined,
+				})
+			)
+		})
+
+		it('should default paused to false when not provided', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateTime(50000)
+
+			expect(updateFn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					estimateState: { paused: false, zeroTime: 50000 },
+				})
+			)
+		})
+	})
+
+	describe('setEstimateDuration', () => {
+		it('should set estimateState with relative duration (not paused)', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateDuration(30000, false)
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: { paused: false, zeroTime: 40000 }, // 10000 (current) + 30000 (duration)
+			})
+		})
+
+		it('should set estimateState with relative duration (paused)', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateDuration(30000, true)
+
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: null,
+				state: null,
+				anchorPartId: undefined,
+				estimateState: { paused: true, duration: 30000 },
+			})
+		})
+
+		it('should clear anchorPartId when setting manual estimate', () => {
+			const tTimers = createEmptyTTimers()
+			tTimers[0].anchorPartId = 'part1' as any
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateDuration(30000)
+
+			expect(updateFn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					anchorPartId: undefined,
+				})
+			)
+		})
+
+		it('should default paused to false when not provided', () => {
+			const tTimers = createEmptyTTimers()
+			const updateFn = jest.fn()
+			const mockPlayoutModel = createMockPlayoutModel(tTimers)
+			const mockJobContext = createMockJobContext()
+			const timer = new PlaylistTTimerImpl(tTimers[0], updateFn, mockPlayoutModel, mockJobContext)
+
+			timer.setEstimateDuration(30000)
+
+			expect(updateFn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					estimateState: { paused: false, zeroTime: 40000 },
+				})
+			)
+		})
+	})
 })
