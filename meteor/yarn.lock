@@ -1442,15 +1442,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/app-root-path@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@types/app-root-path@npm:3.1.0"
-  dependencies:
-    app-root-path: "npm:*"
-  checksum: 10/e62ce16359e91a708d8acefa2a05dd5e6c723dd7789c8914e884b13a032e0e84a5c92bf826728fa63bbb9d96b3647c2ef40fced36f2d8a8210b44a1f6f30dd29
-  languageName: node
-  linkType: hard
-
 "@types/babel__core@npm:^7.20.5":
   version: 7.20.5
   resolution: "@types/babel__core@npm:7.20.5"
@@ -2349,13 +2340,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-root-path@npm:*, app-root-path@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "app-root-path@npm:3.1.0"
-  checksum: 10/b4cdab5f7e51ec43fa04c97eca2adedf8e18d6c3dd21cd775b70457c5e71f0441c692a49dcceb426f192640b7393dcd41d85c36ef98ecb7c785a53159c912def
-  languageName: node
-  linkType: hard
-
 "argparse@npm:^1.0.7":
   version: 1.0.10
   resolution: "argparse@npm:1.0.10"
@@ -2525,7 +2509,6 @@ __metadata:
     "@sofie-automation/job-worker": "portal:../packages/job-worker"
     "@sofie-automation/meteor-lib": "portal:../packages/meteor-lib"
     "@sofie-automation/shared-lib": "portal:../packages/shared-lib"
-    "@types/app-root-path": "npm:^3.1.0"
     "@types/body-parser": "npm:^1.19.6"
     "@types/deep-extend": "npm:^0.6.2"
     "@types/jest": "npm:^30.0.0"
@@ -2538,7 +2521,6 @@ __metadata:
     "@types/node": "npm:^22.19.8"
     "@types/semver": "npm:^7.7.1"
     "@types/underscore": "npm:^1.13.0"
-    app-root-path: "npm:^3.1.0"
     babel-jest: "npm:^30.2.0"
     bcrypt: "npm:^6.0.0"
     body-parser: "npm:^1.20.4"

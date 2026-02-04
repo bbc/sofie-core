@@ -7301,7 +7301,6 @@ __metadata:
     "@types/classnames": "npm:^2.3.4"
     "@types/deep-extend": "npm:^0.6.2"
     "@types/react": "npm:^18.3.27"
-    "@types/react-circular-progressbar": "npm:^1.1.0"
     "@types/react-dom": "npm:^18.3.7"
     "@types/react-router": "npm:^5.1.20"
     "@types/react-router-bootstrap": "npm:^0.26.8"
@@ -7330,7 +7329,6 @@ __metadata:
     rc-tooltip: "npm:^6.4.0"
     react: "npm:^18.3.1"
     react-bootstrap: "npm:^2.10.10"
-    react-circular-progressbar: "npm:^2.2.0"
     react-datepicker: "npm:^9.1.0"
     react-dnd: "npm:^14.0.5"
     react-dnd-html5-backend: "npm:^14.1.0"
@@ -8790,15 +8788,6 @@ __metadata:
   version: 1.2.4
   resolution: "@types/range-parser@npm:1.2.4"
   checksum: 10/b7c0dfd5080a989d6c8bb0b6750fc0933d9acabeb476da6fe71d8bdf1ab65e37c136169d84148034802f48378ab94e3c37bb4ef7656b2bec2cb9c0f8d4146a95
-  languageName: node
-  linkType: hard
-
-"@types/react-circular-progressbar@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@types/react-circular-progressbar@npm:1.1.0"
-  dependencies:
-    react-circular-progressbar: "npm:*"
-  checksum: 10/8cfdad2feb1a5e8315474ec3ae4096e803431e394eddc7be4e91dbd4632e3840171efbe2ea55aeba2fbcd3302a488e4514732465f9702211ac81174a5e8b2d58
   languageName: node
   linkType: hard
 
@@ -25550,15 +25539,6 @@ asn1@evs-broadcast/node-asn1:
     "@types/react":
       optional: true
   checksum: 10/0ed950e0705779312bc625a422d86981c3dbf5d53ff5a038983dee70463c66430b6f3ccac08dd8129665952745e151ff8c35c7dd48a4de89d8322e8cbc23337b
-  languageName: node
-  linkType: hard
-
-"react-circular-progressbar@npm:*, react-circular-progressbar@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "react-circular-progressbar@npm:2.2.0"
-  peerDependencies:
-    react: ">=0.14.0"
-  checksum: 10/3b117f58745745dcbfe8b326945343f50761cd434ae241ae8d9ce7ba5a7ee662038e34e341a209cb05141d2ca654c57120a1940b32a0f0c2890edb54b4316bf4
   languageName: node
   linkType: hard
 
