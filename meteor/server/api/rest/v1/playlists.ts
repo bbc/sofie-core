@@ -201,7 +201,7 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 					)
 				)
 
-			return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			const result = await ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 				this.context.getMethodContext(connection),
 				event,
 				getCurrentTime(),
@@ -220,6 +220,19 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 					actionOptions: adLibOptions,
 				}
 			)
+			if (ClientAPI.isClientResponseError(result)) return result
+			// Check if the action rejected the request
+			if (result.result?.errorMessage) {
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(result.result.errorMessage),
+						UserErrorMessage.InternalError,
+						undefined,
+						400
+					)
+				)
+			}
+			return ClientAPI.responseSuccess(result.result ?? {})
 		} else {
 			return ClientAPI.responseError(
 				UserError.from(new Error(`No adLib with Id ${adLibId}`), UserErrorMessage.AdlibNotFound, undefined, 412)
@@ -268,7 +281,7 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			)
 		}
 
-		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+		const result = await ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
@@ -286,6 +299,14 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 				triggerMode: triggerMode ?? undefined,
 			}
 		)
+		if (ClientAPI.isClientResponseError(result)) return result
+		// Check if the action rejected the request
+		if (result.result?.errorMessage) {
+			return ClientAPI.responseError(
+				UserError.from(new Error(result.result.errorMessage), UserErrorMessage.InternalError, undefined, 400)
+			)
+		}
+		return ClientAPI.responseSuccess(result.result ?? {})
 	}
 	async moveNextPart(
 		connection: Meteor.Connection,
@@ -602,6 +623,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		'post',
 		'/playlists/:playlistId/execute-adlib',
 		new Map([
+			[400, []],
 			[404, [UserErrorMessage.RundownPlaylistNotFound]],
 			[412, [UserErrorMessage.InactiveRundown, UserErrorMessage.NoCurrentPart, UserErrorMessage.AdlibNotFound]],
 		]),
@@ -638,6 +660,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		'post',
 		'/playlists/:playlistId/execute-bucket-adlib',
 		new Map([
+			[400, []],
 			[404, [UserErrorMessage.RundownPlaylistNotFound]],
 			[
 				412,
