@@ -1,6 +1,7 @@
 import _ from 'underscore'
 import { setupDefaultStudioEnvironment, packageBlueprint } from '../../../../__mocks__/helpers/database'
-import { literal, getRandomId, protectString } from '../../../lib/tempLib'
+import { literal, getRandomId } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { Blueprint } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
 import { BlueprintManifestType } from '@sofie-automation/blueprints-integration'
 import { SYSTEM_ID, ICoreSystem } from '@sofie-automation/meteor-lib/dist/collections/CoreSystem'
@@ -41,7 +42,6 @@ describe('Test blueprint management api', () => {
 			const blueprint: Blueprint = {
 				_id: getRandomId(),
 				name: 'Fake blueprint',
-				organizationId: null,
 				hasCode: true,
 				code: `({default: (() => 5)()})`,
 				created: 0,
@@ -217,9 +217,8 @@ describe('Test blueprint management api', () => {
 			)
 		})
 		test('empty body', async () => {
-			await expect(uploadBlueprint(DEFAULT_CONNECTION, protectString('blueprint99'), '')).rejects.toThrowMeteor(
-				400,
-				'Blueprint blueprint99 failed to parse'
+			await expect(uploadBlueprint(DEFAULT_CONNECTION, protectString('blueprint99'), '')).rejects.toMatchToString(
+				/Error evaluating Blueprint "blueprint99"(.+)/
 			)
 		})
 		test('body not a manifest', async () => {
@@ -304,7 +303,6 @@ describe('Test blueprint management api', () => {
 				literal<Omit<Blueprint, 'created' | 'modified' | 'databaseVersion' | 'blueprintHash'>>({
 					_id: protectString('tmp_showstyle'),
 					name: 'tmp_showstyle',
-					organizationId: null,
 					blueprintType: BLUEPRINT_TYPE,
 					blueprintId: 'ss1',
 					blueprintVersion: '0.1.0',
@@ -344,7 +342,6 @@ describe('Test blueprint management api', () => {
 				literal<Omit<Blueprint, 'created' | 'modified' | 'databaseVersion' | 'blueprintHash'>>({
 					_id: protectString('tmp_studio'),
 					name: 'tmp name',
-					organizationId: null,
 					blueprintId: '',
 					blueprintType: BLUEPRINT_TYPE,
 					blueprintVersion: '0.1.0',
@@ -385,7 +382,6 @@ describe('Test blueprint management api', () => {
 				literal<Omit<Blueprint, 'created' | 'modified' | 'databaseVersion' | 'blueprintHash'>>({
 					_id: protectString('tmp_system'),
 					name: 'tmp name',
-					organizationId: null,
 					blueprintId: 'sys',
 					blueprintType: BLUEPRINT_TYPE,
 					blueprintVersion: '0.1.0',
@@ -429,7 +425,6 @@ describe('Test blueprint management api', () => {
 				literal<Omit<Blueprint, 'created' | 'modified' | 'databaseVersion' | 'blueprintHash'>>({
 					_id: existingBlueprint._id,
 					name: existingBlueprint.name,
-					organizationId: null,
 					blueprintId: '',
 					blueprintType: BLUEPRINT_TYPE,
 					blueprintVersion: '0.1.0',
@@ -475,7 +470,6 @@ describe('Test blueprint management api', () => {
 				literal<Omit<Blueprint, 'created' | 'modified' | 'databaseVersion' | 'blueprintHash'>>({
 					_id: existingBlueprint._id,
 					name: existingBlueprint.name,
-					organizationId: null,
 					blueprintId: 'ss1',
 					blueprintType: BLUEPRINT_TYPE,
 					blueprintVersion: '0.1.0',

@@ -8,7 +8,7 @@ sidebar_position: 2
 The settings views are only visible to users with the correct [access level](../features/access-levels.md)!
 :::
 
-Recommended read before diving into the settings: [System, \(Organization\), Studio & Show Style](../concepts-and-architecture.md#system-organization-studio-and-show-style).
+Recommended read before diving into the settings: [System, Studio & Show Style](../concepts-and-architecture.md#system-studio-and-show-style).
 
 ## System
 
@@ -132,6 +132,27 @@ The exact timeline-layer is never exposed to the user, but instead used on the t
 An example of the difference could be when playing a VT \(that's a Source Layer\), which could involve all of the timeline-layers _video_player0_, _audio_fader_video_, _audio_fader_host_ and _mixer_pgm._
 :::
 
+### AB Channel Display
+
+The AB Channel Display settings control how AB Resolver channel assignments (A, B, C, etc.) are shown on various screens. When using the AB Resolver for video playback, clips are automatically assigned to different video server channels. This configuration determines which Pieces display their assigned channel.
+
+![AB Channel Display Settings](/img/docs/main/features/ab-channel-display-settings.png)
+
+The configuration options are:
+
+| Setting | Description |
+| :------ | :---------- |
+| **Source Layer IDs** | Specific Source Layers that should always show AB channel info |
+| **Source Layer Types** | Show AB channel info for all Source Layers of these types (e.g., VT, Live Speak) |
+| **Output Layer IDs** | Only show for Pieces on specific Output Layers (e.g., only PGM) |
+| **Show on Director Screen** | Enable the AB channel display on the [Presenter Screen](../features/sofie-views-and-screens.mdx#presenter-screen) |
+
+:::info
+Blueprints can provide default values for these settings. If the blueprint defines defaults, a reset button will appear allowing you to restore the blueprint's recommended configuration.
+:::
+
+Individual Pieces can also override this configuration by setting `displayAbChannel: true` in the blueprint, which forces the AB channel to be displayed regardless of the ShowStyle settings.
+
 ### Action Triggers
 
 This is a way to set up how - outside of the Point-and-Click Graphical User Interface - actions can be performed in the User Interface. Commonly, these are the _hotkey combinations_ that can be used to either trigger AdLib content or other actions in the larger system. This is done by creating sets of Triggers and Actions to be triggered by them. These pairs can be set at the Show Style level or at the _Sofie&nbsp;Core_ (System) level, for common actions such as doing a Take or activating a Rundown, where you want a shared method of operation. _Sofie&nbsp;Core_ migrations will set up a base set of basic, system-wide Action Triggers for interacting with rundowns, but they can be changed by the System blueprint.
@@ -168,7 +189,7 @@ Clicking on the action and filter pills allows you to edit the action parameters
 
 ##### Shift Registers
 
-Shift Register modification actions are a special type of an Action, that modifies an internal state memory of the [Input Gateway](../installation/installing-input-gateway.md) and allows combination triggers, pagination, etc. on devices that don't natively support them or combining multiple devices into a single Control Surface. Refer to _Input Gateway_ documentation for more information on Shift Registers.
+Shift Register modification actions are a special type of an Action, that modifies an internal state memory of the [Input Gateway](../installation/installing-a-gateway/input-gateway.md) and allows combination triggers, pagination, etc. on devices that don't natively support them or combining multiple devices into a single Control Surface. Refer to _Input Gateway_ documentation for more information on Shift Registers.
 
 Shift Register actions have no effect in the browser, triggered from a _Hotkey_.
 

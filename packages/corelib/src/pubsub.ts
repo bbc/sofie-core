@@ -18,7 +18,7 @@ import { Blueprint } from './dataModel/Blueprint.js'
 import { BucketAdLibAction } from './dataModel/BucketAdLibAction.js'
 import { BucketAdLib } from './dataModel/BucketAdLibPiece.js'
 import { ExpectedPackageWorkStatus } from './dataModel/ExpectedPackageWorkStatuses.js'
-import { ExpectedPackageDBBase } from './dataModel/ExpectedPackages.js'
+import { ExpectedPackageDB } from './dataModel/ExpectedPackages.js'
 import { ExternalMessageQueueObj } from './dataModel/ExternalMessageQueue.js'
 import { PackageContainerStatusDB } from './dataModel/PackageContainerStatus.js'
 import { PeripheralDevice } from './dataModel/PeripheralDevice.js'
@@ -38,6 +38,7 @@ import { BlueprintId, BucketId, RundownPlaylistActivationId, SegmentId, ShowStyl
 import { PackageInfoDB } from './dataModel/PackageInfos.js'
 import { UIPieceContentStatus } from './dataModel/PieceContentStatus.js'
 import { Bucket } from './dataModel/Bucket.js'
+import { DBNotificationObj } from './dataModel/Notifications.js'
 
 /**
  * Ids of possible DDP subscriptions for any the UI and gateways accessing the Rundown & RundownPlaylist model.
@@ -130,6 +131,14 @@ export enum CorelibPubSub {
 	 * Fetch all Expected Package statuses in the specified Studios
 	 */
 	expectedPackageWorkStatuses = 'expectedPackageWorkStatuses',
+	/**
+	 * Fetch notifications for playlist
+	 */
+	notificationsForRundownPlaylist = 'notificationsForRundownPlaylist',
+	/**
+	 * Fetch notifications for rundown
+	 */
+	notificationsForRundown = 'notificationsForRundown',
 	/**
 	 * Fetch all Package container statuses in the specified Studios
 	 */
@@ -328,6 +337,11 @@ export interface CorelibPubSubTypes {
 		studioIds: StudioId[],
 		token?: string
 	) => CollectionName.PackageContainerStatuses
+	[CorelibPubSub.notificationsForRundown]: (studioId: StudioId, rundownId: RundownId) => CollectionName.Notifications
+	[CorelibPubSub.notificationsForRundownPlaylist]: (
+		studioId: StudioId,
+		playlistId: RundownPlaylistId
+	) => CollectionName.Notifications
 	[CorelibPubSub.packageInfos]: (deviceId: PeripheralDeviceId, token?: string) => CollectionName.PackageInfos
 
 	[CorelibPubSub.uiPieceContentStatuses]: (
@@ -342,9 +356,10 @@ export type CorelibPubSubCollections = {
 	[CollectionName.Buckets]: Bucket
 	[CollectionName.BucketAdLibActions]: BucketAdLibAction
 	[CollectionName.BucketAdLibPieces]: BucketAdLib
-	[CollectionName.ExpectedPackages]: ExpectedPackageDBBase
+	[CollectionName.ExpectedPackages]: ExpectedPackageDB
 	[CollectionName.ExpectedPackageWorkStatuses]: ExpectedPackageWorkStatus
 	[CollectionName.ExternalMessageQueue]: ExternalMessageQueueObj
+	[CollectionName.Notifications]: DBNotificationObj
 	[CollectionName.NrcsIngestDataCache]: NrcsIngestDataCacheObj
 	[CollectionName.PartInstances]: DBPartInstance
 	[CollectionName.PackageContainerStatuses]: PackageContainerStatusDB

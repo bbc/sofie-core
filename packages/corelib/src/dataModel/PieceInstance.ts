@@ -7,6 +7,7 @@ import {
 	RundownId,
 	PartInstanceId,
 	PieceId,
+	ExpectedPackageId,
 } from './Ids.js'
 import { Piece } from './Piece.js'
 import { omit } from '../lib.js'
@@ -34,7 +35,7 @@ export interface PieceInstance {
 	_id: PieceInstanceId
 	/** The rundown this piece belongs to */
 	rundownId: RundownId
-	/** The part instace this piece belongs to */
+	/** The part instance this piece belongs to. */
 	partInstanceId: PartInstanceId
 
 	/** Whether this PieceInstance is a temprorary wrapping of a Piece */
@@ -61,15 +62,10 @@ export interface PieceInstance {
 	dynamicallyInserted?: Time
 
 	/** This is set when the duration needs to be overriden from some user action */
-	userDuration?:
-		| {
-				/** The time relative to the part (milliseconds since start of part) */
-				endRelativeToPart: number
-		  }
-		| {
-				/** The time relative to 'now' (ms since 'now') */
-				endRelativeToNow: number
-		  }
+	userDuration?: {
+		/** The time relative to the part (milliseconds since start of part) */
+		endRelativeToPart: number
+	}
 
 	/** The time the system started playback of this part, undefined if not yet played back (milliseconds since epoch) */
 	reportedStartedPlayback?: Time
@@ -79,6 +75,13 @@ export interface PieceInstance {
 	reportedStoppedPlayback?: Time
 	plannedStartedPlayback?: Time
 	plannedStoppedPlayback?: Time
+
+	/**
+	 * The IDs of ExpectedPackages that are needed for this PieceInstance
+	 * This matches the data on `this.piece.expectedPackages`, resolved to the full database IDs
+	 * Future: This should replace the expectedPackages on Piece entirely
+	 */
+	neededExpectedPackageIds?: ExpectedPackageId[]
 }
 
 export interface ResolvedPieceInstance {

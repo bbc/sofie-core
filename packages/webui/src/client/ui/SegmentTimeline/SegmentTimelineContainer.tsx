@@ -11,7 +11,7 @@ import { PartExtended } from '../../lib/RundownResolver.js'
 import { SpeechSynthesiser } from '../../lib/speechSynthesis.js'
 import { getElementWidth } from '../../utils/dimensions.js'
 import { isMaintainingFocus, scrollToSegment, getHeaderHeight } from '../../lib/viewPort.js'
-import { unprotectString } from '../../lib/tempLib.js'
+import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { equivalentArrays } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { Settings } from '../../lib/Settings.js'
 import RundownViewEventBus, {
@@ -149,6 +149,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 		declare context: React.ContextType<typeof RundownTimingProviderContext>
 
 		isVisible: boolean
+		visibilityChangeTimeout: NodeJS.Timeout | undefined
 		rundownCurrentPartInstanceId: PartInstanceId | null = null
 		timelineDiv: HTMLDivElement | null = null
 		intersectionObserver: IntersectionObserver | undefined
@@ -198,14 +199,17 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			RundownViewEventBus.on(RundownViewEvents.REWIND_SEGMENTS, this.onRewindSegment)
 			RundownViewEventBus.on(RundownViewEvents.GO_TO_PART, this.onGoToPart)
 			RundownViewEventBus.on(RundownViewEvents.GO_TO_PART_INSTANCE, this.onGoToPartInstance)
-			window.requestAnimationFrame(() => {
-				this.mountedTime = Date.now()
-				if (this.state.isLiveSegment && this.props.followLiveSegments && !this.isVisible) {
-					scrollToSegment(this.props.segmentId, true).catch((error) => {
-						if (!error.toString().match(/another scroll/)) console.warn(error)
-					})
-				}
-			})
+			// Delay is to ensure UI has settled before checking:
+			setTimeout(() => {
+				window.requestAnimationFrame(() => {
+					this.mountedTime = Date.now()
+					if (this.state.isLiveSegment && this.props.followLiveSegments && !this.isVisible) {
+						scrollToSegment(this.props.segmentId, true).catch((error) => {
+							if (!error.toString().match(/another scroll/)) console.warn(error)
+						})
+					}
+				})
+			}, 500)
 			window.addEventListener('resize', this.onWindowResize)
 			this.updateMaxTimeScale()
 				.then(() => this.showEntireSegment())
@@ -541,12 +545,19 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 		}
 
 		visibleChanged = (entries: IntersectionObserverEntry[]) => {
-			if (entries[0].intersectionRatio < 0.99 && !isMaintainingFocus() && Date.now() - this.mountedTime > 2000) {
-				if (typeof this.props.onSegmentScroll === 'function') this.props.onSegmentScroll()
-				this.isVisible = false
-			} else {
-				this.isVisible = true
+			// Add a small debounce to ensure UI has settled before checking
+			if (this.visibilityChangeTimeout) {
+				clearTimeout(this.visibilityChangeTimeout)
 			}
+
+			this.visibilityChangeTimeout = setTimeout(() => {
+				if (entries[0].intersectionRatio < 0.99 && !isMaintainingFocus() && Date.now() - this.mountedTime > 2000) {
+					if (typeof this.props.onSegmentScroll === 'function') this.props.onSegmentScroll()
+					this.isVisible = false
+				} else {
+					this.isVisible = true
+				}
+			}, 1800)
 		}
 
 		startLive = () => {

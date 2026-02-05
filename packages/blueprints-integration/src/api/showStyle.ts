@@ -35,8 +35,11 @@ import type {
 	IBlueprintSegment,
 	IBlueprintPiece,
 	IBlueprintPart,
+	IBlueprintRundownPiece,
+	IBlueprintRundownPieceDB,
 } from '../documents/index.js'
 import type { IBlueprintShowStyleVariant, IOutputLayer, ISourceLayer } from '../showStyle.js'
+import type { SourceLayerType } from '../content.js'
 import type { TSR, OnGenerateTimelineObj, TimelineObjectCoreExt } from '../timeline.js'
 import type { IBlueprintConfig } from '../common.js'
 import type { ReadonlyDeep } from 'type-fest'
@@ -137,7 +140,7 @@ export interface ShowStyleBlueprintManifest<TRawConfig = IBlueprintConfig, TProc
 		privateData: unknown | undefined,
 		publicData: unknown | undefined,
 		actionOptions: { [key: string]: any } | undefined
-	) => Promise<{ validationErrors: any } | void>
+	) => Promise<void>
 
 	/** Generate adlib piece from ingest data */
 	getAdlibItem?: (
@@ -271,6 +274,7 @@ export interface BlueprintResultRundown {
 	rundown: IBlueprintRundown
 	globalAdLibPieces: IBlueprintAdLibPiece[]
 	globalActions: IBlueprintActionManifest[]
+	globalPieces?: IBlueprintRundownPiece[]
 	baseline: BlueprintResultBaseline
 }
 export interface BlueprintResultSegment {
@@ -297,6 +301,11 @@ export interface BlueprintSyncIngestNewData {
 	actions: IBlueprintActionManifest[]
 	/** A list of adlibs that have pieceInstances in the partInstance in question */
 	referencedAdlibs: IBlueprintAdLibPieceDB[]
+	/**
+	 * The list of pieces which belong to the Rundown, and may be active
+	 * Note: Some of these may have played and been stopped before the current PartInstance
+	 */
+	rundownPieces: IBlueprintRundownPieceDB[]
 }
 
 // TODO: add something like this later?
@@ -322,6 +331,19 @@ export interface BlueprintResultApplyShowStyleConfig {
 	outputLayers: IOutputLayer[]
 
 	triggeredActions: IBlueprintTriggeredActions[]
+
+	/** Configuration for displaying AB resolver channel assignments */
+	abChannelDisplay?: {
+		/** Source layer IDs that should show AB channel info */
+		sourceLayerIds: string[]
+		/** Configure by source layer type */
+		sourceLayerTypes: SourceLayerType[]
+		/** Only show for specific output layers (e.g., only PGM) */
+		outputLayerIds: string[]
+		/** Enable display on Director screen */
+		showOnDirectorScreen: boolean
+		// Future: showOnPresenterScreen, showOnCameraScreen when those views are implemented
+	}
 }
 
 export interface IShowStyleConfigPreset<TConfig = IBlueprintConfig> {

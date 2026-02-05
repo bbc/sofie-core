@@ -2,7 +2,8 @@ import * as React from 'react'
 import { useSubscription, useTracker } from '../../lib/ReactMeteorData/react-meteor-data.js'
 import _ from 'underscore'
 import { deserializeTimelineBlob, TimelineHash } from '@sofie-automation/corelib/dist/dataModel/Timeline'
-import { applyToArray, clone, normalizeArray, protectString } from '../../lib/tempLib.js'
+import { applyToArray, clone, normalizeArray } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import {
 	TimelineState,
@@ -20,17 +21,12 @@ import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Classnames from 'classnames'
-import { createSyncPeripheralDeviceCustomPublicationMongoCollection } from '../../collections/lib.js'
-import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { PeripheralDevicePubSubCollectionsNames } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
+import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids.js'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
-
-export const StudioTimeline = createSyncPeripheralDeviceCustomPublicationMongoCollection(
-	PeripheralDevicePubSubCollectionsNames.studioTimeline
-)
+import { StudioTimeline } from './collections'
 
 interface TimelineViewRouteParams {
 	studioId: string | undefined

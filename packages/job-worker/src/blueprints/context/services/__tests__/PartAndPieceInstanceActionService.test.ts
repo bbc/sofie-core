@@ -36,6 +36,7 @@ import { PlayoutPartInstanceModelImpl } from '../../../../playout/model/implemen
 import { writePartInstancesAndPieceInstances } from '../../../../playout/model/implementation/SavePlayoutModel.js'
 import { PlayoutPieceInstanceModel } from '../../../../playout/model/PlayoutPieceInstanceModel.js'
 import { DatabasePersistedModel } from '../../../../modelBase.js'
+import { SelectedPartInstance } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 import * as PlayoutAdlib from '../../../../playout/adlibUtils.js'
 type TinnerStopPieces = jest.MockedFunction<typeof PlayoutAdlib.innerStopPieces>
@@ -238,7 +239,9 @@ describe('Test blueprint api context', () => {
 		nextPartInstance: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | undefined | null,
 		previousPartInstance?: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null
 	) {
-		const convertInfo = (info: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null) => {
+		const convertInfo = (
+			info: PlayoutPartInstanceModel | DBPartInstance | PieceInstance | null
+		): SelectedPartInstance | null => {
 			if (!info) {
 				return null
 			} else if ('partInstanceId' in info) {
@@ -1474,6 +1477,7 @@ describe('Test blueprint api context', () => {
 					expect(resultPiece).toEqual(convertPieceInstanceToBlueprints(pieceInstance1.pieceInstance))
 					const pieceInstance0After = {
 						...pieceInstance0Before,
+						neededExpectedPackageIds: [],
 						piece: {
 							...pieceInstance0Before.piece,
 							...omit(pieceInstance0Delta, 'badProperty', '_id'),

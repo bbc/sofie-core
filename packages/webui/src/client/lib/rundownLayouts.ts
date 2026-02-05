@@ -4,7 +4,10 @@ import {
 	RundownPlaylistActivationId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { processAndPrunePieceInstanceTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
+import {
+	createPartCurrentTimes,
+	processAndPrunePieceInstanceTimings,
+} from '@sofie-automation/corelib/dist/playout/processAndPrune'
 import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import {
@@ -46,7 +49,7 @@ import {
 	RundownViewLayout,
 } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { literal } from './tempLib.js'
+import { literal } from '@sofie-automation/corelib/dist/lib'
 import { getCurrentTime } from './systemTime.js'
 import { invalidateAt } from './invalidatingTime.js'
 import { memoizedIsolatedAutorun } from './memoizedIsolatedAutorun.js'
@@ -138,13 +141,11 @@ export function getUnfinishedPieceInstancesReactive(
 						playlistActivationId: playlistActivationId,
 					}).fetch()
 
-					const nowInPart = partInstance.timings?.plannedStartedPlayback
-						? now - partInstance.timings.plannedStartedPlayback
-						: 0
+					const partTimes = createPartCurrentTimes(now, partInstance.timings?.plannedStartedPlayback)
 					prospectivePieces = processAndPrunePieceInstanceTimings(
 						showStyleBase.sourceLayers,
 						prospectivePieces,
-						nowInPart
+						partTimes
 					)
 
 					let nearestEnd = Number.POSITIVE_INFINITY
@@ -165,12 +166,6 @@ export function getUnfinishedPieceInstancesReactive(
 							typeof pieceInstance.userDuration.endRelativeToPart === 'number'
 						) {
 							end = pieceInstance.userDuration.endRelativeToPart
-						} else if (
-							pieceInstance.userDuration &&
-							'endRelativeToNow' in pieceInstance.userDuration &&
-							typeof pieceInstance.userDuration.endRelativeToNow === 'number'
-						) {
-							end = pieceInstance.userDuration.endRelativeToNow + now
 						} else if (typeof piece.enable.duration === 'number' && pieceInstance.plannedStartedPlayback) {
 							end = piece.enable.duration + pieceInstance.plannedStartedPlayback
 						}

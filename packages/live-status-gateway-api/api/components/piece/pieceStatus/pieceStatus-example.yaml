@@ -1,0 +1,9 @@
+id: 'H5CBGYjThrMSmaYvRaa5FVKJIzk_'
+name: 'Camera 1'
+sourceLayer: 'Camera'
+outputLayer: 'PGM'
+tags: ['camera']
+publicData:
+  switcherSource: 1
+abSessions:
+  - $ref: './abSessionAssignment-example.yaml'

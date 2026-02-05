@@ -37,7 +37,13 @@ import _ from 'underscore'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PlaylistLock } from '../../../jobs/lock.js'
 import { logger } from '../../../logging.js'
-import { clone, getRandomId, literal, normalizeArrayToMapFunc } from '@sofie-automation/corelib/dist/lib'
+import {
+	clone,
+	getRandomId,
+	groupByToMapFunc,
+	literal,
+	normalizeArrayToMapFunc,
+} from '@sofie-automation/corelib/dist/lib'
 import { sleep } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { sortRundownIDsInPlaylist } from '@sofie-automation/corelib/dist/playout/playlist'
 import { PlayoutRundownModel } from '../PlayoutRundownModel.js'
@@ -50,18 +56,21 @@ import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedSt
 import { queuePartInstanceTimingEvent } from '../../timings/events.js'
 import { IS_PRODUCTION } from '../../../environment.js'
 import { DeferredAfterSaveFunction, DeferredFunction, PlayoutModel, PlayoutModelReadonly } from '../PlayoutModel.js'
-import { writePartInstancesAndPieceInstances, writeAdlibTestingSegments } from './SavePlayoutModel.js'
+import {
+	writePartInstancesAndPieceInstances,
+	writeAdlibTestingSegments,
+	writeExpectedPackagesForPlayoutSources,
+} from './SavePlayoutModel.js'
 import { PlayoutPieceInstanceModel } from '../PlayoutPieceInstanceModel.js'
 import { DatabasePersistedModel } from '../../../modelBase.js'
-import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { StudioBaselineHelper } from '../../../studio/model/StudioBaselineHelper.js'
-import { EventsJobs } from '@sofie-automation/corelib/dist/worker/events'
 import { QuickLoopService } from '../services/QuickLoopService.js'
 import { calculatePartTimings, PartCalculatedTimings } from '@sofie-automation/corelib/dist/playout/timings'
 import { PieceInstanceWithTimings } from '@sofie-automation/corelib/dist/playout/processAndPrune'
-import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { NotificationsModelHelper } from '../../../notifications/NotificationsModelHelper.js'
+import { getExpectedLatency } from '@sofie-automation/corelib/dist/studio/playout'
+import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -264,6 +273,31 @@ export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 		}
 		return this.#isMultiGatewayMode
 	}
+
+	public get multiGatewayNowSafeLatency(): number | undefined {
+		return this.context.studio.settings.multiGatewayNowSafeLatency
+	}
+
+	/**
+	 * Calculate an offset to apply to the 'now' value, to compensate for delay in playout-gateway
+	 * The intention is that any concrete value used instead of 'now' should still be just in the future for playout-gateway
+	 */
+	protected getNowOffsetLatency(): number | undefined {
+		/** The timestamp that "now" was set to */
+		let nowOffsetLatency: number | undefined
+
+		if (this.isMultiGatewayMode) {
+			const playoutDevices = this.peripheralDevices.filter(
+				(device) => device.type === PeripheralDeviceType.PLAYOUT
+			)
+			const worstLatency = Math.max(0, ...playoutDevices.map((device) => getExpectedLatency(device).safe))
+			/** Add a little more latency, to account for network latency variability */
+			const ADD_SAFE_LATENCY = this.multiGatewayNowSafeLatency || 30
+			nowOffsetLatency = worstLatency + ADD_SAFE_LATENCY
+		}
+
+		return nowOffsetLatency
+	}
 }
 
 /**
@@ -283,7 +317,6 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	#timelineHasChanged = false
 
 	#pendingPartInstanceTimingEvents = new Set<PartInstanceId>()
-	#pendingNotifyCurrentlyPlayingPartEvent = new Map<RundownId, string | null>()
 
 	get hackDeletedPartInstanceIds(): PartInstanceId[] {
 		const result: PartInstanceId[] = []
@@ -342,6 +375,15 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 		delete this.playlistImpl.lastTakeTime
 		delete this.playlistImpl.queuedSegmentId
+
+		this.#playlistHasChanged = true
+	}
+
+	clearPreviousPartInstance(): void {
+		this.playlistImpl.previousPartInfo = null
+
+		// Make sure that a hold isn't running. We can't block it here, so abort it immediately instead
+		this.playlistImpl.holdState = RundownHoldState.NONE
 
 		this.#playlistHasChanged = true
 	}
@@ -528,14 +570,6 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		this.#pendingPartInstanceTimingEvents.add(partInstanceId)
 	}
 
-	queueNotifyCurrentlyPlayingPartEvent(rundownId: RundownId, partInstance: PlayoutPartInstanceModel | null): void {
-		if (partInstance && partInstance.partInstance.part.shouldNotifyCurrentPlayingPart) {
-			this.#pendingNotifyCurrentlyPlayingPartEvent.set(rundownId, partInstance.partInstance.part.externalId)
-		} else if (!partInstance) {
-			this.#pendingNotifyCurrentlyPlayingPartEvent.set(rundownId, null)
-		}
-	}
-
 	removeAllRehearsalPartInstances(): void {
 		const partInstancesToRemove: PartInstanceId[] = []
 
@@ -672,12 +706,20 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		}
 		this.#timelineHasChanged = false
 
+		const partInstancesByRundownId = groupByToMapFunc(
+			Array.from(this.allPartInstances.values()).filter((p) => !!p),
+			(p) => p.partInstance.rundownId
+		)
+
 		await Promise.all([
 			this.#playlistHasChanged
 				? this.context.directCollections.RundownPlaylists.replace(this.playlistImpl)
 				: undefined,
 			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
+			...Array.from(partInstancesByRundownId.entries()).map(async ([rundownId, partInstances]) =>
+				writeExpectedPackagesForPlayoutSources(this.context, this.playlistId, rundownId, partInstances)
+			),
 			this.#baselineHelper.saveAllToDatabase(),
 			this.#notificationsHelper.saveAllToDatabase(),
 			this.context.saveRouteSetChanges(),
@@ -702,21 +744,6 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			queuePartInstanceTimingEvent(this.context, this.playlistId, partInstanceId)
 		}
 		this.#pendingPartInstanceTimingEvents.clear()
-
-		for (const [rundownId, partExternalId] of this.#pendingNotifyCurrentlyPlayingPartEvent) {
-			// This is low-prio, defer so that it's executed well after publications has been updated,
-			// so that the playout gateway has had the chance to learn about the timeline changes
-			this.context
-				.queueEventJob(EventsJobs.NotifyCurrentlyPlayingPart, {
-					rundownId: rundownId,
-					isRehearsal: !!this.playlist.rehearsal,
-					partExternalId: partExternalId,
-				})
-				.catch((e) => {
-					logger.warn(`Failed to queue NotifyCurrentlyPlayingPart job: ${stringifyError(e)}`)
-				})
-		}
-		this.#pendingNotifyCurrentlyPlayingPartEvent.clear()
 
 		if (span) span.end()
 	}
@@ -832,7 +859,7 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		return this.timelineImpl
 	}
 
-	setExpectedPackagesForStudioBaseline(packages: ExpectedPackageDBFromStudioBaselineObjects[]): void {
+	setExpectedPackagesForStudioBaseline(packages: ExpectedPackage.Any[]): void {
 		this.#baselineHelper.setExpectedPackages(packages)
 	}
 	setExpectedPlayoutItemsForStudioBaseline(playoutItems: ExpectedPlayoutItemStudio[]): void {
@@ -848,6 +875,15 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	updateQuickLoopState(): void {
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedProps()
 		this.#playlistHasChanged = true
+	}
+
+	#lastMonotonicNowInPlayout = getCurrentTime()
+	getNowInPlayout(): number {
+		const nowOffsetLatency = this.getNowOffsetLatency() ?? 0
+		const targetNowTime = getCurrentTime() + nowOffsetLatency
+		const result = Math.max(this.#lastMonotonicNowInPlayout, targetNowTime)
+		this.#lastMonotonicNowInPlayout = result
+		return result
 	}
 
 	/** Notifications */

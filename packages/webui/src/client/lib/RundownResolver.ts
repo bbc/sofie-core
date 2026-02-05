@@ -9,7 +9,8 @@ import {
 	buildPastInfinitePiecesForThisPartQuery,
 } from '@sofie-automation/corelib/dist/playout/infinites'
 import { invalidateAfter } from './invalidatingTime.js'
-import { groupByToMap, protectString } from './tempLib.js'
+import { groupByToMap } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { getCurrentTime } from './systemTime.js'
 import { DBRundownPlaylist, QuickLoopMarkerType } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
@@ -62,7 +63,7 @@ function fetchPiecesThatMayBeActiveForPart(
 	segmentsToReceiveOnRundownEndFromSet: Set<SegmentId>,
 	rundownsToReceiveOnShowStyleEndFrom: RundownId[],
 	/** Map of Pieces on Parts, passed through for performance */
-	allPiecesCache?: Map<PartId, Piece[]>
+	allPiecesCache?: Map<PartId | null, Piece[]>
 ): Piece[] {
 	let piecesStartingInPart: Piece[]
 	const allPieces = allPiecesCache?.get(part._id)
@@ -131,7 +132,7 @@ export function getPieceInstancesForPartInstance(
 	currentPartInstancePieceInstances: PieceInstance[] | undefined,
 	allowTestingAdlibsToPersist: boolean,
 	/** Map of Pieces on Parts, passed through for performance */
-	allPiecesCache?: Map<PartId, Piece[]>,
+	allPiecesCache?: Map<PartId | null, Piece[]>,
 	options?: FindOptions<PieceInstance>,
 	pieceInstanceSimulation?: boolean
 ): PieceInstance[] {

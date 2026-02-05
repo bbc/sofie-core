@@ -19,7 +19,8 @@ export function pieceUiClassNames(
 	uiState?: {
 		leftAnchoredWidth: number
 		rightAnchoredWidth: number
-	}
+	},
+	draggable?: boolean
 ): string {
 	const typeClass = layerType ? RundownUtils.getSourceLayerClassName(layerType) : ''
 
@@ -32,10 +33,12 @@ export function pieceUiClassNames(
 				: undefined,
 
 		'super-infinite':
+			!innerPiece.enable.isAbsolute &&
 			innerPiece.lifespan !== PieceLifespan.WithinPart &&
 			innerPiece.lifespan !== PieceLifespan.OutOnSegmentChange &&
 			innerPiece.lifespan !== PieceLifespan.OutOnSegmentEnd,
 		'infinite-starts':
+			!innerPiece.enable.isAbsolute &&
 			innerPiece.lifespan !== PieceLifespan.WithinPart &&
 			innerPiece.lifespan !== PieceLifespan.OutOnSegmentChange &&
 			innerPiece.lifespan !== PieceLifespan.OutOnSegmentEnd &&
@@ -57,5 +60,7 @@ export function pieceUiClassNames(
 		'invert-flash': highlight,
 
 		'element-selected': selected,
+
+		'draggable-element': draggable,
 	})
 }

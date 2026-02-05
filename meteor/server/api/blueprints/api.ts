@@ -1,7 +1,8 @@
 import _ from 'underscore'
 import path from 'path'
 import { ReadStream, createReadStream, promises as fsp } from 'fs'
-import { unprotectString, getRandomId } from '../../lib/tempLib'
+import { getRandomId } from '@sofie-automation/corelib/dist/lib'
+import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { getCurrentTime } from '../../lib/lib'
 import { logger } from '../../logging'
 import { Meteor } from 'meteor/meteor'
@@ -21,7 +22,7 @@ import { evalBlueprint } from './cache'
 import { removeSystemStatus } from '../../systemStatus/systemStatus'
 import { MethodContext, MethodContextAPI } from '../methodContext'
 import { generateTranslationBundleOriginId, upsertBundles } from '../translationsBundles'
-import { BlueprintId, OrganizationId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { BlueprintId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { Blueprints, CoreSystem, ShowStyleBases, ShowStyleVariants, Studios } from '../../collections'
 import { fetchBlueprintLight, BlueprintLight } from '../../serverOptimisations'
 import { getSystemStorePath } from '../../coreSystem'
@@ -31,6 +32,7 @@ import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { UserPermissions } from '@sofie-automation/meteor-lib/dist/userPermissions'
 import { assertConnectionHasOneOfPermissions, RequestCredentials } from '../../security/auth'
 import { blueprintsPerformDevelopmentMode } from './development'
+import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 
 const PERMISSIONS_FOR_MANAGE_BLUEPRINTS: Array<keyof UserPermissions> = ['configure']
 
@@ -43,7 +45,6 @@ export async function insertBlueprint(
 
 	return Blueprints.insertAsync({
 		_id: getRandomId(),
-		organizationId: null,
 		name: name || 'New Blueprint',
 		hasCode: false,
 		code: '',
@@ -102,7 +103,7 @@ export async function uploadBlueprint(
 	if (!blueprintId) throw new Meteor.Error(400, `Blueprint id "${blueprintId}" is not valid`)
 	const blueprint = await fetchBlueprintLight(blueprintId)
 
-	return innerUploadBlueprint(null, blueprint, blueprintId, body, options)
+	return innerUploadBlueprint(blueprint, blueprintId, body, options)
 }
 export async function uploadBlueprintAsset(cred: RequestCredentials, fileId: string, body: string): Promise<void> {
 	check(fileId, String)
@@ -133,16 +134,13 @@ export function retrieveBlueprintAsset(_cred: RequestCredentials, fileId: string
 export async function internalUploadBlueprint(
 	blueprintId: BlueprintId,
 	body: string,
-	options?: UploadBlueprintOptions,
-	organizationId?: OrganizationId | null
+	options?: UploadBlueprintOptions
 ): Promise<Blueprint> {
-	organizationId = organizationId || null
 	const blueprint = await fetchBlueprintLight(blueprintId)
 
-	return innerUploadBlueprint(organizationId, blueprint, blueprintId, body, options)
+	return innerUploadBlueprint(blueprint, blueprintId, body, options)
 }
 async function innerUploadBlueprint(
-	organizationId: OrganizationId | null,
 	blueprint: BlueprintLight | undefined,
 	blueprintId: BlueprintId,
 	body: string,
@@ -150,7 +148,6 @@ async function innerUploadBlueprint(
 ): Promise<Blueprint> {
 	const newBlueprint: Blueprint = {
 		_id: blueprintId,
-		organizationId: organizationId,
 		name: blueprint ? blueprint.name : options?.blueprintName || unprotectString(blueprintId),
 		created: blueprint ? blueprint.created : getCurrentTime(),
 		code: body,
@@ -174,8 +171,10 @@ async function innerUploadBlueprint(
 	let blueprintManifest: SomeBlueprintManifest | undefined
 	try {
 		blueprintManifest = evalBlueprint(newBlueprint)
-	} catch (_e) {
-		throw new Meteor.Error(400, `Blueprint ${blueprintId} failed to parse`)
+	} catch (e) {
+		logger.error(`Error evaluating Blueprint "${blueprintId}": "${stringifyError(e)}"`)
+
+		throw new Meteor.Error(400, `Error evaluating Blueprint "${blueprintId}": "${stringifyError(e)}"`)
 	}
 
 	if (!_.isObject(blueprintManifest))

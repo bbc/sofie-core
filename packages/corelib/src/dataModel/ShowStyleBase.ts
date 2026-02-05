@@ -1,7 +1,7 @@
 import { IBlueprintConfig, IOutputLayer, ISourceLayer, SourceLayerType } from '@sofie-automation/blueprints-integration'
 import { ObjectWithOverrides } from '../settings/objectWithOverrides.js'
 import { BlueprintHash, LastBlueprintConfig } from './Blueprint.js'
-import { BlueprintId, OrganizationId, ShowStyleBaseId } from './Ids.js'
+import { BlueprintId, ShowStyleBaseId } from './Ids.js'
 
 export interface HotkeyDefinition {
 	_id: string
@@ -37,9 +37,6 @@ export interface DBShowStyleBase {
 	/** Whether blueprintConfigPresetId is invalid, and does not match a currently exposed preset from the Blueprint */
 	blueprintConfigPresetIdUnlinked?: boolean
 
-	/** If set, the Organization that owns this ShowStyleBase */
-	organizationId: OrganizationId | null
-
 	/** A list of hotkeys, used to display a legend of hotkeys for the user in GUI */
 	hotkeyLegend?: Array<HotkeyDefinition>
 
@@ -50,6 +47,27 @@ export interface DBShowStyleBase {
 
 	/** Config values are used by the Blueprints */
 	blueprintConfigWithOverrides: ObjectWithOverrides<IBlueprintConfig>
+
+	/** Configuration for displaying AB resolver channel assignments across different screens */
+	abChannelDisplay?: {
+		/** Source layer IDs that should show AB channel info */
+		sourceLayerIds: string[]
+		/** Configure by source layer type */
+		sourceLayerTypes: SourceLayerType[]
+		/** Only show for specific output layers (e.g., only PGM) */
+		outputLayerIds: string[]
+		/** Enable display on Director screen */
+		showOnDirectorScreen: boolean
+		// Future: showOnPresenterScreen, showOnCameraScreen when those views are implemented
+	}
+
+	/** Blueprint default for abChannelDisplay (saved during blueprint upgrade) */
+	blueprintAbChannelDisplay?: {
+		sourceLayerIds: string[]
+		sourceLayerTypes: SourceLayerType[]
+		outputLayerIds: string[]
+		showOnDirectorScreen: boolean
+	}
 
 	_rundownVersionHash: string
 

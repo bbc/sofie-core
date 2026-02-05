@@ -44,12 +44,23 @@ export class CoreHandler implements ICoreHandler {
 	private _coreConfig?: CoreConfig
 	private _certificates?: Buffer[]
 
-	constructor(logger: Winston.Logger, deviceOptions: DeviceConfig) {
+	public static async create(
+		logger: Winston.Logger,
+		config: CoreConfig,
+		certificates: Buffer[],
+		deviceOptions: DeviceConfig
+	): Promise<CoreHandler> {
+		const handler = new CoreHandler(logger, deviceOptions)
+		await handler.init(config, certificates)
+		return handler
+	}
+
+	private constructor(logger: Winston.Logger, deviceOptions: DeviceConfig) {
 		this.logger = logger
 		this._deviceOptions = deviceOptions
 	}
 
-	async init(config: CoreConfig, certificates: Buffer[]): Promise<void> {
+	private async init(config: CoreConfig, certificates: Buffer[]): Promise<void> {
 		// this.logger.info('========')
 		this._coreConfig = config
 		this._certificates = certificates
@@ -224,7 +235,10 @@ export class CoreHandler implements ICoreHandler {
 	executeFunction(cmd: PeripheralDeviceCommand, fcnObject: CoreHandler | CoreMosDeviceHandler): void {
 		if (cmd) {
 			if (this._executedFunctions.has(cmd._id)) return // prevent it from running multiple times
-			this.logger.debug(cmd.functionName || cmd.actionId || '', cmd.args)
+			this.logger.debug(
+				`Executing function "${cmd.functionName || cmd.actionId || ''}", args: ${JSON.stringify(cmd.args)}`
+			)
+
 			this._executedFunctions.add(cmd._id)
 			// console.log('executeFunction', cmd)
 			const cb = (errStr: string | null, res?: any) => {
@@ -243,7 +257,7 @@ export class CoreHandler implements ICoreHandler {
 						// console.log('cb done')
 					})
 					.catch((e) => {
-						this.logger.error(e)
+						this.logger.error(stringifyError(e))
 					})
 			}
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment

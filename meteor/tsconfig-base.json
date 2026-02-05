@@ -3,19 +3,27 @@
 	"compilerOptions": {
 		/* At the time of writing we are not ready for stricter rules */
 		"strict": true,
-		"target": "es2022",
+		"target": "es2024",
 		"allowImportingTsExtensions": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"allowJs": false,
-		"lib": ["dom", "es2022", "dom.iterable", "scripthost"],
+		"lib": ["dom", "es2024", "dom.iterable", "scripthost"],
 		"paths": {
 			"meteor/*": [
 				//   "./node_modules/@types/meteor/*",
 				"./.meteor/local/types/packages.d.ts"
 			]
-		}
+		},
+		"noEmit": true
 	},
 	"include": ["client/**/*", "server/**/*", "lib/**/*", "__mocks__/**/*", "tslint-rules/**/*"],
-	"exclude": ["node_modules", "**/.coverage/**/*"]
+	"exclude": ["node_modules", "**/.coverage/**/*"],
+	"references": [
+		{ "path": "../shared-lib/tsconfig.build.json" },
+		{ "path": "../blueprints-integration/tsconfig.build.json" },
+		{ "path": "../corelib/tsconfig.build.json" },
+		{ "path": "../meteor-lib/tsconfig.build.json" },
+		{ "path": "../job-worker/tsconfig.build.json" }
+	]
 }

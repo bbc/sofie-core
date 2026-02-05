@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import { useSubscription, useTracker } from '../../lib/ReactMeteorData/react-meteor-data.js'
-import { unprotectString } from '../../lib/tempLib.js'
+import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { doModalDialog } from '../../lib/ModalDialog.js'
 import { NavLink, useLocation } from 'react-router-dom'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
@@ -86,12 +86,16 @@ function SettingsMenuStudios() {
 		MeteorCall.studio.insertStudio().catch(catchError('studio.insertStudio'))
 	}, [])
 
+	// An installation should have only one studio https://github.com/Sofie-Automation/sofie-core/issues/1450
+	const canAddStudio = studios.length === 0
+	const canDeleteStudio = studios.length > 1
+
 	return (
 		<>
-			<SectionHeading title={t('Studios')} addClick={onAddStudio} />
+			<SectionHeading title={t('Studios')} addClick={canAddStudio ? onAddStudio : undefined} />
 
 			{studios.map((studio) => (
-				<SettingsMenuStudio key={unprotectString(studio._id)} studio={studio} />
+				<SettingsMenuStudio key={unprotectString(studio._id)} studio={studio} canDelete={canDeleteStudio} />
 			))}
 		</>
 	)
@@ -241,8 +245,9 @@ function SettingsCollapsibleGroup({
 
 interface SettingsMenuStudioProps {
 	studio: DBStudio
+	canDelete: boolean
 }
-function SettingsMenuStudio({ studio }: Readonly<SettingsMenuStudioProps>) {
+function SettingsMenuStudio({ studio, canDelete }: Readonly<SettingsMenuStudioProps>) {
 	const { t } = useTranslation()
 
 	const onDeleteStudio = React.useCallback(
@@ -291,9 +296,11 @@ function SettingsMenuStudio({ studio }: Readonly<SettingsMenuStudioProps>) {
 					<FontAwesomeIcon icon={faExclamationTriangle} />
 				</button>
 			) : null}
-			<button className="action-btn" onClick={onDeleteStudio}>
-				<FontAwesomeIcon icon={faTrash} />
-			</button>
+			{canDelete && (
+				<button className="action-btn" onClick={onDeleteStudio}>
+					<FontAwesomeIcon icon={faTrash} />
+				</button>
+			)}
 		</SettingsCollapsibleGroup>
 	)
 }
@@ -350,6 +357,7 @@ function SettingsMenuShowStyle({ showStyleBase }: Readonly<SettingsMenuShowStyle
 			{ label: t('Source/Output Layers'), subPath: `layers` },
 			{ label: t('Action Triggers'), subPath: `action-triggers` },
 			{ label: t('Custom Hotkey Labels'), subPath: `hotkey-labels` },
+			{ label: t('AB Channel Display'), subPath: `ab-channel-display` },
 
 			...RundownLayoutsAPI.getSettingsManifest(t).map((region) => {
 				return { label: region.title, subPath: `layouts-${region._id}` }
@@ -524,6 +532,7 @@ function SettingsMenuPeripheralDevice({ device }: Readonly<SettingsMenuPeriphera
 					{device.connected ? t('Connected') : t('Disconnected')}, {t('Status')}:{' '}
 					{statusCodeString(t, device.status.statusCode)}
 				</p>
+				<p className="text-s">{configIdString(t, device.studioAndConfigId?.configId)}</p>
 			</NavLink>
 			<hr className="vsubtle" />
 		</>
@@ -550,4 +559,9 @@ function statusCodeString(t: TFunction, statusCode: StatusCode): string {
 		case StatusCode.FATAL:
 			return t('Fatal')
 	}
+}
+
+function configIdString(t: TFunction, configId: string | undefined): string {
+	if (configId) return t('Config ID: ') + configId
+	else return t('Unconfigured')
 }

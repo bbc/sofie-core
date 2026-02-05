@@ -15,9 +15,9 @@ import { IS_PRODUCTION } from '../../environment.js'
 import { logger } from '../../logging.js'
 import { StudioPlayoutModel } from './StudioPlayoutModel.js'
 import { DatabasePersistedModel } from '../../modelBase.js'
-import { ExpectedPackageDBFromStudioBaselineObjects } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { ExpectedPlayoutItemStudio } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
 import { StudioBaselineHelper } from './StudioBaselineHelper.js'
+import { ExpectedPackage } from '@sofie-automation/blueprints-integration'
 
 /**
  * This is a model used for studio operations.
@@ -78,7 +78,11 @@ export class StudioPlayoutModelImpl implements StudioPlayoutModel {
 		return this.#isMultiGatewayMode
 	}
 
-	setExpectedPackagesForStudioBaseline(packages: ExpectedPackageDBFromStudioBaselineObjects[]): void {
+	public get multiGatewayNowSafeLatency(): number | undefined {
+		return this.context.studio.settings.multiGatewayNowSafeLatency
+	}
+
+	setExpectedPackagesForStudioBaseline(packages: ExpectedPackage.Any[]): void {
 		this.#baselineHelper.setExpectedPackages(packages)
 	}
 	setExpectedPlayoutItemsForStudioBaseline(playoutItems: ExpectedPlayoutItemStudio[]): void {

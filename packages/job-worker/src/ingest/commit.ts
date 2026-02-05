@@ -19,7 +19,7 @@ import {
 	removeRundownFromDb,
 } from '../rundownPlaylists.js'
 import { ReadonlyDeep } from 'type-fest'
-import { IngestModel, IngestModelReadonly } from './model/IngestModel.js'
+import { IngestDatabasePersistedModel, IngestModel, IngestModelReadonly } from './model/IngestModel.js'
 import { JobContext } from '../jobs/index.js'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
@@ -40,7 +40,6 @@ import { PlayoutRundownModelImpl } from '../playout/model/implementation/Playout
 import { PlayoutSegmentModelImpl } from '../playout/model/implementation/PlayoutSegmentModelImpl.js'
 import { createPlayoutModelFromIngestModel } from '../playout/model/implementation/LoadPlayoutModel.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { DatabasePersistedModel } from '../modelBase.js'
 import { updateSegmentIdsForAdlibbedPartInstances } from './commit/updateSegmentIdsForAdlibbedPartInstances.js'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { AnyBulkWriteOperation } from 'mongodb'
@@ -64,7 +63,7 @@ interface PlaylistIdPair {
  */
 export async function CommitIngestOperation(
 	context: JobContext,
-	ingestModel: IngestModel & DatabasePersistedModel,
+	ingestModel: IngestModel & IngestDatabasePersistedModel,
 	beforeRundown: ReadonlyDeep<DBRundown> | undefined,
 	beforePartMap: BeforeIngestOperationPartMap,
 	data: ReadonlyDeep<CommitIngestData>
@@ -223,7 +222,7 @@ export async function CommitIngestOperation(
 			)
 
 			// Start the save
-			const pSaveIngest = ingestModel.saveAllToDatabase()
+			const pSaveIngest = ingestModel.saveAllToDatabase(playlistLock)
 			pSaveIngest.catch(() => null) // Ensure promise isn't reported as unhandled
 
 			await validateAdlibTestingSegment(context, playoutModel)
@@ -576,7 +575,8 @@ export async function updatePlayoutAfterChangingRundownInPlaylist(
 	context: JobContext,
 	playlist: DBRundownPlaylist,
 	playlistLock: PlaylistLock,
-	insertedRundown: ReadonlyDeep<DBRundown> | null
+	insertedRundown: ReadonlyDeep<DBRundown> | null,
+	rundownIdToForget: RundownId | null
 ): Promise<void> {
 	// ensure the 'old' playout is updated to remove any references to the rundown
 	await runWithPlayoutModel(context, playlist, playlistLock, null, async (playoutModel) => {
@@ -589,6 +589,16 @@ export async function updatePlayoutAfterChangingRundownInPlaylist(
 
 			playoutModel.assertNoChanges()
 			return
+		}
+
+		// Ensure previousPartInstance doesn't reference the old Rundown
+		// The current and next partInstances are enforced by allowedToMoveRundownOutOfPlaylist
+		if (
+			rundownIdToForget &&
+			playoutModel.previousPartInstance &&
+			playoutModel.previousPartInstance.partInstance.rundownId === rundownIdToForget
+		) {
+			playoutModel.clearPreviousPartInstance()
 		}
 
 		// Ensure playout is in sync
@@ -711,7 +721,7 @@ export async function removeRundownFromPlaylistAndUpdatePlaylist(
 
 	if (updatedPlaylist) {
 		// ensure the 'old' playout is updated to remove any references to the rundown
-		await updatePlayoutAfterChangingRundownInPlaylist(context, updatedPlaylist, playlistLock, null)
+		await updatePlayoutAfterChangingRundownInPlaylist(context, updatedPlaylist, playlistLock, null, rundownId)
 	}
 }
 

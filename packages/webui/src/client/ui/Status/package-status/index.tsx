@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react'
-import { useSubscription, useTracker } from '../../../lib/ReactMeteorData/react-meteor-data.js'
+import { useSubscriptionIfEnabled, useTracker } from '../../../lib/ReactMeteorData/react-meteor-data.js'
 import { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'
-import { normalizeArrayToMap, unprotectString } from '../../../lib/tempLib.js'
+import { normalizeArrayToMap } from '@sofie-automation/corelib/dist/lib'
+import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import { MeteorCall } from '../../../lib/meteorApi.js'
 import { doUserAction, UserAction } from '../../../lib/clientUserAction.js'
@@ -33,15 +34,16 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 			UIStudios.find()
 				.fetch()
 				.map((studio) => studio._id),
+		[],
 		[]
 	)
 
 	const allSubsReady: boolean =
 		[
-			useSubscription(CorelibPubSub.expectedPackageWorkStatuses, studioIds ?? []),
-			useSubscription(CorelibPubSub.expectedPackages, studioIds ?? []),
-			useSubscription(CorelibPubSub.packageContainerStatuses, studioIds ?? []),
-			studioIds && studioIds.length > 0,
+			useSubscriptionIfEnabled(CorelibPubSub.expectedPackageWorkStatuses, studioIds.length > 0, studioIds),
+			useSubscriptionIfEnabled(CorelibPubSub.expectedPackages, studioIds.length > 0, studioIds),
+			useSubscriptionIfEnabled(CorelibPubSub.packageContainerStatuses, studioIds.length > 0, studioIds),
+			studioIds.length > 0,
 		].reduce((memo, value) => memo && value, true) || false
 
 	const expectedPackageWorkStatuses = useTracker(() => ExpectedPackageWorkStatuses.find({}).fetch(), [], [])
@@ -54,7 +56,11 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		expectedPackageWorkStatuses.forEach((epws) => devices.add(epws.deviceId))
 		return Array.from(devices)
 	}, [packageContainerStatuses, expectedPackageWorkStatuses])
-	const peripheralDeviceSubReady = useSubscription(CorelibPubSub.peripheralDevices, deviceIds)
+	const peripheralDeviceSubReady = useSubscriptionIfEnabled(
+		CorelibPubSub.peripheralDevices,
+		deviceIds.length > 0,
+		deviceIds
+	)
 	const peripheralDevices = useTracker(() => PeripheralDevices.find().fetch(), [], [])
 	const peripheralDevicesMap = normalizeArrayToMap(peripheralDevices, '_id')
 
@@ -67,11 +73,6 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 		)
 	}
 	function renderExpectedPackageStatuses() {
-		const packageRef: { [packageId: string]: ExpectedPackageDB } = {}
-		for (const expPackage of expectedPackages) {
-			packageRef[unprotectString(expPackage._id)] = expPackage
-		}
-
 		const packagesWithWorkStatuses: {
 			[packageId: string]: {
 				package: ExpectedPackageDB | undefined
@@ -79,20 +80,33 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 				device: PeripheralDevice | undefined
 			}
 		} = {}
-		for (const work of expectedPackageWorkStatuses) {
-			const device = peripheralDevicesMap.get(work.deviceId)
-			// todo: make this better:
-			const key = unprotectString(work.fromPackages[0]?.id) || 'unknown_work_' + work._id
-			// const referencedPackage = packageRef[packageId]
-			let packageWithWorkStatus = packagesWithWorkStatuses[key]
-			if (!packageWithWorkStatus) {
-				packagesWithWorkStatuses[key] = packageWithWorkStatus = {
-					package: packageRef[key] || undefined,
-					statuses: [],
-					device,
-				}
+
+		for (const expPackage of expectedPackages) {
+			packagesWithWorkStatuses[unprotectString(expPackage._id)] = {
+				package: expPackage,
+				statuses: [],
+				device: undefined,
 			}
-			packageWithWorkStatus.statuses.push(work)
+		}
+
+		for (const work of expectedPackageWorkStatuses) {
+			// todo: make this better:
+			let fromPackageIds = work.fromPackages.map((p) => unprotectString(p.id))
+			if (fromPackageIds.length === 0) fromPackageIds = ['unknown_work_' + work._id]
+
+			for (const key of fromPackageIds) {
+				// const referencedPackage = packageRef[packageId]
+				let packageWithWorkStatus = packagesWithWorkStatuses[key]
+				if (!packageWithWorkStatus) {
+					packagesWithWorkStatuses[key] = packageWithWorkStatus = {
+						package: undefined,
+						statuses: [],
+						device: undefined,
+					}
+				}
+				packageWithWorkStatus.statuses.push(work)
+				packageWithWorkStatus.device = peripheralDevicesMap.get(work.deviceId)
+			}
 		}
 
 		for (const id of Object.keys(packagesWithWorkStatuses)) {
@@ -149,6 +163,7 @@ export const ExpectedPackagesStatus: React.FC<{}> = function ExpectedPackagesSta
 	function renderPackageContainerStatuses() {
 		return packageContainerStatuses.map((packageContainerStatus) => {
 			const device = peripheralDevicesMap.get(packageContainerStatus.deviceId)
+			console.log(device, packageContainerStatus.deviceId)
 			return (
 				<PackageContainerStatus
 					key={unprotectString(packageContainerStatus._id)}

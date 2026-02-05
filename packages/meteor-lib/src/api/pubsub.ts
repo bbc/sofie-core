@@ -1,8 +1,7 @@
 import {
 	BucketId,
-	OrganizationId,
 	PartId,
-	RundownId,
+	PeripheralDeviceId,
 	RundownPlaylistActivationId,
 	RundownPlaylistId,
 	ShowStyleBaseId,
@@ -12,7 +11,6 @@ import { Bucket } from '@sofie-automation/corelib/dist/dataModel/Bucket'
 import { ICoreSystem } from '../collections/CoreSystem.js'
 import { Evaluation } from '../collections/Evaluations.js'
 import { ExpectedPlayoutItem } from '@sofie-automation/corelib/dist/dataModel/ExpectedPlayoutItem'
-import { DBOrganization } from '../collections/Organization.js'
 import { RundownLayoutBase } from '../collections/RundownLayouts.js'
 import { SnapshotItem } from '../collections/Snapshots.js'
 import { TranslationsBundle } from '../collections/TranslationsBundles.js'
@@ -33,7 +31,6 @@ import { CorelibPubSub, CorelibPubSubCollections, CorelibPubSubTypes } from '@so
 import { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { PartInstance } from '../collections/PartInstances.js'
-import type { DBNotificationObj } from '@sofie-automation/corelib/dist/dataModel/Notifications'
 
 /**
  * Ids of possible DDP subscriptions for the UI only
@@ -78,22 +75,9 @@ export enum MeteorPubSub {
 	 */
 	rundownLayouts = 'rundownLayouts',
 	/**
-	 * Fetch information about a specified organization.
-	 * If null is provided, nothing will be returned
-	 */
-	organization = 'organization',
-	/**
 	 * Fetch all translation bundles
 	 */
 	translationsBundles = 'translationsBundles',
-	/**
-	 * Fetch notifications for playlist
-	 */
-	notificationsForRundownPlaylist = 'notificationsForRundownPlaylist',
-	/**
-	 * Fetch notifications for rundown
-	 */
-	notificationsForRundown = 'notificationsForRundown',
 
 	// custom publications:
 
@@ -105,6 +89,11 @@ export enum MeteorPubSub {
 	 * Fetch the simplified timeline for a given studio
 	 */
 	timelineForStudio = 'timelineForStudio',
+
+	/**
+	 * Ingest status of rundowns for a PeripheralDevice
+	 */
+	ingestDeviceRundownStatusTestTool = 'ingestDeviceRundownStatusTestTool',
 
 	/**
 	 * Fetch the simplified playout UI view of the specified ShowStyleBase
@@ -184,13 +173,7 @@ export interface MeteorPubSubTypes {
 		showStyleBaseIds: ShowStyleBaseId[] | null,
 		token?: string
 	) => CollectionName.RundownLayouts
-	[MeteorPubSub.organization]: (organizationId: OrganizationId | null, token?: string) => CollectionName.Organizations
 	[MeteorPubSub.translationsBundles]: (token?: string) => CollectionName.TranslationsBundles
-	[MeteorPubSub.notificationsForRundown]: (studioId: StudioId, rundownId: RundownId) => CollectionName.Notifications
-	[MeteorPubSub.notificationsForRundownPlaylist]: (
-		studioId: StudioId,
-		playlistId: RundownPlaylistId
-	) => CollectionName.Notifications
 
 	// custom publications:
 
@@ -202,6 +185,11 @@ export interface MeteorPubSubTypes {
 		studioId: StudioId,
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.studioTimeline
+
+	[MeteorPubSub.ingestDeviceRundownStatusTestTool]: (
+		peripheralDeviceId: PeripheralDeviceId
+	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
+
 	[MeteorPubSub.uiShowStyleBase]: (showStyleBaseId: ShowStyleBaseId) => CustomCollectionName.UIShowStyleBase
 	/** Subscribe to one or all studios */
 	[MeteorPubSub.uiStudio]: (studioId: StudioId | null) => CustomCollectionName.UIStudio
@@ -254,11 +242,9 @@ export type MeteorPubSubCollections = {
 	[CollectionName.Snapshots]: SnapshotItem
 	[CollectionName.UserActionsLog]: UserActionsLogItem
 	[CollectionName.RundownLayouts]: RundownLayoutBase
-	[CollectionName.Organizations]: DBOrganization
 	[CollectionName.Buckets]: Bucket
 	[CollectionName.TranslationsBundles]: TranslationsBundle
 	[CollectionName.ExpectedPlayoutItems]: ExpectedPlayoutItem
-	[CollectionName.Notifications]: DBNotificationObj
 } & MeteorPubSubCustomCollections
 
 export type MeteorPubSubCustomCollections = {

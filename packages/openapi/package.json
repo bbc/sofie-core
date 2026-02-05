@@ -1,6 +1,6 @@
 {
 	"name": "@sofie-automation/openapi",
-	"version": "1.53.0-in-development",
+	"version": "26.3.0-0",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -53,5 +53,8 @@
 			"yarn lint:raw"
 		]
 	},
-	"packageManager": "yarn@4.10.3"
+	"publishConfig": {
+		"access": "public"
+	},
+	"packageManager": "yarn@4.12.0"
 }

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'
-import { assertNever, unprotectString } from '../../../lib/tempLib.js'
+import { assertNever } from '@sofie-automation/corelib/dist/lib'
+import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
 import Tooltip from 'rc-tooltip'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -24,7 +25,7 @@ export const PackageStatus: React.FC<{
 	const { t } = useTranslation()
 
 	const getPackageName = useCallback((): string => {
-		const p2: ExpectedPackage.Any = props.package as any
+		const p2 = props.package.package as ExpectedPackage.Any
 		if (p2.type === ExpectedPackage.PackageType.MEDIA_FILE) {
 			return p2.content.filePath || unprotectString(props.package._id)
 		} else if (p2.type === ExpectedPackage.PackageType.QUANTEL_CLIP) {
@@ -86,7 +87,7 @@ export const PackageStatus: React.FC<{
 
 			return 0
 		})
-	}, props.statuses)
+	}, [props.statuses])
 
 	let offlineReasonMessage: string | undefined = undefined
 	let connected = true

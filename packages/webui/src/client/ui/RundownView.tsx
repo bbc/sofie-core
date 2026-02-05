@@ -27,7 +27,7 @@ import {
 	maintainFocusOnPartInstance,
 	scrollToPartInstance,
 	getHeaderHeight,
-} from '../lib/viewPort'
+} from '../lib/viewPort.js'
 import { AfterBroadcastForm } from './AfterBroadcastForm.js'
 import { RundownRightHandControls } from './RundownView/RundownRightHandControls.js'
 import { PeripheralDevicesAPI } from '../lib/clientAPI.js'
@@ -38,7 +38,7 @@ import {
 } from './RundownView/RundownNotifier.js'
 import { NotificationCenterPanel } from '../lib/notifications/NotificationCenterPanel.js'
 import { NotificationCenter, NoticeLevel, Notification } from '../lib/notifications/notifications.js'
-import { SupportPopUp } from './SupportPopUp'
+import { SupportPopUp } from './SupportPopUp.js'
 import { KeyboardFocusIndicator } from '../lib/KeyboardFocusIndicator.js'
 import { PeripheralDeviceType } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { doUserAction, UserAction } from '../lib/clientUserAction.js'
@@ -111,6 +111,7 @@ import { useMiniShelfAdlibsData } from './RundownView/useQueueMiniShelfAdlib.js'
 import { RundownViewContextProviders } from './RundownView/RundownViewContextProviders.js'
 import { AnimatePresence } from 'motion/react'
 import { UserError } from '@sofie-automation/corelib/dist/error'
+import { DragContextProvider } from './RundownView/DragContextProvider.js'
 
 const HIDE_NOTIFICATIONS_AFTER_MOUNT: number | undefined = 5000
 
@@ -500,9 +501,14 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 				this.props.playlist.nextPartInfo
 			) {
 				// scroll to next after activation
-				scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId).catch((error) => {
-					if (!error.toString().match(/another scroll/)) console.warn(error)
-				})
+				// add small delay to ensure the nextPartInfo is available
+				setTimeout(() => {
+					if (this.props.playlist && this.props.playlist.nextPartInfo) {
+						scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId).catch((error) => {
+							if (!error.toString().match(/another scroll/)) console.warn(error)
+						})
+					}
+				}, 120)
 			} else if (
 				// after take
 				this.props.playlist &&
@@ -639,24 +645,36 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 			}
 		}
 
-		private onWheelScrollInner = _.debounce(() => {
-			if (this.state.followLiveSegments && this.props.playlist && this.props.playlist.activationId) {
-				const liveSegmentComponent = document.querySelector('.segment-timeline.live')
-				if (liveSegmentComponent) {
-					const offsetPosition = liveSegmentComponent.getBoundingClientRect()
-					// if it's closer to the top edge than the headerHeight
-					const segmentComponentTooHigh = offsetPosition.top < getHeaderHeight()
-					// or if it's closer to the bottom edge than very close to the top
-					const segmentComponentTooLow =
-						offsetPosition.bottom < window.innerHeight - getHeaderHeight() - 20 - (offsetPosition.height * 3) / 2
-					if (segmentComponentTooHigh || segmentComponentTooLow) {
-						this.setState({
-							followLiveSegments: false,
-						})
+		onWheelScrollInner = _.throttle(
+			() => {
+				if (this.state.followLiveSegments && this.props.playlist && this.props.playlist.activationId) {
+					const liveSegmentComponent = document.querySelector('.segment-timeline.live')
+					if (liveSegmentComponent) {
+						const offsetPosition = liveSegmentComponent.getBoundingClientRect()
+						const headerHeight = getHeaderHeight()
+
+						// Use a buffer zone to prevent oscillation
+						const topBuffer = headerHeight + 10
+						const bottomBuffer = window.innerHeight - headerHeight - 20 - (offsetPosition.height * 3) / 2
+
+						// Check if segment is outside the comfortable viewing area
+						const segmentComponentTooHigh = offsetPosition.top < topBuffer
+						const segmentComponentTooLow = offsetPosition.bottom < bottomBuffer
+
+						if (segmentComponentTooHigh || segmentComponentTooLow) {
+							// Only change state if we need to
+							if (this.state.followLiveSegments) {
+								this.setState({
+									followLiveSegments: false,
+								})
+							}
+						}
 					}
 				}
-			}
-		}, 250)
+			},
+			100,
+			{ leading: true, trailing: true }
+		)
 
 		private onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
 			if (e.deltaX === 0 && e.deltaY !== 0 && !e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
@@ -689,9 +707,14 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 				this.setState({
 					followLiveSegments: true,
 				})
-				scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId, true).catch((error) => {
-					if (!error.toString().match(/another scroll/)) console.warn(error)
-				})
+				// Small delay to ensure the nextPartInfo is available
+				setTimeout(() => {
+					if (this.props.playlist && this.props.playlist.nextPartInfo) {
+						scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId, true).catch((error) => {
+							if (!error.toString().match(/another scroll/)) console.warn(error)
+						})
+					}
+				}, 120)
 				setTimeout(() => {
 					this.setState({
 						followLiveSegments: true,
@@ -984,6 +1007,27 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 								const isLastSegment =
 									rundownIndex === rundownArray.length - 1 && segmentIndex === segmentArray.length - 1
 
+								// Calculate placeholder height based on segment properties
+								const calculatePlaceholderHeight = (segment: DBSegment): number => {
+									// Base height for a normal segment timeline
+									const BASE_SEGMENT_HEIGHT = 260
+									// Approximate height for dashboard panel (mini-shelf) when displayed
+									const DASHBOARD_PANEL_HEIGHT = 200
+									// Minimum height for hidden segments to prevent layout issues
+									const HIDDEN_SEGMENT_MIN_HEIGHT = 10
+
+									if (segment.isHidden) {
+										// Hidden segments don't render the timeline at all
+										// They only render the dashboard panel if showShelf is true
+										return segment.showShelf ? DASHBOARD_PANEL_HEIGHT : HIDDEN_SEGMENT_MIN_HEIGHT
+									}
+
+									// Normal segment: base timeline height + optional dashboard panel
+									return segment.showShelf ? BASE_SEGMENT_HEIGHT + DASHBOARD_PANEL_HEIGHT : BASE_SEGMENT_HEIGHT
+								}
+
+								const segmentPlaceholderHeight = calculatePlaceholderHeight(segment)
+
 								return (
 									<ErrorBoundary key={unprotectString(segment._id)}>
 										<VirtualElement
@@ -993,8 +1037,8 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 											})}
 											id={SEGMENT_TIMELINE_ELEMENT_ID + segment._id}
 											margin={'100% 0px 100% 0px'}
-											initialShow={globalIndex++ < window.innerHeight / 260}
-											placeholderHeight={260}
+											initialShow={globalIndex++ < window.innerHeight / segmentPlaceholderHeight}
+											placeholderHeight={segmentPlaceholderHeight}
 											placeholderClassName="placeholder-shimmer-element segment-timeline-placeholder"
 											width="auto"
 										>
@@ -1324,213 +1368,216 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 					currentRundown={currentRundown}
 					onActivate={this.onActivate}
 				>
-					<SelectedElementsContext.Consumer>
-						{(selectionContext) => {
-							return (
-								<div
-									className={classNames('rundown-view', {
-										'notification-center-open': this.state.isNotificationsCenterOpen !== undefined,
-										'rundown-view--studio-mode': this.props.userPermissions.studio,
-										'properties-panel-open': selectionContext.listSelectedElements().length > 0,
-									})}
-									style={this.getStyle()}
-									onWheelCapture={this.onWheel}
-									onContextMenu={this.onContextMenuTop}
-								>
-									{this.renderSegmentsList()}
-									<ErrorBoundary>
-										{this.props.matchedSegments &&
-											this.props.matchedSegments.length > 0 &&
-											this.props.userPermissions.studio &&
-											studio.settings.enableEvaluationForm && <AfterBroadcastForm playlist={playlist} />}
-									</ErrorBoundary>
-									{!this.props.hideRundownHeader && (
+					<DragContextProvider t={t}>
+						<SelectedElementsContext.Consumer>
+							{(selectionContext) => {
+								return (
+									<div
+										className={classNames('rundown-view', {
+											'notification-center-open': this.state.isNotificationsCenterOpen !== undefined,
+											'rundown-view--studio-mode': this.props.userPermissions.studio,
+											'properties-panel-open': selectionContext.listSelectedElements().length > 0,
+										})}
+										style={this.getStyle()}
+										onWheelCapture={this.onWheel}
+										onContextMenu={this.onContextMenuTop}
+									>
+										{this.renderSegmentsList()}
 										<ErrorBoundary>
-											<RundownHeader
+											{this.props.matchedSegments &&
+												this.props.matchedSegments.length > 0 &&
+												this.props.userPermissions.studio &&
+												studio.settings.enableEvaluationForm && <AfterBroadcastForm playlist={playlist} />}
+										</ErrorBoundary>
+										{!this.props.hideRundownHeader && (
+											<ErrorBoundary>
+												<RundownHeader
+													playlist={playlist}
+													studio={studio}
+													rundownIds={this.props.rundowns.map((r) => r._id)}
+													firstRundown={this.props.rundowns[0]}
+													onActivate={this.onActivate}
+													inActiveRundownView={this.props.inActiveRundownView}
+													currentRundown={currentRundown}
+													layout={this.props.selectedHeaderLayout}
+													showStyleBase={showStyleBase}
+													showStyleVariant={showStyleVariant}
+												/>
+											</ErrorBoundary>
+										)}
+										<ErrorBoundary>
+											<Shelf
+												isExpanded={
+													this.state.isInspectorShelfExpanded ||
+													!!(!this.state.wasShelfResizedByUser && this.props.selectedShelfLayout?.openByDefault)
+												}
+												onChangeExpanded={this.onShelfChangeExpanded}
 												playlist={playlist}
-												studio={studio}
-												rundownIds={this.props.rundowns.map((r) => r._id)}
-												firstRundown={this.props.rundowns[0]}
-												onActivate={this.onActivate}
-												inActiveRundownView={this.props.inActiveRundownView}
-												currentRundown={currentRundown}
-												layout={this.props.selectedHeaderLayout}
 												showStyleBase={showStyleBase}
 												showStyleVariant={showStyleVariant}
+												onChangeBottomMargin={this.onChangeBottomMargin}
+												rundownLayout={this.props.selectedShelfLayout}
+												studio={studio}
 											/>
 										</ErrorBoundary>
-									)}
-									<ErrorBoundary>
-										<Shelf
-											isExpanded={
-												this.state.isInspectorShelfExpanded ||
-												!!(!this.state.wasShelfResizedByUser && this.props.selectedShelfLayout?.openByDefault)
-											}
-											onChangeExpanded={this.onShelfChangeExpanded}
-											playlist={playlist}
-											showStyleBase={showStyleBase}
-											showStyleVariant={showStyleVariant}
-											onChangeBottomMargin={this.onChangeBottomMargin}
-											rundownLayout={this.props.selectedShelfLayout}
-											studio={studio}
-										/>
-									</ErrorBoundary>
-									<ErrorBoundary>
-										{this.props.userPermissions.studio && !Settings.disableBlurBorder && (
-											<KeyboardFocusIndicator userPermissions={this.props.userPermissions}>
-												<div
-													className={classNames('rundown-view__focus-lost-frame', {
-														'rundown-view__focus-lost-frame--reduce-animation': import.meta.env.DEV,
-													})}
-												></div>
-											</KeyboardFocusIndicator>
-										)}
-									</ErrorBoundary>
-									<ErrorBoundary>
-										<RundownRightHandControls
-											playlistId={playlist._id}
-											isFollowingOnAir={this.state.followLiveSegments}
-											onFollowOnAir={this.onGoToLiveSegment}
-											onRewindSegments={this.onRewindSegments}
-											isNotificationCenterOpen={this.state.isNotificationsCenterOpen}
-											onToggleNotifications={this.onToggleNotifications}
-											isSupportPanelOpen={this.state.isSupportPanelOpen}
-											onToggleSupportPanel={this.onToggleSupportPanel}
-											isStudioMode={this.props.userPermissions.studio}
-											isUserEditsEnabled={this.props.studio?.settings.enableUserEdits ?? false}
-											onTake={this.onTake}
-											studioRouteSets={studio.routeSets}
-											studioRouteSetExclusivityGroups={studio.routeSetExclusivityGroups}
-											onStudioRouteSetSwitch={this.onStudioRouteSetSwitch}
-											onSegmentViewMode={this.onSegmentViewModeChange}
-											hideRundownHeader={this.props.hideRundownHeader}
-										/>
-									</ErrorBoundary>
-									<ErrorBoundary>
-										{this.props.userPermissions.studio && currentRundown && (
-											<RundownSorensenContext
-												studio={studio}
-												playlist={playlist}
-												currentRundown={currentRundown}
-												showStyleBase={showStyleBase}
+										<ErrorBoundary>
+											{this.props.userPermissions.studio && !Settings.disableBlurBorder && (
+												<KeyboardFocusIndicator userPermissions={this.props.userPermissions}>
+													<div
+														className={classNames('rundown-view__focus-lost-frame', {
+															'rundown-view__focus-lost-frame--reduce-animation': import.meta.env.DEV,
+														})}
+													></div>
+												</KeyboardFocusIndicator>
+											)}
+										</ErrorBoundary>
+										<ErrorBoundary>
+											<RundownRightHandControls
+												playlistId={playlist._id}
+												isFollowingOnAir={this.state.followLiveSegments}
+												onFollowOnAir={this.onGoToLiveSegment}
+												onRewindSegments={this.onRewindSegments}
+												isNotificationCenterOpen={this.state.isNotificationsCenterOpen}
+												onToggleNotifications={this.onToggleNotifications}
+												isSupportPanelOpen={this.state.isSupportPanelOpen}
+												onToggleSupportPanel={this.onToggleSupportPanel}
+												isStudioMode={this.props.userPermissions.studio}
+												isUserEditsEnabled={this.props.studio?.settings.enableUserEdits ?? false}
+												onTake={this.onTake}
+												studioRouteSets={studio.routeSets}
+												studioRouteSetExclusivityGroups={studio.routeSetExclusivityGroups}
+												onStudioRouteSetSwitch={this.onStudioRouteSetSwitch}
+												onSegmentViewMode={this.onSegmentViewModeChange}
+												hideRundownHeader={this.props.hideRundownHeader}
 											/>
-										)}
-									</ErrorBoundary>
-									<ErrorBoundary>
-										<AnimatePresence>
-											{this.state.isNotificationsCenterOpen && (
-												<NotificationCenterPanel
-													filter={this.state.isNotificationsCenterOpen}
-													hideRundownHeader={this.props.hideRundownHeader}
-												/>
-											)}
-											{!this.state.isNotificationsCenterOpen && selectionContext.listSelectedElements().length > 0 && (
-												<div>
-													<PropertiesPanel />
-												</div>
-											)}
-
-											{this.state.isSupportPanelOpen && (
-												<SupportPopUp>
-													<hr />
-													<button className="btn btn-secondary" onClick={this.onToggleHotkeys}>
-														{t('Show Hotkeys')}
-													</button>
-													<hr />
-													<PromiseButton
-														className="btn btn-secondary"
-														onClick={this.onTakeRundownSnapshot}
-														disableDuringFeedback={true}
-													>
-														{t('Take a Snapshot')}
-													</PromiseButton>
-													<hr />
-													{this.props.userPermissions.studio && (
-														<>
-															<button className="btn btn-secondary" onClick={this.onRestartPlayout}>
-																{t('Restart Playout')}
-															</button>
-															<hr />
-														</>
-													)}
-													{this.props.userPermissions.studio && <CasparCGRestartButtons studioId={studio._id} />}
-												</SupportPopUp>
-											)}
-										</AnimatePresence>
-									</ErrorBoundary>
-									<ErrorBoundary>
-										{this.props.userPermissions.studio && (
-											<Prompt
-												when={!!playlist.activationId}
-												message={t('This rundown is now active. Are you sure you want to exit this screen?')}
-											/>
-										)}
-									</ErrorBoundary>
-									<ErrorBoundary>
-										<SegmentContextMenu
-											contextMenuContext={this.state.contextMenuContext}
-											playlist={playlist}
-											onSetNext={this.onSetNext}
-											onSetNextSegment={this.onSetNextSegment}
-											onQueueNextSegment={this.onQueueNextSegment}
-											onSetQuickLoopStart={this.onSetQuickLoopStart}
-											onSetQuickLoopEnd={this.onSetQuickLoopEnd}
-											onEditProps={(selection) => selectionContext.clearAndSetSelection(selection)}
-											studioMode={this.props.userPermissions.studio}
-											enablePlayFromAnywhere={!!studio.settings.enablePlayFromAnywhere}
-											enableQuickLoop={!!studio.settings.enableQuickLoop}
-											enableUserEdits={!!studio.settings.enableUserEdits}
-										/>
-									</ErrorBoundary>
-									<ErrorBoundary>
-										{this.state.isClipTrimmerOpen &&
-											this.state.selectedPiece &&
-											RundownUtils.isPieceInstance(this.state.selectedPiece) &&
-											(selectedPieceRundown === undefined ? (
-												<ModalDialog
-													onAccept={() => this.setState({ selectedPiece: undefined })}
-													title={t('Rundown not found')}
-													acceptText={t('Close')}
-												>
-													{t('Rundown for piece "{{pieceLabel}}" could not be found.', {
-														pieceLabel: this.state.selectedPiece.instance.piece.name,
-													})}
-												</ModalDialog>
-											) : (
-												<ClipTrimDialog
+										</ErrorBoundary>
+										<ErrorBoundary>
+											{this.props.userPermissions.studio && currentRundown && (
+												<RundownSorensenContext
 													studio={studio}
-													playlistId={playlist._id}
-													rundown={selectedPieceRundown}
-													selectedPiece={this.state.selectedPiece.instance.piece}
-													onClose={() => this.setState({ isClipTrimmerOpen: false })}
+													playlist={playlist}
+													currentRundown={currentRundown}
+													showStyleBase={showStyleBase}
 												/>
-											))}
-									</ErrorBoundary>
-									<ErrorBoundary>
-										<PointerLockCursor />
-									</ErrorBoundary>
-									<ErrorBoundary>
-										{this.props.playlist && this.props.studio && this.props.showStyleBase && (
-											<RundownNotifier playlistId={this.props.playlist._id} studio={this.props.studio} />
-										)}
-									</ErrorBoundary>
-								</div>
-							)
-						}}
-						{
-							// USE IN CASE OF DEBUGGING EMERGENCY
-							/* getDeveloperMode() && <div id='debug-console' className='debug-console' style={{
-							background: 'rgba(255,255,255,0.7)',
-							color: '#000',
-							position: 'fixed',
-							top: '0',
-							right: '0',
-							zIndex: 10000,
-							pointerEvents: 'none'
-						}}>
-						</div> */
-						}
-					</SelectedElementsContext.Consumer>
+											)}
+										</ErrorBoundary>
+										<ErrorBoundary>
+											<AnimatePresence>
+												{this.state.isNotificationsCenterOpen && (
+													<NotificationCenterPanel
+														filter={this.state.isNotificationsCenterOpen}
+														hideRundownHeader={this.props.hideRundownHeader}
+													/>
+												)}
+												{!this.state.isNotificationsCenterOpen &&
+													selectionContext.listSelectedElements().length > 0 && (
+														<div>
+															<PropertiesPanel />
+														</div>
+													)}
+
+												{this.state.isSupportPanelOpen && (
+													<SupportPopUp>
+														<hr />
+														<button className="btn btn-secondary" onClick={this.onToggleHotkeys}>
+															{t('Show Hotkeys')}
+														</button>
+														<hr />
+														<PromiseButton
+															className="btn btn-secondary"
+															onClick={this.onTakeRundownSnapshot}
+															disableDuringFeedback={true}
+														>
+															{t('Take a Snapshot')}
+														</PromiseButton>
+														<hr />
+														{this.props.userPermissions.studio && (
+															<>
+																<button className="btn btn-secondary" onClick={this.onRestartPlayout}>
+																	{t('Restart Playout')}
+																</button>
+																<hr />
+															</>
+														)}
+														{this.props.userPermissions.studio && <CasparCGRestartButtons studioId={studio._id} />}
+													</SupportPopUp>
+												)}
+											</AnimatePresence>
+										</ErrorBoundary>
+										<ErrorBoundary>
+											{this.props.userPermissions.studio && (
+												<Prompt
+													when={!!playlist.activationId}
+													message={t('This rundown is now active. Are you sure you want to exit this screen?')}
+												/>
+											)}
+										</ErrorBoundary>
+										<ErrorBoundary>
+											<SegmentContextMenu
+												contextMenuContext={this.state.contextMenuContext}
+												playlist={playlist}
+												onSetNext={this.onSetNext}
+												onSetNextSegment={this.onSetNextSegment}
+												onQueueNextSegment={this.onQueueNextSegment}
+												onSetQuickLoopStart={this.onSetQuickLoopStart}
+												onSetQuickLoopEnd={this.onSetQuickLoopEnd}
+												onEditProps={(selection) => selectionContext.clearAndSetSelection(selection)}
+												studioMode={this.props.userPermissions.studio}
+												enablePlayFromAnywhere={!!studio.settings.enablePlayFromAnywhere}
+												enableQuickLoop={!!studio.settings.enableQuickLoop}
+												enableUserEdits={!!studio.settings.enableUserEdits}
+											/>
+										</ErrorBoundary>
+										<ErrorBoundary>
+											{this.state.isClipTrimmerOpen &&
+												this.state.selectedPiece &&
+												RundownUtils.isPieceInstance(this.state.selectedPiece) &&
+												(selectedPieceRundown === undefined ? (
+													<ModalDialog
+														onAccept={() => this.setState({ selectedPiece: undefined })}
+														title={t('Rundown not found')}
+														acceptText={t('Close')}
+													>
+														{t('Rundown for piece "{{pieceLabel}}" could not be found.', {
+															pieceLabel: this.state.selectedPiece.instance.piece.name,
+														})}
+													</ModalDialog>
+												) : (
+													<ClipTrimDialog
+														studio={studio}
+														playlistId={playlist._id}
+														rundown={selectedPieceRundown}
+														selectedPiece={this.state.selectedPiece.instance.piece}
+														onClose={() => this.setState({ isClipTrimmerOpen: false })}
+													/>
+												))}
+										</ErrorBoundary>
+										<ErrorBoundary>
+											<PointerLockCursor />
+										</ErrorBoundary>
+										<ErrorBoundary>
+											{this.props.playlist && this.props.studio && this.props.showStyleBase && (
+												<RundownNotifier playlistId={this.props.playlist._id} studio={this.props.studio} />
+											)}
+										</ErrorBoundary>
+									</div>
+								)
+							}}
+							{
+								// USE IN CASE OF DEBUGGING EMERGENCY
+								/* getDeveloperMode() && <div id='debug-console' className='debug-console' style={{
+									background: 'rgba(255,255,255,0.7)',
+									color: '#000',
+									position: 'fixed',
+									top: '0',
+									right: '0',
+									zIndex: 10000,
+									pointerEvents: 'none'
+								}}>
+								</div> */
+							}
+						</SelectedElementsContext.Consumer>
+					</DragContextProvider>
 				</RundownViewContextProviders>
 			)
 		}

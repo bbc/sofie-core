@@ -76,17 +76,6 @@ export async function executeAdlibActionAndSaveModel(
 		throw UserError.create(UserErrorMessage.ActionsNotSupported)
 	}
 
-	const watchedPackages = await WatchedPackagesHelper.create(context, {
-		pieceId: data.actionDocId,
-		fromPieceType: {
-			$in: [
-				ExpectedPackageDBType.ADLIB_ACTION,
-				ExpectedPackageDBType.BASELINE_ADLIB_ACTION,
-				ExpectedPackageDBType.BUCKET_ADLIB_ACTION,
-			],
-		},
-	})
-
 	const [adLibAction, baselineAdLibAction, bucketAdLibAction] = await Promise.all([
 		context.directCollections.AdLibActions.findOne(data.actionDocId as AdLibActionId, {
 			projection: { _id: 1, privateData: 1 },
@@ -102,6 +91,27 @@ export async function executeAdlibActionAndSaveModel(
 		}),
 	])
 	const adLibActionDoc = adLibAction ?? baselineAdLibAction ?? bucketAdLibAction
+
+	if (adLibActionDoc && adLibActionDoc.invalid)
+		throw UserError.from(
+			new Error(`Cannot take invalid AdLib Action "${adLibActionDoc._id}"!`),
+			UserErrorMessage.AdlibUnplayable
+		)
+
+	let watchedPackages = WatchedPackagesHelper.empty(context)
+	if (adLibActionDoc && 'rundownId' in adLibActionDoc) {
+		watchedPackages = await WatchedPackagesHelper.create(context, adLibActionDoc.rundownId, null, {
+			fromPieceType: {
+				$in: [ExpectedPackageDBType.ADLIB_ACTION, ExpectedPackageDBType.BASELINE_ADLIB_ACTION],
+			},
+			pieceId: data.actionDocId,
+		})
+	} else if (adLibActionDoc && 'bucketId' in adLibActionDoc) {
+		watchedPackages = await WatchedPackagesHelper.create(context, null, adLibActionDoc.bucketId, {
+			fromPieceType: ExpectedPackageDBType.BUCKET_ADLIB_ACTION,
+			pieceId: data.actionDocId,
+		})
+	}
 
 	const actionParameters: ExecuteActionParameters = {
 		actionId: data.actionId,
@@ -278,7 +288,7 @@ async function applyAnyExecutionSideEffects(
 	await applyActionSideEffects(context, playoutModel, actionContext)
 
 	if (actionContext.takeAfterExecute) {
-		await performTakeToNextedPart(context, playoutModel, now)
+		await performTakeToNextedPart(context, playoutModel, now, actionContext.partToQueueAfterTake)
 	} else if (
 		actionContext.forceRegenerateTimeline ||
 		actionContext.currentPartState !== ActionPartChange.NONE ||

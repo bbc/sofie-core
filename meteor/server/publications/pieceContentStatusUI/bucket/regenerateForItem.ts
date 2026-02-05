@@ -1,7 +1,8 @@
 import { BucketAdLibActionId, BucketAdLibId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import { UIBucketContentStatus } from '@sofie-automation/meteor-lib/dist/api/rundownNotifications'
-import { literal, protectString } from '../../../lib/tempLib'
+import { literal } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { CustomPublishCollection } from '../../../lib/customPublication'
 import { BucketContentCache } from './bucketContentCache'
 import { PieceDependencies } from '../common'
@@ -47,6 +48,7 @@ export async function regenerateForBucketAdLibIds(
 			if (sourceLayer) {
 				const [status, itemDependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.bucketId,
 					messageFactories.get(actionDoc.showStyleBaseId),
 					actionDoc,
 					sourceLayer
@@ -119,6 +121,7 @@ export async function regenerateForBucketActionIds(
 
 				const [status, itemDependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.bucketId,
 					messageFactories.get(actionDoc.showStyleBaseId),
 					fakedPiece,
 					sourceLayer

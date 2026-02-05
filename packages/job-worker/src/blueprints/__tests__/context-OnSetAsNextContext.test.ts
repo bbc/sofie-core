@@ -6,17 +6,24 @@ import { JobContext, ProcessedShowStyleCompound } from '../../jobs/index.js'
 import { mock } from 'jest-mock-extended'
 import { PartAndPieceInstanceActionService } from '../context/services/PartAndPieceInstanceActionService.js'
 import { OnSetAsNextContext } from '../context/index.js'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 
 describe('Test blueprint api context', () => {
-	async function getTestee(setManually = false) {
+	async function getTestee(setManually = false, rehearsal?: boolean) {
 		const mockActionService = mock<PartAndPieceInstanceActionService>()
+		const mockPlayoutModel = mock<PlayoutModel>()
+		Object.defineProperty(mockPlayoutModel, 'playlist', {
+			get: () => ({ rehearsal }),
+		})
 		const context = new OnSetAsNextContext(
 			{
 				name: 'fakeContext',
 				identifier: 'action',
 			},
 			mock<JobContext>(),
-			mock<PlayoutModel>(),
+			mockPlayoutModel,
 			mock<ProcessedShowStyleCompound>(),
 			mock<WatchedPackagesHelper>(),
 			mockActionService,
@@ -26,6 +33,7 @@ describe('Test blueprint api context', () => {
 		return {
 			context,
 			mockActionService,
+			mockPlayoutModel,
 		}
 	}
 
@@ -100,6 +108,42 @@ describe('Test blueprint api context', () => {
 			expect(mockActionService.getPartForPreviousPiece).toHaveBeenCalledWith({ _id: 'pieceId' })
 		})
 
+		test('getUpcomingParts', async () => {
+			const { context, mockPlayoutModel } = await getTestee()
+
+			mockPlayoutModel.getAllOrderedParts.mockReturnValue(
+				mock([
+					{
+						_id: protectString<PartId>('part1'),
+						title: 'Part 1',
+						invalid: false,
+						floated: false,
+						_rank: 1,
+						rundownId: protectString<RundownId>('rundown1'),
+						externalId: 'ext1',
+						segmentId: protectString<SegmentId>('seg1'),
+						expectedDurationWithTransition: 1000,
+						userEditOperations: [],
+					} as DBPart,
+					{
+						_id: protectString<PartId>('part2'),
+						title: 'Part 2',
+						invalid: false,
+						floated: false,
+						_rank: 1,
+						rundownId: protectString<RundownId>('rundown1'),
+						externalId: 'ext1',
+						segmentId: protectString<SegmentId>('seg1'),
+						expectedDurationWithTransition: 1000,
+						userEditOperations: [],
+					} as unknown as DBPart,
+				])
+			)
+
+			const parts = await context.getUpcomingParts()
+			expect(parts.map((i) => i.title)).toEqual(['Part 1', 'Part 2'])
+		})
+
 		test('insertPiece', async () => {
 			const { context, mockActionService } = await getTestee()
 
@@ -146,6 +190,24 @@ describe('Test blueprint api context', () => {
 			const { context } = await getTestee(true)
 
 			expect(context.manuallySelected).toBe(true)
+		})
+
+		test('isRehearsal when true', async () => {
+			const { context } = await getTestee(false, true)
+
+			expect(context.isRehearsal).toBe(true)
+		})
+
+		test('isRehearsal when false', async () => {
+			const { context } = await getTestee(false, false)
+
+			expect(context.isRehearsal).toBe(false)
+		})
+
+		test('isRehearsal when undefined', async () => {
+			const { context } = await getTestee()
+
+			expect(context.isRehearsal).toBe(false)
 		})
 	})
 })

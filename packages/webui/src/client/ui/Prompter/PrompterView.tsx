@@ -10,6 +10,7 @@ import {
 	Translated,
 	useGlobalDelayedTrackerUpdateState,
 	useSubscription,
+	useSubscriptionIfEnabled,
 	useSubscriptions,
 	useTracker,
 } from '../../lib/ReactMeteorData/ReactMeteorData.js'
@@ -62,6 +63,9 @@ interface PrompterConfig {
 	pedal_rangeNeutralMax?: number
 	pedal_rangeFwdMax?: number
 	shuttle_speedMap?: number[]
+	xbox_speedMap?: number[]
+	xbox_reverseSpeedMap?: number[]
+	xbox_triggerDeadZone?: number
 	marker?: 'center' | 'top' | 'bottom' | 'hide'
 	showMarker: boolean
 	showScroll: boolean
@@ -77,6 +81,7 @@ export enum PrompterConfigMode {
 	JOYCON = 'joycon',
 	PEDAL = 'pedal',
 	SHUTTLEWEBHID = 'shuttlewebhid',
+	XBOX = 'xbox',
 }
 
 export interface IPrompterControllerState {
@@ -175,6 +180,18 @@ export class PrompterViewContent extends React.Component<Translated<IProps & ITr
 			pedal_rangeNeutralMin: parseInt(firstIfArray(queryParams['pedal_rangeNeutralMin']) as string, 10) || undefined,
 			pedal_rangeNeutralMax: parseInt(firstIfArray(queryParams['pedal_rangeNeutralMax']) as string, 10) || undefined,
 			pedal_rangeFwdMax: parseInt(firstIfArray(queryParams['pedal_rangeFwdMax']) as string, 10) || undefined,
+			xbox_speedMap:
+				queryParams['xbox_speedMap'] === undefined
+					? undefined
+					: asArray(queryParams['xbox_speedMap']).map((value) => Number.parseInt(value, 10)),
+			xbox_reverseSpeedMap:
+				queryParams['xbox_reverseSpeedMap'] === undefined
+					? undefined
+					: asArray(queryParams['xbox_reverseSpeedMap']).map((value) => Number.parseInt(value, 10)),
+			xbox_triggerDeadZone: (() => {
+				const val = Number.parseFloat(firstIfArray(queryParams['xbox_triggerDeadZone']) as string)
+				return Number.isNaN(val) ? undefined : val
+			})(),
 			marker: (firstIfArray(queryParams['marker']) as any) || undefined,
 			showMarker: queryParams['showmarker'] === undefined ? true : queryParams['showmarker'] === '1',
 			showScroll: queryParams['showscroll'] === undefined ? true : queryParams['showscroll'] === '1',
@@ -664,11 +681,11 @@ function Prompter(props: Readonly<PropsWithChildren<IPrompterProps>>): JSX.Eleme
 		[props.rundownPlaylistId]
 	)
 	const rundownIDs = playlist ? RundownPlaylistCollectionUtil.getRundownUnorderedIDs(playlist) : []
-	useSubscription(CorelibPubSub.segments, rundownIDs, {})
+	useSubscriptionIfEnabled(CorelibPubSub.segments, rundownIDs.length > 0, rundownIDs, {})
 	useSubscription(MeteorPubSub.uiParts, props.rundownPlaylistId)
-	useSubscription(MeteorPubSub.uiPartInstances, playlist?.activationId ?? null)
-	useSubscription(CorelibPubSub.pieces, rundownIDs, null)
-	useSubscription(CorelibPubSub.pieceInstancesSimple, rundownIDs, null)
+	useSubscriptionIfEnabled(MeteorPubSub.uiPartInstances, !!playlist?.activationId, playlist?.activationId ?? null)
+	useSubscriptionIfEnabled(CorelibPubSub.pieces, rundownIDs.length > 0, rundownIDs, null)
+	useSubscriptionIfEnabled(CorelibPubSub.pieceInstancesSimple, rundownIDs.length > 0, rundownIDs, null)
 
 	const rundowns = useTracker(
 		() =>
@@ -1024,7 +1041,11 @@ const PrompterContent = withTranslation()(
 			}
 
 			if (hasInsertedScript) {
-				lines.push(<div className="prompter-break end">—{t('End of script')}—</div>)
+				lines.push(
+					<div key="end-of-script" className="prompter-break end">
+						—{t('End of script')}—
+					</div>
+				)
 			}
 
 			return lines

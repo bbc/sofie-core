@@ -29,9 +29,15 @@ import { ProcessedShowStyleConfig } from '../config.js'
 import { DatastorePersistenceMode } from '@sofie-automation/shared-lib/dist/core/model/TimelineDatastore'
 import { removeTimelineDatastoreValue, setTimelineDatastoreValue } from '../../playout/datastore.js'
 import { executePeripheralDeviceAction, listPlayoutDevices } from '../../peripheralDevice.js'
-import { ActionPartChange, PartAndPieceInstanceActionService } from './services/PartAndPieceInstanceActionService.js'
+import {
+	ActionPartChange,
+	PartAndPieceInstanceActionService,
+	QueueablePartAndPieces,
+} from './services/PartAndPieceInstanceActionService.js'
 import { BlueprintQuickLookInfo } from '@sofie-automation/blueprints-integration/dist/context/quickLoopInfo'
 import { setNextPartFromPart } from '../../playout/setNext.js'
+import { getOrderedPartsAfterPlayhead } from '../../playout/lookahead/util.js'
+import { convertPartToBlueprints } from './lib.js'
 
 export class DatastoreActionExecutionContext
 	extends ShowStyleUserContext
@@ -74,8 +80,14 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 	 */
 	public forceRegenerateTimeline = false
 
+	public partToQueueAfterTake: QueueablePartAndPieces | undefined
+
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
 		return this.partAndPieceInstanceService.quickLoopInfo
+	}
+
+	public get isRehearsal(): boolean {
+		return this._playoutModel.playlist.rehearsal ?? false
 	}
 
 	public get currentPartState(): ActionPartChange {
@@ -100,6 +112,10 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		private readonly partAndPieceInstanceService: PartAndPieceInstanceActionService
 	) {
 		super(contextInfo, _context, showStyle, watchedPackages)
+	}
+
+	async getUpcomingParts(limit: number = 5): Promise<ReadonlyDeep<IBlueprintPart[]>> {
+		return getOrderedPartsAfterPlayhead(this._context, this._playoutModel, limit).map(convertPartToBlueprints)
 	}
 
 	async getPartInstance(part: 'current' | 'next'): Promise<IBlueprintPartInstance | undefined> {
@@ -160,6 +176,19 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 
 	async queuePart(rawPart: IBlueprintPart, rawPieces: IBlueprintPiece[]): Promise<IBlueprintPartInstance> {
 		return this.partAndPieceInstanceService.queuePart(rawPart, rawPieces)
+	}
+
+	queuePartAfterTake(rawPart: IBlueprintPart, rawPieces: IBlueprintPiece[]): void {
+		const currentPartInstance = this._playoutModel.currentPartInstance
+		if (!currentPartInstance) {
+			throw new Error('Cannot queue part when no current partInstance')
+		}
+		this.partToQueueAfterTake = this.partAndPieceInstanceService.processPartAndPiecesToQueueOrFail(
+			rawPart,
+			rawPieces,
+			this._playoutModel.currentPartInstance.partInstance.rundownId,
+			this._playoutModel.currentPartInstance.partInstance.segmentId
+		)
 	}
 
 	async moveNextPart(partDelta: number, segmentDelta: number, ignoreQuickloop?: boolean): Promise<void> {

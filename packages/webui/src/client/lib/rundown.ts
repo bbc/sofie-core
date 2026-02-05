@@ -2,6 +2,7 @@ import _ from 'underscore'
 import { PieceUi, PartUi } from '../ui/SegmentTimeline/SegmentTimelineContainer.js'
 import { Timecode } from '@sofie-automation/corelib/dist/index'
 import { Settings } from '../lib/Settings.js'
+import { TFunction } from 'react-i18next'
 import {
 	SourceLayerType,
 	PieceLifespan,
@@ -23,9 +24,11 @@ import {
 import { PartInstance, wrapPartToTemporaryInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { literal, protectString, groupByToMap } from './tempLib.js'
+import { literal, groupByToMap } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { getCurrentTime } from './systemTime.js'
 import {
+	createPartCurrentTimes,
 	processAndPrunePieceInstanceTimings,
 	resolvePrunedPieceInstance,
 } from '@sofie-automation/corelib/dist/playout/processAndPrune'
@@ -47,6 +50,47 @@ import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { RundownPlaylistClientUtil } from './rundownPlaylistUtil.js'
+
+/**
+ * Returns a human-readable, translatable string for a given SourceLayerType.
+ */
+export function sourceLayerTypeString(t: TFunction<'translation', undefined>, type: SourceLayerType): string {
+	switch (type) {
+		case SourceLayerType.CAMERA:
+			return t('Camera')
+		case SourceLayerType.GRAPHICS:
+			return t('Graphics')
+		case SourceLayerType.LIVE_SPEAK:
+			return t('Live Speak')
+		case SourceLayerType.LOWER_THIRD:
+			return t('Lower Third')
+		case SourceLayerType.REMOTE_SPEAK:
+			return t('Remote Speak')
+		case SourceLayerType.REMOTE:
+			return t('Remote Source')
+		case SourceLayerType.SCRIPT:
+			return t('Generic Script')
+		case SourceLayerType.SPLITS:
+			return t('Split Screen')
+		case SourceLayerType.VT:
+			return t('Clips')
+		case SourceLayerType.UNKNOWN:
+			return t('Unknown Layer')
+		case SourceLayerType.AUDIO:
+			return t('Audio Mixing')
+		case SourceLayerType.LIGHTS:
+			return t('Lighting')
+		case SourceLayerType.TRANSITION:
+			return t('Transition')
+		case SourceLayerType.LOCAL:
+			return t('Local')
+		case SourceLayerType.STUDIO_SCREEN:
+			return t('Studio Screen Graphics')
+		default:
+			assertNever(type)
+			return SourceLayerType[type]
+	}
+}
 
 export namespace RundownUtils {
 	export function padZeros(input: number, places?: number): string {
@@ -503,19 +547,20 @@ export namespace RundownUtils {
 					pieceInstanceSimulation
 				)
 
-				const partStarted = partE.instance.timings?.plannedStartedPlayback
-				const nowInPart = partStarted ? getCurrentTime() - partStarted : 0
-
+				const partTimes = createPartCurrentTimes(
+					getCurrentTime(),
+					partE.instance.timings?.plannedStartedPlayback
+				)
 				const preprocessedPieces = processAndPrunePieceInstanceTimings(
 					showStyleBase.sourceLayers,
 					rawPieceInstances,
-					nowInPart,
+					partTimes,
 					includeDisabledPieces
 				)
 
 				// insert items into the timeline for resolution
 				partE.pieces = preprocessedPieces.map((piece) => {
-					const resolvedPiece = resolvePrunedPieceInstance(nowInPart, piece)
+					const resolvedPiece = resolvePrunedPieceInstance(partTimes, piece)
 					const resPiece: PieceExtended = {
 						instance: piece,
 						renderedDuration: resolvedPiece.resolvedDuration ?? null,

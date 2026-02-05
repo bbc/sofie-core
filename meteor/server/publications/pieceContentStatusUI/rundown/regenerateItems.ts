@@ -8,7 +8,8 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import { UIPieceContentStatus } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
-import { literal, protectString } from '../../../lib/tempLib'
+import { literal } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { CustomPublishCollection } from '../../../lib/customPublication'
 import { ContentCache } from './reactiveContentCache'
 import { wrapTranslatableMessageFromBlueprintsIfNotString } from '@sofie-automation/corelib/dist/TranslatableMessage'
@@ -45,6 +46,7 @@ async function regenerateGenericPiece(
 	if (part && segment && sourceLayer) {
 		const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 			uiStudio,
+			part.rundownId,
 			messageFactory,
 			pieceDoc,
 			sourceLayer
@@ -107,7 +109,7 @@ export async function regenerateForPieceIds(
 				{
 					_id: protectString(`piece_${pieceId}`),
 
-					partId: pieceDoc.startPartId,
+					partId: pieceDoc.startPartId ?? undefined,
 					rundownId: pieceDoc.startRundownId,
 					pieceId: pieceId,
 
@@ -181,6 +183,7 @@ export async function regenerateForPieceInstanceIds(
 			if (partInstance && segment && sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					pieceDoc.rundownId,
 					messageFactories.get(pieceDoc.rundownId),
 					{
 						...pieceDoc.piece,
@@ -193,7 +196,7 @@ export async function regenerateForPieceInstanceIds(
 				const res: UIPieceContentStatus = {
 					_id: protectString(`piece_${pieceId}`),
 
-					partId: pieceDoc.piece.startPartId,
+					partId: pieceDoc.piece.startPartId ?? undefined,
 					rundownId: pieceDoc.rundownId,
 					pieceId: pieceId,
 
@@ -380,6 +383,7 @@ export async function regenerateForBaselineAdLibPieceIds(
 			if (sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					pieceDoc.rundownId,
 					messageFactories.get(pieceDoc.rundownId),
 					pieceDoc,
 					sourceLayer
@@ -460,6 +464,7 @@ export async function regenerateForBaselineAdLibActionIds(
 			if (sourceLayer) {
 				const [status, dependencies] = await checkPieceContentStatusAndDependencies(
 					uiStudio,
+					actionDoc.rundownId,
 					messageFactories.get(actionDoc.rundownId),
 					fakedPiece,
 					sourceLayer
