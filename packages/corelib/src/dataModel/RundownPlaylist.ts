@@ -165,6 +165,26 @@ export interface RundownTTimer {
 	 */
 	state: TimerState | null
 
+	/** The estimated time when we expect to reach the anchor part, for calculating over/under diff.
+	 *
+	 * Based on scheduled durations of remaining parts and segments up to the anchor.
+	 * The over/under diff is calculated as the difference between this estimate and the timer's target (state.zeroTime).
+	 *
+	 * Running means we are progressing towards the anchor (estimate moves with real time)
+	 * Paused means we are pushing (e.g. overrunning the current segment, so the anchor is being delayed)
+	 *
+	 * Calculated automatically when anchorPartId is set, or can be set manually by a blueprint if custom logic is needed.
+	 */
+	estimateState?: TimerState
+
+	/** The target Part that this timer is counting towards (the "timing anchor")
+	 *
+	 * This is typically a "break" part or other milestone in the rundown.
+	 * When set, the server calculates estimateState based on when we expect to reach this part.
+	 * If not set, estimateState is not calculated automatically but can still be set manually by a blueprint.
+	 */
+	anchorPartId?: PartId
+
 	/*
 	 * Future ideas:
 	 * allowUiControl: boolean

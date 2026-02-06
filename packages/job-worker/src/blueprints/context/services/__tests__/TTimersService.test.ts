@@ -6,6 +6,11 @@ import type { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/coreli
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { mock, MockProxy } from 'jest-mock-extended'
 import type { ReadonlyDeep } from 'type-fest'
+import type { JobContext } from '../../../../jobs/index.js'
+
+function createMockJobContext(): MockProxy<JobContext> {
+	return mock<JobContext>()
+}
 
 function createMockPlayoutModel(tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]): MockProxy<PlayoutModel> {
 	const mockPlayoutModel = mock<PlayoutModel>()
@@ -41,8 +46,9 @@ describe('TTimersService', () => {
 	describe('constructor', () => {
 		it('should create three timer instances', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
+			const mockJobContext = createMockJobContext()
 
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, mockJobContext)
 
 			expect(service.timers).toHaveLength(3)
 			expect(service.timers[0]).toBeInstanceOf(PlaylistTTimerImpl)
@@ -54,7 +60,7 @@ describe('TTimersService', () => {
 	describe('getTimer', () => {
 		it('should return the correct timer for index 1', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, createMockJobContext())
 
 			const timer = service.getTimer(1)
 
@@ -63,7 +69,7 @@ describe('TTimersService', () => {
 
 		it('should return the correct timer for index 2', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, createMockJobContext())
 
 			const timer = service.getTimer(2)
 
@@ -72,7 +78,7 @@ describe('TTimersService', () => {
 
 		it('should return the correct timer for index 3', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, createMockJobContext())
 
 			const timer = service.getTimer(3)
 
@@ -81,7 +87,7 @@ describe('TTimersService', () => {
 
 		it('should throw for invalid index', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, createMockJobContext())
 
 			expect(() => service.getTimer(0 as RundownTTimerIndex)).toThrow('T-timer index out of range: 0')
 			expect(() => service.getTimer(4 as RundownTTimerIndex)).toThrow('T-timer index out of range: 4')
@@ -97,7 +103,7 @@ describe('TTimersService', () => {
 			tTimers[1].state = { paused: false, zeroTime: 65000 }
 
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const service = new TTimersService(mockPlayoutModel)
+			const service = new TTimersService(mockPlayoutModel, createMockJobContext())
 
 			service.clearAllTimers()
 
@@ -129,7 +135,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return the correct index', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 2)
 
 			expect(timer.index).toBe(2)
 		})
@@ -138,7 +144,7 @@ describe('PlaylistTTimerImpl', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[1].label = 'Custom Label'
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 2)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 2)
 
 			expect(timer.label).toBe('Custom Label')
 		})
@@ -146,7 +152,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return null state when no mode is set', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toBeNull()
 		})
@@ -156,7 +162,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 15000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'freeRun',
@@ -170,7 +176,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: true, duration: 3000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'freeRun',
@@ -188,7 +194,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 15000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'countdown',
@@ -208,7 +214,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: true, duration: 2000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'countdown',
@@ -228,7 +234,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 } // 10 seconds in the future
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'timeOfDay',
@@ -249,7 +255,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: targetTimestamp }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(timer.state).toEqual({
 				mode: 'timeOfDay',
@@ -265,7 +271,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should update the label', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.setLabel('New Label')
 
@@ -284,7 +290,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.clearTimer()
 
@@ -301,7 +307,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a running countdown with default options', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startCountdown(60000)
 
@@ -320,7 +326,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a paused countdown', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startCountdown(30000, { startPaused: true, stopAtZero: false })
 
@@ -341,7 +347,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a running free-run timer', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startFreeRun()
 
@@ -358,7 +364,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a paused free-run timer', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startFreeRun({ startPaused: true })
 
@@ -377,7 +383,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a timeOfDay timer with time string', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startTimeOfDay('15:30')
 
@@ -399,7 +405,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a timeOfDay timer with numeric timestamp', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 			const targetTimestamp = 1737331200000
 
 			timer.startTimeOfDay(targetTimestamp)
@@ -422,7 +428,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a timeOfDay timer with stopAtZero false', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startTimeOfDay('18:00', { stopAtZero: false })
 
@@ -444,7 +450,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should start a timeOfDay timer with 12-hour format', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			timer.startTimeOfDay('5:30pm')
 
@@ -466,7 +472,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should throw for invalid time string', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(() => timer.startTimeOfDay('invalid')).toThrow('Unable to parse target time for timeOfDay T-timer')
 		})
@@ -474,7 +480,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should throw for empty time string', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			expect(() => timer.startTimeOfDay('')).toThrow('Unable to parse target time for timeOfDay T-timer')
 		})
@@ -486,7 +492,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.pause()
 
@@ -506,7 +512,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'countdown', duration: 60000, stopAtZero: true }
 			tTimers[0].state = { paused: false, zeroTime: 70000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.pause()
 
@@ -526,7 +532,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.pause()
 
@@ -543,7 +549,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.pause()
 
@@ -558,7 +564,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: true, duration: -3000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.resume()
 
@@ -578,7 +584,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.resume()
 
@@ -590,7 +596,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.resume()
 
@@ -607,7 +613,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 20000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.resume()
 
@@ -622,7 +628,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'countdown', duration: 60000, stopAtZero: true }
 			tTimers[0].state = { paused: false, zeroTime: 40000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -648,7 +654,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: true, duration: 15000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -670,7 +676,7 @@ describe('PlaylistTTimerImpl', () => {
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -687,7 +693,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 5000 } // old target time
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -716,7 +722,7 @@ describe('PlaylistTTimerImpl', () => {
 			}
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -727,7 +733,7 @@ describe('PlaylistTTimerImpl', () => {
 		it('should return false for timer with no mode', () => {
 			const tTimers = createEmptyTTimers()
 			const mockPlayoutModel = createMockPlayoutModel(tTimers)
-			const timer = new PlaylistTTimerImpl(mockPlayoutModel, 1)
+			const timer = new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 1)
 
 			const result = timer.restart()
 
@@ -740,12 +746,12 @@ describe('PlaylistTTimerImpl', () => {
 		it('should throw for invalid index', () => {
 			const mockPlayoutModel = createMockPlayoutModel(createEmptyTTimers())
 
-			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 0 as RundownTTimerIndex)).toThrow(
-				'T-timer index out of range: 0'
-			)
-			expect(() => new PlaylistTTimerImpl(mockPlayoutModel, 4 as RundownTTimerIndex)).toThrow(
-				'T-timer index out of range: 4'
-			)
+			expect(
+				() => new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 0 as RundownTTimerIndex)
+			).toThrow('T-timer index out of range: 0')
+			expect(
+				() => new PlaylistTTimerImpl(mockPlayoutModel, createMockJobContext(), 4 as RundownTTimerIndex)
+			).toThrow('T-timer index out of range: 4')
 		})
 	})
 })

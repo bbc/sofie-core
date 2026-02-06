@@ -66,7 +66,7 @@ export class OnTakeContext extends ShowStyleUserContext implements IOnTakeContex
 	) {
 		super(contextInfo, _context, showStyle, watchedPackages)
 		this.isTakeAborted = false
-		this.#tTimersService = new TTimersService(_playoutModel)
+		this.#tTimersService = new TTimersService(_playoutModel, _context)
 	}
 
 	async getUpcomingParts(limit: number = 5): Promise<ReadonlyDeep<IBlueprintPart[]>> {
