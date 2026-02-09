@@ -20,10 +20,12 @@ Options:
                        Creates meteor/.meteor/local/db.<name> and switches to it with a symlink
                        Original database is backed up to db.default on first use
                        Run without --db to use the currently active database
+  --db-list            List all available database directories and show which is active
 
 Examples:
   yarn start                  # Install, build, then run in dev mode
   yarn dev                    # Run in normal dev mode (requires prior build)
+  yarn dev --db-list          # List all available databases
   yarn dev --db=testing       # Use a separate database for testing
   yarn dev --db=demo          # Switch to demo database
   yarn dev --ui-only          # Only watch UI, skip backend packages
@@ -42,6 +44,7 @@ const config = {
 	inspectMeteor: args.indexOf("--inspect-meteor") >= 0 || false,
 	verbose: args.indexOf("--verbose") >= 0 || false,
 	dbName: dbName,
+	dbList: args.indexOf("--db-list") >= 0 || false,
 };
 
 module.exports = {

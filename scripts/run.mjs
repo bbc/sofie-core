@@ -72,6 +72,52 @@ function hr() {
 	return "─".repeat(process.stdout.columns ?? 40);
 }
 
+function listDatabases() {
+	const meteorLocalDir = path.join('meteor', '.meteor', 'local');
+	const dbLink = path.join(meteorLocalDir, 'db');
+
+	if (!fs.existsSync(meteorLocalDir)) {
+		console.log('No databases found (meteor/.meteor/local does not exist yet)');
+		return;
+	}
+
+	// Get current database
+	let currentDb = null;
+	if (fs.existsSync(dbLink)) {
+		const stats = fs.lstatSync(dbLink);
+		if (stats.isSymbolicLink()) {
+			const target = fs.readlinkSync(dbLink);
+			const match = target.match(/^db\.(.+)$/);
+			if (match) {
+				currentDb = match[1];
+			}
+		} else {
+			currentDb = '(unnamed - real directory)';
+		}
+	}
+
+	// List all db.* directories
+	const files = fs.readdirSync(meteorLocalDir);
+	const dbDirs = files
+		.filter(file => file.startsWith('db.') && fs.statSync(path.join(meteorLocalDir, file)).isDirectory())
+		.map(file => file.substring(3));
+
+	console.log('\nAvailable databases:');
+	if (dbDirs.length === 0) {
+		console.log('  (none found)');
+	} else {
+		dbDirs.sort().forEach(db => {
+			const marker = db === currentDb ? ' ← current' : '';
+			console.log(`  ${db}${marker}`);
+		});
+	}
+
+	if (currentDb && !dbDirs.includes(currentDb)) {
+		console.log(`\nCurrent: ${currentDb}`);
+	}
+	console.log('');
+}
+
 function switchDatabase(dbName) {
 	const meteorLocalDir = path.join('meteor', '.meteor', 'local');
 	const dbLink = path.join(meteorLocalDir, 'db');
@@ -117,6 +163,12 @@ function switchDatabase(dbName) {
 
 try {
 	// Note: This script assumes that install-and-build.mjs has been run before
+
+	// List databases if requested
+	if (config.dbList) {
+		listDatabases();
+		process.exit(0);
+	}
 
 	// Switch database if requested
 	if (config.dbName) {
