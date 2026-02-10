@@ -764,8 +764,13 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		this.#playlistHasChanged = true
 	}
 
-	setBlueprintPersistentState(persistentState: unknown | undefined): void {
+	setBlueprintPrivatePersistentState(persistentState: unknown | undefined): void {
 		this.playlistImpl.previousPersistentState = persistentState
+
+		this.#playlistHasChanged = true
+	}
+	setBlueprintPublicPersistentState(persistentState: unknown | undefined): void {
+		this.playlistImpl.previousPublicPersistentState = persistentState
 
 		this.#playlistHasChanged = true
 	}
