@@ -746,33 +746,37 @@ channels:
                                   type:
                                     type: string
                                     const: countdown
-                                  startTime:
-                                    description: Unix timestamp when timer started (milliseconds). May be adjusted
-                                      when pausing/resuming.
+                                  paused:
+                                    description: Whether the timer is currently paused
+                                    type: boolean
+                                  zeroTime:
+                                    description: Unix timestamp (ms) when the timer reaches/reached zero. Present
+                                      when paused is false. The client
+                                      calculates remaining time as zeroTime -
+                                      Date.now().
                                     type: number
-                                  pauseTime:
-                                    description: Unix timestamp when paused (milliseconds), or null if running
-                                    oneOf:
-                                      - type: number
-                                      - type: "null"
+                                  remainingMs:
+                                    description: Frozen remaining duration in milliseconds. Present when paused is
+                                      true.
+                                    type: number
                                   durationMs:
-                                    description: Total countdown duration in milliseconds
+                                    description: Total countdown duration in milliseconds (the original configured
+                                      duration)
                                     type: number
                                   stopAtZero:
                                     description: Whether timer stops at zero or continues into negative values
                                     type: boolean
                                 required:
                                   - type
-                                  - startTime
-                                  - pauseTime
+                                  - paused
                                   - durationMs
                                   - stopAtZero
                                 additionalProperties: false
                                 examples:
                                   - &a29
                                     type: countdown
-                                    startTime: 1706371800000
-                                    pauseTime: null
+                                    paused: false
+                                    zeroTime: 1706371920000
                                     durationMs: 120000
                                     stopAtZero: true
                               - type: object
@@ -782,25 +786,52 @@ channels:
                                   type:
                                     type: string
                                     const: freeRun
-                                  startTime:
-                                    description: Unix timestamp when timer started (milliseconds). May be adjusted
-                                      when pausing/resuming.
+                                  paused:
+                                    description: Whether the timer is currently paused
+                                    type: boolean
+                                  zeroTime:
+                                    description: Unix timestamp (ms) when the timer was at zero (i.e. when it was
+                                      started). Present when paused is false.
+                                      The client calculates elapsed time as
+                                      Date.now() - zeroTime.
                                     type: number
-                                  pauseTime:
-                                    description: Unix timestamp when paused (milliseconds), or null if running
-                                    oneOf:
-                                      - type: number
-                                      - type: "null"
+                                  elapsedMs:
+                                    description: Frozen elapsed time in milliseconds. Present when paused is true.
+                                    type: number
                                 required:
                                   - type
-                                  - startTime
-                                  - pauseTime
+                                  - paused
                                 additionalProperties: false
                                 examples:
                                   - &a30
                                     type: freeRun
-                                    startTime: 1706371900000
-                                    pauseTime: 1706372000000
+                                    paused: false
+                                    zeroTime: 1706371800000
+                      estimate:
+                        description: Estimated timing for when we expect to reach an anchor part. Used
+                          to calculate over/under diff
+                        oneOf:
+                          - type: "null"
+                          - type: object
+                            title: TTimerEstimate
+                            description: Estimate timing state for a T-timer
+                            properties:
+                              paused:
+                                description: Whether the estimate is frozen
+                                type: boolean
+                              zeroTime:
+                                description: Unix timestamp in milliseconds of estimated arrival at the anchor
+                                  part
+                                type: number
+                              durationMs:
+                                description: Frozen remaining duration estimate in milliseconds
+                                type: number
+                            required:
+                              - paused
+                            additionalProperties: false
+                      anchorPartId:
+                        description: The Part ID that this timer is counting towards (the timing anchor)
+                        type: string
                     required:
                       - index
                       - label
@@ -812,10 +843,14 @@ channels:
                         configured: true
                         mode:
                           type: countdown
-                          startTime: 1706371800000
-                          pauseTime: null
+                          paused: false
+                          zeroTime: 1706371920000
                           durationMs: 120000
                           stopAtZero: true
+                        estimate:
+                          paused: false
+                          zeroTime: 1706371920000
+                        anchorPartId: part_break_1
                   minItems: 3
                   maxItems: 3
               required:

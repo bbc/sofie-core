@@ -478,6 +478,14 @@ interface TTimerStatus {
 	 * Timer mode and timing state. Null if not configured.
 	 */
 	mode?: TTimerModeCountdown | TTimerModeFreeRun | null
+	/**
+	 * Estimated timing for when we expect to reach an anchor part. Used to calculate over/under diff
+	 */
+	estimate?: TTimerEstimate | null
+	/**
+	 * The Part ID that this timer is counting towards (the timing anchor)
+	 */
+	anchorPartId?: string
 }
 
 /**
@@ -495,15 +503,19 @@ enum TTimerIndex {
 interface TTimerModeCountdown {
 	type: 'countdown'
 	/**
-	 * Unix timestamp when timer started (milliseconds). May be adjusted when pausing/resuming.
+	 * Whether the timer is currently paused
 	 */
-	startTime: number
+	paused: boolean
 	/**
-	 * Unix timestamp when paused (milliseconds), or null if running
+	 * Unix timestamp (ms) when the timer reaches/reached zero. Present when paused is false. The client calculates remaining time as zeroTime - Date.now().
 	 */
-	pauseTime: number | null
+	zeroTime?: number
 	/**
-	 * Total countdown duration in milliseconds
+	 * Frozen remaining duration in milliseconds. Present when paused is true.
+	 */
+	remainingMs?: number
+	/**
+	 * Total countdown duration in milliseconds (the original configured duration)
 	 */
 	durationMs: number
 	/**
@@ -518,13 +530,35 @@ interface TTimerModeCountdown {
 interface TTimerModeFreeRun {
 	type: 'freeRun'
 	/**
-	 * Unix timestamp when timer started (milliseconds). May be adjusted when pausing/resuming.
+	 * Whether the timer is currently paused
 	 */
-	startTime: number
+	paused: boolean
 	/**
-	 * Unix timestamp when paused (milliseconds), or null if running
+	 * Unix timestamp (ms) when the timer was at zero (i.e. when it was started). Present when paused is false. The client calculates elapsed time as Date.now() - zeroTime.
 	 */
-	pauseTime: number | null
+	zeroTime?: number
+	/**
+	 * Frozen elapsed time in milliseconds. Present when paused is true.
+	 */
+	elapsedMs?: number
+}
+
+/**
+ * Estimate timing state for a T-timer
+ */
+interface TTimerEstimate {
+	/**
+	 * Whether the estimate is frozen
+	 */
+	paused: boolean
+	/**
+	 * Unix timestamp in milliseconds of estimated arrival at the anchor part
+	 */
+	zeroTime?: number
+	/**
+	 * Frozen remaining duration estimate in milliseconds
+	 */
+	durationMs?: number
 }
 
 interface ActivePiecesEvent {
@@ -1001,6 +1035,7 @@ export {
 	TTimerIndex,
 	TTimerModeCountdown,
 	TTimerModeFreeRun,
+	TTimerEstimate,
 	ActivePiecesEvent,
 	SegmentsEvent,
 	Segment,

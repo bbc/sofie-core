@@ -32,6 +32,9 @@ import {
 	QuickLoopMarker as QuickLoopMarkerStatus,
 	QuickLoopMarkerType as QuickLoopMarkerStatusType,
 	TTimerStatus,
+	TTimerEstimate,
+	TTimerModeCountdown,
+	TTimerModeFreeRun,
 	TTimerIndex,
 } from '@sofie-automation/live-status-gateway-api'
 
@@ -219,9 +222,9 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 		if (!tTimers) {
 			// Return 3 unconfigured timers when no playlist is active
 			return [
-				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null },
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
 			]
 		}
 
@@ -235,38 +238,82 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 		const index =
 			timer.index === 1 ? TTimerIndex.NUMBER_1 : timer.index === 2 ? TTimerIndex.NUMBER_2 : TTimerIndex.NUMBER_3
 
-		if (!timer.mode) {
+		const estimate = this.transformTimerEstimate(timer.estimateState)
+		const anchorPartId = timer.anchorPartId ? unprotectString(timer.anchorPartId) : undefined
+
+		if (!timer.mode || !timer.state) {
 			return {
 				index,
 				label: timer.label,
 				configured: false,
 				mode: null,
+				estimate,
+				anchorPartId,
 			}
 		}
 
 		if (timer.mode.type === 'countdown') {
+			const mode: TTimerModeCountdown = timer.state.paused
+				? {
+						type: 'countdown',
+						paused: true,
+						remainingMs: timer.state.duration,
+						durationMs: timer.mode.duration,
+						stopAtZero: timer.mode.stopAtZero,
+					}
+				: {
+						type: 'countdown',
+						paused: false,
+						zeroTime: timer.state.zeroTime,
+						durationMs: timer.mode.duration,
+						stopAtZero: timer.mode.stopAtZero,
+					}
 			return {
 				index,
 				label: timer.label,
 				configured: true,
-				mode: {
-					type: 'countdown',
-					startTime: timer.mode.startTime,
-					pauseTime: timer.mode.pauseTime,
-					durationMs: timer.mode.duration,
-					stopAtZero: timer.mode.stopAtZero,
-				},
+				mode,
+				estimate,
+				anchorPartId,
+			}
+		} else {
+			const mode: TTimerModeFreeRun = timer.state.paused
+				? {
+						type: 'freeRun',
+						paused: true,
+						elapsedMs: timer.state.duration,
+					}
+				: {
+						type: 'freeRun',
+						paused: false,
+						zeroTime: timer.state.zeroTime,
+					}
+			return {
+				index,
+				label: timer.label,
+				configured: true,
+				mode,
+				estimate,
+				anchorPartId,
+			}
+		}
+	}
+
+	/**
+	 * Transform a TimerState from the data model to a TTimerEstimate for the API
+	 */
+	private transformTimerEstimate(estimateState: RundownTTimer['estimateState']): TTimerEstimate | null {
+		if (!estimateState) return null
+
+		if (estimateState.paused) {
+			return {
+				paused: true,
+				durationMs: estimateState.duration,
 			}
 		} else {
 			return {
-				index,
-				label: timer.label,
-				configured: true,
-				mode: {
-					type: 'freeRun',
-					startTime: timer.mode.startTime,
-					pauseTime: timer.mode.pauseTime,
-				},
+				paused: false,
+				zeroTime: estimateState.zeroTime,
 			}
 		}
 	}

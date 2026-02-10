@@ -17,6 +17,34 @@ $defs:
         oneOf:
           - type: 'null'
           - $ref: '../tTimerMode/tTimerMode.yaml#/$defs/tTimerMode'
+      estimate:
+        description: >-
+          Estimated timing for when we expect to reach an anchor part.
+          Used to calculate over/under diff
+        oneOf:
+          - type: 'null'
+          - type: object
+            title: TTimerEstimate
+            description: >-
+              Estimate timing state for a T-timer
+            properties:
+              paused:
+                description: Whether the estimate is frozen
+                type: boolean
+              zeroTime:
+                description: >-
+                  Unix timestamp in milliseconds of estimated arrival at the anchor part
+                type: number
+              durationMs:
+                description: >-
+                  Frozen remaining duration estimate in milliseconds
+                type: number
+            required: [paused]
+            additionalProperties: false
+      anchorPartId:
+        description: >-
+          The Part ID that this timer is counting towards (the timing anchor)
+        type: string
     required: [index, label, configured]
     additionalProperties: false
     examples:

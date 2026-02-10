@@ -65,9 +65,9 @@ describe('ActivePlaylistTopic', () => {
 			},
 			quickLoop: undefined,
 			tTimers: [
-				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null },
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
 			],
 		}
 
@@ -171,9 +171,9 @@ describe('ActivePlaylistTopic', () => {
 			},
 			quickLoop: undefined,
 			tTimers: [
-				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null },
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
 			],
 		}
 
@@ -282,9 +282,9 @@ describe('ActivePlaylistTopic', () => {
 			},
 			quickLoop: undefined,
 			tTimers: [
-				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null },
-				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null },
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
 			],
 		}
 
@@ -309,22 +309,23 @@ describe('ActivePlaylistTopic', () => {
 				label: 'Countdown Timer',
 				mode: {
 					type: 'countdown',
-					startTime: 1600000000000,
-					pauseTime: null,
 					duration: 60000,
 					stopAtZero: true,
 				},
+				state: { paused: false, zeroTime: 1600000060000 },
+				estimateState: { paused: false, zeroTime: 1600000060000 },
+				anchorPartId: protectString('PART_BREAK'),
 			},
 			{
 				index: 2,
 				label: 'Paused FreeRun',
 				mode: {
 					type: 'freeRun',
-					startTime: 1600000010000,
-					pauseTime: 1600000020000,
 				},
+				state: { paused: true, duration: 10000 },
+				estimateState: { paused: true, duration: 5000 },
 			},
-			{ index: 3, label: '', mode: null },
+			{ index: 3, label: '', mode: null, state: null },
 		]
 		handlers.playlistHandler.notify(playlist)
 
@@ -340,18 +341,23 @@ describe('ActivePlaylistTopic', () => {
 		expect(mockSubscriber.send).toHaveBeenCalledTimes(1)
 		const receivedStatus = JSON.parse(mockSubscriber.send.mock.calls[0][0] as string) as ActivePlaylistEvent
 
-		// Verify countdown timer transformation
+		// Verify running countdown timer transformation
 		expect(receivedStatus.tTimers[0]).toEqual({
 			index: TTimerIndex.NUMBER_1,
 			label: 'Countdown Timer',
 			configured: true,
 			mode: {
 				type: 'countdown',
-				startTime: 1600000000000,
-				pauseTime: null,
+				paused: false,
+				zeroTime: 1600000060000,
 				durationMs: 60000,
 				stopAtZero: true,
 			},
+			estimate: {
+				paused: false,
+				zeroTime: 1600000060000,
+			},
+			anchorPartId: 'PART_BREAK',
 		})
 
 		// Verify paused freeRun timer transformation
@@ -361,8 +367,12 @@ describe('ActivePlaylistTopic', () => {
 			configured: true,
 			mode: {
 				type: 'freeRun',
-				startTime: 1600000010000,
-				pauseTime: 1600000020000,
+				paused: true,
+				elapsedMs: 10000,
+			},
+			estimate: {
+				paused: true,
+				durationMs: 5000,
 			},
 		})
 
@@ -372,6 +382,7 @@ describe('ActivePlaylistTopic', () => {
 			label: '',
 			configured: false,
 			mode: null,
+			estimate: null,
 		})
 	})
 })

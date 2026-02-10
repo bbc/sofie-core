@@ -35,9 +35,9 @@ export function makeTestPlaylist(id?: string): DBRundownPlaylist {
 		timing: { type: PlaylistTimingType.None },
 		publicData: { a: 'b' },
 		tTimers: [
-			{ index: 1, label: '', mode: null },
-			{ index: 2, label: '', mode: null },
-			{ index: 3, label: '', mode: null },
+			{ index: 1, label: '', mode: null, state: null },
+			{ index: 2, label: '', mode: null, state: null },
+			{ index: 3, label: '', mode: null, state: null },
 		],
 	}
 }
