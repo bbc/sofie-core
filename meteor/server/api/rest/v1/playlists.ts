@@ -698,9 +698,10 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		async (serverAPI, connection, event, params, _body) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
 			const rundownId = protectString<RundownId>(params.rundownId)
-			logger.info(`API PUT: activate AdLib testing mode, playlist ${rundownPlaylistId}, rundown ${rundownId}}`)
+			logger.info(`API PUT: activate AdLib testing mode, playlist ${rundownPlaylistId}, rundown ${rundownId}`)
 
 			check(rundownPlaylistId, String)
+			check(rundownId, String)
 			return await serverAPI.activateAdLibTesting(connection, event, rundownPlaylistId, rundownId)
 		}
 	)
