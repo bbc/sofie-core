@@ -10,6 +10,7 @@ import {
 	PartInstanceId,
 	PieceId,
 	RundownBaselineAdLibActionId,
+	RundownId,
 	RundownPlaylistId,
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
@@ -119,6 +120,29 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			{
 				playlistId: playlist._id,
 				rehearsal,
+			}
+		)
+	}
+
+	async activateAdLibTesting(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		rundownId: RundownId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			rundownPlaylistId,
+			() => {
+				check(rundownPlaylistId, String)
+				check(rundownId, String)
+			},
+			StudioJobs.ActivateAdlibTesting,
+			{
+				playlistId: rundownPlaylistId,
+				rundownId: rundownId,
 			}
 		)
 	}
@@ -660,6 +684,25 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 
 			check(rundownPlaylistId, String)
 			return await serverAPI.activate(connection, event, rundownPlaylistId, rehearsal)
+		}
+	)
+
+	registerRoute<{ playlistId: string; rundownId: string }, { rehearsal: boolean }, void>(
+		'put',
+		'/playlists/:playlistId/rundowns/:rundownId/activate-adlib-testing',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.RundownAlreadyActive]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const rundownId = protectString<RundownId>(params.rundownId)
+			logger.info(`API PUT: activate AdLib testing mode, playlist ${rundownPlaylistId}, rundown ${rundownId}`)
+
+			check(rundownPlaylistId, String)
+			check(rundownId, String)
+			return await serverAPI.activateAdLibTesting(connection, event, rundownPlaylistId, rundownId)
 		}
 	)
 
