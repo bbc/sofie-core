@@ -242,8 +242,8 @@ export async function executeActionInner(
 
 	try {
 		const blueprintPersistentState = new PersistentPlayoutStateStore(
-			playoutModel.playlist.previousPersistentState,
-			playoutModel.playlist.previousPublicPersistentState
+			playoutModel.playlist.privatePlayoutPersistentState,
+			playoutModel.playlist.publicPlayoutPersistentState
 		)
 
 		await blueprint.blueprint.executeAction(

@@ -171,12 +171,12 @@ export interface DBRundownPlaylist {
 	 * Persistent state belong to blueprint playout methods
 	 * This can be accessed and modified by the blueprints in various methods
 	 */
-	previousPersistentState?: TimelinePersistentState
+	privatePlayoutPersistentState?: TimelinePersistentState
 	/**
 	 * Persistent state belong to blueprint playout methods, but exposed to APIs such as the LSG
 	 * This can be accessed and modified by the blueprints in various methods, but is also exposed to APIs such as the LSG
 	 */
-	previousPublicPersistentState?: TimelinePersistentState
+	publicPlayoutPersistentState?: TimelinePersistentState
 
 	/** AB playback sessions calculated in the last timeline genertaion */
 	trackedAbSessions?: ABSessionInfo[]

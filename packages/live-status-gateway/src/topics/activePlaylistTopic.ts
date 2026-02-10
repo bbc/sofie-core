@@ -45,7 +45,7 @@ const PLAYLIST_KEYS = [
 	'name',
 	'rundownIdsInOrder',
 	'publicData',
-	'previousPersistentState',
+	'publicPlayoutPersistentState',
 	'currentPartInfo',
 	'nextPartInfo',
 	'timing',
@@ -158,7 +158,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 						: null,
 					quickLoop: this.transformQuickLoopStatus(),
 					publicData: this._activePlaylist.publicData,
-					playoutState: this._activePlaylist.previousPersistentState,
+					playoutState: this._activePlaylist.publicPlayoutPersistentState,
 					timing: {
 						timingMode: translatePlaylistTimingType(this._activePlaylist.timing.type),
 						startedPlayback: this._activePlaylist.startedPlayback,

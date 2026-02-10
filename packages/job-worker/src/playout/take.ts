@@ -343,8 +343,8 @@ async function executeOnTakeCallback(
 		)
 		try {
 			const blueprintPersistentState = new PersistentPlayoutStateStore(
-				playoutModel.playlist.previousPersistentState,
-				playoutModel.playlist.previousPublicPersistentState
+				playoutModel.playlist.privatePlayoutPersistentState,
+				playoutModel.playlist.publicPlayoutPersistentState
 			)
 
 			await blueprint.blueprint.onTake(onSetAsNextContext, blueprintPersistentState)
@@ -548,8 +548,8 @@ export function updatePartInstanceOnTake(
 				takeRundown
 			)
 			const blueprintPersistentState = new PersistentPlayoutStateStore(
-				playoutModel.playlist.previousPersistentState,
-				playoutModel.playlist.previousPublicPersistentState
+				playoutModel.playlist.privatePlayoutPersistentState,
+				playoutModel.playlist.publicPlayoutPersistentState
 			)
 			previousPartEndState = blueprint.blueprint.getEndStateForPart(
 				context2,
