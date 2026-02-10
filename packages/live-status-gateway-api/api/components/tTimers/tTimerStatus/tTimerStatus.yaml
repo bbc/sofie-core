@@ -17,6 +17,34 @@ $defs:
         oneOf:
           - type: 'null'
           - $ref: '../tTimerMode/tTimerMode.yaml#/$defs/tTimerMode'
+      projected:
+        description: >-
+          Projected timing for when we expect to reach an anchor part.
+          Used to calculate over/under diff
+        oneOf:
+          - type: 'null'
+          - type: object
+            title: TTimerProjected
+            description: >-
+              Projected timing state for a T-timer
+            properties:
+              paused:
+                description: Whether the projected time is frozen
+                type: boolean
+              zeroTime:
+                description: >-
+                  Unix timestamp in milliseconds of projected arrival at the anchor part
+                type: number
+              durationMs:
+                description: >-
+                  Frozen remaining duration projection in milliseconds
+                type: number
+            required: [paused]
+            additionalProperties: false
+      anchorPartId:
+        description: >-
+          The Part ID that this timer is counting towards (the timing anchor)
+        type: string
     required: [index, label, configured]
     additionalProperties: false
     examples:
