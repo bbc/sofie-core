@@ -5,7 +5,7 @@ import { clearMigrationSteps, addMigrationSteps, prepareMigration, PreparedMigra
 import { CURRENT_SYSTEM_VERSION } from '../currentSystemVersion'
 import { RunMigrationResult, GetMigrationStatusResult } from '@sofie-automation/meteor-lib/dist/api/migration'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { MigrationStepCore } from '@sofie-automation/blueprints-integration'
+import { MigrationStepCore } from '@sofie-automation/meteor-lib/dist/migrations'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { MeteorCall } from '../../api/methods'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
@@ -47,11 +47,8 @@ describe('Migrations', () => {
 			migrationNeeded: true,
 
 			migration: {
-				canDoAutomaticMigration: true,
-				// manualInputs: [],
 				hash: expect.stringContaining(''),
 				automaticStepCount: expect.any(Number),
-				manualStepCount: expect.any(Number),
 				ignoredStepCount: expect.any(Number),
 				partialMigration: true,
 				// chunks: expect.any(Array)
@@ -258,8 +255,7 @@ describe('Migrations', () => {
 		const migrationStatus: GetMigrationStatusResult = await MeteorCall.migration.getMigrationStatus()
 		const migrationResult: RunMigrationResult = await MeteorCall.migration.runMigration(
 			migrationStatus.migration.chunks,
-			migrationStatus.migration.hash,
-			userInput(migrationStatus)
+			migrationStatus.migration.hash
 		)
 
 		expect(migrationResult.migrationCompleted).toEqual(true)

@@ -13,7 +13,7 @@ export interface MigrationStepBase<TValidate extends ValidateFunction, TMigrate 
 	/**
 	 * The validate function determines whether the step is to be applied
 	 * (it can for example check that some value in the database is present)
-	 * The function should return falsy if step is fullfilled (ie truthy if migrate function should be applied, return value could then be a string describing why)
+	 * The function should return falsy if step is fulfilled (ie truthy if migrate function should be applied, return value could then be a string describing why)
 	 * The function is also run after the migration-script has been applied (and should therefore return false if all is good)
 	 */
 	validate: TValidate
