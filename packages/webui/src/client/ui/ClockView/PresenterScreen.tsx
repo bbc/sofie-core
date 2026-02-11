@@ -48,6 +48,8 @@ import { useSetDocumentClass, useSetDocumentDarkTheme } from '../util/useSetDocu
 import { useRundownAndShowStyleIdsForPlaylist } from '../util/useRundownAndShowStyleIdsForPlaylist.js'
 import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil.js'
 import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownTiming/CurrentPartOrSegmentRemaining.js'
+import { TTimerDisplay } from './TTimerDisplay.js'
+import { getDefaultTTimer } from '../../lib/tTimerUtils.js'
 
 interface SegmentUi extends DBSegment {
 	items: Array<PartUi>
@@ -482,6 +484,7 @@ function PresenterScreenContentDefaultLayout({
 
 		const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
 		const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
+		const activeTTimer = getDefaultTTimer(playlist.tTimers)
 
 		return (
 			<div className="presenter-screen">
@@ -586,6 +589,9 @@ function PresenterScreenContentDefaultLayout({
 				<div className="presenter-screen__rundown-status-bar">
 					<div className="presenter-screen__rundown-status-bar__rundown-name">
 						{playlist ? playlist.name : 'UNKNOWN'}
+					</div>
+					<div className="presenter-screen__rundown-status-bar__t-timer">
+						{!!activeTTimer && <TTimerDisplay timer={activeTTimer} />}
 					</div>
 					<div
 						className={ClassNames('presenter-screen__rundown-status-bar__countdown', {

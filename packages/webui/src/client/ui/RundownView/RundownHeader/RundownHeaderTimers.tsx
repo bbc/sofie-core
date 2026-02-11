@@ -2,6 +2,7 @@ import React from 'react'
 import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown'
+import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../../lib/tTimerUtils'
 import classNames from 'classnames'
 
 interface IProps {
@@ -33,13 +34,15 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 
 	const now = Date.now()
 
-	const isRunning = timer.state !== null && !timer.state.paused
+	const isRunning = !!timer.state && !timer.state.paused
 
-	const diff = calculateDiff(timer, now)
+	const diff = calculateTTimerDiff(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const parts = timeStr.split(':')
 
 	const timerSign = diff >= 0 ? '+' : '-'
+
+	const overUnder = calculateTTimerOverUnder(timer, now)
 
 	return (
 		<div
@@ -51,7 +54,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 				'timing__header_t-timers__timer__isCountingDown': timer.mode!.type === 'countdown',
 				'timing__header_t-timers__timer__isCountingUp': timer.mode!.type === 'countdown',
 				'timing__header_t-timers__timer__isComplete':
-					timer.mode!.type === 'countdown' && timer.state !== null && timer.state.paused,
+					timer.mode!.type === 'countdown' && !!timer.state && timer.state.paused,
 			})}
 		>
 			<span className="timing__header_t-timers__timer__label">{timer.label}</span>
@@ -70,27 +73,17 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 					</React.Fragment>
 				))}
 			</div>
+			{!!overUnder && (
+				<span
+					className={classNames('timing__header_t-timers__timer__over-under', {
+						'timing__header_t-timers__timer__over-under--over': overUnder > 0,
+						'timing__header_t-timers__timer__over-under--under': overUnder < 0,
+					})}
+				>
+					{overUnder >= 0 ? '+' : '-'}
+					{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
+				</span>
+			)}
 		</div>
 	)
-}
-
-function calculateDiff(timer: RundownTTimer, now: number): number {
-	if (!timer.state) {
-		return 0
-	}
-
-	// Get current time: either frozen duration or calculated from zeroTime
-	const currentTime = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
-
-	// Free run counts up, so negate to get positive elapsed time
-	if (timer.mode?.type === 'freeRun') {
-		return -currentTime
-	}
-
-	// Apply stopAtZero if configured
-	if (timer.mode?.stopAtZero && currentTime < 0) {
-		return 0
-	}
-
-	return currentTime
 }

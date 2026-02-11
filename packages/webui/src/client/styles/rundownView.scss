@@ -3644,5 +3644,21 @@ svg.icon {
 			margin: 0 0.05em;
 			color: #888;
 		}
+
+		.timing__header_t-timers__timer__over-under {
+			font-size: 0.75em;
+			font-weight: 400;
+			font-variant-numeric: tabular-nums;
+			margin-left: 0.5em;
+			white-space: nowrap;
+
+			&.timing__header_t-timers__timer__over-under--over {
+				color: $general-late-color;
+			}
+
+			&.timing__header_t-timers__timer__over-under--under {
+				color: #0f0;
+			}
+		}
 	}
 }
