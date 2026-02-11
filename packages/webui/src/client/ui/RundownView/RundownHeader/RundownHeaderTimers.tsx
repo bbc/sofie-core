@@ -2,6 +2,7 @@ import React from 'react'
 import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown'
+import { calculateTTimerDiff } from '../../../lib/tTimerUtils'
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime'
 import { Countdown } from './Countdown'
@@ -33,15 +34,13 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const now = getCurrentTime()
 	const mode = timer.mode
 	if (!mode) return null
-
 	const isRunning = !!timer.state && !timer.state.paused
 
-	const diff = calculateDiff(timer, now)
+	const diff = calculateTTimerDiff(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const parts = timeStr.split(':')
 
 	const timerSign = diff >= 0 ? '+' : '-'
-
 	const isCountingDown = timer.mode?.type === 'countdown' && diff < 0 && isRunning
 
 	return (
@@ -80,25 +79,4 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 			})()}
 		</Countdown>
 	)
-}
-
-function calculateDiff(timer: RundownTTimer, now: number): number {
-	if (!timer.state) {
-		return 0
-	}
-
-	// Get current time: either frozen duration or calculated from zeroTime
-	const currentTime = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
-
-	// Free run counts up, so negate to get positive elapsed time
-	if (timer.mode?.type === 'freeRun') {
-		return -currentTime
-	}
-
-	// Apply stopAtZero if configured
-	if (timer.mode?.stopAtZero && currentTime < 0) {
-		return 0
-	}
-
-	return currentTime
 }
