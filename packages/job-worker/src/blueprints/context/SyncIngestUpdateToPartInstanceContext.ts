@@ -13,6 +13,7 @@ import {
 	IBlueprintPieceInstance,
 	OmitId,
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPartInstance,
 	SomeContent,
 	WithTimeline,
@@ -23,6 +24,7 @@ import {
 	convertPieceInstanceToBlueprints,
 	convertPartInstanceToBlueprints,
 	convertPartialBlueprintMutablePartToCore,
+	convertPartialBlueprintMutatablePartInstanceToCore,
 } from './lib.js'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { JobContext, JobStudio, ProcessedShowStyleCompound } from '../../jobs/index.js'
@@ -166,7 +168,10 @@ export class SyncIngestUpdateToPartInstanceContext
 
 		return convertPieceInstanceToBlueprints(pieceInstance.pieceInstance)
 	}
-	updatePartInstance(updatePart: Partial<IBlueprintMutatablePart>): IBlueprintPartInstance {
+	updatePartInstance(
+		updatePart: Partial<IBlueprintMutatablePart>,
+		instanceProps: Partial<IBlueprintMutatablePartInstance> = {}
+	): IBlueprintPartInstance {
 		if (!this.partInstance) throw new Error(`PartInstance has been removed`)
 
 		// for autoNext, the new expectedDuration cannot be shorter than the time a part has been on-air for
@@ -184,8 +189,20 @@ export class SyncIngestUpdateToPartInstanceContext
 			updatePart,
 			this.showStyleCompound.blueprintId
 		)
+		const playoutUpdatePartInstance = convertPartialBlueprintMutatablePartInstanceToCore(
+			instanceProps,
+			this.showStyleCompound.blueprintId
+		)
 
-		if (!this.partInstance.updatePartProps(playoutUpdatePart)) {
+		const partPropsUpdated = this.partInstance.updatePartProps(playoutUpdatePart)
+		let instancePropsUpdated = false
+
+		if (playoutUpdatePartInstance) {
+			this.partInstance.setInvalidReason(playoutUpdatePartInstance.invalidReason)
+			instancePropsUpdated = true
+		}
+
+		if (!partPropsUpdated && !instancePropsUpdated) {
 			throw new Error(`Cannot update PartInstance. Some valid properties must be defined`)
 		}
 
