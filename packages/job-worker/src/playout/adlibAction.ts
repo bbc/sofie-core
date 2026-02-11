@@ -35,6 +35,9 @@ import type { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper.js'
 import type { INotificationsModel } from '../notifications/NotificationsModel.js'
 import { PersistentPlayoutStateStore } from '../blueprints/context/services/PersistantStateStore.js'
+import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
+import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
+import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
 
 /**
  * Execute an AdLib Action
@@ -78,17 +81,39 @@ export async function executeAdlibActionAndSaveModel(
 
 	const [adLibAction, baselineAdLibAction, bucketAdLibAction] = await Promise.all([
 		context.directCollections.AdLibActions.findOne(data.actionDocId as AdLibActionId, {
-			projection: { _id: 1, privateData: 1 },
-		}),
+			projection: {
+				_id: 1,
+				privateData: 1,
+				publicData: 1,
+				invalid: 1,
+				rundownId: 1,
+			},
+		}) as Promise<Pick<AdLibAction, '_id' | 'privateData' | 'publicData' | 'invalid' | 'rundownId'> | undefined>,
 		context.directCollections.RundownBaselineAdLibActions.findOne(
 			data.actionDocId as RundownBaselineAdLibActionId,
 			{
-				projection: { _id: 1, privateData: 1 },
+				projection: {
+					_id: 1,
+					privateData: 1,
+					publicData: 1,
+					invalid: 1,
+					rundownId: 1,
+				},
 			}
-		),
+		) as Promise<
+			Pick<RundownBaselineAdLibAction, '_id' | 'privateData' | 'publicData' | 'invalid' | 'rundownId'> | undefined
+		>,
 		context.directCollections.BucketAdLibActions.findOne(data.actionDocId as BucketAdLibActionId, {
-			projection: { _id: 1, privateData: 1 },
-		}),
+			projection: {
+				_id: 1,
+				privateData: 1,
+				publicData: 1,
+				invalid: 1,
+				bucketId: 1,
+			},
+		}) as Promise<
+			Pick<BucketAdLibAction, '_id' | 'privateData' | 'publicData' | 'invalid' | 'bucketId'> | undefined
+		>,
 	])
 	const adLibActionDoc = adLibAction ?? baselineAdLibAction ?? bucketAdLibAction
 
