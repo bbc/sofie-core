@@ -9,7 +9,7 @@ import {
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	IEventContext,
 	IOnSetAsNextContext,
 } from '@sofie-automation/blueprints-integration'
@@ -50,11 +50,15 @@ export class OnSetAsNextContext
 		public readonly manuallySelected: boolean
 	) {
 		super(contextInfo, context, showStyle, watchedPackages)
-		this.#tTimersService = new TTimersService(playoutModel)
+		this.#tTimersService = TTimersService.withPlayoutModel(playoutModel)
 	}
 
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
 		return this.partAndPieceInstanceService.quickLoopInfo
+	}
+
+	public get isRehearsal(): boolean {
+		return this.playoutModel.playlist.rehearsal ?? false
 	}
 
 	public get nextPartState(): ActionPartChange {
@@ -81,7 +85,7 @@ export class OnSetAsNextContext
 		return this.partAndPieceInstanceService.getResolvedPieceInstances(part)
 	}
 
-	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined> {
+	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
 		return this.partAndPieceInstanceService.getSegment(segment)
 	}
 

@@ -57,9 +57,9 @@ describe('Test external message queue static methods', () => {
 			},
 			rundownIdsInOrder: [protectString('rundown_1')],
 			tTimers: [
-				{ index: 1, label: '', mode: null },
-				{ index: 2, label: '', mode: null },
-				{ index: 3, label: '', mode: null },
+				{ index: 1, label: '', mode: null, state: null },
+				{ index: 2, label: '', mode: null, state: null },
+				{ index: 3, label: '', mode: null, state: null },
 			],
 		})
 		await context.mockCollections.Rundowns.insertOne({
@@ -207,9 +207,9 @@ describe('Test sending messages to mocked endpoints', () => {
 			},
 			rundownIdsInOrder: [protectString('rundown_1')],
 			tTimers: [
-				{ index: 1, label: '', mode: null },
-				{ index: 2, label: '', mode: null },
-				{ index: 3, label: '', mode: null },
+				{ index: 1, label: '', mode: null, state: null },
+				{ index: 2, label: '', mode: null, state: null },
+				{ index: 3, label: '', mode: null, state: null },
 			],
 		})
 

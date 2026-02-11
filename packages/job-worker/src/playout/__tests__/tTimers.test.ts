@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { useFakeCurrentTime, useRealCurrentTime, adjustFakeTime } from '../../__mocks__/time.js'
+import { useFakeCurrentTime, useRealCurrentTime } from '../../__mocks__/time.js'
 import {
 	validateTTimerIndex,
 	pauseTTimer,
@@ -7,14 +7,10 @@ import {
 	restartTTimer,
 	createCountdownTTimer,
 	createFreeRunTTimer,
-	calculateTTimerCurrentTime,
 	calculateNextTimeOfDayTarget,
 	createTimeOfDayTTimer,
 } from '../tTimers.js'
-import type {
-	RundownTTimerMode,
-	RundownTTimerModeTimeOfDay,
-} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 describe('tTimers utils', () => {
 	beforeEach(() => {
@@ -51,48 +47,63 @@ describe('tTimers utils', () => {
 
 	describe('pauseTTimer', () => {
 		it('should pause a running countdown timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: null,
-				duration: 60000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 70000 }, // 60 seconds from now
 			}
 
 			const result = pauseTTimer(timer)
 
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: 10000, // getCurrentTime()
-				duration: 60000,
-				stopAtZero: true,
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: true, duration: 60000 }, // Captured remaining time
 			})
 		})
 
 		it('should pause a running freeRun timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'freeRun',
-				startTime: 5000,
-				pauseTime: null,
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 5000 }, // Started 5 seconds ago
 			}
 
 			const result = pauseTTimer(timer)
 
 			expect(result).toEqual({
-				type: 'freeRun',
-				startTime: 5000,
-				pauseTime: 10000,
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: -5000 }, // Elapsed time (negative for counting up)
 			})
 		})
 
 		it('should return unchanged countdown timer if already paused', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: 7000, // already paused
-				duration: 60000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: true, duration: 30000 }, // already paused
 			}
 
 			const result = pauseTTimer(timer)
@@ -101,10 +112,13 @@ describe('tTimers utils', () => {
 		})
 
 		it('should return unchanged freeRun timer if already paused', () => {
-			const timer: RundownTTimerMode = {
-				type: 'freeRun',
-				startTime: 5000,
-				pauseTime: 7000, // already paused
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: 5000 }, // already paused
 			}
 
 			const result = pauseTTimer(timer)
@@ -112,59 +126,77 @@ describe('tTimers utils', () => {
 			expect(result).toBe(timer) // same reference, unchanged
 		})
 
-		it('should return null for null timer', () => {
-			expect(pauseTTimer(null)).toBeNull()
+		it('should return null for timer with no mode', () => {
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: null,
+				state: null,
+			}
+
+			expect(pauseTTimer(timer)).toBeNull()
 		})
 	})
 
 	describe('resumeTTimer', () => {
 		it('should resume a paused countdown timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: 8000, // paused 3 seconds after start
-				duration: 60000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: true, duration: 30000 }, // 30 seconds remaining
 			}
 
 			const result = resumeTTimer(timer)
 
-			// pausedOffset = 5000 - 8000 = -3000
-			// newStartTime = 10000 + (-3000) = 7000
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 7000, // 3 seconds before now
-				pauseTime: null,
-				duration: 60000,
-				stopAtZero: true,
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 40000 }, // now (10000) + duration (30000)
 			})
 		})
 
 		it('should resume a paused freeRun timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'freeRun',
-				startTime: 2000,
-				pauseTime: 6000, // paused 4 seconds after start
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: -5000 }, // 5 seconds elapsed
 			}
 
 			const result = resumeTTimer(timer)
 
-			// pausedOffset = 2000 - 6000 = -4000
-			// newStartTime = 10000 + (-4000) = 6000
 			expect(result).toEqual({
-				type: 'freeRun',
-				startTime: 6000, // 4 seconds before now
-				pauseTime: null,
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 5000 }, // now (10000) + duration (-5000)
 			})
 		})
 
 		it('should return countdown timer unchanged if already running', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: null, // already running
-				duration: 60000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 70000 }, // already running
 			}
 
 			const result = resumeTTimer(timer)
@@ -173,10 +205,13 @@ describe('tTimers utils', () => {
 		})
 
 		it('should return freeRun timer unchanged if already running', () => {
-			const timer: RundownTTimerMode = {
-				type: 'freeRun',
-				startTime: 5000,
-				pauseTime: null, // already running
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 5000 }, // already running
 			}
 
 			const result = resumeTTimer(timer)
@@ -184,64 +219,93 @@ describe('tTimers utils', () => {
 			expect(result).toBe(timer) // same reference
 		})
 
-		it('should return null for null timer', () => {
-			expect(resumeTTimer(null)).toBeNull()
+		it('should return null for timer with no mode', () => {
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: null,
+				state: null,
+			}
+
+			expect(resumeTTimer(timer)).toBeNull()
 		})
 	})
 
 	describe('restartTTimer', () => {
 		it('should restart a running countdown timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: null,
-				duration: 60000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 40000 }, // Partway through
 			}
 
 			const result = restartTTimer(timer)
 
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 10000, // now
-				pauseTime: null,
-				duration: 60000,
-				stopAtZero: true,
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 70000 }, // now (10000) + duration (60000)
 			})
 		})
 
 		it('should restart a paused countdown timer (stays paused)', () => {
-			const timer: RundownTTimerMode = {
-				type: 'countdown',
-				startTime: 5000,
-				pauseTime: 8000,
-				duration: 60000,
-				stopAtZero: false,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: false,
+				},
+				state: { paused: true, duration: 15000 }, // Paused with time remaining
 			}
 
 			const result = restartTTimer(timer)
 
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 10000, // now
-				pauseTime: 10000, // also now (paused at start)
-				duration: 60000,
-				stopAtZero: false,
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: false,
+				},
+				state: { paused: true, duration: 60000 }, // Reset to full duration, still paused
 			})
 		})
 
 		it('should return null for freeRun timer', () => {
-			const timer: RundownTTimerMode = {
-				type: 'freeRun',
-				startTime: 5000,
-				pauseTime: null,
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 5000 },
 			}
 
 			expect(restartTTimer(timer)).toBeNull()
 		})
 
-		it('should return null for null timer', () => {
-			expect(restartTTimer(null)).toBeNull()
+		it('should return null for timer with no mode', () => {
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: null,
+				state: null,
+			}
+
+			expect(restartTTimer(timer)).toBeNull()
 		})
 	})
 
@@ -253,11 +317,12 @@ describe('tTimers utils', () => {
 			})
 
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 10000,
-				pauseTime: null,
-				duration: 60000,
-				stopAtZero: true,
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 70000 }, // now (10000) + duration (60000)
 			})
 		})
 
@@ -268,11 +333,12 @@ describe('tTimers utils', () => {
 			})
 
 			expect(result).toEqual({
-				type: 'countdown',
-				startTime: 10000,
-				pauseTime: 10000,
-				duration: 30000,
-				stopAtZero: false,
+				mode: {
+					type: 'countdown',
+					duration: 30000,
+					stopAtZero: false,
+				},
+				state: { paused: true, duration: 30000 },
 			})
 		})
 
@@ -300,9 +366,10 @@ describe('tTimers utils', () => {
 			const result = createFreeRunTTimer({ startPaused: false })
 
 			expect(result).toEqual({
-				type: 'freeRun',
-				startTime: 10000,
-				pauseTime: null,
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 10000 }, // now
 			})
 		})
 
@@ -310,48 +377,11 @@ describe('tTimers utils', () => {
 			const result = createFreeRunTTimer({ startPaused: true })
 
 			expect(result).toEqual({
-				type: 'freeRun',
-				startTime: 10000,
-				pauseTime: 10000,
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: 0 },
 			})
-		})
-	})
-
-	describe('calculateTTimerCurrentTime', () => {
-		it('should calculate time for a running timer', () => {
-			// Timer started at 5000, current time is 10000
-			const result = calculateTTimerCurrentTime(5000, null)
-
-			expect(result).toBe(5000) // 10000 - 5000
-		})
-
-		it('should calculate time for a paused timer', () => {
-			// Timer started at 5000, paused at 8000
-			const result = calculateTTimerCurrentTime(5000, 8000)
-
-			expect(result).toBe(3000) // 8000 - 5000
-		})
-
-		it('should handle timer that just started', () => {
-			const result = calculateTTimerCurrentTime(10000, null)
-
-			expect(result).toBe(0)
-		})
-
-		it('should handle timer paused immediately', () => {
-			const result = calculateTTimerCurrentTime(10000, 10000)
-
-			expect(result).toBe(0)
-		})
-
-		it('should update as time progresses', () => {
-			const startTime = 5000
-
-			expect(calculateTTimerCurrentTime(startTime, null)).toBe(5000)
-
-			adjustFakeTime(2000) // Now at 12000
-
-			expect(calculateTTimerCurrentTime(startTime, null)).toBe(7000)
 		})
 	})
 
@@ -510,10 +540,15 @@ describe('tTimers utils', () => {
 			const result = createTimeOfDayTTimer('15:30', { stopAtZero: true })
 
 			expect(result).toEqual({
-				type: 'timeOfDay',
-				stopAtZero: true,
-				targetTime: expect.any(Number), // new target time
-				targetRaw: '15:30',
+				mode: {
+					type: 'timeOfDay',
+					stopAtZero: true,
+					targetRaw: '15:30',
+				},
+				state: {
+					paused: false,
+					zeroTime: expect.any(Number), // Parsed target time
+				},
 			})
 		})
 
@@ -522,10 +557,15 @@ describe('tTimers utils', () => {
 			const result = createTimeOfDayTTimer(timestamp, { stopAtZero: false })
 
 			expect(result).toEqual({
-				type: 'timeOfDay',
-				targetTime: timestamp,
-				targetRaw: timestamp,
-				stopAtZero: false,
+				mode: {
+					type: 'timeOfDay',
+					targetRaw: timestamp,
+					stopAtZero: false,
+				},
+				state: {
+					paused: false,
+					zeroTime: timestamp,
+				},
 			})
 		})
 
@@ -556,28 +596,41 @@ describe('tTimers utils', () => {
 		})
 
 		it('should restart a timeOfDay timer with valid targetRaw', () => {
-			const timer: RundownTTimerMode = {
-				type: 'timeOfDay',
-				targetTime: 1737300000000,
-				targetRaw: '15:30',
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'timeOfDay',
+					targetRaw: '15:30',
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 1737300000000 },
 			}
 
 			const result = restartTTimer(timer)
 
-			expect(result).toEqual({
-				...timer,
-				targetTime: expect.any(Number), // new target time
+			expect(result).not.toBeNull()
+			expect(result?.mode).toEqual(timer.mode)
+			expect(result?.state).toEqual({
+				paused: false,
+				zeroTime: expect.any(Number), // new target time
 			})
-			expect((result as RundownTTimerModeTimeOfDay).targetTime).toBeGreaterThan(timer.targetTime)
+			if (!result || !result.state || result.state.paused) {
+				throw new Error('Expected running timeOfDay timer state')
+			}
+			expect(result.state.zeroTime).toBeGreaterThan(1737300000000)
 		})
 
 		it('should return null for timeOfDay timer with invalid targetRaw', () => {
-			const timer: RundownTTimerMode = {
-				type: 'timeOfDay',
-				targetTime: 1737300000000,
-				targetRaw: 'invalid',
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'timeOfDay',
+					targetRaw: 'invalid',
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 1737300000000 },
 			}
 
 			const result = restartTTimer(timer)
@@ -586,11 +639,15 @@ describe('tTimers utils', () => {
 		})
 
 		it('should return null for timeOfDay timer with unix timestamp', () => {
-			const timer: RundownTTimerMode = {
-				type: 'timeOfDay',
-				targetTime: 1737300000000,
-				targetRaw: 1737300000000,
-				stopAtZero: true,
+			const timer: RundownTTimer = {
+				index: 1,
+				label: 'Test',
+				mode: {
+					type: 'timeOfDay',
+					targetRaw: 1737300000000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 1737300000000 },
 			}
 
 			const result = restartTTimer(timer)

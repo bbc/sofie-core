@@ -16,10 +16,13 @@
 	},
 	"scripts": {
 		"prepare": "lerna run prepare",
-		"build": "lerna run build --ignore @sofie-automation/openapi",
-		"build:all": "lerna run build",
-		"build:try": "lerna run --no-bail build --ignore @sofie-automation/openapi || true",
-		"watch": "lerna run --parallel build:main --ignore @sofie-automation/openapi -- --watch --preserveWatchOutput",
+		"build": "run build:prepare && run build:main",
+		"build:prepare": "(rimraf */dist */*.tsbuildinfo || true) && lerna run build:prepare",
+		"build:main": "tsc --build tsconfig.build.json",
+		"build:all": "run build && lerna run build --scope @sofie-automation/openapi",
+		"build:try": "run build || true",
+		"build:single": "run build:prepare && tsc --build",
+		"watch": "run build:main --watch",
 		"stage-versions": "git add -u \"*/package.json\" \"*/CHANGELOG.md\" lerna.json yarn.lock",
 		"set-version": "lerna version --exact --no-changelog --no-git-tag-version --no-push --yes",
 		"set-version-and-commit": "lerna version --exact --no-changelog --no-changelog --no-commit-hooks --force-publish='*' --no-push --yes",
@@ -70,7 +73,7 @@
 		"typescript": "~5.7.3"
 	},
 	"name": "packages",
-	"packageManager": "yarn@4.10.3",
+	"packageManager": "yarn@4.12.0",
 	"resolutions": {
 		"timecode@0.0.4": "patch:timecode@npm%3A0.0.4#./.yarn/patches/timecode-npm-0.0.4-82bde9e6fe.patch",
 		"@hyperjump/json-schema-core@^0.28.0": "patch:@hyperjump/json-schema-core@npm%3A0.28.5#./.yarn/patches/@hyperjump-json-schema-core-npm-0.28.5-e8b590eb0d.patch",

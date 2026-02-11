@@ -9,11 +9,23 @@ import { OnSetAsNextContext } from '../context/index.js'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 describe('Test blueprint api context', () => {
-	async function getTestee(setManually = false) {
+	async function getTestee(setManually = false, rehearsal?: boolean) {
 		const mockActionService = mock<PartAndPieceInstanceActionService>()
 		const mockPlayoutModel = mock<PlayoutModel>()
+		Object.defineProperty(mockPlayoutModel, 'playlist', {
+			get: () =>
+				({
+					rehearsal,
+					tTimers: [
+						{ index: 1, label: 'Timer 1', mode: null, state: null },
+						{ index: 2, label: 'Timer 2', mode: null, state: null },
+						{ index: 3, label: 'Timer 3', mode: null, state: null },
+					],
+				}) satisfies Partial<DBRundownPlaylist>,
+		})
 		const context = new OnSetAsNextContext(
 			{
 				name: 'fakeContext',
@@ -187,6 +199,24 @@ describe('Test blueprint api context', () => {
 			const { context } = await getTestee(true)
 
 			expect(context.manuallySelected).toBe(true)
+		})
+
+		test('isRehearsal when true', async () => {
+			const { context } = await getTestee(false, true)
+
+			expect(context.isRehearsal).toBe(true)
+		})
+
+		test('isRehearsal when false', async () => {
+			const { context } = await getTestee(false, false)
+
+			expect(context.isRehearsal).toBe(false)
+		})
+
+		test('isRehearsal when undefined', async () => {
+			const { context } = await getTestee()
+
+			expect(context.isRehearsal).toBe(false)
 		})
 	})
 })

@@ -7,7 +7,6 @@ import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import type { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
 import {
-	calculateTTimerCurrentTime,
 	createCountdownTTimer,
 	createFreeRunTTimer,
 	createTimeOfDayTTimer,
@@ -19,18 +18,23 @@ import {
 import { getCurrentTime } from '../../../lib/time.js'
 
 export class TTimersService {
-	readonly playoutModel: PlayoutModel
-
 	readonly timers: [PlaylistTTimerImpl, PlaylistTTimerImpl, PlaylistTTimerImpl]
 
-	constructor(playoutModel: PlayoutModel) {
-		this.playoutModel = playoutModel
-
+	constructor(
+		timers: ReadonlyDeep<RundownTTimer[]>,
+		emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void
+	) {
 		this.timers = [
-			new PlaylistTTimerImpl(playoutModel, 1),
-			new PlaylistTTimerImpl(playoutModel, 2),
-			new PlaylistTTimerImpl(playoutModel, 3),
+			new PlaylistTTimerImpl(timers[0], emitChange),
+			new PlaylistTTimerImpl(timers[1], emitChange),
+			new PlaylistTTimerImpl(timers[2], emitChange),
 		]
+	}
+
+	static withPlayoutModel(playoutModel: PlayoutModel): TTimersService {
+		return new TTimersService(playoutModel.playlist.tTimers, (updatedTimer) => {
+			playoutModel.updateTTimer(updatedTimer)
+		})
 	}
 
 	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
@@ -45,124 +49,123 @@ export class TTimersService {
 }
 
 export class PlaylistTTimerImpl implements IPlaylistTTimer {
-	readonly #playoutModel: PlayoutModel
-	readonly #index: RundownTTimerIndex
+	readonly #emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void
 
-	get #modelTimer(): ReadonlyDeep<RundownTTimer> {
-		return this.#playoutModel.playlist.tTimers[this.#index - 1]
-	}
+	#timer: ReadonlyDeep<RundownTTimer>
 
 	get index(): RundownTTimerIndex {
-		return this.#modelTimer.index
+		return this.#timer.index
 	}
 	get label(): string {
-		return this.#modelTimer.label
+		return this.#timer.label
 	}
 	get state(): IPlaylistTTimerState | null {
-		const rawMode = this.#modelTimer.mode
-		switch (rawMode?.type) {
+		const rawMode = this.#timer.mode
+		const rawState = this.#timer.state
+
+		if (!rawMode || !rawState) return null
+
+		const currentTime = rawState.paused ? rawState.duration : rawState.zeroTime - getCurrentTime()
+
+		switch (rawMode.type) {
 			case 'countdown':
 				return {
 					mode: 'countdown',
-					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
+					currentTime,
 					duration: rawMode.duration,
-					paused: !!rawMode.pauseTime,
+					paused: rawState.paused,
 					stopAtZero: rawMode.stopAtZero,
 				}
 			case 'freeRun':
 				return {
 					mode: 'freeRun',
-					currentTime: calculateTTimerCurrentTime(rawMode.startTime, rawMode.pauseTime),
-					paused: !!rawMode.pauseTime,
+					currentTime,
+					paused: rawState.paused,
 				}
 			case 'timeOfDay':
 				return {
 					mode: 'timeOfDay',
-					currentTime: rawMode.targetTime - getCurrentTime(),
-					targetTime: rawMode.targetTime,
+					currentTime,
+					targetTime: rawState.paused ? 0 : rawState.zeroTime,
 					targetRaw: rawMode.targetRaw,
 					stopAtZero: rawMode.stopAtZero,
 				}
-			case undefined:
-				return null
 			default:
 				assertNever(rawMode)
 				return null
 		}
 	}
 
-	constructor(playoutModel: PlayoutModel, index: RundownTTimerIndex) {
-		this.#playoutModel = playoutModel
-		this.#index = index
-
-		validateTTimerIndex(index)
+	constructor(timer: ReadonlyDeep<RundownTTimer>, emitChange: (updatedTimer: ReadonlyDeep<RundownTTimer>) => void) {
+		this.#timer = timer
+		this.#emitChange = emitChange
 	}
 
 	setLabel(label: string): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			label: label,
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	clearTimer(): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
+		this.#timer = {
+			...this.#timer,
 			mode: null,
-		})
+			state: null,
+		}
+		this.#emitChange(this.#timer)
 	}
 	startCountdown(duration: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: createCountdownTTimer(duration, {
+		this.#timer = {
+			...this.#timer,
+			...createCountdownTTimer(duration, {
 				stopAtZero: options?.stopAtZero ?? true,
 				startPaused: options?.startPaused ?? false,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	startTimeOfDay(targetTime: string | number, options?: { stopAtZero?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: createTimeOfDayTTimer(targetTime, {
+		this.#timer = {
+			...this.#timer,
+			...createTimeOfDayTTimer(targetTime, {
 				stopAtZero: options?.stopAtZero ?? true,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	startFreeRun(options?: { startPaused?: boolean }): void {
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: createFreeRunTTimer({
+		this.#timer = {
+			...this.#timer,
+			...createFreeRunTTimer({
 				startPaused: options?.startPaused ?? false,
 			}),
-		})
+		}
+		this.#emitChange(this.#timer)
 	}
 	pause(): boolean {
-		const newTimer = pauseTTimer(this.#modelTimer.mode)
+		const newTimer = pauseTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 	resume(): boolean {
-		const newTimer = resumeTTimer(this.#modelTimer.mode)
+		const newTimer = resumeTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 	restart(): boolean {
-		const newTimer = restartTTimer(this.#modelTimer.mode)
+		const newTimer = restartTTimer(this.#timer)
 		if (!newTimer) return false
 
-		this.#playoutModel.updateTTimer({
-			...this.#modelTimer,
-			mode: newTimer,
-		})
+		this.#timer = newTimer
+		this.#emitChange(newTimer)
 		return true
 	}
 }

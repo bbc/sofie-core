@@ -237,9 +237,9 @@ export function produceRundownPlaylistInfoFromRundown(
 			previousPartInfo: null,
 			rundownIdsInOrder: [],
 			tTimers: [
-				{ index: 1, label: '', mode: null },
-				{ index: 2, label: '', mode: null },
-				{ index: 3, label: '', mode: null },
+				{ index: 1, label: '', mode: null, state: null },
+				{ index: 2, label: '', mode: null, state: null },
+				{ index: 3, label: '', mode: null, state: null },
 			],
 
 			...clone<DBRundownPlaylist | undefined>(existingPlaylist),
@@ -338,9 +338,9 @@ function defaultPlaylistForRundown(
 		previousPartInfo: null,
 		rundownIdsInOrder: [],
 		tTimers: [
-			{ index: 1, label: '', mode: null },
-			{ index: 2, label: '', mode: null },
-			{ index: 3, label: '', mode: null },
+			{ index: 1, label: '', mode: null, state: null },
+			{ index: 2, label: '', mode: null, state: null },
+			{ index: 3, label: '', mode: null, state: null },
 		],
 
 		...clone<DBRundownPlaylist | undefined>(existingPlaylist),
