@@ -633,10 +633,10 @@ resources:
                   message:
                     type: string
                     example: Cannot take during a transition
-                  nextAllowedTakeTime:
-                    type: number
-                    description: Unix timestamp (ms) of when the next take will be allowed.
-                    example: 1707024000000
+                  additionalInfo:
+                    type: object
+                    description: Additional error details, e.g. includes nextAllowedTakeTime (Unix timestamp ms) for blocked takes.
+                    additionalProperties: true
         429:
           description: Take rate limit exceeded - takes are happening too quickly.
           content:
@@ -650,10 +650,10 @@ resources:
                   message:
                     type: string
                     example: Ignoring TAKES that are too quick after eachother (1000 ms)
-                  nextAllowedTakeTime:
-                    type: number
-                    description: Unix timestamp (ms) of when the next take will be allowed.
-                    example: 1707024000000
+                  additionalInfo:
+                    type: object
+                    description: Additional error details, e.g. includes nextAllowedTakeTime (Unix timestamp ms) for blocked takes.
+                    additionalProperties: true
         500:
           $ref: '#/components/responses/internalServerError'
 

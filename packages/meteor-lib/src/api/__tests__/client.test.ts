@@ -50,7 +50,7 @@ describe('ClientAPI', () => {
 			})
 		}
 	})
-	it('Extracts nextAllowedTakeTime from error args', () => {
+	it('Extracts additionalInfo from error args', () => {
 		const error = ClientAPI.responseError(
 			UserError.create(
 				UserErrorMessage.TakeRateLimit,
@@ -61,12 +61,12 @@ describe('ClientAPI', () => {
 				429
 			)
 		)
-		expect(error.nextAllowedTakeTime).toBe(1234567890)
+		expect(error.additionalInfo).toEqual({ duration: 1000, nextAllowedTakeTime: 1234567890 })
 		expect(error.errorCode).toBe(429)
 	})
-	it('Does not include nextAllowedTakeTime when not in args', () => {
+	it('Does not include additionalInfo when no args', () => {
 		const error = ClientAPI.responseError(UserError.create(UserErrorMessage.InactiveRundown))
-		expect(error.nextAllowedTakeTime).toBeUndefined()
+		expect(error.additionalInfo).toBeUndefined()
 	})
 	describe('isClientResponseSuccess', () => {
 		it('Correctly recognizes a responseSuccess object', () => {
