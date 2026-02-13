@@ -27,7 +27,7 @@ Some useful npm scripts you may wish to copy are:
 
 There are a few key properties that your plugin must conform to, the rest of the structure and how it gets generated is up to you.
 
-1. It must be possible to `require(...)` your plugin folder. The resuling js must contain an export of the format `export const Devices: Record<string, DeviceEntry> = {}`
+1. It must be possible to `require(...)` your plugin folder. The resulting js must contain an export of the format `export const Devices: Record<string, DeviceEntry> = {}`
    This is how the TSR process finds the entrypoint for your code, and allows you to define multiple device types.
 
 2. There must be a `manifest.json` file at the root of your plugin folder. This should contain json in the form `Record<string, TSRDevicesManifestEntry>`
