@@ -99,7 +99,7 @@ function listDatabases() {
 	// List all db.* directories
 	const files = fs.readdirSync(meteorLocalDir);
 	const dbDirs = files
-		.filter(file => file.startsWith('db.') && fs.statSync(path.join(meteorLocalDir, file)).isDirectory())
+		.filter(file => file.startsWith('db.') && fs.lstatSync(path.join(meteorLocalDir, file)).isDirectory())
 		.map(file => file.substring(3));
 
 	console.log('\nAvailable databases:');
@@ -125,10 +125,13 @@ function switchDatabase(dbName) {
 
 	// Check if we're already using this database
 	if (fs.existsSync(dbLink)) {
-		const currentTarget = fs.readlinkSync(dbLink);
-		if (currentTarget === `db.${dbName}`) {
-			console.log(`✓ Already using database: ${dbName}`);
-			return;
+		const stats = fs.lstatSync(dbLink);
+		if (stats.isSymbolicLink()) {
+			const currentTarget = fs.readlinkSync(dbLink);
+			if (currentTarget === `db.${dbName}`) {
+				console.log(`✓ Already using database: ${dbName}`);
+				return;
+			}
 		}
 	}
 
@@ -144,14 +147,23 @@ function switchDatabase(dbName) {
 		if (stats.isSymbolicLink()) {
 			fs.unlinkSync(dbLink);
 		} else {
-			// It's a real directory - back it up as 'default'
+			// It's a real directory - back it up with timestamp
 			const defaultDb = path.join(meteorLocalDir, 'db.default');
 			if (!fs.existsSync(defaultDb)) {
 				console.log(`Backing up existing database to: default`);
 				fs.renameSync(dbLink, defaultDb);
 			} else {
-				// Default already exists, just remove current
-				fs.rmSync(dbLink, { recursive: true, force: true });
+				// Default already exists, create timestamped backup instead of deleting
+				const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+				let backupName = path.join(meteorLocalDir, `db.backup.${timestamp}`);
+				// Ensure unique backup name
+				let suffix = 0;
+				while (fs.existsSync(backupName)) {
+					suffix++;
+					backupName = path.join(meteorLocalDir, `db.backup.${timestamp}.${suffix}`);
+				}
+				console.log(`Backing up existing database to: ${path.basename(backupName)}`);
+				fs.renameSync(dbLink, backupName);
 			}
 		}
 	}
