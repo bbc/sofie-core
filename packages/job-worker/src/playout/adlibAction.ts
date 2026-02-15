@@ -35,9 +35,6 @@ import type { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper.js'
 import type { INotificationsModel } from '../notifications/NotificationsModel.js'
 import { PersistentPlayoutStateStore } from '../blueprints/context/services/PersistantStateStore.js'
-import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
-import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
-import { BucketAdLibAction } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibAction'
 
 /**
  * Execute an AdLib Action
