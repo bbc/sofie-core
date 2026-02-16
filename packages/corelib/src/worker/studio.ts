@@ -19,7 +19,7 @@ import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import { CoreRundownPlaylistSnapshot } from '../snapshots.js'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { ITranslatableMessage } from '../TranslatableMessage.js'
-import { QuickLoopMarker } from '../dataModel/RundownPlaylist.js'
+import { QuickLoopMarker, RundownTTimerIndex } from '../dataModel/RundownPlaylist.js'
 
 /** List of all Jobs performed by the Worker related to a certain Studio */
 export enum StudioJobs {
@@ -207,6 +207,11 @@ export enum StudioJobs {
 	SwitchRouteSet = 'switchRouteSet',
 
 	/**
+	 * Set visibility of a T-Timer on different screens
+	 */
+	SetTimerVisibility = 'setTimerVisibility',
+
+	/**
 	 * Cleanup any expected packages playout references that are orphaned
 	 * During playout it is hard to track removal of PieceInstances (particularly when resetting PieceInstances)
 	 */
@@ -375,6 +380,16 @@ export interface SwitchRouteSetProps {
 	state: boolean | 'toggle'
 }
 
+export interface SetTimerVisibilityProps extends RundownPlayoutPropsBase {
+	timerIndex: RundownTTimerIndex
+	visibility: {
+		rundownView?: boolean
+		directorScreen?: boolean
+		presenterScreen?: boolean
+		prompterScreen?: boolean
+	}
+}
+
 export interface CleanupOrphanedExpectedPackageReferencesProps {
 	playlistId: RundownPlaylistId
 	rundownId: RundownId
@@ -436,6 +451,8 @@ export type StudioJobFunc = {
 	[StudioJobs.ClearQuickLoopMarkers]: (data: ClearQuickLoopMarkersProps) => void
 
 	[StudioJobs.SwitchRouteSet]: (data: SwitchRouteSetProps) => void
+
+	[StudioJobs.SetTimerVisibility]: (data: SetTimerVisibilityProps) => void
 
 	[StudioJobs.CleanupOrphanedExpectedPackageReferences]: (data: CleanupOrphanedExpectedPackageReferencesProps) => void
 }

@@ -12,6 +12,7 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { QueueNextSegmentResult } from '@sofie-automation/corelib/dist/worker/studio'
 import { Meteor } from 'meteor/meteor'
+import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 /* *************************************************************************
 This file contains types and interfaces that are used by the REST API.
@@ -260,5 +261,26 @@ export interface PlaylistsRestAPI {
 		event: string,
 		rundownPlaylistId: RundownPlaylistId,
 		sourceLayerId: string
+	): Promise<ClientAPI.ClientResponse<void>>
+	/**
+	 * Sets the visibility of a T-Timer on different screens.
+	 *
+	 * @param connection Connection data including client and header details
+	 * @param event User event string
+	 * @param rundownPlaylistId Target Playlist.
+	 * @param timerIndex Timer index (1, 2, or 3).
+	 * @param visibility Visibility settings for different screens.
+	 */
+	setTimerVisibility(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		visibility: {
+			rundownView?: boolean
+			directorScreen?: boolean
+			presenterScreen?: boolean
+			prompterScreen?: boolean
+		}
 	): Promise<ClientAPI.ClientResponse<void>>
 }

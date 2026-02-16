@@ -544,6 +544,37 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			}
 		)
 	}
+
+	async setTimerVisibility(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: 1 | 2 | 3,
+		visibility: {
+			rundownView?: boolean
+			directorScreen?: boolean
+			presenterScreen?: boolean
+			prompterScreen?: boolean
+		}
+	): Promise<ClientAPI.ClientResponse<void>> {
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			rundownPlaylistId,
+			() => {
+				check(rundownPlaylistId, String)
+				check(timerIndex, Number)
+				check(visibility, Object)
+			},
+			StudioJobs.SetTimerVisibility,
+			{
+				playlistId: rundownPlaylistId,
+				timerIndex,
+				visibility,
+			}
+		)
+	}
 }
 
 class PlaylistsAPIFactory implements APIFactory<PlaylistsRestAPI> {
@@ -875,6 +906,44 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 			check(playlistId, String)
 			check(sourceLayerId, String)
 			return await serverAPI.recallStickyPiece(connection, event, playlistId, sourceLayerId)
+		}
+	)
+
+	registerRoute<
+		{ playlistId: string; timerIndex: string },
+		{
+			rundownView?: boolean
+			directorScreen?: boolean
+			presenterScreen?: boolean
+			prompterScreen?: boolean
+		},
+		void
+	>(
+		'put',
+		'/playlists/:playlistId/timers/:timerIndex/visibility',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const playlistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = Number.parseInt(params.timerIndex, 10) as 1 | 2 | 3
+			logger.info(`API PUT: set-timer-visibility ${playlistId} timer ${timerIndex}`)
+
+			check(playlistId, String)
+			check(timerIndex, Number)
+
+			// Validate timer index
+			if (timerIndex < 1 || timerIndex > 3) {
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(`Timer index must be 1, 2, or 3`),
+						UserErrorMessage.InternalError,
+						undefined,
+						400
+					)
+				)
+			}
+
+			return await serverAPI.setTimerVisibility(connection, event, playlistId, timerIndex, body)
 		}
 	)
 }

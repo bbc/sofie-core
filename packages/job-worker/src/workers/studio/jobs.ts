@@ -49,6 +49,7 @@ import { handleActivateAdlibTesting } from '../../playout/adlibTesting.js'
 import { handleExecuteBucketAdLibOrAction } from '../../playout/bucketAdlibJobs.js'
 import { handleSwitchRouteSet } from '../../studio/routeSet.js'
 import { handleCleanupOrphanedExpectedPackageReferences } from '../../playout/expectedPackages.js'
+import { handleSetTimerVisibility } from '../../playout/tTimersJobs.js'
 
 type ExecutableFunction<T extends keyof StudioJobFunc> = (
 	context: JobContext,
@@ -111,6 +112,8 @@ export const studioJobHandlers: StudioJobHandlers = {
 	[StudioJobs.ClearQuickLoopMarkers]: handleClearQuickLoopMarkers,
 
 	[StudioJobs.SwitchRouteSet]: handleSwitchRouteSet,
+
+	[StudioJobs.SetTimerVisibility]: handleSetTimerVisibility,
 
 	[StudioJobs.CleanupOrphanedExpectedPackageReferences]: handleCleanupOrphanedExpectedPackageReferences,
 }

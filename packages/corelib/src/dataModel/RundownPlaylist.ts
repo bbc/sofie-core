@@ -94,6 +94,17 @@ export interface QuickLoopProps {
 	forceAutoNext: ForceQuickLoopAutoNext
 }
 
+export interface TimerVisibility {
+	/** Whether the timer is visible in the RundownView top bar */
+	rundownView: boolean
+	/** Whether the timer is visible on the director screen */
+	directorScreen: boolean
+	/** Whether the timer is visible on the presenter screen */
+	presenterScreen: boolean
+	/** Whether the timer is visible on the prompter screen */
+	prompterScreen: boolean
+}
+
 export type RundownTTimerMode = RundownTTimerModeFreeRun | RundownTTimerModeCountdown | RundownTTimerModeTimeOfDay
 
 export interface RundownTTimerModeFreeRun {
@@ -164,6 +175,12 @@ export interface RundownTTimer {
 	 * This contains the information needed to calculate the current time of the timer
 	 */
 	state: TimerState | null
+
+	/**
+	 * Visibility settings for different screens
+	 * If undefined, defaults to visible on all screens (backward compatibility)
+	 */
+	visibility?: TimerVisibility
 
 	/*
 	 * Future ideas:

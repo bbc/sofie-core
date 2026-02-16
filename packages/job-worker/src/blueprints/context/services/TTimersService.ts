@@ -168,4 +168,29 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		this.#emitChange(newTimer)
 		return true
 	}
+
+	setVisibility(visibility: {
+		rundownView?: boolean
+		directorScreen?: boolean
+		presenterScreen?: boolean
+		prompterScreen?: boolean
+	}): void {
+		const currentVisibility = this.#timer.visibility ?? {
+			rundownView: true,
+			directorScreen: true,
+			presenterScreen: true,
+			prompterScreen: true,
+		}
+
+		this.#timer = {
+			...this.#timer,
+			visibility: {
+				rundownView: visibility.rundownView ?? currentVisibility.rundownView,
+				directorScreen: visibility.directorScreen ?? currentVisibility.directorScreen,
+				presenterScreen: visibility.presenterScreen ?? currentVisibility.presenterScreen,
+				prompterScreen: visibility.prompterScreen ?? currentVisibility.prompterScreen,
+			},
+		}
+		this.#emitChange(this.#timer)
+	}
 }

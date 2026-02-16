@@ -71,6 +71,17 @@ export interface IPlaylistTTimer {
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */
 	restart(): boolean
+
+	/**
+	 * Set the visibility of the timer on different screens
+	 * @param visibility Object specifying which screens should display this timer
+	 */
+	setVisibility(visibility: {
+		rundownView?: boolean
+		directorScreen?: boolean
+		presenterScreen?: boolean
+		prompterScreen?: boolean
+	}): void
 }
 
 export type IPlaylistTTimerState =
