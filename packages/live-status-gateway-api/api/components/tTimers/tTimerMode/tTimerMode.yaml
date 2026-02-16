@@ -1,0 +1,65 @@
+$defs:
+  tTimerModeCountdown:
+    type: object
+    title: TTimerModeCountdown
+    description: Countdown timer mode - counts down from a duration
+    properties:
+      type:
+        type: string
+        const: countdown
+      paused:
+        description: Whether the timer is currently paused
+        type: boolean
+      zeroTime:
+        description: >-
+          Unix timestamp (ms) when the timer reaches/reached zero.
+          Present when paused is false. The client calculates remaining time as zeroTime - Date.now().
+        type: number
+      remainingMs:
+        description: >-
+          Frozen remaining duration in milliseconds.
+          Present when paused is true.
+        type: number
+      durationMs:
+        description: Total countdown duration in milliseconds (the original configured duration)
+        type: number
+      stopAtZero:
+        description: Whether timer stops at zero or continues into negative values
+        type: boolean
+    required: [type, paused, durationMs, stopAtZero]
+    additionalProperties: false
+    examples:
+      - $ref: './tTimerModeCountdown-example.yaml'
+
+  tTimerModeFreeRun:
+    type: object
+    title: TTimerModeFreeRun
+    description: Free-running timer mode - counts up from start time
+    properties:
+      type:
+        type: string
+        const: freeRun
+      paused:
+        description: Whether the timer is currently paused
+        type: boolean
+      zeroTime:
+        description: >-
+          Unix timestamp (ms) when the timer was at zero (i.e. when it was started).
+          Present when paused is false. The client calculates elapsed time as Date.now() - zeroTime.
+        type: number
+      elapsedMs:
+        description: >-
+          Frozen elapsed time in milliseconds.
+          Present when paused is true.
+        type: number
+    required: [type, paused]
+    additionalProperties: false
+    examples:
+      - $ref: './tTimerModeFreeRun-example.yaml'
+
+  tTimerMode:
+    title: TTimerMode
+    description: The mode/state of a T-timer
+    oneOf:
+      - $ref: '#/$defs/tTimerModeCountdown'
+      - $ref: '#/$defs/tTimerModeFreeRun'

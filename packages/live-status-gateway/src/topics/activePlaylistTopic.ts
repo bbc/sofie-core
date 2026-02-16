@@ -5,6 +5,7 @@ import {
 	DBRundownPlaylist,
 	QuickLoopMarker,
 	QuickLoopMarkerType,
+	RundownTTimer,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { assertNever, literal } from '@sofie-automation/shared-lib/dist/lib/lib'
@@ -30,6 +31,11 @@ import {
 	ActivePlaylistQuickLoop,
 	QuickLoopMarker as QuickLoopMarkerStatus,
 	QuickLoopMarkerType as QuickLoopMarkerStatusType,
+	TTimerStatus,
+	TTimerEstimate,
+	TTimerModeCountdown,
+	TTimerModeFreeRun,
+	TTimerIndex,
 } from '@sofie-automation/live-status-gateway-api'
 
 import { CollectionHandlers } from '../liveStatusServer.js'
@@ -50,6 +56,7 @@ const PLAYLIST_KEYS = [
 	'timing',
 	'startedPlayback',
 	'quickLoop',
+	'tTimers',
 ] as const
 type Playlist = PickKeys<DBRundownPlaylist, typeof PLAYLIST_KEYS>
 
@@ -170,6 +177,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 								? this._activePlaylist.timing.expectedEnd
 								: undefined,
 					},
+					tTimers: this.transformTTimers(this._activePlaylist.tTimers),
 				})
 			: literal<ActivePlaylistEvent>({
 					event: 'activePlaylist',
@@ -185,6 +193,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 					timing: {
 						timingMode: ActivePlaylistTimingMode.NONE,
 					},
+					tTimers: this.transformTTimers(undefined),
 				})
 
 		this.sendMessage(subscribers, message)
@@ -201,6 +210,111 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 			running: quickLoopProps.running,
 			start: this.transformQuickLoopMarkerStatus(quickLoopProps.start),
 			end: this.transformQuickLoopMarkerStatus(quickLoopProps.end),
+		}
+	}
+
+	/**
+	 * Transform T-timers from database format to API status format
+	 */
+	private transformTTimers(
+		tTimers: [RundownTTimer, RundownTTimer, RundownTTimer] | undefined
+	): [TTimerStatus, TTimerStatus, TTimerStatus] {
+		if (!tTimers) {
+			// Return 3 unconfigured timers when no playlist is active
+			return [
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
+			]
+		}
+
+		return [this.transformTTimer(tTimers[0]), this.transformTTimer(tTimers[1]), this.transformTTimer(tTimers[2])]
+	}
+
+	/**
+	 * Transform a single T-timer from database format to API status format
+	 */
+	private transformTTimer(timer: RundownTTimer): TTimerStatus {
+		const index =
+			timer.index === 1 ? TTimerIndex.NUMBER_1 : timer.index === 2 ? TTimerIndex.NUMBER_2 : TTimerIndex.NUMBER_3
+
+		const estimate = this.transformTimerEstimate(timer.estimateState)
+		const anchorPartId = timer.anchorPartId ? unprotectString(timer.anchorPartId) : undefined
+
+		if (!timer.mode || !timer.state) {
+			return {
+				index,
+				label: timer.label,
+				configured: false,
+				mode: null,
+				estimate,
+				anchorPartId,
+			}
+		}
+
+		if (timer.mode.type === 'countdown') {
+			const mode: TTimerModeCountdown = timer.state.paused
+				? {
+						type: 'countdown',
+						paused: true,
+						remainingMs: timer.state.duration,
+						durationMs: timer.mode.duration,
+						stopAtZero: timer.mode.stopAtZero,
+					}
+				: {
+						type: 'countdown',
+						paused: false,
+						zeroTime: timer.state.zeroTime,
+						durationMs: timer.mode.duration,
+						stopAtZero: timer.mode.stopAtZero,
+					}
+			return {
+				index,
+				label: timer.label,
+				configured: true,
+				mode,
+				estimate,
+				anchorPartId,
+			}
+		} else {
+			const mode: TTimerModeFreeRun = timer.state.paused
+				? {
+						type: 'freeRun',
+						paused: true,
+						elapsedMs: timer.state.duration,
+					}
+				: {
+						type: 'freeRun',
+						paused: false,
+						zeroTime: timer.state.zeroTime,
+					}
+			return {
+				index,
+				label: timer.label,
+				configured: true,
+				mode,
+				estimate,
+				anchorPartId,
+			}
+		}
+	}
+
+	/**
+	 * Transform a TimerState from the data model to a TTimerEstimate for the API
+	 */
+	private transformTimerEstimate(estimateState: RundownTTimer['estimateState']): TTimerEstimate | null {
+		if (!estimateState) return null
+
+		if (estimateState.paused) {
+			return {
+				paused: true,
+				durationMs: estimateState.duration,
+			}
+		} else {
+			return {
+				paused: false,
+				zeroTime: estimateState.zeroTime,
+			}
 		}
 	}
 

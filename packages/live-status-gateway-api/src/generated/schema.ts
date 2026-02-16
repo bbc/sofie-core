@@ -186,6 +186,10 @@ interface ActivePlaylistEvent {
 	 * Information about the current quickLoop, if any
 	 */
 	quickLoop?: ActivePlaylistQuickLoop
+	/**
+	 * T-timers for the playlist. Always contains 3 elements (one for each timer slot).
+	 */
+	tTimers: TTimerStatus[]
 }
 
 interface CurrentPartStatus {
@@ -452,6 +456,109 @@ enum QuickLoopMarkerType {
 	RUNDOWN = 'rundown',
 	SEGMENT = 'segment',
 	PART = 'part',
+}
+
+/**
+ * Status of a single T-timer in the playlist
+ */
+interface TTimerStatus {
+	/**
+	 * Timer index (1-3). The playlist always has 3 T-timer slots.
+	 */
+	index: TTimerIndex
+	/**
+	 * User-defined label for the timer
+	 */
+	label: string
+	/**
+	 * Whether the timer has been configured (mode is not null)
+	 */
+	configured: boolean
+	/**
+	 * Timer mode and timing state. Null if not configured.
+	 */
+	mode?: TTimerModeCountdown | TTimerModeFreeRun | null
+	/**
+	 * Estimated timing for when we expect to reach an anchor part. Used to calculate over/under diff
+	 */
+	estimate?: TTimerEstimate | null
+	/**
+	 * The Part ID that this timer is counting towards (the timing anchor)
+	 */
+	anchorPartId?: string
+}
+
+/**
+ * Timer index (1-3). The playlist always has 3 T-timer slots.
+ */
+enum TTimerIndex {
+	NUMBER_1 = 1,
+	NUMBER_2 = 2,
+	NUMBER_3 = 3,
+}
+
+/**
+ * Countdown timer mode - counts down from a duration
+ */
+interface TTimerModeCountdown {
+	type: 'countdown'
+	/**
+	 * Whether the timer is currently paused
+	 */
+	paused: boolean
+	/**
+	 * Unix timestamp (ms) when the timer reaches/reached zero. Present when paused is false. The client calculates remaining time as zeroTime - Date.now().
+	 */
+	zeroTime?: number
+	/**
+	 * Frozen remaining duration in milliseconds. Present when paused is true.
+	 */
+	remainingMs?: number
+	/**
+	 * Total countdown duration in milliseconds (the original configured duration)
+	 */
+	durationMs: number
+	/**
+	 * Whether timer stops at zero or continues into negative values
+	 */
+	stopAtZero: boolean
+}
+
+/**
+ * Free-running timer mode - counts up from start time
+ */
+interface TTimerModeFreeRun {
+	type: 'freeRun'
+	/**
+	 * Whether the timer is currently paused
+	 */
+	paused: boolean
+	/**
+	 * Unix timestamp (ms) when the timer was at zero (i.e. when it was started). Present when paused is false. The client calculates elapsed time as Date.now() - zeroTime.
+	 */
+	zeroTime?: number
+	/**
+	 * Frozen elapsed time in milliseconds. Present when paused is true.
+	 */
+	elapsedMs?: number
+}
+
+/**
+ * Estimate timing state for a T-timer
+ */
+interface TTimerEstimate {
+	/**
+	 * Whether the estimate is frozen
+	 */
+	paused: boolean
+	/**
+	 * Unix timestamp in milliseconds of estimated arrival at the anchor part
+	 */
+	zeroTime?: number
+	/**
+	 * Frozen remaining duration estimate in milliseconds
+	 */
+	durationMs?: number
 }
 
 interface ActivePiecesEvent {
@@ -924,6 +1031,11 @@ export {
 	ActivePlaylistQuickLoop,
 	QuickLoopMarker,
 	QuickLoopMarkerType,
+	TTimerStatus,
+	TTimerIndex,
+	TTimerModeCountdown,
+	TTimerModeFreeRun,
+	TTimerEstimate,
 	ActivePiecesEvent,
 	SegmentsEvent,
 	Segment,

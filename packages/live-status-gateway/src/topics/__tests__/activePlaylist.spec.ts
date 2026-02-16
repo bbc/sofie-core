@@ -19,6 +19,7 @@ import {
 	ActivePlaylistEvent,
 	ActivePlaylistTimingMode,
 	SegmentCountdownType,
+	TTimerIndex,
 } from '@sofie-automation/live-status-gateway-api'
 
 function makeEmptyTestPartInstances(): SelectedPartInstances {
@@ -63,6 +64,11 @@ describe('ActivePlaylistTopic', () => {
 				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
+			tTimers: [
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
+			],
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -164,6 +170,11 @@ describe('ActivePlaylistTopic', () => {
 				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
+			tTimers: [
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
+			],
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -270,6 +281,11 @@ describe('ActivePlaylistTopic', () => {
 				timingMode: ActivePlaylistTimingMode.NONE,
 			},
 			quickLoop: undefined,
+			tTimers: [
+				{ index: TTimerIndex.NUMBER_1, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_2, label: '', configured: false, mode: null, estimate: null },
+				{ index: TTimerIndex.NUMBER_3, label: '', configured: false, mode: null, estimate: null },
+			],
 		}
 
 		// eslint-disable-next-line @typescript-eslint/unbound-method
@@ -277,5 +293,96 @@ describe('ActivePlaylistTopic', () => {
 		expect(JSON.parse(mockSubscriber.send.mock.calls[0][0] as string)).toMatchObject(
 			JSON.parse(JSON.stringify(expectedStatus))
 		)
+	})
+
+	it('transforms configured T-timers correctly', async () => {
+		const handlers = makeMockHandlers()
+		const topic = new ActivePlaylistTopic(makeMockLogger(), handlers)
+		const mockSubscriber = makeMockSubscriber()
+
+		const playlist = makeTestPlaylist()
+		playlist.activationId = protectString('somethingRandom')
+		// Configure timers with different modes
+		playlist.tTimers = [
+			{
+				index: 1,
+				label: 'Countdown Timer',
+				mode: {
+					type: 'countdown',
+					duration: 60000,
+					stopAtZero: true,
+				},
+				state: { paused: false, zeroTime: 1600000060000 },
+				estimateState: { paused: false, zeroTime: 1600000060000 },
+				anchorPartId: protectString('PART_BREAK'),
+			},
+			{
+				index: 2,
+				label: 'Paused FreeRun',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: 10000 },
+				estimateState: { paused: true, duration: 5000 },
+			},
+			{ index: 3, label: '', mode: null, state: null },
+		]
+		handlers.playlistHandler.notify(playlist)
+
+		const testShowStyleBase = makeTestShowStyleBase()
+		handlers.showStyleBaseHandler.notify(testShowStyleBase as ShowStyleBaseExt)
+
+		const testPartInstancesMap = makeEmptyTestPartInstances()
+		handlers.partInstancesHandler.notify(testPartInstancesMap)
+
+		topic.addSubscriber(mockSubscriber)
+
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect(mockSubscriber.send).toHaveBeenCalledTimes(1)
+		const receivedStatus = JSON.parse(mockSubscriber.send.mock.calls[0][0] as string) as ActivePlaylistEvent
+
+		// Verify running countdown timer transformation
+		expect(receivedStatus.tTimers[0]).toEqual({
+			index: TTimerIndex.NUMBER_1,
+			label: 'Countdown Timer',
+			configured: true,
+			mode: {
+				type: 'countdown',
+				paused: false,
+				zeroTime: 1600000060000,
+				durationMs: 60000,
+				stopAtZero: true,
+			},
+			estimate: {
+				paused: false,
+				zeroTime: 1600000060000,
+			},
+			anchorPartId: 'PART_BREAK',
+		})
+
+		// Verify paused freeRun timer transformation
+		expect(receivedStatus.tTimers[1]).toEqual({
+			index: TTimerIndex.NUMBER_2,
+			label: 'Paused FreeRun',
+			configured: true,
+			mode: {
+				type: 'freeRun',
+				paused: true,
+				elapsedMs: 10000,
+			},
+			estimate: {
+				paused: true,
+				durationMs: 5000,
+			},
+		})
+
+		// Verify unconfigured timer
+		expect(receivedStatus.tTimers[2]).toEqual({
+			index: TTimerIndex.NUMBER_3,
+			label: '',
+			configured: false,
+			mode: null,
+			estimate: null,
+		})
 	})
 })
