@@ -36,7 +36,6 @@
 		"@fortawesome/free-solid-svg-icons": "^7.1.0",
 		"@fortawesome/react-fontawesome": "^3.1.1",
 		"@jstarpl/react-contextmenu": "^2.15.3",
-		"@nrk/core-icons": "^9.6.0",
 		"@popperjs/core": "^2.11.8",
 		"@sofie-automation/blueprints-integration": "26.3.0-1",
 		"@sofie-automation/corelib": "26.3.0-1",
