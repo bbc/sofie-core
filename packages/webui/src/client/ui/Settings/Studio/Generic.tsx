@@ -5,6 +5,7 @@ import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 import { useTranslation } from 'react-i18next'
 import { EditAttribute } from '../../../lib/EditAttribute.js'
 import { StudioBaselineStatus } from './Baseline.js'
+import { TTimerSettingsPanel } from './TTimerSettings.js'
 import { ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ShowStyleBases, Studios } from '../../../collections/index.js'
 import { useHistory } from 'react-router-dom'
@@ -104,6 +105,8 @@ export function StudioGenericProperties({ studio }: IStudioGenericPropertiesProp
 			</div>
 
 			<StudioSettings studio={studio} />
+
+			<TTimerSettingsPanel studio={studio} />
 
 			<StudioBaselineStatus studioId={studio._id} />
 		</div>

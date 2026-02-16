@@ -104,4 +104,30 @@ export interface IStudioSettings {
 	 * How long before their start time a rundown owned piece be added to the timeline
 	 */
 	rundownGlobalPiecesPrepareTime?: number
+
+	/** Configuration for T-Timers in this studio */
+	tTimerSettings?: [TTimerSettingsConfig, TTimerSettingsConfig, TTimerSettingsConfig]
+}
+
+export type TTimerMode = 'freeRun' | 'countdown' | 'timeOfDay'
+
+export interface TTimerSettingsConfig {
+	/** User label for this timer (matches RundownTTimer.label) */
+	label: string
+	/** Whether this timer is enabled */
+	enabled: boolean
+	/** The mode for this timer */
+	mode: TTimerMode
+	/** Countdown duration in milliseconds (for 'countdown' mode) */
+	countdownDuration: number
+	/** Target time string for 'timeOfDay' mode (e.g. "14:30") */
+	timeOfDayTarget: string
+	/** Whether the timer should stop at zero, or continue into negative values */
+	stopAtZero: boolean
+	/** Show on the Top Bar */
+	showOnTopBar: boolean
+	/** Show on the Director Screen */
+	showOnDirectorScreen: boolean
+	/** Show on the Presenter Screen + Prompter */
+	showOnPresenterScreen: boolean
 }
