@@ -33,7 +33,7 @@ import { RundownTimingProvider } from '../RundownView/RundownTiming/RundownTimin
 import { StudioScreenSaver } from '../StudioScreenSaver/StudioScreenSaver.js'
 import { PrompterControlManager } from './controller/manager.js'
 import { OverUnderTimer } from './OverUnderTimer.js'
-import { PrompterAPI, PrompterData, PrompterDataPart } from './prompter.js'
+import { PrompterAPI, PrompterData, PrompterDataPart, PrompterDataPiece } from './prompter.js'
 import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
 import { MeteorCall } from '../../lib/meteorApi.js'
 import { MdDisplay } from './Formatted/MdDisplay.js'
@@ -976,28 +976,28 @@ const PrompterContent = withTranslation()(
 			const { prompterData } = this.props
 			const { prompterData: nextPrompterData } = nextProps
 
-			// TODO - how to handle markdown here?
+			const hasPrompterText = (piece: PrompterDataPiece) => {
+				// TODO - how to handle markdown here?
+				return piece.text !== ''
+			}
 
-			const currentPrompterPieces = _.flatten(
-				prompterData?.rundowns.map((rundown) =>
-					rundown.segments.map((segment) =>
-						segment.parts.map((part) =>
-							// collect all the PieceId's of all the non-empty pieces of script
-							_.compact(part.pieces.map((dataPiece) => (dataPiece.text !== '' ? dataPiece.id : null)))
+			const getPrompterPieceIds = (data: PrompterData | null): PieceId[] => {
+				if (!data) return []
+
+				return _.compact(
+					data.rundowns.flatMap((rundown) =>
+						rundown.segments.flatMap((segment) =>
+							segment.parts.flatMap((part) =>
+								// collect all the PieceId's of all the non-empty pieces of script
+								part.pieces.map((dataPiece) => (hasPrompterText(dataPiece) ? dataPiece.id : null))
+							)
 						)
 					)
-				) ?? []
-			) as PieceId[]
-			const nextPrompterPieces = _.flatten(
-				nextPrompterData?.rundowns.map((rundown) =>
-					rundown.segments.map((segment) =>
-						segment.parts.map((part) =>
-							// collect all the PieceId's of all the non-empty pieces of script
-							_.compact(part.pieces.map((dataPiece) => (dataPiece.text !== '' ? dataPiece.id : null)))
-						)
-					)
-				) ?? []
-			) as PieceId[]
+				)
+			}
+
+			const currentPrompterPieces = getPrompterPieceIds(prompterData)
+			const nextPrompterPieces = getPrompterPieceIds(nextPrompterData)
 
 			// Flag for marking that a Piece is going missing during the update (was present in prompterData
 			// no longer present in nextPrompterData)
