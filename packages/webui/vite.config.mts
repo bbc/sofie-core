@@ -62,9 +62,10 @@ export default defineConfig(({ command }) => ({
 	css: {
 		preprocessorOptions: {
 			scss: {
-				// Silence deprecation warnings from Bootstrap and other libraries
-				// These are caused by Bootstrap 5.x not yet fully supporting Dart Sass 2.x
-				silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'mixed-decls'],
+				// Silence deprecation warnings from Bootstrap and other dependencies
+				// This hides warnings from dependencies but still shows warnings from our own code
+				// Bootstrap 5.x not yet fully supporting Dart Sass 2.x causes many warnings
+				quietDeps: true,
 			},
 		},
 	},
