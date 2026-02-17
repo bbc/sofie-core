@@ -13,6 +13,12 @@ interface BasicType {
 		valC: number
 		valD?: string
 	}
+	valE?: [
+		{
+			valF: number
+			valG: string
+		},
+	]
 }
 
 describe('applyAndValidateOverrides', () => {
