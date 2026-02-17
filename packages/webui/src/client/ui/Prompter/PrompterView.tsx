@@ -36,6 +36,7 @@ import { OverUnderTimer } from './OverUnderTimer.js'
 import { PrompterAPI, PrompterData, PrompterDataPart } from './prompter.js'
 import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
 import { MeteorCall } from '../../lib/meteorApi.js'
+import { MdDisplay } from './Markdown/MdDisplay.js'
 
 const DEFAULT_UPDATE_THROTTLE = 250 //ms
 const PIECE_MISSING_UPDATE_THROTTLE = 2000 //ms
@@ -1129,60 +1130,34 @@ const PrompterContent = withTranslation()(
 						)
 
 						for (const line of part.pieces) {
-							if (line.markdown !== undefined) {
-								let text = line.markdown
-								if (line.id === pieceIdToHideScript) {
-									text = ''
-								}
-								if (line.continuationOf && partStatus !== 'live') {
-									// if a continuation is not in a live part, it should not display its text
-									text = ''
-								}
-
-								lines.push(
-									<div
-										id={`line_${line.id}`}
-										data-obj-id={segment.id + '_' + part.id + '_' + line.id}
-										key={'line_' + part.id + '_' + segment.id + '_' + line.id}
-										data-live-continuation-of={
-											partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
-										}
-										className={ClassNames('prompter-line', {
-											'add-blank': this.props.config.addBlankLine,
-											empty: !text,
-											[PIECE_CONTINUATION_CLASS]: line.continuationOf,
-										})}
-									>
-										{text}
-									</div>
-								)
-							} else {
-								let text = line.text || ''
-								if (line.id === pieceIdToHideScript) {
-									text = ''
-								}
-								if (line.continuationOf && partStatus !== 'live') {
-									// if a continuation is not in a live part, it should not display its text
-									text = ''
-								}
-								lines.push(
-									<div
-										id={`line_${line.id}`}
-										data-obj-id={segment.id + '_' + part.id + '_' + line.id}
-										key={'line_' + part.id + '_' + segment.id + '_' + line.id}
-										data-live-continuation-of={
-											partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
-										}
-										className={ClassNames('prompter-line', {
-											'add-blank': this.props.config.addBlankLine,
-											empty: !text,
-											[PIECE_CONTINUATION_CLASS]: line.continuationOf,
-										})}
-									>
-										{text}
-									</div>
-								)
+							const isMarkdown = line.markdown !== undefined
+							let text = (isMarkdown ? line.markdown : line.text) || ''
+							if (line.id === pieceIdToHideScript) {
+								text = ''
 							}
+							if (line.continuationOf && partStatus !== 'live') {
+								// if a continuation is not in a live part, it should not display its text
+								text = ''
+							}
+
+							lines.push(
+								<div
+									id={`line_${line.id}`}
+									data-obj-id={segment.id + '_' + part.id + '_' + line.id}
+									key={'line_' + part.id + '_' + segment.id + '_' + line.id}
+									data-live-continuation-of={
+										partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
+									}
+									className={ClassNames('prompter-line', {
+										'add-blank': this.props.config.addBlankLine,
+										empty: !text,
+										[PIECE_CONTINUATION_CLASS]: line.continuationOf,
+										markdown: isMarkdown,
+									})}
+								>
+									{isMarkdown ? <MdDisplay source={text} /> : text}
+								</div>
+							)
 						}
 					}
 				}

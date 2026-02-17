@@ -155,6 +155,114 @@ body.prompter-scrollbar {
 		.add-blank {
 			margin-bottom: 1.5em;
 		}
+
+		&.markdown {
+			// --background-color: #000;
+			// --foreground-color: #fff;
+			// --header-color: #999;
+
+			// --prompter-font-size-base: 16px;
+			// --prompter-line-height: calc(var(--prompter-font-size-base) * 1.4);
+
+			// color: var(--foreground-color);
+			// background: var(--background-color);
+
+			// word-wrap: break-word;
+			// white-space: pre-wrap;
+			// white-space: break-spaces;
+
+			// padding: 0 2em;
+			// overflow: auto;
+			// box-sizing: border-box;
+
+			// font-size: var(--prompter-font-size-base);
+			// line-height: var(--prompter-line-height);
+
+			// /* These are needed to maintain compatibility with Prose-mirror's text layout */
+			// word-wrap: break-word;
+			// overflow-wrap: anywhere;
+			// white-space: pre-wrap;
+			// white-space: break-spaces;
+			// -webkit-font-variant-ligatures: none;
+			// font-variant-ligatures: none;
+			// font-feature-settings: 'liga' 0;
+			// font-kerning: none;
+
+			// overflow-anchor: none;
+
+			p {
+				margin: 0;
+				padding: 0;
+			}
+
+			b {
+				font-weight: 700;
+			}
+
+			i {
+				font-style: italic;
+			}
+
+			u {
+				text-decoration: underline;
+			}
+
+			s {
+				text-decoration: none;
+				opacity: 0.3;
+			}
+
+			rev {
+				background-color: var(--foreground-color);
+				color: var(--background-color);
+			}
+
+			h1,
+			h2,
+			h3 {
+				background-color: var(--header-color);
+				color: var(--background-color);
+				user-select: none;
+				margin: 1em 0;
+			}
+
+			h1 {
+				font-size: calc(var(--prompter-font-size-base) * 2);
+				line-height: 1.4;
+			}
+
+			h2 {
+				font-size: calc(var(--prompter-font-size-base) * 1);
+				line-height: 1.4;
+			}
+
+			h3 {
+				font-size: calc(var(--prompter-font-size-base) * 1);
+				line-height: 1.4;
+			}
+
+			.spacer {
+				height: 100vh;
+			}
+
+			.ProseMirror {
+				outline: none;
+			}
+
+			span.colour.red {
+				color: red;
+			}
+			span.colour.yellow {
+				color: yellow;
+			}
+			rev span.colour.yellow,
+			span.colour.yellow rev {
+				color: rgb(113, 0, 237);
+			}
+			span.screen-marker {
+				margin: 10px;
+			}
+		}
 	}
 
 	.overlay-fix {
