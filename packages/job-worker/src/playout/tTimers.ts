@@ -8,13 +8,13 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { getCurrentTime } from '../lib/index.js'
 import type { ReadonlyDeep } from 'type-fest'
 import * as chrono from 'chrono-node'
-import { isPartPlayable } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { PartId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { JobContext } from '../jobs/index.js'
 import { PlayoutModel } from './model/PlayoutModel.js'
 import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
 import { logger } from '../logging.js'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
 
 /**
  * Map of active setTimeout timeouts by studioId
@@ -225,28 +225,13 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 	}
 
 	const currentPartInstance = playoutModel.currentPartInstance?.partInstance
-	const nextPartInstance = playoutModel.nextPartInstance?.partInstance
 
-	// Get ordered parts to iterate through
+	// Get ordered parts after playhead (excludes previous, current, and next)
+	// Use ignoreQuickLoop=true to count parts linearly without loop-back behavior
 	const orderedParts = playoutModel.getAllOrderedParts()
+	const playablePartsSlice = getOrderedPartsAfterPlayhead(context, playoutModel, orderedParts.length, true)
 
-	// Start from next part if available, otherwise current, otherwise first playable part
-	let startPartIndex: number | undefined
-	if (nextPartInstance) {
-		// We have a next part selected, start from there
-		startPartIndex = orderedParts.findIndex((p) => p._id === nextPartInstance.part._id)
-	} else if (currentPartInstance) {
-		// No next, but we have current - start from the part after current
-		const currentIndex = orderedParts.findIndex((p) => p._id === currentPartInstance.part._id)
-		if (currentIndex >= 0 && currentIndex < orderedParts.length - 1) {
-			startPartIndex = currentIndex + 1
-		}
-	}
-
-	// If we couldn't find a starting point, start from the first playable part
-	startPartIndex ??= orderedParts.findIndex((p) => isPartPlayable(p))
-
-	if (startPartIndex === undefined || startPartIndex < 0) {
+	if (playablePartsSlice.length === 0 && !currentPartInstance) {
 		// No parts to iterate through, clear estimates
 		for (const timer of tTimers) {
 			if (timer.anchorPartId) {
@@ -256,9 +241,6 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 		if (span) span.end()
 		return
 	}
-
-	// Iterate through parts and accumulate durations
-	const playablePartsSlice = orderedParts.slice(startPartIndex).filter((p) => isPartPlayable(p))
 
 	const now = getCurrentTime()
 	let accumulatedDuration = 0
