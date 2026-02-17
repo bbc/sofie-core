@@ -1,4 +1,4 @@
-import { MigrationStepCore } from '@sofie-automation/blueprints-integration'
+import { MigrationStepCore } from '@sofie-automation/meteor-lib/dist/migrations'
 import { Studios } from '../../../collections'
 import {
 	convertObjectIntoOverrides,

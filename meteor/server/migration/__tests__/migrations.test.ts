@@ -4,9 +4,8 @@ import { ICoreSystem, GENESIS_SYSTEM_VERSION } from '@sofie-automation/meteor-li
 import { clearMigrationSteps, addMigrationSteps, prepareMigration, PreparedMigration } from '../databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from '../currentSystemVersion'
 import { RunMigrationResult, GetMigrationStatusResult } from '@sofie-automation/meteor-lib/dist/api/migration'
-import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
-import { MigrationStepCore, MigrationStepInputResult } from '@sofie-automation/blueprints-integration'
+import { MigrationStepCore } from '@sofie-automation/meteor-lib/dist/migrations'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { MeteorCall } from '../../api/methods'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
@@ -36,22 +35,7 @@ describe('Migrations', () => {
 	async function getSystem() {
 		return (await getCoreSystemAsync()) as ICoreSystem
 	}
-	function userInput(
-		migrationStatus: GetMigrationStatusResult,
-		userValues?: { [key: string]: any }
-	): MigrationStepInputResult[] {
-		return _.compact(
-			_.map(migrationStatus.migration.manualInputs, (manualInput) => {
-				if (manualInput.stepId && manualInput.attribute) {
-					return literal<MigrationStepInputResult>({
-						stepId: manualInput.stepId,
-						attribute: manualInput.attribute,
-						value: userValues && userValues[manualInput.stepId],
-					})
-				}
-			})
-		)
-	}
+
 	test('System migrations, initial setup', async () => {
 		expect((await getSystem()).version).toEqual(GENESIS_SYSTEM_VERSION)
 
@@ -63,11 +47,8 @@ describe('Migrations', () => {
 			migrationNeeded: true,
 
 			migration: {
-				canDoAutomaticMigration: true,
-				// manualInputs: [],
 				hash: expect.stringContaining(''),
 				automaticStepCount: expect.any(Number),
-				manualStepCount: expect.any(Number),
 				ignoredStepCount: expect.any(Number),
 				partialMigration: true,
 				// chunks: expect.any(Array)
@@ -76,8 +57,7 @@ describe('Migrations', () => {
 
 		const migrationResult0: RunMigrationResult = await MeteorCall.migration.runMigration(
 			migrationStatus0.migration.chunks,
-			migrationStatus0.migration.hash,
-			userInput(migrationStatus0)
+			migrationStatus0.migration.hash
 		)
 
 		expect(migrationResult0).toMatchObject({
@@ -275,8 +255,7 @@ describe('Migrations', () => {
 		const migrationStatus: GetMigrationStatusResult = await MeteorCall.migration.getMigrationStatus()
 		const migrationResult: RunMigrationResult = await MeteorCall.migration.runMigration(
 			migrationStatus.migration.chunks,
-			migrationStatus.migration.hash,
-			userInput(migrationStatus)
+			migrationStatus.migration.hash
 		)
 
 		expect(migrationResult.migrationCompleted).toEqual(true)
