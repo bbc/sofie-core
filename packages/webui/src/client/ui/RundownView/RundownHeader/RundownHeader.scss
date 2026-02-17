@@ -1,0 +1,166 @@
+@import '../../../styles/colorScheme';
+
+.rundown-header {
+	height: 64px;
+	min-height: 64px;
+	padding: 0;
+	width: 100%;
+	border-bottom: 1px solid #333;
+	transition: background-color 0.5s;
+	font-family: 'Roboto Flex', sans-serif;
+
+	.rundown-header__trigger {
+		height: 100%;
+		width: 100%;
+		display: block;
+	}
+
+	// State-based background colors
+	&.not-active {
+		background: $color-header-inactive;
+	}
+
+	&.active {
+		background: $color-header-on-air;
+
+		&.rehearsal {
+			background: $color-header-rehearsal;
+		}
+	}
+
+	.rundown-header__content {
+		height: 100%;
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background: transparent;
+	}
+
+	.rundown-header__left {
+		display: flex;
+		align-items: center;
+		flex: 1;
+	}
+
+	.rundown-header__center {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+
+		.timing-clock {
+			color: #40b8fa99;
+			font-size: 1.4em;
+			font-variant-numeric: tabular-nums;
+			letter-spacing: 0.05em;
+			transition: color 0.2s;
+		}
+	}
+
+	.rundown-header__right {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		flex: 1;
+		padding-right: 1rem;
+	}
+
+	.rundown-header__hamburger-btn {
+		background: none;
+		border: none;
+		color: #40b8fa99;
+		cursor: pointer;
+		padding: 0 1em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		font-size: 1.2em;
+		transition: color 0.2s;
+	}
+
+	.rundown-header__timers {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: center;
+		gap: 0.1em;
+	}
+
+	.rundown-header__segment-remaining,
+	.rundown-header__onair-remaining {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.8em;
+		color: rgba(255, 255, 255, 0.6);
+		transition: color 0.2s;
+
+		&__label {
+			font-size: 0.7em;
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			opacity: 0;
+			transition: opacity 0.2s;
+		}
+
+		&__value {
+			font-size: 1.4em;
+			font-variant-numeric: tabular-nums;
+			letter-spacing: 0.05em;
+
+			.overtime {
+				color: $general-late-color;
+			}
+		}
+	}
+
+	// On Air label: always visible, red badge — overrides the shared opacity:0 from &__label above
+	.rundown-header__onair-remaining__label {
+		background-color: $general-live-color;
+		color: #fff;
+		padding: 0.1em 0.6em 0.1em 0.3em;
+		border-radius: 2px 999px 999px 2px;
+		font-weight: bold;
+		opacity: 1 !important;
+
+		.freeze-frame-icon {
+			margin-left: 0.3em;
+			vertical-align: middle;
+			height: 0.9em;
+			width: auto;
+		}
+	}
+
+	.rundown-header__close-btn {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+		color: #40b8fa;
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+
+	&:hover {
+		.rundown-header__hamburger-btn,
+		.rundown-header__center .timing-clock {
+			color: #40b8fa;
+		}
+
+		.rundown-header__segment-remaining,
+		.rundown-header__onair-remaining {
+			color: white;
+		}
+
+		.rundown-header__segment-remaining__label,
+		.rundown-header__onair-remaining__label {
+			opacity: 1;
+		}
+
+		.rundown-header__close-btn {
+			opacity: 1;
+		}
+	}
+}

@@ -76,7 +76,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 }
 
 function calculateDiff(timer: RundownTTimer, now: number): number {
-	if (!timer.state) {
+	if (!timer.state || timer.state.paused === undefined) {
 		return 0
 	}
 

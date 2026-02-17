@@ -291,7 +291,7 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 	return (
 		<div
 			className={classNames('container-fluid', 'header-clear', {
-				'header-clear--no-rundown-header': hideRundownHeader,
+				'header-clear--no-rundown-header_OLD': hideRundownHeader,
 			})}
 		>
 			<RundownViewContent
