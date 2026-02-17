@@ -36,7 +36,7 @@ import { OverUnderTimer } from './OverUnderTimer.js'
 import { PrompterAPI, PrompterData, PrompterDataPart } from './prompter.js'
 import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
 import { MeteorCall } from '../../lib/meteorApi.js'
-import { MdDisplay } from './Markdown/MdDisplay.js'
+import { MdDisplay } from './Formatted/MdDisplay.js'
 
 const DEFAULT_UPDATE_THROTTLE = 250 //ms
 const PIECE_MISSING_UPDATE_THROTTLE = 2000 //ms
@@ -1130,8 +1130,8 @@ const PrompterContent = withTranslation()(
 						)
 
 						for (const line of part.pieces) {
-							const isMarkdown = line.markdown !== undefined
-							let text = (isMarkdown ? line.markdown : line.text) || ''
+							const isFormatted = line.formattedText !== undefined
+							let text = (isFormatted ? line.formattedText : line.text) || ''
 							if (line.id === pieceIdToHideScript) {
 								text = ''
 							}
@@ -1152,10 +1152,10 @@ const PrompterContent = withTranslation()(
 										'add-blank': this.props.config.addBlankLine,
 										empty: !text,
 										[PIECE_CONTINUATION_CLASS]: line.continuationOf,
-										markdown: isMarkdown,
+										formatted: isFormatted,
 									})}
 								>
-									{isMarkdown ? <MdDisplay source={text} /> : text}
+									{isFormatted ? <MdDisplay source={text} /> : text}
 								</div>
 							)
 						}
