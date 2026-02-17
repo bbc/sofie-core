@@ -144,16 +144,13 @@ body.prompter-scrollbar {
 	.prompter-line {
 		// font-family: Overpass, Roboto, Helvetica, Arial, sans-serif;
 		font-family: 'Source Serif Pro', Roboto, Helvetica, Arial, sans-serif;
-		font-size: var(--prompter-font-size-base);
+		font-size: 0.96em;
 		letter-spacing: 0em;
-		line-height: var(--prompter-font-line-height);
+		line-height: 1.2em;
 		margin-bottom: 0.5em;
 		overflow-wrap: break-word;
 		// hyphens: auto;  // do not use, leads to much more broken words than is needed.
 		white-space: pre-line; // allows for line breaks in manuscript, also replaces line with just "<>" with a blank line
-
-		--prompter-font-size-base: 0.96em;
-		--prompter-font-line-height: 1.2em;
 
 		.add-blank {
 			margin-bottom: 1.5em;
@@ -329,50 +326,25 @@ body.prompter-scrollbar {
 		padding: 0;
 	}
 
-	b {
+	b,
+	b * {
 		font-weight: 700;
 	}
 
-	i {
+	i,
+	i * {
 		font-style: italic;
 	}
 
-	u {
+	u,
+	u * {
 		text-decoration: underline;
 	}
 
-	s {
-		text-decoration: none;
-		opacity: 0.3;
-	}
-
-	rev {
+	rev,
+	rev * {
 		background-color: var(--foreground-color);
 		color: var(--background-color);
-	}
-
-	h1,
-	h2,
-	h3 {
-		background-color: var(--header-color);
-		color: var(--background-color);
-		user-select: none;
-		margin: 1em 0;
-	}
-
-	h1 {
-		font-size: calc(var(--prompter-font-size-base) * 2);
-		line-height: calc(var(--prompter-font-line-height) * 1.2);
-	}
-
-	h2 {
-		font-size: calc(var(--prompter-font-size-base) * 1);
-		line-height: calc(var(--prompter-font-line-height) * 1.2);
-	}
-
-	h3 {
-		font-size: calc(var(--prompter-font-size-base) * 1);
-		line-height: calc(var(--prompter-font-line-height) * 1.2);
 	}
 
 	.spacer {
@@ -380,6 +352,6 @@ body.prompter-scrollbar {
 	}
 
 	span.screen-marker {
-		margin: 10px;
+		margin: 0 0.1em;
 	}
 }
