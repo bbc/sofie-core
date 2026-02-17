@@ -977,8 +977,8 @@ const PrompterContent = withTranslation()(
 			const { prompterData: nextPrompterData } = nextProps
 
 			const hasPrompterText = (piece: PrompterDataPiece) => {
-				// TODO - how to handle markdown here?
-				return piece.text !== ''
+				const prompterText = piece.formattedText ?? piece.text
+				return prompterText !== undefined && prompterText !== ''
 			}
 
 			const getPrompterPieceIds = (data: PrompterData | null): PieceId[] => {
@@ -1152,7 +1152,7 @@ const PrompterContent = withTranslation()(
 										'add-blank': this.props.config.addBlankLine,
 										empty: !text,
 										[PIECE_CONTINUATION_CLASS]: line.continuationOf,
-										formatted: isFormatted,
+										'script-text-formatted': isFormatted,
 									})}
 								>
 									{isFormatted ? <MdDisplay source={text} /> : text}
