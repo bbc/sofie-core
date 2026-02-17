@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import createParser from './mdParser'
 import { Node, ParentNodeBase } from './mdParser/astNodes'
-import { assertNever } from '@sofie-automation/shared-lib/src/lib/lib'
+import { assertNever } from '@sofie-automation/shared-lib/dist/lib/lib'
 
 const mdParser = createParser()
 
@@ -23,7 +23,7 @@ function MdNode({ content }: { content: Node }): React.ReactNode {
 		case 'strong':
 			return <b>{renderChildren(content)}</b>
 		case 'reverse':
-			return React.createElement('rev', {}, renderChildren(content))
+			return React.createElement('span', { className: 'reverse' }, renderChildren(content))
 		case 'underline':
 			return React.createElement('u', {}, renderChildren(content))
 		case 'colour':

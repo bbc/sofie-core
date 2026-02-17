@@ -341,8 +341,8 @@ body.prompter-scrollbar {
 		text-decoration: underline;
 	}
 
-	rev,
-	rev * {
+	.reverse,
+	.reverse * {
 		background-color: var(--foreground-color);
 		color: var(--background-color);
 	}

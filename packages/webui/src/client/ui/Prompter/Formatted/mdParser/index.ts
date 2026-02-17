@@ -38,9 +38,7 @@ export class ParserStateImpl implements ParserState {
 		})
 	}
 	pushNode = (node: ParentNodeBase): void => {
-		if (this.nodeCursor === null) {
-			this.nodeCursor = node
-		} else {
+		if (this.nodeCursor !== null) {
 			this.nodeCursor.children.push(node as Node)
 		}
 		this.nodeStack.push(node)
@@ -48,7 +46,7 @@ export class ParserStateImpl implements ParserState {
 	}
 	popNode = (): void => {
 		this.nodeStack.pop()
-		this.nodeCursor = this.nodeStack[this.nodeStack.length - 1]
+		this.nodeCursor = this.nodeStack[this.nodeStack.length - 1] ?? null
 	}
 	replaceStack = (node: ParentNodeBase): void => {
 		this.document.children.push(node as Node)
@@ -124,10 +122,6 @@ export default function createParser(): Parser {
 		if (charHandlers['end']) runAll(charHandlers['end'], 'end', state)
 
 		performance.mark('astFromMarkdownishEnd')
-
-		// console.log(performance.measure('astFromMarkdownish', 'astFromMarkdownishBegin', 'astFromMarkdownishEnd'))
-
-		// console.log(document)
 
 		return document
 	}

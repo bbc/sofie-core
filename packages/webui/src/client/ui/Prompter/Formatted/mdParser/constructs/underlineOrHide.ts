@@ -47,12 +47,12 @@ function hide(char: string, state: ParserState): CharHandlerResult | void {
 
 	const type = 'hidden'
 
-	const underlineNode: HiddenNode = {
+	const hiddenNode: HiddenNode = {
 		type,
 		children: [],
 		code: char,
 	}
-	state.pushNode(underlineNode)
+	state.pushNode(hiddenNode)
 
 	return CharHandlerResult.StopProcessingNoBuffer
 }
