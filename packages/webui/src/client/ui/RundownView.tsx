@@ -291,7 +291,7 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 	return (
 		<div
 			className={classNames('container-fluid', 'header-clear', {
-				'header-clear--no-rundown-header': hideRundownHeader,
+				'header-clear--no-rundown-header_OLD': hideRundownHeader,
 			})}
 		>
 			<RundownViewContent
@@ -1399,6 +1399,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 													onActivate={this.onActivate}
 													inActiveRundownView={this.props.inActiveRundownView}
 													currentRundown={currentRundown}
+													rundownCount={this.props.rundowns.length}
 													layout={this.props.selectedHeaderLayout}
 													showStyleBase={showStyleBase}
 													showStyleVariant={showStyleVariant}

@@ -12,11 +12,9 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
-	if (!tTimers?.length) {
-		return null
-	}
-
 	const activeTimers = tTimers.filter((t) => t.mode)
+
+	if (activeTimers.length == 0) return null
 
 	return (
 		<div className="timing__header_t-timers">
