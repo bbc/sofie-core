@@ -313,6 +313,17 @@ body.prompter-scrollbar {
 }
 
 .script-text-formatted {
+	--background-color: #000;
+	--foreground-color: #fff;
+	--header-color: #999;
+
+	color: var(--foreground-color);
+	background: var(--background-color);
+
+	* {
+		color: var(--foreground-color);
+	}
+
 	p {
 		margin: 0;
 		padding: 0;
@@ -368,20 +379,6 @@ body.prompter-scrollbar {
 		height: 100vh;
 	}
 
-	.ProseMirror {
-		outline: none;
-	}
-
-	span.colour.red {
-		color: red;
-	}
-	span.colour.yellow {
-		color: yellow;
-	}
-	rev span.colour.yellow,
-	span.colour.yellow rev {
-		color: rgb(113, 0, 237);
-	}
 	span.screen-marker {
 		margin: 10px;
 	}

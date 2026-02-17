@@ -27,7 +27,15 @@ function MdNode({ content }: { content: Node }): React.ReactNode {
 		case 'underline':
 			return React.createElement('u', {}, renderChildren(content))
 		case 'colour':
-			return React.createElement('span', { className: 'colour ' + content.colour }, renderChildren(content))
+			return React.createElement(
+				'span',
+				{
+					style: {
+						'--foreground-color': content.colour,
+					},
+				},
+				renderChildren(content)
+			)
 		case 'text':
 			return content.value
 		case 'hidden':

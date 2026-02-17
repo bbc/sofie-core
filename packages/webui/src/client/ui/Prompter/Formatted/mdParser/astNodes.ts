@@ -47,7 +47,7 @@ export interface ReverseNode extends ParentNodeBase {
 export interface ColourNode extends ParentNodeBase {
 	type: 'colour'
 	code: string
-	colour: 'red' | 'yellow'
+	colour: string
 }
 
 export interface BackScreenMarkerNode extends NodeBase {

@@ -37,13 +37,11 @@ export function colour(): NodeConstruct {
 
 			state.flushBuffer()
 
-			const colour = rest.includes('#ffff00') ? 'yellow' : 'red'
-
 			const colourNode: ColourNode = {
 				type: 'colour',
 				children: [],
 				code: char,
-				colour: colour,
+				colour: rest.slice(7, 14),
 			}
 			state.pushNode(colourNode)
 
