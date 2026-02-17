@@ -15,9 +15,12 @@ export class ParserStateImpl implements ParserState {
 	charCursor: number = 0
 	readonly dataStore: Record<string, unknown> = {}
 
-	constructor(private document: RootNode, private text: string) {}
+	constructor(
+		private document: RootNode,
+		private text: string
+	) {}
 
-	flushBuffer = () => {
+	flushBuffer = (): void => {
 		if (this.buffer === '') return
 		if (this.nodeCursor === null) throw new Error('No node available to flush buffer.')
 
@@ -27,14 +30,14 @@ export class ParserStateImpl implements ParserState {
 		})
 		this.buffer = ''
 	}
-	setMarker = () => {
+	setMarker = (): void => {
 		if (this.nodeCursor === null) throw new Error('No node available to flush buffer.')
 
 		this.nodeCursor.children.push({
 			type: 'screenMarker',
 		})
 	}
-	pushNode = (node: ParentNodeBase) => {
+	pushNode = (node: ParentNodeBase): void => {
 		if (this.nodeCursor === null) {
 			this.nodeCursor = node
 		} else {
@@ -43,20 +46,20 @@ export class ParserStateImpl implements ParserState {
 		this.nodeStack.push(node)
 		this.nodeCursor = node
 	}
-	popNode = () => {
+	popNode = (): void => {
 		this.nodeStack.pop()
 		this.nodeCursor = this.nodeStack[this.nodeStack.length - 1]
 	}
-	replaceStack = (node: ParentNodeBase) => {
+	replaceStack = (node: ParentNodeBase): void => {
 		this.document.children.push(node as Node)
 		this.nodeCursor = node
 		this.nodeStack.length = 0
 		this.nodeStack.push(this.nodeCursor)
 	}
-	peek = (n = 1) => {
+	peek = (n = 1): string => {
 		return this.text.slice(this.charCursor + 1, this.charCursor + n + 1)
 	}
-	consume = () => {
+	consume = (): string => {
 		if (this.text[this.charCursor + 1] === undefined) throw new Error('No more text available to parse')
 		this.charCursor++
 		return this.text[this.charCursor]
@@ -79,7 +82,7 @@ export default function createParser(): Parser {
 	const charHandlers: Record<string, CharHandler[]> = {}
 
 	for (const construct of nodeConstructs) {
-		for (const [char, handler] of Object.entries(construct.char)) {
+		for (const [char, handler] of Object.entries<CharHandler>(construct.char)) {
 			if (!charHandlers[char]) charHandlers[char] = []
 			charHandlers[char].push(handler)
 		}
