@@ -270,7 +270,7 @@ export function convertSourceLayerItemToPreview(
 			contents: [
 				{
 					type: 'script',
-					script: content.fullScript,
+					script: content.fullScript, // nocommit - handle markdown here?
 					firstWords: content.firstWords,
 					lastWords: content.lastWords,
 					comment: content.comment,

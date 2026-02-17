@@ -56,6 +56,7 @@ export interface PrompterDataPart {
 export interface PrompterDataPiece {
 	id: PieceId
 	text: string
+	markdown: string | undefined
 	continuationOf?: PieceId
 	startPartId?: PartId | null
 }
@@ -271,6 +272,7 @@ export namespace PrompterAPI {
 							partData.pieces.push({
 								id: protectString(`${partData.id}_${piece._id}_continuation`),
 								text: content.fullScript,
+								markdown: content.fullScriptMarkdown,
 								continuationOf: piece._id,
 								startPartId: piece.startPartId,
 							})
@@ -281,6 +283,7 @@ export namespace PrompterAPI {
 						partData.pieces.push({
 							id: piece._id,
 							text: content.fullScript,
+							markdown: content.fullScriptMarkdown,
 						})
 					}
 				}
@@ -290,6 +293,7 @@ export namespace PrompterAPI {
 					partData.pieces.push({
 						id: protectString(`part_${partData.id}_empty`),
 						text: '',
+						markdown: '',
 					})
 				}
 

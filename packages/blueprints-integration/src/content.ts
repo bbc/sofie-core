@@ -104,6 +104,7 @@ export interface ScriptContent extends BaseContent {
 	firstWords: string
 	lastWords: string
 	fullScript?: string
+	fullScriptMarkdown?: string
 	comment?: string
 	lastModified?: Time | null
 }

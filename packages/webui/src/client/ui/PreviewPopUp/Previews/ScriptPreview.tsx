@@ -19,6 +19,8 @@ export function ScriptPreview({ content }: ScriptPreviewProps): React.ReactEleme
 
 	const fullScript = useMemo(() => content?.script?.trim(), [content?.script])
 
+	// nocommit - handle markdown here?
+
 	return (
 		<div>
 			<div className="preview-popUp__script">

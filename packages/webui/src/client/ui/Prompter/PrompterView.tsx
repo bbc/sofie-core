@@ -975,6 +975,8 @@ const PrompterContent = withTranslation()(
 			const { prompterData } = this.props
 			const { prompterData: nextPrompterData } = nextProps
 
+			// TODO - how to handle markdown here?
+
 			const currentPrompterPieces = _.flatten(
 				prompterData?.rundowns.map((rundown) =>
 					rundown.segments.map((segment) =>
@@ -1127,31 +1129,60 @@ const PrompterContent = withTranslation()(
 						)
 
 						for (const line of part.pieces) {
-							let text = line.text || ''
-							if (line.id === pieceIdToHideScript) {
-								text = ''
+							if (line.markdown !== undefined) {
+								let text = line.markdown
+								if (line.id === pieceIdToHideScript) {
+									text = ''
+								}
+								if (line.continuationOf && partStatus !== 'live') {
+									// if a continuation is not in a live part, it should not display its text
+									text = ''
+								}
+
+								lines.push(
+									<div
+										id={`line_${line.id}`}
+										data-obj-id={segment.id + '_' + part.id + '_' + line.id}
+										key={'line_' + part.id + '_' + segment.id + '_' + line.id}
+										data-live-continuation-of={
+											partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
+										}
+										className={ClassNames('prompter-line', {
+											'add-blank': this.props.config.addBlankLine,
+											empty: !text,
+											[PIECE_CONTINUATION_CLASS]: line.continuationOf,
+										})}
+									>
+										{text}
+									</div>
+								)
+							} else {
+								let text = line.text || ''
+								if (line.id === pieceIdToHideScript) {
+									text = ''
+								}
+								if (line.continuationOf && partStatus !== 'live') {
+									// if a continuation is not in a live part, it should not display its text
+									text = ''
+								}
+								lines.push(
+									<div
+										id={`line_${line.id}`}
+										data-obj-id={segment.id + '_' + part.id + '_' + line.id}
+										key={'line_' + part.id + '_' + segment.id + '_' + line.id}
+										data-live-continuation-of={
+											partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
+										}
+										className={ClassNames('prompter-line', {
+											'add-blank': this.props.config.addBlankLine,
+											empty: !text,
+											[PIECE_CONTINUATION_CLASS]: line.continuationOf,
+										})}
+									>
+										{text}
+									</div>
+								)
 							}
-							if (line.continuationOf && partStatus !== 'live') {
-								// if a continuation is not in a live part, it should not display its text
-								text = ''
-							}
-							lines.push(
-								<div
-									id={`line_${line.id}`}
-									data-obj-id={segment.id + '_' + part.id + '_' + line.id}
-									key={'line_' + part.id + '_' + segment.id + '_' + line.id}
-									data-live-continuation-of={
-										partStatus === 'live' && line.continuationOf ? `line_${line.continuationOf}` : undefined
-									}
-									className={ClassNames('prompter-line', {
-										'add-blank': this.props.config.addBlankLine,
-										empty: !text,
-										[PIECE_CONTINUATION_CLASS]: line.continuationOf,
-									})}
-								>
-									{text}
-								</div>
-							)
 						}
 					}
 				}
