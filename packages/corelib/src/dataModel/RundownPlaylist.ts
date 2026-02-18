@@ -130,6 +130,7 @@ export interface RundownTTimerModeTimeOfDay {
  * Timing state for a timer, optimized for efficient client rendering.
  * When running, the client calculates current time from zeroTime.
  * When paused, the duration is frozen and sent directly.
+ * pauseTime indicates when the timer should automatically pause (when current part ends and overrun begins).
  */
 export type TimerState =
 	| {
@@ -137,12 +138,16 @@ export type TimerState =
 			paused: false
 			/** The absolute timestamp (ms) when the timer reaches/reached zero */
 			zeroTime: number
+			/** Optional timestamp when the timer should pause (when current part ends) */
+			pauseTime?: number | null
 	  }
 	| {
 			/** Whether the timer is paused */
 			paused: true
 			/** The frozen duration value in milliseconds */
 			duration: number
+			/** Optional timestamp when the timer should pause (null when already paused/pushing) */
+			pauseTime?: number | null
 	  }
 
 export type RundownTTimerIndex = 1 | 2 | 3

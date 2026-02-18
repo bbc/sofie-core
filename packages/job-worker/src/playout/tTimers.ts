@@ -301,6 +301,9 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 		}
 	}
 
+	// Save remaining current part time for pauseTime calculation
+	const currentPartRemainingTime = totalAccumulator
+
 	// Single pass through parts
 	for (const part of playablePartsSlice) {
 		// Detect segment boundary
@@ -335,10 +338,12 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 					? literal<TimerState>({
 							paused: true,
 							duration: anchorTime,
+							pauseTime: null, // Already paused/pushing
 						})
 					: literal<TimerState>({
 							paused: false,
 							zeroTime: now + anchorTime,
+							pauseTime: now + currentPartRemainingTime, // When current part ends and pushing begins
 						})
 
 				playoutModel.updateTTimer({ ...timer, estimateState })
