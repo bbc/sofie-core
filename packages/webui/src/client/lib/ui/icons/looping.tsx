@@ -1,6 +1,6 @@
 import React, { JSX } from 'react'
-import * as loopAnimation from './icon-loop.json'
-import { Lottie } from '@crello/react-lottie'
+import loopAnimation from './icon-loop.json'
+import Lottie, { LottieComponentProps } from 'lottie-react'
 
 export function LoopingIcon(props?: Readonly<React.SVGProps<SVGSVGElement>>): JSX.Element {
 	return (
@@ -28,12 +28,12 @@ export function LoopingPieceIcon({
 }: Readonly<{ className?: string; playing: boolean }>): JSX.Element {
 	return (
 		<div className={`${className} label-icon label-loop-icon`}>
-			<Lottie config={LOOPING_PIECE_ICON} width="24px" height="24px" playingState={playing ? 'playing' : 'stopped'} />
+			<Lottie {...LOOPING_PIECE_ICON} width="24px" height="24px" autoplay={playing} />
 		</div>
 	)
 }
 
-const LOOPING_PIECE_ICON = {
+const LOOPING_PIECE_ICON: LottieComponentProps = {
 	loop: true,
 	autoplay: false,
 	animationData: loopAnimation,
