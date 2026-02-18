@@ -2,8 +2,9 @@ import { NodeConstruct, ParserState, CharHandlerResult } from '../parserState'
 import { ParagraphNode } from '../astNodes'
 
 export function paragraph(): NodeConstruct {
-	function paragraphStart(_: string, state: ParserState) {
+	function paragraphStart(char: string, state: ParserState) {
 		if (state.nodeCursor !== null) return
+		if (char === '\n') return
 		const newParagraph: ParagraphNode = {
 			type: 'paragraph',
 			children: [],
@@ -11,9 +12,9 @@ export function paragraph(): NodeConstruct {
 		state.replaceStack(newParagraph)
 	}
 
-	function paragraphEnd(char: string, state: ParserState): CharHandlerResult {
+	function paragraphEnd(_char: string, state: ParserState): CharHandlerResult {
 		if (state.nodeCursor === null) {
-			paragraphStart(char, state)
+			return CharHandlerResult.StopProcessingNoBuffer
 		}
 
 		state.flushBuffer()

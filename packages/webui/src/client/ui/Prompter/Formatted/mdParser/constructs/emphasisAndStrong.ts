@@ -15,11 +15,13 @@ export function emphasisAndStrong(): NodeConstruct {
 		if (len > 2) return // this parser only handles 2 chars
 
 		if (state.nodeCursor && isEmphasisOrStrongNode(state.nodeCursor)) {
-			if (state.nodeCursor.code.startsWith(char)) {
-				if (state.nodeCursor.type === 'strong' && len === 2) {
-					state.consume()
-				}
-
+			if (state.nodeCursor.code === char && state.nodeCursor.type === 'emphasis' && len === 1) {
+				state.flushBuffer()
+				state.popNode()
+				return CharHandlerResult.StopProcessingNoBuffer
+			}
+			if (state.nodeCursor.code.startsWith(char) && state.nodeCursor.type === 'strong' && len === 2) {
+				state.consume()
 				state.flushBuffer()
 				state.popNode()
 				return CharHandlerResult.StopProcessingNoBuffer
