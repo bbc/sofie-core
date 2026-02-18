@@ -31,7 +31,7 @@ export class ParserStateImpl implements ParserState {
 		this.buffer = ''
 	}
 	setMarker = (): void => {
-		if (this.nodeCursor === null) throw new Error('No node available to flush buffer.')
+		if (this.nodeCursor === null) throw new Error('No node available to set marker.')
 
 		this.nodeCursor.children.push({
 			type: 'screenMarker',

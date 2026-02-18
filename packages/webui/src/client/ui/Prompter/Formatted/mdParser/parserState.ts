@@ -21,7 +21,7 @@ export interface ParserState {
 	popNode(): void
 	/** Append a new child node to the root node and clear the stack */
 	replaceStack(node: ParentNodeBase): void
-	/** Get the character immediately after the current one */
+	/** Get the specified number of characters immediately after the current one (default = 1) */
 	peek(n?: number): string | undefined
 	/** Move the charCursor to the next character */
 	consume(): string | undefined
