@@ -22,7 +22,7 @@ import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyE
 import { createPrivateApiPath } from '../../url.js'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase.js'
 import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio.js'
-import { assertNever } from '@sofie-automation/corelib/dist/lib.js'
+import { assertNever } from '@sofie-automation/corelib/dist/lib'
 
 interface IProps {
 	blueprintId: BlueprintId
