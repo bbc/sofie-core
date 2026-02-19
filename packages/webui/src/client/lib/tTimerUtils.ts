@@ -1,4 +1,4 @@
-import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { RundownTTimer, timerStateToDuration } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 /**
  * Calculate the display diff for a T-Timer.
@@ -11,19 +11,19 @@ export function calculateTTimerDiff(timer: RundownTTimer, now: number): number {
 	}
 
 	// Get current time: either frozen duration or calculated from zeroTime
-	const currentTime = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
+	const currentDuration = timerStateToDuration(timer.state, now)
 
 	// Free run counts up, so negate to get positive elapsed time
 	if (timer.mode?.type === 'freeRun') {
-		return -currentTime
+		return -currentDuration
 	}
 
 	// Apply stopAtZero if configured
-	if (timer.mode?.stopAtZero && currentTime < 0) {
+	if (timer.mode?.stopAtZero && currentDuration < 0) {
 		return 0
 	}
 
-	return currentTime
+	return currentDuration
 }
 
 /**
@@ -40,10 +40,8 @@ export function calculateTTimerOverUnder(timer: RundownTTimer, now: number): num
 		return undefined
 	}
 
-	const duration = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
-	const estimateDuration = timer.estimateState.paused
-		? timer.estimateState.duration
-		: timer.estimateState.zeroTime - now
+	const duration = timerStateToDuration(timer.state, now)
+	const estimateDuration = timerStateToDuration(timer.estimateState, now)
 
 	return duration - estimateDuration
 }
