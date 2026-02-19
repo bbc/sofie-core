@@ -131,6 +131,20 @@ export interface RundownTTimerModeTimeOfDay {
  * When running, the client calculates current time from zeroTime.
  * When paused, the duration is frozen and sent directly.
  * pauseTime indicates when the timer should automatically pause (when current part ends and overrun begins).
+ *
+ * Client rendering logic:
+ * ```typescript
+ * if (state.paused === true) {
+ *   // Manually paused by user or already pushing/overrun
+ *   duration = state.duration
+ * } else if (state.pauseTime && now >= state.pauseTime) {
+ *   // Auto-pause at overrun (current part ended)
+ *   duration = state.zeroTime - state.pauseTime
+ * } else {
+ *   // Running normally
+ *   duration = state.zeroTime - now
+ * }
+ * ```
  */
 export type TimerState =
 	| {
