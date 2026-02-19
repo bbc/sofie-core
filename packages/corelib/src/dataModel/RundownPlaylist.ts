@@ -164,6 +164,27 @@ export type TimerState =
 			pauseTime?: number | null
 	  }
 
+/**
+ * Calculate the current duration for a timer state.
+ * Handles paused, auto-pause (pauseTime), and running states.
+ *
+ * @param state The timer state
+ * @param now Current timestamp in milliseconds
+ * @returns The current duration in milliseconds
+ */
+export function timerStateToDuration(state: TimerState, now: number): number {
+	if (state.paused) {
+		// Manually paused by user or already pushing/overrun
+		return state.duration
+	} else if (state.pauseTime && now >= state.pauseTime) {
+		// Auto-pause at overrun (current part ended)
+		return state.zeroTime - state.pauseTime
+	} else {
+		// Running normally
+		return state.zeroTime - now
+	}
+}
+
 export type RundownTTimerIndex = 1 | 2 | 3
 
 export interface RundownTTimer {
