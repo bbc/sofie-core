@@ -4,9 +4,23 @@ import type {
 	RundownTTimer,
 	TimerState,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { literal } from '@sofie-automation/corelib/dist/lib'
 import { getCurrentTime } from '../lib/index.js'
 import type { ReadonlyDeep } from 'type-fest'
 import * as chrono from 'chrono-node'
+import { PartId, SegmentId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { JobContext } from '../jobs/index.js'
+import { PlayoutModel } from './model/PlayoutModel.js'
+import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
+import { logger } from '../logging.js'
+import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
+
+/**
+ * Map of active setTimeout timeouts by studioId
+ * Used to clear previous timeout when recalculation is triggered before the timeout fires
+ */
+const activeTimeouts = new Map<StudioId, NodeJS.Timeout>()
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
 	if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
@@ -166,4 +180,185 @@ export function calculateNextTimeOfDayTarget(targetTime: string | number): numbe
 		forwardDate: true,
 	})
 	return parsed ? parsed.getTime() : null
+}
+
+/**
+ * Recalculate T-Timer estimates based on timing anchors using segment budget timing.
+ *
+ * Uses a single-pass algorithm with two accumulators:
+ * - totalAccumulator: Accumulated time across completed segments
+ * - segmentAccumulator: Accumulated time within current segment
+ *
+ * At each segment boundary:
+ * - If segment has a budget → use segment budget duration
+ * - Otherwise → use accumulated part durations
+ *
+ * Handles starting mid-segment with budget by calculating remaining budget time.
+ *
+ * @param context Job context
+ * @param playoutModel The playout model containing the playlist and parts
+ */
+export function recalculateTTimerEstimates(context: JobContext, playoutModel: PlayoutModel): void {
+	const span = context.startSpan('recalculateTTimerEstimates')
+
+	const playlist = playoutModel.playlist
+
+	// Clear any existing timeout for this studio
+	const existingTimeout = activeTimeouts.get(playlist.studioId)
+	if (existingTimeout) {
+		clearTimeout(existingTimeout)
+		activeTimeouts.delete(playlist.studioId)
+	}
+
+	const tTimers = playlist.tTimers
+
+	// Find which timers have anchors that need calculation
+	const timerAnchors = new Map<PartId, RundownTTimerIndex[]>()
+	for (const timer of tTimers) {
+		if (timer.anchorPartId) {
+			const existingTimers = timerAnchors.get(timer.anchorPartId) ?? []
+			existingTimers.push(timer.index)
+			timerAnchors.set(timer.anchorPartId, existingTimers)
+		}
+	}
+
+	// If no timers have anchors, nothing to do
+	if (timerAnchors.size === 0) {
+		if (span) span.end()
+		return undefined
+	}
+
+	const currentPartInstance = playoutModel.currentPartInstance?.partInstance
+
+	// Get ordered parts after playhead (excludes previous, current, and next)
+	// Use ignoreQuickLoop=true to count parts linearly without loop-back behavior
+	const orderedParts = playoutModel.getAllOrderedParts()
+	const playablePartsSlice = getOrderedPartsAfterPlayhead(context, playoutModel, orderedParts.length, true)
+
+	if (playablePartsSlice.length === 0 && !currentPartInstance) {
+		// No parts to iterate through, clear estimates
+		for (const timer of tTimers) {
+			if (timer.anchorPartId) {
+				playoutModel.updateTTimer({ ...timer, estimateState: undefined })
+			}
+		}
+		if (span) span.end()
+		return
+	}
+
+	const now = getCurrentTime()
+
+	// Initialize accumulators
+	let totalAccumulator = 0
+	let segmentAccumulator = 0
+	let isPushing = false
+	let currentSegmentId: SegmentId | undefined = undefined
+
+	// Handle current part/segment
+	if (currentPartInstance) {
+		currentSegmentId = currentPartInstance.segmentId
+		const currentSegment = playoutModel.findSegment(currentPartInstance.segmentId)
+		const currentSegmentBudget = currentSegment?.segment.segmentTiming?.budgetDuration
+
+		if (currentSegmentBudget === undefined) {
+			// Normal part duration timing
+			const currentPartDuration =
+				currentPartInstance.part.expectedDurationWithTransition ?? currentPartInstance.part.expectedDuration
+			if (currentPartDuration) {
+				const currentPartStartedPlayback = currentPartInstance.timings?.plannedStartedPlayback
+				const startedPlayback =
+					currentPartStartedPlayback && currentPartStartedPlayback <= now ? currentPartStartedPlayback : now
+				const playOffset = currentPartInstance.timings?.playOffset || 0
+				const elapsed = now - startedPlayback - playOffset
+				const remaining = currentPartDuration - elapsed
+
+				isPushing = remaining < 0
+				totalAccumulator = Math.max(0, remaining)
+			}
+		} else {
+			// Segment budget timing - we're already inside a budgeted segment
+			const segmentStartedPlayback =
+				playlist.segmentsStartedPlayback?.[currentPartInstance.segmentId as unknown as string]
+			if (segmentStartedPlayback) {
+				const segmentElapsed = now - segmentStartedPlayback
+				const remaining = currentSegmentBudget - segmentElapsed
+				isPushing = remaining < 0
+				totalAccumulator = Math.max(0, remaining)
+			} else {
+				totalAccumulator = currentSegmentBudget
+			}
+		}
+
+		// Schedule next recalculation
+		if (!isPushing && !currentPartInstance.part.autoNext) {
+			const delay = totalAccumulator + 5
+			const timeoutId = setTimeout(() => {
+				context.queueStudioJob(StudioJobs.RecalculateTTimerEstimates, undefined, undefined).catch((err) => {
+					logger.error(`Failed to queue T-Timer recalculation: ${stringifyError(err)}`)
+				})
+			}, delay)
+			activeTimeouts.set(playlist.studioId, timeoutId)
+		}
+	}
+
+	// Single pass through parts
+	for (const part of playablePartsSlice) {
+		// Detect segment boundary
+		if (part.segmentId !== currentSegmentId) {
+			// Flush previous segment
+			if (currentSegmentId !== undefined) {
+				const lastSegment = playoutModel.findSegment(currentSegmentId)
+				const segmentBudget = lastSegment?.segment.segmentTiming?.budgetDuration
+
+				// Use budget if it exists, otherwise use accumulated part durations
+				if (segmentBudget !== undefined) {
+					totalAccumulator += segmentBudget
+				} else {
+					totalAccumulator += segmentAccumulator
+				}
+			}
+
+			// Reset for new segment
+			segmentAccumulator = 0
+			currentSegmentId = part.segmentId
+		}
+
+		// Check if this part is an anchor
+		const timersForThisPart = timerAnchors.get(part._id)
+		if (timersForThisPart) {
+			const anchorTime = totalAccumulator + segmentAccumulator
+
+			for (const timerIndex of timersForThisPart) {
+				const timer = tTimers[timerIndex - 1]
+
+				const estimateState: TimerState = isPushing
+					? literal<TimerState>({
+							paused: true,
+							duration: anchorTime,
+						})
+					: literal<TimerState>({
+							paused: false,
+							zeroTime: now + anchorTime,
+						})
+
+				playoutModel.updateTTimer({ ...timer, estimateState })
+			}
+
+			timerAnchors.delete(part._id)
+		}
+
+		// Accumulate this part's duration
+		const partDuration = part.expectedDurationWithTransition ?? part.expectedDuration ?? 0
+		segmentAccumulator += partDuration
+	}
+
+	// Clear estimates for unresolved anchors
+	for (const [, timerIndices] of timerAnchors.entries()) {
+		for (const timerIndex of timerIndices) {
+			const timer = tTimers[timerIndex - 1]
+			playoutModel.updateTTimer({ ...timer, estimateState: undefined })
+		}
+	}
+
+	if (span) span.end()
 }
