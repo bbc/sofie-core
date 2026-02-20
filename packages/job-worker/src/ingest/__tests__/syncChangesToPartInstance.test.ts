@@ -118,6 +118,9 @@ describe('SyncChangesToPartInstancesWorker', () => {
 				{
 					findPart: jest.fn(() => undefined),
 					getGlobalPieces: jest.fn(() => []),
+					getAllOrderedParts: jest.fn(() => []),
+					getOrderedSegments: jest.fn(() => []),
+					findAdlibPiece: jest.fn(() => undefined),
 				},
 				mockOptions
 			)
