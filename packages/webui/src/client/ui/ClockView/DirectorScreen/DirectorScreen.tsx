@@ -38,7 +38,7 @@ import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
 import { useSetDocumentClass } from '../../util/useSetDocumentClass.js'
 import { useRundownAndShowStyleIdsForPlaylist } from '../../util/useRundownAndShowStyleIdsForPlaylist.js'
 import { RundownPlaylistClientUtil } from '../../../lib/rundownPlaylistUtil.js'
-import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownTiming/CurrentPartOrSegmentRemaining.js'
+import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 
 import { AdjustLabelFit } from '../../util/AdjustLabelFit.js'
 import { AutoNextStatus } from '../../RundownView/RundownTiming/AutoNextStatus.js'

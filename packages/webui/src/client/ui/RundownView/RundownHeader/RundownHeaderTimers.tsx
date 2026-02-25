@@ -4,6 +4,7 @@ import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown'
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime'
+import { Countdown } from './Countdown'
 
 interface IProps {
 	tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]
@@ -45,7 +46,8 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 	const isCountingDown = timer.mode?.type === 'countdown' && diff < 0 && isRunning
 
 	return (
-		<div
+		<Countdown
+			label={timer.label}
 			className={classNames('timing__header_t-timers__timer', {
 				'timing__header_t-timers__timer__countdown': timer.mode!.type === 'countdown',
 				'timing__header_t-timers__timer__freeRun': timer.mode!.type === 'freeRun',
@@ -57,23 +59,20 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 					timer.mode!.type === 'countdown' && timer.state !== null && diff <= 0,
 			})}
 		>
-			<span className="timing__header_t-timers__timer__label">{timer.label}</span>
-			<div className="timing__header_t-timers__timer__value">
-				<span className="timing__header_t-timers__timer__sign">{timerSign}</span>
-				{parts.map((p, i) => (
-					<React.Fragment key={i}>
-						<span
-							className={classNames('timing__header_t-timers__timer__part', {
-								'timing__header_t-timers__timer__part--dimmed': Math.abs(diff) < [3600000, 60000, 1][i],
-							})}
-						>
-							{p}
-						</span>
-						{i < parts.length - 1 && <span className="timing__header_t-timers__timer__separator">:</span>}
-					</React.Fragment>
-				))}
-			</div>
-		</div>
+			<span className="timing__header_t-timers__timer__sign">{timerSign}</span>
+			{parts.map((p, i) => (
+				<React.Fragment key={i}>
+					<span
+						className={classNames('timing__header_t-timers__timer__part', {
+							'timing__header_t-timers__timer__part--dimmed': Math.abs(diff) < [3600000, 60000, 1][i],
+						})}
+					>
+						{p}
+					</span>
+					{i < parts.length - 1 && <span className="timing__header_t-timers__timer__separator">:</span>}
+				</React.Fragment>
+			))}
+		</Countdown>
 	)
 }
 

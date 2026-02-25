@@ -5,7 +5,7 @@ import { RundownLayoutRundownHeader } from '@sofie-automation/meteor-lib/dist/co
 import { useTranslation } from 'react-i18next'
 import * as RundownResolver from '../../../lib/RundownResolver'
 import { AutoNextStatus } from '../RundownTiming/AutoNextStatus'
-import { CurrentPartOrSegmentRemaining } from '../RundownTiming/CurrentPartOrSegmentRemaining'
+import { CurrentPartOrSegmentRemaining } from '../RundownHeader/CurrentPartOrSegmentRemaining'
 import { NextBreakTiming } from '../RundownTiming/NextBreakTiming'
 import { PlaylistEndTiming } from '../RundownTiming/PlaylistEndTiming'
 import { PlaylistStartTiming } from '../RundownTiming/PlaylistStartTiming'
