@@ -60,23 +60,19 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 								<div className="rundown-header__timers">
 									<span className="rundown-header__segment-remaining">
 										<span className="rundown-header__segment-remaining__label">{t('Seg. Budg.')}</span>
-										<span className="timing-clock rundown-header__segment-remaining__value">
-											<CurrentPartOrSegmentRemaining
-												currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-												heavyClassName="overtime"
-												preferSegmentTime={true}
-											/>
-										</span>
+										<CurrentPartOrSegmentRemaining
+											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
+											heavyClassName="overtime"
+											preferSegmentTime={true}
+										/>
 									</span>
 									<span className="rundown-header__onair-remaining">
 										<span className="rundown-header__onair-remaining__label">{t('On Air')}</span>
-										<span className="timing-clock rundown-header__onair-remaining__value">
-											<CurrentPartOrSegmentRemaining
-												currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-												heavyClassName="overtime"
-											/>
-											<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
-										</span>
+										<CurrentPartOrSegmentRemaining
+											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
+											heavyClassName="overtime"
+										/>
+										<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
 									</span>
 								</div>
 							)}
