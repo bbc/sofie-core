@@ -25,18 +25,12 @@
 
 		.rundown-header__segment-remaining,
 		.rundown-header__onair-remaining,
-		.rundown-header__expected-end {
+		.countdown {
 			color: #fff;
 		}
 
 		.timing__header_t-timers__timer__label {
 			color: rgba(255, 255, 255, 0.9);
-		}
-
-		.timing-clock {
-			&.time-now {
-				color: #fff;
-			}
 		}
 
 		&.rehearsal {
@@ -74,14 +68,14 @@
 		flex: 1;
 
 		.timing-clock {
-			color: #40b8fa99;
+			color: #40b8fa;
 			font-size: 1.4em;
 			font-variant-numeric: tabular-nums;
 			letter-spacing: 0.05em;
 			transition: color 0.2s;
 
 			&.time-now {
-				font-size: 1.25em;
+				font-size: 1.6em;
 				font-style: italic;
 				font-weight: 300;
 			}
@@ -142,28 +136,20 @@
 			flex-direction: column;
 			justify-content: center; /* Center vertically against the entire header height */
 			align-items: flex-end;
+			font-size: 0.75em;
 
 			.timing__header_t-timers__timer {
-				display: flex;
-				gap: 0.5em;
-				justify-content: space-between;
-				align-items: baseline;
 				white-space: nowrap;
 				line-height: 1.25;
 
-				.timing__header_t-timers__timer__label {
-					font-size: 0.7em;
+				.countdown__label {
 					color: #b8b8b8;
-					text-transform: uppercase;
-					white-space: nowrap;
 				}
 
-				.timing__header_t-timers__timer__value {
+				.countdown__value {
 					font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-					font-variant-numeric: tabular-nums;
 					font-weight: 500;
 					color: #fff;
-					font-size: 1.4em;
 				}
 
 				.timing__header_t-timers__timer__sign {
@@ -187,27 +173,8 @@
 					margin: 0 0.05em;
 					color: #888;
 				}
-
-				&:only-child {
-					/* For single timers, lift it vertically by exactly half its height to match the SegBudget top row height */
-					transform: translateY(-65%);
-				}
 			}
 		}
-
-		&:hover {
-			.timing-clock {
-				color: #40b8fa;
-			}
-		}
-	}
-
-	.rundown-header__right {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		flex: 1;
-		padding-right: 1rem;
 	}
 
 	.rundown-header__hamburger-btn {
@@ -261,35 +228,15 @@
 		}
 	}
 
-	// Stacked Plan. End / Est. End in right section
+	// Stacked Plan. Start / Plan. End / Est. End in right section
 	.rundown-header__endtimes {
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		gap: 0.1em;
-		min-width: 9em;
-	}
-
-	.rundown-header__expected-end {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.6em;
-		color: rgba(255, 255, 255, 0.6);
-		transition: color 0.2s;
-
-		&__label {
-			font-size: 0.7em;
-			font-weight: 600;
-			letter-spacing: 0.1em;
-			text-transform: uppercase;
-		}
-
-		&__value {
-			font-size: 1.4em;
-			font-variant-numeric: tabular-nums;
-			letter-spacing: 0.05em;
-		}
+		justify-content: flex-start;
+		gap: 0.15em;
+		min-width: 7em;
+		font-size: 0.75em;
+		padding-top: 0.8em; // Align with the top row of the T-Timers and Seg Budget
 	}
 
 	.rundown-header__onair-remaining__label {
@@ -318,14 +265,13 @@
 	}
 
 	&:hover {
-		.rundown-header__hamburger-btn,
-		.rundown-header__center .timing-clock {
+		.rundown-header__hamburger-btn {
 			color: #40b8fa;
 		}
 
 		.rundown-header__segment-remaining,
 		.rundown-header__onair-remaining,
-		.rundown-header__expected-end {
+		.countdown {
 			color: white;
 		}
 
