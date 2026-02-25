@@ -6,7 +6,7 @@ import type { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/coreli
 import type { TimerState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { assertNever, literal } from '@sofie-automation/corelib/dist/lib'
-import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import type { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { ReadonlyDeep } from 'type-fest'
 import {
@@ -211,6 +211,13 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 
 		// Recalculate estimates immediately since we already have the playout model
 		recalculateTTimerEstimates(this.#jobContext, this.#playoutModel)
+	}
+
+	setEstimateAnchorPartByExternalId(externalId: string): void {
+		const part = this.#playoutModel.getAllOrderedParts().find((p) => p.externalId === externalId)
+		if (!part) return
+
+		this.setEstimateAnchorPart(unprotectString(part._id))
 	}
 
 	setEstimateTime(time: number, paused: boolean = false): void {

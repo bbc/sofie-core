@@ -89,6 +89,15 @@ export interface IPlaylistTTimer {
 	setEstimateAnchorPart(partId: string): void
 
 	/**
+	 * Set the anchor part for automatic estimate calculation, looked up by its externalId.
+	 * This is a convenience method when you know the externalId of the part (e.g. set during ingest)
+	 * but not its internal PartId. If no part with the given externalId is found, this is a no-op.
+	 * Clears any manual estimate set via setEstimateTime/setEstimateDuration.
+	 * @param externalId The externalId of the part to use as timing anchor
+	 */
+	setEstimateAnchorPartByExternalId(externalId: string): void
+
+	/**
 	 * Manually set the estimate as an absolute timestamp
 	 * Use this when you have custom logic for calculating when you expect to reach a timing point.
 	 * Clears any anchor part set via setAnchorPart.
