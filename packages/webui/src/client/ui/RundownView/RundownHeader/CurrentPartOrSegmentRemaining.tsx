@@ -5,10 +5,13 @@ import { RundownUtils } from '../../../lib/rundown.js'
 import { SpeechSynthesiser } from '../../../lib/speechSynthesis.js'
 import { PartInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
+import { Countdown } from './Countdown.js'
+
 const SPEAK_ADVANCE = 500
 
 interface IPartRemainingProps {
 	currentPartInstanceId: PartInstanceId | null
+	label?: string
 	hideOnZero?: boolean
 	className?: string
 	heavyClassName?: string
@@ -129,11 +132,11 @@ export const CurrentPartOrSegmentRemaining: React.FC<IPartRemainingProps> = (pro
 	displayTimecode *= -1
 
 	return (
-		<span
+		<Countdown
+			label={props.label}
 			className={ClassNames(props.className, Math.floor(displayTimecode / 1000) > 0 ? props.heavyClassName : undefined)}
-			role="timer"
 		>
 			{RundownUtils.formatDiffToTimecode(displayTimecode || 0, true, false, true, false, true, '', false, true)}
-		</span>
+		</Countdown>
 	)
 }

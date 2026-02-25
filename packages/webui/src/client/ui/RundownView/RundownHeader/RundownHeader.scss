@@ -136,7 +136,6 @@
 			flex-direction: column;
 			justify-content: center; /* Center vertically against the entire header height */
 			align-items: flex-end;
-			font-size: 0.75em;
 
 			.timing__header_t-timers__timer {
 				white-space: nowrap;
@@ -217,14 +216,8 @@
 			transition: opacity 0.2s;
 		}
 
-		&__value {
-			font-size: 1.4em;
-			font-variant-numeric: tabular-nums;
-			letter-spacing: 0.05em;
-
-			.overtime {
-				color: $general-late-color;
-			}
+		.overtime {
+			color: $general-late-color;
 		}
 	}
 
@@ -235,8 +228,6 @@
 		justify-content: flex-start;
 		gap: 0.15em;
 		min-width: 7em;
-		font-size: 0.75em;
-		padding-top: 0.8em; // Align with the top row of the T-Timers and Seg Budget
 	}
 
 	.rundown-header__onair-remaining__label {
@@ -267,12 +258,6 @@
 	&:hover {
 		.rundown-header__hamburger-btn {
 			color: #40b8fa;
-		}
-
-		.rundown-header__segment-remaining,
-		.rundown-header__onair-remaining,
-		.countdown {
-			color: white;
 		}
 
 		.rundown-header__segment-remaining__label,
