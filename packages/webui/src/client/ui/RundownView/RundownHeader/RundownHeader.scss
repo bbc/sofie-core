@@ -96,16 +96,16 @@
 				white-space: nowrap;
 
 				.rundown-header__diff__label {
+					@extend .rundown-header__hoverable-label;
 					font-size: 0.7em;
 					font-variation-settings: 'wdth' 25, 'wght' 500, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
-					text-transform: uppercase;
-					letter-spacing: 0.01em;
-					color: #666666;
+					color: #fff;
+					opacity: 0.6;
 				}
 
 				.rundown-header__diff__chip {
 					font-size: 1.1em;
-					font-weight: 500;
+					//font-weight: 500;
 					padding: 0.15em 0.75em;
 					border-radius: 999px;
 					font-variant-numeric: tabular-nums;
@@ -142,10 +142,12 @@
 				line-height: 1.25;
 
 				.countdown__label {
+					@extend .rundown-header__hoverable-label;
+					font-size: 0.65em;
 				}
 
 				.countdown__value {
-					font-weight: 500;
+					//font-weight: 500;
 					color: #fff;
 				}
 
@@ -153,7 +155,7 @@
 					display: inline-block;
 					width: 0.6em;
 					text-align: center;
-					font-weight: 500;
+					//font-weight: 500;
 					font-size: 1.1em;
 					color: #fff;
 					margin-right: 0.3em;
@@ -196,6 +198,16 @@
 		gap: 0.1em;
 	}
 
+	// Common label style for header labels that react to hover
+	.rundown-header__hoverable-label {
+		font-size: 0.75em;
+		font-variation-settings: 'wdth' 25, 'wght' 500, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+		letter-spacing: 0.01em;
+		text-transform: uppercase;
+		opacity: 0.6;
+		transition: opacity 0.2s;
+	}
+
 	.rundown-header__segment-remaining,
 	.rundown-header__onair-remaining {
 		display: flex;
@@ -206,12 +218,7 @@
 		transition: color 0.2s;
 
 		&__label {
-			font-size: 0.8em;
-			font-variation-settings: 'wdth' 80, 'wght' 600, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
-			letter-spacing: 0.05em;
-			text-transform: uppercase;
-			opacity: 0;
-			transition: opacity 0.2s;
+			@extend .rundown-header__hoverable-label;
 		}
 
 		.overtime {
@@ -233,7 +240,11 @@
 		color: #ffffff;
 		padding: 0.03em 0.45em 0.02em 0.2em;
 		border-radius: 2px 999px 999px 2px;
-		font-weight: bold;
+		// Label font styling override meant to match the ON AIR label on the On Air line
+		font-size: 0.8em;
+		letter-spacing: 0.05em;
+		font-variation-settings: 'wdth' 80, 'wght' 700, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+
 		opacity: 1 !important;
 
 		.freeze-frame-icon {
@@ -258,7 +269,10 @@
 			color: #40b8fa;
 		}
 
-		.rundown-header__segment-remaining__label,
+		.rundown-header__hoverable-label {
+			opacity: 1;
+		}
+
 		.rundown-header__onair-remaining__label {
 			opacity: 1;
 		}
