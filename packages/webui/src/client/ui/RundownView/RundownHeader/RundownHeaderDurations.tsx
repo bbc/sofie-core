@@ -4,8 +4,15 @@ import { useTranslation } from 'react-i18next'
 import { Countdown } from './Countdown'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown'
+import { getRemainingDurationFromCurrentPart } from './remainingDuration'
 
-export function RundownHeaderDurations({ playlist }: { playlist: DBRundownPlaylist }): JSX.Element | null {
+export function RundownHeaderDurations({
+	playlist,
+	simplified,
+}: {
+	playlist: DBRundownPlaylist
+	simplified?: boolean
+}): JSX.Element | null {
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
@@ -13,12 +20,25 @@ export function RundownHeaderDurations({ playlist }: { playlist: DBRundownPlayli
 	const planned =
 		expectedDuration != null ? RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true) : null
 
-	const remainingMs = timingDurations.remainingPlaylistDuration
-	const startedMs = playlist.startedPlayback
-	const estDuration =
-		remainingMs != null && startedMs != null
-			? (timingDurations.currentTime ?? Date.now()) - startedMs + remainingMs
-			: null
+	const now = timingDurations.currentTime ?? Date.now()
+	const currentPartInstanceId = playlist.currentPartInfo?.partInstanceId
+
+	let estDuration: number | null = null
+	if (currentPartInstanceId && timingDurations.partStartsAt && timingDurations.partExpectedDurations) {
+		const remaining = getRemainingDurationFromCurrentPart(
+			currentPartInstanceId,
+			timingDurations.partStartsAt,
+			timingDurations.partExpectedDurations
+		)
+		if (remaining != null) {
+			const elapsed =
+				playlist.startedPlayback != null
+					? now - playlist.startedPlayback
+					: (timingDurations.asDisplayedPlaylistDuration ?? 0)
+			estDuration = elapsed + remaining
+		}
+	}
+
 	const estimated =
 		estDuration != null ? RundownUtils.formatDiffToTimecode(estDuration, false, true, true, true, true) : null
 
@@ -27,7 +47,7 @@ export function RundownHeaderDurations({ playlist }: { playlist: DBRundownPlayli
 	return (
 		<div className="rundown-header__endtimes">
 			{planned ? <Countdown label={t('Plan. Dur')}>{planned}</Countdown> : null}
-			{estimated ? <Countdown label={t('Est. Dur')}>{estimated}</Countdown> : null}
+			{!simplified && estimated ? <Countdown label={t('Est. Dur')}>{estimated}</Countdown> : null}
 		</div>
 	)
 }

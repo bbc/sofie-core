@@ -8,7 +8,9 @@
 	border-bottom: 1px solid #333;
 	transition: background-color 0.5s;
 	font-family: 'Roboto Flex', 'Roboto', sans-serif;
-	font-feature-settings: 'liga' 0, 'tnum';
+	font-feature-settings:
+		'liga' 0,
+		'tnum';
 	font-variant-numeric: tabular-nums;
 
 	.rundown-header__trigger {
@@ -73,12 +75,25 @@
 			color: #40b8fa;
 			font-size: 1.4em;
 
-			letter-spacing: 0.0 em;
+			letter-spacing: 0 em;
 			transition: color 0.2s;
 
 			&.time-now {
 				font-size: 1.8em;
-				font-variation-settings: 'wdth' 70, 'wght' 400, 'slnt' -5, 'GRAD' 0, 'opsz' 44, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+				font-variation-settings:
+					'wdth' 70,
+					'wght' 400,
+					'slnt' -5,
+					'GRAD' 0,
+					'opsz' 44,
+					'XOPQ' 96,
+					'XTRA' 468,
+					'YOPQ' 79,
+					'YTAS' 750,
+					'YTFI' 738,
+					'YTLC' 548,
+					'YTDE' -203,
+					'YTUC' 712;
 			}
 		}
 
@@ -98,21 +113,47 @@
 				.rundown-header__diff__label {
 					@extend .rundown-header__hoverable-label;
 					font-size: 0.7em;
-					font-variation-settings: 'wdth' 25, 'wght' 500, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+					font-variation-settings:
+						'wdth' 25,
+						'wght' 500,
+						'slnt' 0,
+						'GRAD' 0,
+						'opsz' 14,
+						'XOPQ' 96,
+						'XTRA' 468,
+						'YOPQ' 79,
+						'YTAS' 750,
+						'YTFI' 738,
+						'YTLC' 548,
+						'YTDE' -203,
+						'YTUC' 712;
 					opacity: 0.6;
 				}
 
 				.rundown-header__diff__chip {
 					font-size: 1.2em;
-					padding: 0.0em 0.3em;
+					padding: 0em 0.3em;
 					border-radius: 999px;
-					font-variation-settings: 'wdth' 25, 'wght' 600, 'slnt' 0, 'GRAD' 0, 'opsz' 20, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+					font-variation-settings:
+						'wdth' 25,
+						'wght' 600,
+						'slnt' 0,
+						'GRAD' 0,
+						'opsz' 20,
+						'XOPQ' 96,
+						'XTRA' 468,
+						'YOPQ' 79,
+						'YTAS' 750,
+						'YTFI' 738,
+						'YTLC' 548,
+						'YTDE' -203,
+						'YTUC' 712;
 					letter-spacing: -0.02em;
 				}
 
 				&.rundown-header__diff--under {
 					.rundown-header__diff__chip {
-						background-color: #ff0;//$general-fast-color;
+						background-color: #ff0; //$general-fast-color;
 						color: #000;
 					}
 				}
@@ -200,7 +241,20 @@
 	// Common label style for header labels that react to hover
 	.rundown-header__hoverable-label {
 		font-size: 0.75em;
-		font-variation-settings: 'wdth' 25, 'wght' 500, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+		font-variation-settings:
+			'wdth' 25,
+			'wght' 500,
+			'slnt' 0,
+			'GRAD' 0,
+			'opsz' 14,
+			'XOPQ' 96,
+			'XTRA' 468,
+			'YOPQ' 79,
+			'YTAS' 750,
+			'YTFI' 738,
+			'YTLC' 548,
+			'YTDE' -203,
+			'YTUC' 712;
 		letter-spacing: 0.01em;
 		text-transform: uppercase;
 		opacity: 0.6;
@@ -234,6 +288,13 @@
 		min-width: 7em;
 	}
 
+	.rundown-header__timing-group {
+		display: flex;
+		align-items: center;
+		gap: 1em;
+		cursor: pointer;
+	}
+
 	.rundown-header__onair-remaining__label {
 		background-color: $general-live-color;
 		color: #ffffff;
@@ -242,7 +303,20 @@
 		// Label font styling override meant to match the ON AIR label on the On Air line
 		font-size: 0.8em;
 		letter-spacing: 0.05em;
-		font-variation-settings: 'wdth' 80, 'wght' 700, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+		font-variation-settings:
+			'wdth' 80,
+			'wght' 700,
+			'slnt' 0,
+			'GRAD' 0,
+			'opsz' 14,
+			'XOPQ' 96,
+			'XTRA' 468,
+			'YOPQ' 79,
+			'YTAS' 750,
+			'YTFI' 738,
+			'YTLC' 548,
+			'YTDE' -203,
+			'YTUC' 712;
 
 		opacity: 1 !important;
 
