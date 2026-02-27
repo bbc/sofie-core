@@ -85,7 +85,7 @@
 		.rundown-header__timing-display {
 			display: flex;
 			align-items: center;
-			margin-right: 1.5em;
+			margin-right: 0.5em;
 			margin-left: 2em;
 
 			.rundown-header__diff {
@@ -99,28 +99,27 @@
 					@extend .rundown-header__hoverable-label;
 					font-size: 0.7em;
 					font-variation-settings: 'wdth' 25, 'wght' 500, 'slnt' 0, 'GRAD' 0, 'opsz' 14, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
-					color: #fff;
 					opacity: 0.6;
 				}
 
 				.rundown-header__diff__chip {
-					font-size: 1.1em;
-					//font-weight: 500;
-					padding: 0.15em 0.75em;
+					font-size: 1.2em;
+					padding: 0.0em 0.3em;
 					border-radius: 999px;
-					font-variant-numeric: tabular-nums;
+					font-variation-settings: 'wdth' 25, 'wght' 600, 'slnt' 0, 'GRAD' 0, 'opsz' 20, 'XOPQ' 96, 'XTRA' 468, 'YOPQ' 79, 'YTAS' 750, 'YTFI' 738, 'YTLC' 548, 'YTDE' -203, 'YTUC' 712;
+					letter-spacing: -0.02em;
 				}
 
 				&.rundown-header__diff--under {
 					.rundown-header__diff__chip {
-						background-color: #c8a800;
+						background-color: #ff0;//$general-fast-color;
 						color: #000;
 					}
 				}
 
 				&.rundown-header__diff--over {
 					.rundown-header__diff__chip {
-						background-color: #b00;
+						background-color: $general-late-color;
 						color: #fff;
 					}
 				}
@@ -258,6 +257,7 @@
 	.rundown-header__close-btn {
 		display: flex;
 		align-items: center;
+		margin-right: 0.75em;
 		cursor: pointer;
 		color: #40b8fa;
 		opacity: 0;
