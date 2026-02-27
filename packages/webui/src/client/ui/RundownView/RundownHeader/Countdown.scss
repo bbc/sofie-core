@@ -6,14 +6,11 @@
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.6em;
-	color: rgba(255, 255, 255, 0.6);
+	//color: rgba(255, 255, 255, 0.6);
 	transition: color 0.2s;
 
 	&__label {
 		@extend .rundown-header__hoverable-label;
-		font-size: 0.7em;
-		font-weight: 600;
-		letter-spacing: 0.1em;
 		white-space: nowrap;
 	}
 
