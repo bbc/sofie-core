@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ClassNames from 'classnames'
 import { NavLink } from 'react-router-dom'
 import * as CoreIcon from '@nrk/core-icons/jsx'
@@ -38,6 +39,7 @@ interface IRundownHeaderProps {
 
 export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeaderProps): JSX.Element {
 	const { t } = useTranslation()
+	const [simplified, setSimplified] = useState(false)
 
 	return (
 		<>
@@ -85,9 +87,11 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 						</div>
 
 						<div className="rundown-header__right">
-							<RundownHeaderPlannedStart playlist={playlist} />
-							<RundownHeaderDurations playlist={playlist} />
-							<RundownHeaderExpectedEnd playlist={playlist} />
+							<div className="rundown-header__timing-group" onClick={() => setSimplified((s) => !s)}>
+								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
+								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
+								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
+							</div>
 							<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
 								<CoreIcon.NrkClose />
 							</NavLink>
