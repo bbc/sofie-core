@@ -45,9 +45,17 @@ export function RundownHeaderDurations({
 	if (!planned && !estimated) return null
 
 	return (
-		<div className="rundown-header__endtimes">
-			{planned ? <Countdown label={t('Plan. Dur')}>{planned}</Countdown> : null}
-			{!simplified && estimated ? <Countdown label={t('Est. Dur')}>{estimated}</Countdown> : null}
+		<div className="rundown-header__show-timers-endtimes">
+			{planned ? (
+				<Countdown label={t('Plan. Dur')} className="rundown-header__show-timers-countdown">
+					{planned}
+				</Countdown>
+			) : null}
+			{!simplified && estimated ? (
+				<Countdown label={t('Est. Dur')} className="rundown-header__show-timers-countdown">
+					{estimated}
+				</Countdown>
+			) : null}
 		</div>
 	)
 }

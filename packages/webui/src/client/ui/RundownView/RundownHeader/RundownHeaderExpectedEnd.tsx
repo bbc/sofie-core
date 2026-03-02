@@ -34,9 +34,13 @@ export function RundownHeaderExpectedEnd({
 	if (!expectedEnd && !estEnd) return null
 
 	return (
-		<div className="rundown-header__endtimes">
-			{expectedEnd ? <Countdown label={t('Plan. End')} time={expectedEnd} /> : null}
-			{!simplified && estEnd ? <Countdown label={t('Est. End')} time={estEnd} /> : null}
+		<div className="rundown-header__show-timers-endtimes">
+			{expectedEnd ? (
+				<Countdown label={t('Plan. End')} time={expectedEnd} className="rundown-header__show-timers-countdown" />
+			) : null}
+			{!simplified && estEnd ? (
+				<Countdown label={t('Est. End')} time={estEnd} className="rundown-header__show-timers-countdown" />
+			) : null}
 		</div>
 	)
 }
