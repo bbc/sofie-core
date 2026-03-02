@@ -8,19 +8,10 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { getCurrentTime } from '../lib/index.js'
 import type { ReadonlyDeep } from 'type-fest'
 import * as chrono from 'chrono-node'
-import { PartId, SegmentId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { JobContext } from '../jobs/index.js'
 import { PlayoutModel } from './model/PlayoutModel.js'
-import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
-import { logger } from '../logging.js'
-import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
-
-/**
- * Map of active setTimeout timeouts by studioId
- * Used to clear previous timeout when recalculation is triggered before the timeout fires
- */
-const activeTimeouts = new Map<StudioId, NodeJS.Timeout>()
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
 	if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
@@ -203,13 +194,6 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 
 	const playlist = playoutModel.playlist
 
-	// Clear any existing timeout for this studio
-	const existingTimeout = activeTimeouts.get(playlist.studioId)
-	if (existingTimeout) {
-		clearTimeout(existingTimeout)
-		activeTimeouts.delete(playlist.studioId)
-	}
-
 	const tTimers = playlist.tTimers
 
 	// Find which timers have anchors that need calculation
@@ -288,18 +272,10 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 				totalAccumulator = currentSegmentBudget
 			}
 		}
-
-		// Schedule next recalculation
-		if (!isPushing && !currentPartInstance.part.autoNext) {
-			const delay = totalAccumulator + 5
-			const timeoutId = setTimeout(() => {
-				context.queueStudioJob(StudioJobs.RecalculateTTimerEstimates, undefined, undefined).catch((err) => {
-					logger.error(`Failed to queue T-Timer recalculation: ${stringifyError(err)}`)
-				})
-			}, delay)
-			activeTimeouts.set(playlist.studioId, timeoutId)
-		}
 	}
+
+	// Save remaining current part time for pauseTime calculation
+	const currentPartRemainingTime = totalAccumulator
 
 	// Single pass through parts
 	for (const part of playablePartsSlice) {
@@ -335,10 +311,12 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 					? literal<TimerState>({
 							paused: true,
 							duration: anchorTime,
+							pauseTime: null, // Already paused/pushing
 						})
 					: literal<TimerState>({
 							paused: false,
 							zeroTime: now + anchorTime,
+							pauseTime: now + currentPartRemainingTime, // When current part ends and pushing begins
 						})
 
 				playoutModel.updateTTimer({ ...timer, estimateState })

@@ -130,6 +130,21 @@ export interface RundownTTimerModeTimeOfDay {
  * Timing state for a timer, optimized for efficient client rendering.
  * When running, the client calculates current time from zeroTime.
  * When paused, the duration is frozen and sent directly.
+ * pauseTime indicates when the timer should automatically pause (when current part ends and overrun begins).
+ *
+ * Client rendering logic:
+ * ```typescript
+ * if (state.paused === true) {
+ *   // Manually paused by user or already pushing/overrun
+ *   duration = state.duration
+ * } else if (state.pauseTime && now >= state.pauseTime) {
+ *   // Auto-pause at overrun (current part ended)
+ *   duration = state.zeroTime - state.pauseTime
+ * } else {
+ *   // Running normally
+ *   duration = state.zeroTime - now
+ * }
+ * ```
  */
 export type TimerState =
 	| {
@@ -137,13 +152,38 @@ export type TimerState =
 			paused: false
 			/** The absolute timestamp (ms) when the timer reaches/reached zero */
 			zeroTime: number
+			/** Optional timestamp when the timer should pause (when current part ends) */
+			pauseTime?: number | null
 	  }
 	| {
 			/** Whether the timer is paused */
 			paused: true
 			/** The frozen duration value in milliseconds */
 			duration: number
+			/** Optional timestamp when the timer should pause (null when already paused/pushing) */
+			pauseTime?: number | null
 	  }
+
+/**
+ * Calculate the current duration for a timer state.
+ * Handles paused, auto-pause (pauseTime), and running states.
+ *
+ * @param state The timer state
+ * @param now Current timestamp in milliseconds
+ * @returns The current duration in milliseconds
+ */
+export function timerStateToDuration(state: TimerState, now: number): number {
+	if (state.paused) {
+		// Manually paused by user or already pushing/overrun
+		return state.duration
+	} else if (state.pauseTime && now >= state.pauseTime) {
+		// Auto-pause at overrun (current part ended)
+		return state.zeroTime - state.pauseTime
+	} else {
+		// Running normally
+		return state.zeroTime - now
+	}
+}
 
 export type RundownTTimerIndex = 1 | 2 | 3
 
