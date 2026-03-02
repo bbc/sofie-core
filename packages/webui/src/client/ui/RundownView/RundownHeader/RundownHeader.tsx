@@ -13,7 +13,7 @@ import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyle
 import Navbar from 'react-bootstrap/Navbar'
 import { RundownContextMenu, RundownHeaderContextMenuTrigger, RundownHamburgerButton } from './RundownContextMenu'
 import { TimeOfDay } from '../RundownTiming/TimeOfDay'
-import { CurrentPartOrSegmentRemaining } from '../RundownHeader/CurrentPartOrSegmentRemaining'
+import { RundownHeaderPartRemaining } from '../RundownHeader/CurrentPartOrSegmentRemaining'
 import { RundownHeaderTimers } from './RundownHeaderTimers'
 
 import { RundownHeaderTimingDisplay } from './RundownHeaderTimingDisplay'
@@ -62,7 +62,7 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 								<div className="rundown-header__onair">
 									<span className="rundown-header__timers-segment-remaining">
 										<span className="rundown-header__timers-segment-remaining__label">{t('Seg. Budg.')}</span>
-										<CurrentPartOrSegmentRemaining
+										<RundownHeaderPartRemaining
 											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
 											heavyClassName="overtime"
 											preferSegmentTime={true}
@@ -70,7 +70,7 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 									</span>
 									<span className="rundown-header__timers-onair-remaining">
 										<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
-										<CurrentPartOrSegmentRemaining
+										<RundownHeaderPartRemaining
 											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
 											heavyClassName="overtime"
 										/>

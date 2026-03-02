@@ -12,6 +12,8 @@
 		'liga' 0,
 		'tnum';
 	font-variant-numeric: tabular-nums;
+	user-select: none;
+	cursor: default;
 
 	.rundown-header__trigger {
 		height: 100%;
@@ -202,7 +204,6 @@
 				}
 
 				.countdown__value {
-					//font-weight: 500;
 					color: #fff;
 				}
 
@@ -210,7 +211,6 @@
 					display: inline-block;
 					width: 0.6em;
 					text-align: center;
-					//font-weight: 500;
 					font-size: 1.1em;
 					color: #fff;
 					margin-right: 0.3em;

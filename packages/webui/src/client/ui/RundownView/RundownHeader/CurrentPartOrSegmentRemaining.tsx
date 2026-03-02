@@ -80,7 +80,7 @@ function vibrate(displayTime: number) {
 	}
 }
 
-export const CurrentPartOrSegmentRemaining: React.FC<IPartRemainingProps> = (props) => {
+function usePartRemaining(props: IPartRemainingProps) {
 	const timingDurations = useTiming(TimingTickResolution.Synced, TimingDataResolution.Synced)
 	const prevPartInstanceId = useRef<PartInstanceId | null>(null)
 
@@ -130,6 +130,37 @@ export const CurrentPartOrSegmentRemaining: React.FC<IPartRemainingProps> = (pro
 
 	if (displayTimecode === undefined) return null
 	displayTimecode *= -1
+
+	return { displayTimecode }
+}
+
+/**
+ * Original version used across the app — renders a plain <span> with role="timer".
+ */
+export const CurrentPartOrSegmentRemaining: React.FC<IPartRemainingProps> = (props) => {
+	const result = usePartRemaining(props)
+	if (!result) return null
+
+	const { displayTimecode } = result
+
+	return (
+		<span
+			className={ClassNames(props.className, Math.floor(displayTimecode / 1000) > 0 ? props.heavyClassName : undefined)}
+			role="timer"
+		>
+			{RundownUtils.formatDiffToTimecode(displayTimecode || 0, true, false, true, false, true, '', false, true)}
+		</span>
+	)
+}
+
+/**
+ * RundownHeader variant — renders inside a <Countdown> component with label support.
+ */
+export const RundownHeaderPartRemaining: React.FC<IPartRemainingProps> = (props) => {
+	const result = usePartRemaining(props)
+	if (!result) return null
+
+	const { displayTimecode } = result
 
 	return (
 		<Countdown
