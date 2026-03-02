@@ -106,12 +106,14 @@
 		}
 
 		.rundown-header__clocks-playlist-name {
-			@extend .rundown-header__hoverable-label;
 			font-size: 0.65em;
 			white-space: nowrap;
-			overflow: hidden;
 			text-overflow: ellipsis;
 			max-width: 20em;
+			color: #fff;
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.2s ease;
 		}
 
 		.rundown-header__clocks-timing-display {
@@ -388,6 +390,12 @@
 
 		.rundown-header__close-btn {
 			opacity: 1;
+		}
+
+		.rundown-header__clocks-clock-group {
+			.rundown-header__clocks-playlist-name {
+				max-height: 1.5em;
+			}
 		}
 	}
 }
