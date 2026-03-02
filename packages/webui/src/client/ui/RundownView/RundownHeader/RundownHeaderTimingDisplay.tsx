@@ -15,12 +15,14 @@ export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDis
 	const isUnder = overUnderClock <= 0
 
 	return (
-		<div className="rundown-header__timing-display">
+		<div className="rundown-header__clocks-timing-display">
 			<span
-				className={`rundown-header__diff ${isUnder ? 'rundown-header__diff--under' : 'rundown-header__diff--over'}`}
+				className={`rundown-header__clocks-diff ${
+					isUnder ? 'rundown-header__clocks-diff--under' : 'rundown-header__clocks-diff--over'
+				}`}
 			>
-				<span className="rundown-header__diff__label">{isUnder ? 'Under' : 'Over'}</span>
-				<span className="rundown-header__diff__chip">
+				<span className="rundown-header__clocks-diff__label">{isUnder ? 'Under' : 'Over'}</span>
+				<span className="rundown-header__clocks-diff__chip">
 					{isUnder ? '−' : '+'}
 					{timeStr}
 				</span>

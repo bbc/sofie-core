@@ -59,17 +59,17 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 						<div className="rundown-header__left">
 							<RundownHamburgerButton />
 							{playlist.currentPartInfo && (
-								<div className="rundown-header__timers">
-									<span className="rundown-header__segment-remaining">
-										<span className="rundown-header__segment-remaining__label">{t('Seg. Budg.')}</span>
+								<div className="rundown-header__onair">
+									<span className="rundown-header__timers-segment-remaining">
+										<span className="rundown-header__timers-segment-remaining__label">{t('Seg. Budg.')}</span>
 										<CurrentPartOrSegmentRemaining
 											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
 											heavyClassName="overtime"
 											preferSegmentTime={true}
 										/>
 									</span>
-									<span className="rundown-header__onair-remaining">
-										<span className="rundown-header__onair-remaining__label">{t('On Air')}</span>
+									<span className="rundown-header__timers-onair-remaining">
+										<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
 										<CurrentPartOrSegmentRemaining
 											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
 											heavyClassName="overtime"
@@ -80,14 +80,17 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 							)}
 						</div>
 
-						<div className="rundown-header__center">
+						<div className="rundown-header__clocks">
 							<RundownHeaderTimers tTimers={playlist.tTimers} />
 							<RundownHeaderTimingDisplay playlist={playlist} />
-							<TimeOfDay />
+							<div className="rundown-header__clocks-clock-group">
+								<TimeOfDay className="rundown-header__clocks-time-now" />
+								<span className="rundown-header__clocks-playlist-name">{playlist.name}</span>
+							</div>
 						</div>
 
 						<div className="rundown-header__right">
-							<div className="rundown-header__timing-group" onClick={() => setSimplified((s) => !s)}>
+							<div className="rundown-header__show-timers" onClick={() => setSimplified((s) => !s)}>
 								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
 								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
 								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />

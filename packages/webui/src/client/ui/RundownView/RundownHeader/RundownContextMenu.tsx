@@ -172,7 +172,7 @@ export function RundownHamburgerButton(): JSX.Element {
 	}, [])
 
 	return (
-		<button ref={buttonRef} className="rundown-header__hamburger-btn" onClick={handleClick} title={t('Menu')}>
+		<button ref={buttonRef} className="rundown-header__menu-btn" onClick={handleClick} title={t('Menu')}>
 			<FontAwesomeIcon icon={faBars} />
 		</button>
 	)

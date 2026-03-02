@@ -22,8 +22,8 @@ export function RundownHeaderPlannedStart({
 	const diff = now - expectedStart
 
 	return (
-		<div className="rundown-header__endtimes">
-			<Countdown label={t('Plan. Start')} time={expectedStart} />
+		<div className="rundown-header__show-timers-endtimes">
+			<Countdown label={t('Plan. Start')} time={expectedStart} className="rundown-header__show-timers-countdown" />
 			{!simplified &&
 				(playlist.startedPlayback ? (
 					<Countdown label={t('Started')} time={playlist.startedPlayback} />
