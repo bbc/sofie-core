@@ -14,9 +14,10 @@
 		white-space: nowrap;
 	}
 
-	&__value {
+	&__counter,
+	&__timeofday {
 		margin-left: auto;
-		font-size: 1.4em;
+		font-size: 1.3em;
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.05em;
 	}

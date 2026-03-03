@@ -11,10 +11,12 @@ interface IProps {
 }
 
 export function Countdown({ label, time, className, children }: IProps): JSX.Element {
+	const valueClassName = time !== undefined ? 'countdown__timeofday' : 'countdown__counter'
+
 	return (
 		<span className={classNames('countdown', className)}>
 			{label && <span className="countdown__label">{label}</span>}
-			<span className="countdown__value">
+			<span className={valueClassName}>
 				{time !== undefined ? <Moment interval={0} format="HH:mm:ss" date={time} /> : children}
 			</span>
 		</span>

@@ -77,8 +77,7 @@
 		.timing-clock {
 			color: #40b8fa;
 			font-size: 1.4em;
-
-			letter-spacing: 0 em;
+			letter-spacing: 0em;
 			transition: color 0.2s;
 
 			&.time-now {
@@ -207,7 +206,7 @@
 					font-size: 0.65em;
 				}
 
-				.countdown__value {
+				.countdown__counter {
 					color: #fff;
 				}
 
@@ -342,11 +341,45 @@
 			white-space: nowrap;
 		}
 
-		.countdown__value {
+		.countdown__counter {
 			margin-left: auto;
-			font-size: 1.4em;
+			font-size: 1.3em;
+			letter-spacing: 0em;
+			font-variation-settings:
+			'wdth' 50,
+			'wght' 550,
+			'slnt' 0,
+			'GRAD' 0,
+			'opsz' 33,
+			'XOPQ' 96,
+			'XTRA' 468,
+			'YOPQ' 79,
+			'YTAS' 750,
+			'YTFI' 738,
+			'YTLC' 548,
+			'YTDE' -203,
+			'YTUC' 712;
+		}
+
+		.countdown__timeofday {
+			margin-left: auto;
+			font-size: 1.3em;
 			font-variant-numeric: tabular-nums;
 			letter-spacing: 0.05em;
+			font-variation-settings:
+			'wdth' 70,
+			'wght' 400,
+			'slnt' -5,
+			'GRAD' 0,
+			'opsz' 44,
+			'XOPQ' 96,
+			'XTRA' 468,
+			'YOPQ' 79,
+			'YTAS' 750,
+			'YTFI' 738,
+			'YTLC' 548,
+			'YTDE' -203,
+			'YTUC' 712;
 		}
 	}
 
