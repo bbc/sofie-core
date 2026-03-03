@@ -30,6 +30,7 @@
 
 	&.active {
 		background: $color-header-on-air;
+		border-bottom: 1px solid #256b91;
 
 		.rundown-header__timers-segment-remaining,
 		.rundown-header__timers-onair-remaining,
@@ -115,6 +116,7 @@
 		}
 
 		.rundown-header__clocks-playlist-name {
+			//@extend .rundown-header__hoverable-label;
 			font-size: 0.65em;
 			display: flex;
 			flex-direction: row;
@@ -377,6 +379,8 @@
 
 		.rundown-header__clocks-clock-group {
 			.rundown-header__clocks-playlist-name {
+				@extend .rundown-header__hoverable-label;
+				font-size: 0.65em;
 				max-height: 1.5em;
 			}
 		}
