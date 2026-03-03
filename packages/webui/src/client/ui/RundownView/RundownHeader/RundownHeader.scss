@@ -75,7 +75,6 @@
 		align-items: center;
 		justify-content: center;
 		flex: 1;
-
 		.timing-clock {
 			color: #40b8fa;
 			font-size: 1.4em;
@@ -115,7 +114,6 @@
 		}
 
 		.rundown-header__clocks-playlist-name {
-			//@extend .rundown-header__hoverable-label;
 			font-size: 0.65em;
 			display: flex;
 			flex-direction: row;
@@ -215,62 +213,62 @@
 				}
 			}
 		}
+	}
 
-		.rundown-header__clocks-timers {
-			display: flex;
-			flex-direction: column;
-			justify-content: center; /* Center vertically against the entire header height */
-			align-items: flex-end;
-			margin-right: 3em;
+	.rundown-header__clocks-timers {
+		margin-left: auto;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-end;
 
-			.rundown-header__clocks-timers__timer {
-				white-space: nowrap;
-				line-height: 1.25;
+		.rundown-header__clocks-timers__timer {
+			white-space: nowrap;
+			line-height: 1.25;
 
-				.countdown__label {
-					@extend .rundown-header__hoverable-label;
-					font-size: 0.65em;
-				}
+			.countdown__label {
+				@extend .rundown-header__hoverable-label;
+				font-size: 0.65em;
+			}
 
-				.countdown__counter {
-					color: #fff;
-				}
+			.countdown__counter {
+				color: #fff;
+			}
 
-				.rundown-header__clocks-timers__timer__sign {
-					display: inline-block;
-					width: 0.6em;
-					text-align: center;
-					font-size: 1.1em;
-					color: #fff;
-					margin-right: 0.3em;
-				}
+			.rundown-header__clocks-timers__timer__sign {
+				display: inline-block;
+				width: 0.6em;
+				text-align: center;
+				font-size: 1.1em;
+				color: #fff;
+				margin-right: 0.3em;
+			}
 
-				.rundown-header__clocks-timers__timer__part {
-					color: #fff;
-					&.rundown-header__clocks-timers__timer__part--dimmed {
-						color: #888;
-						font-weight: 400;
-					}
-				}
-				.rundown-header__clocks-timers__timer__separator {
-					margin: 0 0.05em;
+			.rundown-header__clocks-timers__timer__part {
+				color: #fff;
+				&.rundown-header__clocks-timers__timer__part--dimmed {
 					color: #888;
+					font-weight: 400;
+				}
+			}
+			.rundown-header__clocks-timers__timer__separator {
+				margin: 0 0.05em;
+				color: #888;
+			}
+
+			.rundown-header__clocks-timers__timer__over-under {
+				font-size: 0.75em;
+				font-weight: 400;
+				font-variant-numeric: tabular-nums;
+				margin-left: 0.5em;
+				white-space: nowrap;
+
+				&.rundown-header__clocks-timers__timer__over-under--over {
+					color: $general-late-color;
 				}
 
-				.rundown-header__clocks-timers__timer__over-under {
-					font-size: 0.75em;
-					font-weight: 400;
-					font-variant-numeric: tabular-nums;
-					margin-left: 0.5em;
-					white-space: nowrap;
-
-					&.rundown-header__clocks-timers__timer__over-under--over {
-						color: $general-late-color;
-					}
-
-					&.rundown-header__clocks-timers__timer__over-under--under {
-						color: #0f0;
-					}
+				&.rundown-header__clocks-timers__timer__over-under--under {
+					color: #0f0;
 				}
 			}
 		}

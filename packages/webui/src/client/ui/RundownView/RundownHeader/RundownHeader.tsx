@@ -78,10 +78,10 @@ export function RundownHeader({ playlist, studio, firstRundown, currentRundown }
 									</span>
 								</div>
 							)}
+							<RundownHeaderTimers tTimers={playlist.tTimers} />
 						</div>
 
 						<div className="rundown-header__clocks">
-							<RundownHeaderTimers tTimers={playlist.tTimers} />
 							<div className="rundown-header__clocks-clock-group">
 								<div className="rundown-header__clocks-top-row">
 									<RundownHeaderTimingDisplay playlist={playlist} />
