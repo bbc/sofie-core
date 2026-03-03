@@ -1,5 +1,5 @@
 @import '../../../styles/colorScheme';
-@import './RundownHeader.scss';
+@import './shared';
 
 .countdown {
 	display: flex;
@@ -9,7 +9,7 @@
 	transition: color 0.2s;
 
 	&__label {
-		@extend .rundown-header__hoverable-label;
+		@extend %hoverable-label;
 		white-space: nowrap;
 		position: relative;
 		top: -0.6em; /* Visually push the label up to align with cap height */
