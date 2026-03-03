@@ -51,6 +51,8 @@ import { AdjustLabelFit } from '../util/AdjustLabelFit.js'
 import { AutoNextStatus } from '../RundownView/RundownTiming/AutoNextStatus.js'
 import { useTranslation } from 'react-i18next'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
+import { TTimerDisplay } from './TTimerDisplay.js'
+import { getDefaultTTimer } from '../../lib/tTimerUtils.js'
 import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance.js'
 
 interface SegmentUi extends DBSegment {
@@ -550,6 +552,8 @@ function DirectorScreenRender({
 			}
 		}
 
+		const activeTTimer = getDefaultTTimer(playlist.tTimers)
+
 		return (
 			<div className="director-screen">
 				<div className="director-screen__top">
@@ -754,6 +758,11 @@ function DirectorScreenRender({
 							</>
 						) : null}
 					</div>
+					{!!activeTTimer && (
+						<div className="director-screen__body__t-timer">
+							<TTimerDisplay timer={activeTTimer} />
+						</div>
+					)}
 				</div>
 			</div>
 		)

@@ -5,6 +5,7 @@ import { RundownUtils } from '../../../lib/rundown'
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime'
 import { Countdown } from './Countdown'
+import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../../lib/tTimerUtils'
 
 interface IProps {
 	tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]
@@ -37,13 +38,14 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 
 	const isRunning = !!timer.state && !timer.state.paused
 
-	const diff = calculateDiff(timer, now)
+	const diff = calculateTTimerDiff(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const parts = timeStr.split(':')
 
 	const timerSign = diff >= 0 ? '+' : '-'
 
 	const isCountingDown = timer.mode?.type === 'countdown' && diff < 0 && isRunning
+	const overUnder = calculateTTimerOverUnder(timer, now)
 
 	return (
 		<Countdown
@@ -72,27 +74,17 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 					{i < parts.length - 1 && <span className="rundown-header__clocks-timers__timer__separator">:</span>}
 				</React.Fragment>
 			))}
+			{!!overUnder && (
+				<span
+					className={classNames('rundown-header__clocks-timers__timer__over-under', {
+						'rundown-header__clocks-timers__timer__over-under--over': overUnder > 0,
+						'rundown-header__clocks-timers__timer__over-under--under': overUnder < 0,
+					})}
+				>
+					{overUnder >= 0 ? '+' : '-'}
+					{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
+				</span>
+			)}
 		</Countdown>
 	)
-}
-
-function calculateDiff(timer: RundownTTimer, now: number): number {
-	if (!timer.state || timer.state.paused === undefined) {
-		return 0
-	}
-
-	// Get current time: either frozen duration or calculated from zeroTime
-	const currentTime = timer.state.paused ? timer.state.duration : timer.state.zeroTime - now
-
-	// Free run counts up, so negate to get positive elapsed time
-	if (timer.mode?.type === 'freeRun') {
-		return -currentTime
-	}
-
-	// Apply stopAtZero if configured
-	if (timer.mode?.stopAtZero && currentTime < 0) {
-		return 0
-	}
-
-	return currentTime
 }
