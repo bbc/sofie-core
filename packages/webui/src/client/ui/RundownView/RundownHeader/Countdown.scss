@@ -15,9 +15,10 @@
 		top: -0.6em; /* Visually push the label up to align with cap height */
 	}
 
-	&__value {
+	&__counter,
+	&__timeofday {
 		margin-left: auto;
-		font-size: 1.4em;
+		font-size: 1.3em;
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.05em;
 	}

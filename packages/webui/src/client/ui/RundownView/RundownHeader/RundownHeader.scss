@@ -30,6 +30,7 @@
 
 	&.active {
 		background: $color-header-on-air;
+		border-bottom: 1px solid #256b91;
 
 		.rundown-header__timers-segment-remaining,
 		.rundown-header__timers-onair-remaining,
@@ -78,8 +79,7 @@
 		.timing-clock {
 			color: #40b8fa;
 			font-size: 1.4em;
-
-			letter-spacing: 0 em;
+			letter-spacing: 0em;
 			transition: color 0.2s;
 
 			&.time-now {
@@ -115,6 +115,7 @@
 		}
 
 		.rundown-header__clocks-playlist-name {
+			//@extend .rundown-header__hoverable-label;
 			font-size: 0.65em;
 			display: flex;
 			flex-direction: row;
@@ -161,6 +162,7 @@
 				.rundown-header__clocks-diff__label {
 					@extend .rundown-header__hoverable-label;
 					font-size: 0.7em;
+					opacity: 0.6;
 					font-variation-settings:
 						'wdth' 25,
 						'wght' 500,
@@ -175,13 +177,13 @@
 						'YTLC' 548,
 						'YTDE' -203,
 						'YTUC' 712;
-					opacity: 0.6;
 				}
 
 				.rundown-header__clocks-diff__chip {
-					font-size: 1.2em;
+					font-size: 1.4em;
 					padding: 0em 0.3em;
 					border-radius: 999px;
+					letter-spacing: -0.02em;
 					font-variation-settings:
 						'wdth' 25,
 						'wght' 600,
@@ -196,12 +198,11 @@
 						'YTLC' 548,
 						'YTDE' -203,
 						'YTUC' 712;
-					letter-spacing: -0.02em;
 				}
 
 				&.rundown-header__clocks-diff--under {
 					.rundown-header__clocks-diff__chip {
-						background-color: #ff0; //$general-fast-color;
+						background-color: #ff0; // Should probably be changed to $general-fast-color;
 						color: #000;
 					}
 				}
@@ -225,6 +226,15 @@
 			.rundown-header__clocks-timers__timer {
 				white-space: nowrap;
 				line-height: 1.25;
+
+				.countdown__label {
+					@extend .rundown-header__hoverable-label;
+					font-size: 0.65em;
+				}
+
+				.countdown__counter {
+					color: #fff;
+				}
 
 				.rundown-header__clocks-timers__timer__sign {
 					display: inline-block;
@@ -393,6 +403,8 @@
 
 		.rundown-header__clocks-clock-group {
 			.rundown-header__clocks-playlist-name {
+				@extend .rundown-header__hoverable-label;
+				font-size: 0.65em;
 				max-height: 1.5em;
 			}
 		}
