@@ -41,12 +41,12 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const parts = timeStr.split(':')
 
 	const timerSign = diff >= 0 ? '+' : '-'
-	const isCountingDown = timer.mode?.type === 'countdown' && diff < 0 && isRunning
+	const isCountingDown = mode.type === 'countdown' && diff < 0 && isRunning
 
 	return (
 		<Countdown
 			label={timer.label}
-			className={classNames('rundown-header__clocks-timers__timer', {
+			className={classNames('rundown-header__clocks-timers__timer', 'countdown--counter', {
 				'rundown-header__clocks-timers__timer__countdown': mode.type === 'countdown',
 				'rundown-header__clocks-timers__timer__freeRun': mode.type === 'freeRun',
 				'rundown-header__clocks-timers__timer__isRunning': isRunning,

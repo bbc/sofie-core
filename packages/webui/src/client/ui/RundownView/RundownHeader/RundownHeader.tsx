@@ -37,7 +37,7 @@ interface IRundownHeaderProps {
 	layout: RundownLayoutRundownHeader | undefined
 }
 
-export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeaderProps): JSX.Element {
+export function RundownHeader({ playlist, studio, firstRundown, currentRundown }: IRundownHeaderProps): JSX.Element {
 	const { t } = useTranslation()
 	const [simplified, setSimplified] = useState(false)
 
@@ -82,10 +82,15 @@ export function RundownHeader({ playlist, studio, firstRundown }: IRundownHeader
 
 						<div className="rundown-header__clocks">
 							<RundownHeaderTimers tTimers={playlist.tTimers} />
-							<RundownHeaderTimingDisplay playlist={playlist} />
 							<div className="rundown-header__clocks-clock-group">
-								<TimeOfDay className="rundown-header__clocks-time-now" />
-								<span className="rundown-header__clocks-playlist-name">{playlist.name}</span>
+								<div className="rundown-header__clocks-top-row">
+									<RundownHeaderTimingDisplay playlist={playlist} />
+									<TimeOfDay className="rundown-header__clocks-time-now" />
+								</div>
+								<div className="rundown-header__clocks-playlist-name">
+									<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
+									<span className="playlist-name">{playlist.name}</span>
+								</div>
 							</div>
 						</div>
 
