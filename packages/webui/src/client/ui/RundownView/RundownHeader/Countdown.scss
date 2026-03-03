@@ -6,12 +6,13 @@
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.6em;
-	//color: rgba(255, 255, 255, 0.6);
 	transition: color 0.2s;
 
 	&__label {
 		@extend .rundown-header__hoverable-label;
 		white-space: nowrap;
+		position: relative;
+		top: -0.6em; /* Visually push the label up to align with cap height */
 	}
 
 	&__value {
@@ -19,5 +20,25 @@
 		font-size: 1.4em;
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.05em;
+	}
+
+	&--counter {
+		.countdown__label {
+			font-size: 0.65em;
+		}
+		.countdown__value {
+			color: #fff;
+			line-height: 1;
+		}
+	}
+
+	&--timeofday {
+		.countdown__label {
+			font-size: 0.7em;
+		}
+		.countdown__value {
+			color: $general-fast-color;
+			font-weight: 300;
+		}
 	}
 }
