@@ -15,7 +15,7 @@ export function Countdown({ label, time, className, children }: IProps): JSX.Ele
 
 	return (
 		<span className={classNames('countdown', className)}>
-			{label && <span className="countdown__label">{label}</span>}
+			<span className="countdown__label">{label}</span>
 			<span className={valueClassName}>
 				{time !== undefined ? <Moment interval={0} format="HH:mm:ss" date={time} /> : children}
 			</span>
