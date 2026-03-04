@@ -248,6 +248,15 @@
 			white-space: nowrap;
 			line-height: 1.25;
 
+			&.countdown--timeofday {
+				.rundown-header__clocks-timers__timer__part,
+				.rundown-header__clocks-timers__timer__sign,
+				.rundown-header__clocks-timers__timer__separator {
+					font-style: italic;
+					font-weight: 300;
+				}
+			}
+
 			.countdown__label {
 				@extend .rundown-header__hoverable-label;
 				font-size: 0.65em;
@@ -423,8 +432,6 @@
 
 		.rundown-header__clocks-clock-group {
 			.rundown-header__clocks-playlist-name {
-				@extend .rundown-header__hoverable-label;
-				font-size: 0.65em;
 				max-height: 1.5em;
 			}
 		}

@@ -50,7 +50,9 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 	return (
 		<Countdown
 			label={timer.label}
-			className={classNames('rundown-header__clocks-timers__timer', 'countdown--counter', {
+			className={classNames('rundown-header__clocks-timers__timer', {
+				'countdown--counter': timer.mode!.type !== 'timeOfDay',
+				'countdown--timeofday': timer.mode!.type === 'timeOfDay',
 				'rundown-header__clocks-timers__timer__countdown': timer.mode!.type === 'countdown',
 				'rundown-header__clocks-timers__timer__freeRun': timer.mode!.type === 'freeRun',
 				'rundown-header__clocks-timers__timer__isRunning': isRunning,

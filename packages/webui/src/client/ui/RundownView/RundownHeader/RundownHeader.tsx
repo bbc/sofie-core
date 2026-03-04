@@ -37,7 +37,13 @@ interface IRundownHeaderProps {
 	layout: RundownLayoutRundownHeader | undefined
 }
 
-export function RundownHeader({ playlist, studio, firstRundown, currentRundown }: IRundownHeaderProps): JSX.Element {
+export function RundownHeader({
+	playlist,
+	studio,
+	firstRundown,
+	currentRundown,
+	rundownCount,
+}: IRundownHeaderProps): JSX.Element {
 	const { t } = useTranslation()
 	const [simplified, setSimplified] = useState(false)
 
@@ -89,7 +95,7 @@ export function RundownHeader({ playlist, studio, firstRundown, currentRundown }
 								</div>
 								<div className="rundown-header__clocks-playlist-name">
 									<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
-									<span className="playlist-name">{playlist.name}</span>
+									{rundownCount > 1 && <span className="playlist-name">{playlist.name}</span>}
 								</div>
 							</div>
 						</div>
