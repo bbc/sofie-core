@@ -13,31 +13,31 @@
 		white-space: nowrap;
 		position: relative;
 		top: -0.6em; /* Visually push the label up to align with cap height */
+		margin-left: auto;
 	}
 
 	&__counter {
-		margin-left: auto;
 		font-size: 1.3em;
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.05em;
+		color: #fff;
+		line-height: 1;
 	}
 
 	&__timeofday {
-		margin-left: auto;
 		font-size: 1.3em;
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.05em;
 		font-style: italic;
 		font-weight: 300;
+		color: #fff;
+		line-height: 1;
 	}
 
+	/* Modifier classes — only used for label font-size overrides */
 	&--counter {
 		.countdown__label {
 			font-size: 0.65em;
-		}
-		.countdown__value {
-			color: #fff;
-			line-height: 1;
 		}
 	}
 
@@ -45,9 +45,8 @@
 		.countdown__label {
 			font-size: 0.7em;
 		}
-		.countdown__value {
+		.countdown__timeofday {
 			color: #40b8fa;
-			font-weight: 300;
 		}
 	}
 }

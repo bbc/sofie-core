@@ -101,7 +101,10 @@ export function RundownHeader({
 						</div>
 
 						<div className="rundown-header__right">
-							<div className="rundown-header__show-timers" onClick={() => setSimplified((s) => !s)}>
+							<div
+								className={`rundown-header__show-timers${simplified ? ' rundown-header__show-timers--simplified' : ''}`}
+								onClick={() => setSimplified((s) => !s)}
+							>
 								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
 								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
 								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />

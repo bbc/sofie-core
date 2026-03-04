@@ -22,7 +22,7 @@ export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDis
 				}`}
 			>
 				<span className="rundown-header__clocks-diff__label">{isUnder ? 'Under' : 'Over'}</span>
-				<span className="rundown-header__clocks-diff__chip">
+				<span className={`rundown-header__clocks-diff__chip--${isUnder ? 'under' : 'over'}`}>
 					{isUnder ? '−' : '+'}
 					{timeStr}
 				</span>

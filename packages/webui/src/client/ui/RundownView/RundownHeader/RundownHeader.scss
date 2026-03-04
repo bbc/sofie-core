@@ -221,14 +221,14 @@
 				}
 
 				&.rundown-header__clocks-diff--under {
-					.rundown-header__clocks-diff__chip {
+					.rundown-header__clocks-diff__chip--under {
 						background-color: #ff0; // Should probably be changed to $general-fast-color;
 						color: #000;
 					}
 				}
 
 				&.rundown-header__clocks-diff--over {
-					.rundown-header__clocks-diff__chip {
+					.rundown-header__clocks-diff__chip--over {
 						background-color: $general-late-color;
 						color: #000000;
 					}
@@ -359,15 +359,19 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
-		gap: 0.15em;
+		gap: 0.1em;
 		min-width: 7em;
 	}
 
 	.rundown-header__show-timers {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 1em;
-		cursor: pointer;
+		cursor: zoom-out;
+
+		&.rundown-header__show-timers--simplified {
+			cursor: zoom-in;
+		}
 	}
 
 	.rundown-header__show-timers-countdown {
@@ -472,7 +476,8 @@
 			color: #40b8fa;
 		}
 
-		.rundown-header__hoverable-label {
+		.rundown-header__hoverable-label,
+		.countdown__label {
 			opacity: 1;
 		}
 
