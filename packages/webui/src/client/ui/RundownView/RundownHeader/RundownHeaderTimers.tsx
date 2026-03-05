@@ -2,7 +2,7 @@ import React from 'react'
 import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown'
-import { calculateTTimerDiff } from '../../../lib/tTimerUtils'
+import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../../lib/tTimerUtils'
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime'
 import { Countdown } from './Countdown'
@@ -37,6 +37,7 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const isRunning = !!timer.state && !timer.state.paused
 
 	const diff = calculateTTimerDiff(timer, now)
+	const overUnder = calculateTTimerOverUnder(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const parts = timeStr.split(':')
 
@@ -79,6 +80,17 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 					)
 				})
 			})()}
+			{!!overUnder && (
+				<span
+					className={classNames('rundown-header__clocks-timers__timer__over-under', {
+						'rundown-header__clocks-timers__timer__over-under--over': overUnder > 0,
+						'rundown-header__clocks-timers__timer__over-under--under': overUnder < 0,
+					})}
+				>
+					{overUnder > 0 ? '+' : '-'}
+					{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
+				</span>
+			)}
 		</Countdown>
 	)
 }
