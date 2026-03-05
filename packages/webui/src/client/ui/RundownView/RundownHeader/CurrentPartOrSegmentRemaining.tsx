@@ -166,6 +166,7 @@ export const RundownHeaderPartRemaining: React.FC<IPartRemainingProps> = (props)
 		<Countdown
 			label={props.label}
 			className={ClassNames(props.className, Math.floor(displayTimecode / 1000) > 0 ? props.heavyClassName : undefined)}
+			ms={displayTimecode || 0}
 		>
 			{RundownUtils.formatDiffToTimecode(displayTimecode || 0, true, false, true, false, true, '', false, true)}
 		</Countdown>

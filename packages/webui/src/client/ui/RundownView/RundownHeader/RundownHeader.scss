@@ -324,13 +324,15 @@
 			.rundown-header__clocks-timers__timer__part {
 				color: #fff;
 				&.rundown-header__clocks-timers__timer__part--dimmed {
-					color: #888;
-					font-weight: 400;
+					opacity: 0.4;
 				}
 			}
 			.rundown-header__clocks-timers__timer__separator {
 				margin: 0 0.05em;
-				color: #888;
+				color: #fff;
+				&.rundown-header__clocks-timers__timer__separator--dimmed {
+					opacity: 0.4;
+				}
 			}
 
 			.rundown-header__clocks-timers__timer__over-under {
