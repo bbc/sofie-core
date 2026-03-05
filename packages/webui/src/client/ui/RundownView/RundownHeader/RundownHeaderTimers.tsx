@@ -20,7 +20,9 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	return (
 		<div className="rundown-header__clocks-timers">
 			{activeTimers.map((timer) => (
-				<SingleTimer key={timer.index} timer={timer} />
+				<div key={timer.index} className="rundown-header__clocks-timers__row">
+					<SingleTimer timer={timer} />
+				</div>
 			))}
 		</div>
 	)

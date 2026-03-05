@@ -266,12 +266,19 @@
 
 	.rundown-header__clocks-timers {
 		margin-left: auto;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: flex-end;
+		display: grid;
+		grid-template-columns: auto auto;
+		align-items: baseline;
+		justify-content: end;
+		column-gap: 0.6em;
+		row-gap: 0.15em;
+
+		.rundown-header__clocks-timers__row {
+			display: contents;
+		}
 
 		.rundown-header__clocks-timers__timer {
+			display: contents;
 			white-space: nowrap;
 			line-height: 1.25;
 
@@ -287,10 +294,18 @@
 			.countdown__label {
 				@extend .rundown-header__hoverable-label;
 				font-size: 0.65em;
+				margin-left: 0;
+				top: 0;
+				text-align: right;
+				white-space: nowrap;
 			}
 
 			.countdown__counter {
 				color: #fff;
+				margin-left: 0;
+				display: flex;
+				align-items: baseline;
+				gap: 0;
 			}
 
 			.countdown__timeofday {
