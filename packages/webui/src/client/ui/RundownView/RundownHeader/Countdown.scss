@@ -75,4 +75,18 @@
 			color: #40b8fa;
 		}
 	}
+
+	&__digit {
+		&--dimmed {
+			opacity: 0.4;
+		}
+	}
+
+	&__sep {
+		margin: 0 0.05em;
+
+		&--dimmed {
+			opacity: 0.4;
+		}
+	}
 }

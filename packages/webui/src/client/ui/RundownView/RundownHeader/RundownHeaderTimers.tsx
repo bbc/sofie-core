@@ -104,18 +104,29 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 			})}
 		>
 			<span className="rundown-header__clocks-timers__timer__sign">{timerSign}</span>
-			{parts.map((p, i) => (
-				<React.Fragment key={i}>
-					<span
-						className={classNames('rundown-header__clocks-timers__timer__part', {
-							'rundown-header__clocks-timers__timer__part--dimmed': Math.abs(diff) < [3600000, 60000, 1][i],
-						})}
-					>
-						{p}
-					</span>
-					{i < parts.length - 1 && <span className="rundown-header__clocks-timers__timer__separator">:</span>}
-				</React.Fragment>
-			))}
+			{parts.map((p, i) => {
+				const isDimmed = timer.mode!.type !== 'timeOfDay' && Math.abs(diff) < [3600000, 60000, 1][i]
+				return (
+					<React.Fragment key={i}>
+						<span
+							className={classNames('rundown-header__clocks-timers__timer__part', {
+								'rundown-header__clocks-timers__timer__part--dimmed': isDimmed,
+							})}
+						>
+							{p}
+						</span>
+						{i < parts.length - 1 && (
+							<span
+								className={classNames('rundown-header__clocks-timers__timer__separator', {
+									'rundown-header__clocks-timers__timer__separator--dimmed': isDimmed,
+								})}
+							>
+								:
+							</span>
+						)}
+					</React.Fragment>
+				)
+			})}
 			{!!overUnder && (
 				<span
 					className={classNames('rundown-header__clocks-timers__timer__over-under', {

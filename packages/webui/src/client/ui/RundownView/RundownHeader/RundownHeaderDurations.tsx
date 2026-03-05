@@ -10,15 +10,13 @@ export function RundownHeaderDurations({
 	playlist,
 	simplified,
 }: {
-	playlist: DBRundownPlaylist
-	simplified?: boolean
+	readonly playlist: DBRundownPlaylist
+	readonly simplified?: boolean
 }): JSX.Element | null {
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
-	const planned =
-		expectedDuration != null ? RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true) : null
 
 	const now = timingDurations.currentTime ?? Date.now()
 	const currentPartInstanceId = playlist.currentPartInfo?.partInstanceId
@@ -32,28 +30,25 @@ export function RundownHeaderDurations({
 		)
 		if (remaining != null) {
 			const elapsed =
-				playlist.startedPlayback != null
-					? now - playlist.startedPlayback
-					: (timingDurations.asDisplayedPlaylistDuration ?? 0)
+				playlist.startedPlayback == null
+					? (timingDurations.asDisplayedPlaylistDuration ?? 0)
+					: now - playlist.startedPlayback
 			estDuration = elapsed + remaining
 		}
 	}
 
-	const estimated =
-		estDuration != null ? RundownUtils.formatDiffToTimecode(estDuration, false, true, true, true, true) : null
-
-	if (!planned && !estimated) return null
+	if (expectedDuration == null && estDuration == null) return null
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
-			{planned ? (
-				<Countdown label={t('Plan. Dur')} className="rundown-header__show-timers-countdown">
-					{planned}
+			{expectedDuration != null ? (
+				<Countdown label={t('Plan. Dur')} className="rundown-header__show-timers-countdown" ms={expectedDuration}>
+					{RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true)}
 				</Countdown>
 			) : null}
-			{!simplified && estimated ? (
-				<Countdown label={t('Est. Dur')} className="rundown-header__show-timers-countdown">
-					{estimated}
+			{!simplified && estDuration != null ? (
+				<Countdown label={t('Est. Dur')} className="rundown-header__show-timers-countdown" ms={estDuration}>
+					{RundownUtils.formatDiffToTimecode(estDuration, false, true, true, true, true)}
 				</Countdown>
 			) : null}
 		</div>
