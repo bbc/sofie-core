@@ -68,7 +68,7 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 						})}
 					>
 						{overUnder > 0 ? '+' : '−'}
-						{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
+						{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, false, true, false, true)}
 					</span>
 				) : undefined
 			}
