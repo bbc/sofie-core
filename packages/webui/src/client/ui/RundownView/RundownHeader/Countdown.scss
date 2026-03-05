@@ -5,15 +5,17 @@
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
-	gap: 0.6em;
+	gap: 0.3em;
 	transition: color 0.2s;
 
 	&__label {
 		@extend %hoverable-label;
 		white-space: nowrap;
 		position: relative;
-		top: -0.6em; /* Visually push the label up to align with cap height */
+		top: -0.4em; /* Visually push the label up to align with cap height */
 		margin-left: auto;
+		text-align: right;
+		width: 100%;
 	}
 
 	&__counter {

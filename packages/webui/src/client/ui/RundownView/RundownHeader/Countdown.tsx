@@ -11,11 +11,12 @@ interface IProps {
 	className?: string
 	children?: React.ReactNode
 	ms?: number
+	postfix?: React.ReactNode
 }
 
-function DimmedValue({ value, ms }: { readonly value: string; readonly ms: number }): JSX.Element {
+function DimmedValue({ value, ms }: { readonly value: string; readonly ms?: number }): JSX.Element {
 	const parts = value.split(':')
-	const absDiff = Math.abs(ms)
+	const absDiff = ms !== undefined ? Math.abs(ms) : Infinity
 
 	return (
 		<>
@@ -45,19 +46,22 @@ function renderContent(time: number | undefined, ms: number | undefined, childre
 	if (time !== undefined) {
 		return <Moment interval={0} format="HH:mm:ss" date={time} />
 	}
-	if (ms !== undefined && typeof children === 'string') {
+	if (typeof children === 'string') {
 		return <DimmedValue value={children} ms={ms} />
 	}
 	return children
 }
 
-export function Countdown({ label, time, className, children, ms }: IProps): JSX.Element {
+export function Countdown({ label, time, className, children, ms, postfix }: IProps): JSX.Element {
 	const valueClassName = time === undefined ? 'countdown__counter' : 'countdown__timeofday'
 
 	return (
 		<span className={classNames('countdown', className)}>
 			{label && <span className="countdown__label">{label}</span>}
-			<span className={valueClassName}>{renderContent(time, ms, children)}</span>
+			<span className={valueClassName}>
+				{renderContent(time, ms, children)}
+				{postfix}
+			</span>
 		</span>
 	)
 }
