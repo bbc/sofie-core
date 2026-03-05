@@ -18,7 +18,7 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 		return null
 	}
 
-	const activeTimers = tTimers.filter((t) => t.mode)
+	const activeTimers = tTimers.filter((t) => t.mode).slice(0, 2)
 
 	return (
 		<div className="rundown-header__clocks-timers">
