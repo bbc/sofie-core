@@ -271,7 +271,7 @@
 		align-items: baseline;
 		justify-content: end;
 		column-gap: 0.6em;
-		row-gap: 0.15em;
+		row-gap: 0.1em;
 
 		.rundown-header__clocks-timers__row {
 			display: contents;
@@ -283,19 +283,16 @@
 			line-height: 1.25;
 
 			&.countdown--timeofday {
-				.rundown-header__clocks-timers__timer__part,
-				.rundown-header__clocks-timers__timer__sign,
-				.rundown-header__clocks-timers__timer__separator {
+				.countdown__digit,
+				.countdown__sep {
 					font-style: italic;
 					font-weight: 300;
+					color: #40b8fa;
 				}
 			}
-
 			.countdown__label {
 				@extend .rundown-header__hoverable-label;
-				font-size: 0.65em;
 				margin-left: 0;
-				top: 0;
 				text-align: right;
 				white-space: nowrap;
 			}
@@ -318,21 +315,15 @@
 				text-align: center;
 				font-size: 1.1em;
 				color: #fff;
-				margin-right: 0.0em;
+				margin-right: 0em;
 			}
 
-			.rundown-header__clocks-timers__timer__part {
+			.countdown__digit {
 				color: #fff;
-				&.rundown-header__clocks-timers__timer__part--dimmed {
-					opacity: 0.4;
-				}
 			}
-			.rundown-header__clocks-timers__timer__separator {
+			.countdown__sep {
 				margin: 0 0em;
 				color: #fff;
-				&.rundown-header__clocks-timers__timer__separator--dimmed {
-					opacity: 0.4;
-				}
 			}
 
 			.rundown-header__clocks-timers__timer__over-under {
@@ -396,7 +387,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.8em;
+		gap: 0.3em;
 		color: rgba(255, 255, 255, 0.6);
 		transition: color 0.2s;
 

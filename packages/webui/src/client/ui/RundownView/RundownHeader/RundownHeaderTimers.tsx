@@ -41,9 +41,6 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const diff = calculateTTimerDiff(timer, now)
 	const overUnder = calculateTTimerOverUnder(timer, now)
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
-	const parts = timeStr.split(':')
-
-	const timerSign = diff >= 0 ? '+' : '-'
 	const isCountingDown = mode.type === 'countdown' && diff < 0 && isRunning
 
 	return (
@@ -61,48 +58,22 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 				'rundown-header__clocks-timers__timer__isComplete':
 					mode.type === 'countdown' && timer.state !== null && diff <= 0,
 			})}
+			ms={mode.type === 'timeOfDay' ? undefined : diff}
+			postfix={
+				overUnder ? (
+					<span
+						className={classNames('rundown-header__clocks-timers__timer__over-under', {
+							'rundown-header__clocks-timers__timer__over-under--over': overUnder > 0,
+							'rundown-header__clocks-timers__timer__over-under--under': overUnder < 0,
+						})}
+					>
+						{overUnder > 0 ? '+' : '−'}
+						{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
+					</span>
+				) : undefined
+			}
 		>
-			<span className="rundown-header__clocks-timers__timer__sign">{timerSign}</span>
-			{(() => {
-				let cursor = 0
-				return parts.map((p, i) => {
-					const key = `${timer.index}-${cursor}-${p}`
-					cursor += p.length + 1
-					const isDimmed = mode.type !== 'timeOfDay' && Math.abs(diff) < [3600000, 60000, 1][i]
-
-					return (
-						<React.Fragment key={key}>
-							<span
-								className={classNames('rundown-header__clocks-timers__timer__part', {
-									'rundown-header__clocks-timers__timer__part--dimmed': isDimmed,
-								})}
-							>
-								{p}
-							</span>
-							{i < parts.length - 1 && (
-								<span
-									className={classNames('rundown-header__clocks-timers__timer__separator', {
-										'rundown-header__clocks-timers__timer__separator--dimmed': isDimmed,
-									})}
-								>
-									:
-								</span>
-							)}
-						</React.Fragment>
-					)
-				})
-			})()}
-			{!!overUnder && (
-				<span
-					className={classNames('rundown-header__clocks-timers__timer__over-under', {
-						'rundown-header__clocks-timers__timer__over-under--over': overUnder > 0,
-						'rundown-header__clocks-timers__timer__over-under--under': overUnder < 0,
-					})}
-				>
-					{overUnder > 0 ? '+' : '-'}
-					{RundownUtils.formatDiffToTimecode(Math.abs(overUnder), false, true, true, false, true)}
-				</span>
-			)}
+			{timeStr}
 		</Countdown>
 	)
 }
