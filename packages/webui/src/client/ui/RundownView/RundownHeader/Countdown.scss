@@ -17,10 +17,8 @@
 	}
 
 	&__counter {
-		font-variant-numeric: tabular-nums;
-		color: #fff;
+		color: #ffffff;
 		line-height: 1;
-
 		margin-left: auto;
 		font-size: 1.3em;
 		letter-spacing: 0em;
@@ -41,14 +39,10 @@
 	}
 
 	&__timeofday {
-		font-style: italic;
-		font-weight: 300;
 		color: #fff;
 		line-height: 1;
-
 		margin-left: auto;
 		font-size: 1.3em;
-		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.02em;
 		font-variation-settings:
 			'wdth' 70,
