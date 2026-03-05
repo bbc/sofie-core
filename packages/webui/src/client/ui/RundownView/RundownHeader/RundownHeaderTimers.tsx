@@ -33,7 +33,7 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 		{
 			index: 2,
 			label: 'T-timer mock 2',
-			mode: null,
+			mode: { type: 'freeRun' },
 			state: {
 				zeroTime: 1772700194670 + 45 * 60 * 1000,
 				duration: 0,
@@ -61,7 +61,9 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	return (
 		<div className="rundown-header__clocks-timers">
 			{activeTimers.map((timer) => (
-				<SingleTimer key={timer.index} timer={timer} />
+				<div key={timer.index} className="rundown-header__clocks-timers__row">
+					<SingleTimer timer={timer} />
+				</div>
 			))}
 		</div>
 	)
