@@ -88,7 +88,8 @@ export function SegmentContextMenu({
 		partInstance: DBPartInstance,
 		nextPartInstanceId: PartInstanceId | null,
 		currentPartInstanceId: PartInstanceId | null,
-		e: React.MouseEvent | React.TouchEvent
+		e: React.MouseEvent | React.TouchEvent,
+		take: boolean = false
 	) => {
 		const partInstanceAvailableForPlayout = partInstance.timings?.take !== undefined
 		const isCurrentPartInstance = partInstance._id === currentPartInstanceId
@@ -97,19 +98,11 @@ export function SegmentContextMenu({
 		onSetNext(
 			(partInstanceAvailableForPlayout && !isCurrentPartInstance) || isNextInstance ? partInstance : partInstance.part,
 			e,
-			offset || 0
+			offset || 0,
+			take
 		)
 	}
 
-	const onPlayFromHere = (
-		partInstance: DBPartInstance,
-		nextPartInstanceId: PartInstanceId | null,
-		e: React.MouseEvent | React.TouchEvent
-	) => {
-		const isNextInstance = partInstance._id === nextPartInstanceId
-		const offset = getTimePosition()
-		onSetNext(isNextInstance ? partInstance : partInstance.part, e, offset || 0, true)
-	}
 	const piece = contextMenuContext?.piece
 	const part = contextMenuContext?.part
 	const segment = contextMenuContext?.segment
@@ -215,7 +208,15 @@ export function SegmentContextMenu({
 										></span>
 									</MenuItem>
 									<MenuItem
-										onClick={(e) => onPlayFromHere(part.instance, playlist?.nextPartInfo?.partInstanceId ?? null, e)}
+										onClick={(e) =>
+											onSetAsNextFromHere(
+												part.instance,
+												playlist?.nextPartInfo?.partInstanceId ?? null,
+												playlist?.currentPartInfo?.partInstanceId ?? null,
+												e,
+												true
+											)
+										}
 										disabled={getIsPlayFromHereDisabled(true)}
 									>
 										<span>
