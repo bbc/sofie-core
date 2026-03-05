@@ -314,7 +314,7 @@
 				text-align: center;
 				font-size: 1.1em;
 				color: #fff;
-				margin-right: 0.3em;
+				margin-right: 0.0em;
 			}
 
 			.rundown-header__clocks-timers__timer__part {
@@ -324,7 +324,7 @@
 				}
 			}
 			.rundown-header__clocks-timers__timer__separator {
-				margin: 0 0.05em;
+				margin: 0 0em;
 				color: #fff;
 				&.rundown-header__clocks-timers__timer__separator--dimmed {
 					opacity: 0.4;
@@ -418,10 +418,10 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 1em;
-		cursor: zoom-out;
+		cursor: pointer;
 
 		&.rundown-header__show-timers--simplified {
-			cursor: zoom-in;
+			cursor: pointer;
 		}
 	}
 
