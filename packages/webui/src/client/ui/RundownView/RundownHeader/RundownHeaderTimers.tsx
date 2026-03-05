@@ -14,7 +14,7 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
-	const activeTimers = tTimers.filter((t) => t.mode)
+	const activeTimers = tTimers.filter((t) => t.mode).slice(0, 2)
 	if (activeTimers.length == 0) return null
 
 	return (
