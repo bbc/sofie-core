@@ -270,7 +270,7 @@
 		grid-template-columns: auto auto;
 		align-items: baseline;
 		justify-content: end;
-		column-gap: 0.6em;
+		column-gap: 0.3em;
 		row-gap: 0.1em;
 
 		.rundown-header__clocks-timers__row {
@@ -301,7 +301,7 @@
 				color: #fff;
 				margin-left: 0;
 				display: flex;
-				align-items: baseline;
+				align-items: center;
 				gap: 0;
 			}
 
@@ -328,19 +328,28 @@
 
 			.rundown-header__clocks-timers__timer__over-under {
 				display: inline-block;
-				vertical-align: middle;
-				font-size: 0.65em;
-				padding: 0.05em 0.35em;
+				line-height: -1em;
+				font-size: 0.75em;
+				padding: 0.05em 0.25em;
 				border-radius: 999px;
 				white-space: nowrap;
 				letter-spacing: -0.02em;
-				margin-left: 0.5em;
+				margin-left: 0.25em;
+				margin-top: 0em;
 				font-variant-numeric: tabular-nums;
 				font-variation-settings:
 					'wdth' 25,
-					'wght' 500,
+					'wght' 600,
 					'slnt' 0,
-					'opsz' 14;
+					'opsz' 14,
+					'XOPQ' 96,
+					'XTRA' 468,
+					'YOPQ' 79,
+					'YTAS' 750,
+					'YTFI' 738,
+					'YTLC' 548,
+					'YTDE' -203,
+					'YTUC' 712;
 
 				&.rundown-header__clocks-timers__timer__over-under--over {
 					background-color: $general-late-color;
