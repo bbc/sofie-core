@@ -13,7 +13,7 @@ import Navbar from 'react-bootstrap/Navbar'
 import { RundownContextMenu, RundownHeaderContextMenuTrigger, RundownHamburgerButton } from './RundownContextMenu'
 import { useTranslation } from 'react-i18next'
 import { TimeOfDay } from '../RundownTiming/TimeOfDay'
-import { RundownHeaderPartRemaining } from '../RundownHeader/CurrentPartOrSegmentRemaining'
+import { RundownHeaderPartRemaining, RundownHeaderSegmentBudget } from '../RundownHeader/CurrentPartOrSegmentRemaining'
 import { RundownHeaderTimers } from './RundownHeaderTimers'
 
 import { RundownHeaderTimingDisplay } from './RundownHeaderTimingDisplay'
@@ -66,14 +66,10 @@ export function RundownHeader({
 							<RundownHamburgerButton />
 							{playlist.currentPartInfo && (
 								<div className="rundown-header__onair">
-									<span className="rundown-header__timers-segment-remaining">
-										<span className="rundown-header__timers-segment-remaining__label">{t('Seg. Budg.')}</span>
-										<RundownHeaderPartRemaining
-											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-											heavyClassName="overtime"
-											preferSegmentTime={true}
-										/>
-									</span>
+									<RundownHeaderSegmentBudget
+										currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
+										label={t('Seg. Budg.')}
+									/>
 									<span className="rundown-header__timers-onair-remaining">
 										<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
 										<RundownHeaderPartRemaining

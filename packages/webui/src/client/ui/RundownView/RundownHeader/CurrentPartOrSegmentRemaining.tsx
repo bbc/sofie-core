@@ -125,7 +125,8 @@ function usePartRemaining(props: IPartRemainingProps) {
 
 	let displayTimecode = timingDurations.remainingTimeOnCurrentPart
 	if (props.preferSegmentTime) {
-		displayTimecode = timingDurations.remainingBudgetOnCurrentSegment ?? displayTimecode
+		if (timingDurations.remainingBudgetOnCurrentSegment === undefined) return null
+		displayTimecode = timingDurations.remainingBudgetOnCurrentSegment
 	}
 
 	if (displayTimecode === undefined) return null
@@ -166,9 +167,30 @@ export const RundownHeaderPartRemaining: React.FC<IPartRemainingProps> = (props)
 		<Countdown
 			label={props.label}
 			className={ClassNames(props.className, Math.floor(displayTimecode / 1000) > 0 ? props.heavyClassName : undefined)}
-			ms={displayTimecode || 0}
 		>
 			{RundownUtils.formatDiffToTimecode(displayTimecode || 0, true, false, true, false, true, '', false, true)}
 		</Countdown>
+	)
+}
+
+/**
+ * RundownHeader Segment Budget variant — renders inside a wrapper with a label, and handles hiding when value is missing or 0.
+ */
+export const RundownHeaderSegmentBudget: React.FC<{
+	currentPartInstanceId: PartInstanceId | null
+	label?: string
+}> = ({ currentPartInstanceId, label }) => {
+	const result = usePartRemaining({ currentPartInstanceId, preferSegmentTime: true })
+	if (!result) return null
+
+	const { displayTimecode } = result
+
+	return (
+		<span className="rundown-header__timers-segment-remaining">
+			<span className="rundown-header__timers-segment-remaining__label">{label}</span>
+			<Countdown className={ClassNames(Math.floor(displayTimecode / 1000) > 0 ? 'overtime' : undefined)}>
+				{RundownUtils.formatDiffToTimecode(displayTimecode || 0, true, false, true, false, true, '', false, true)}
+			</Countdown>
+		</span>
 	)
 }

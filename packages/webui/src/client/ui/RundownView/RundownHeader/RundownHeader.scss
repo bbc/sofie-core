@@ -391,10 +391,15 @@
 			@extend .rundown-header__hoverable-label;
 			opacity: 1;
 			position: relative;
-			top: -0.4em; /* Match alignment from Countdown.scss */
+			top: -0.2em; /* Match alignment from Countdown.scss */
 		}
 
-		.overtime {
+		.countdown__counter {
+			color: $general-countdown-to-next-color;
+		}
+
+		.overtime,
+		.overtime .countdown__counter {
 			color: $general-late-color;
 		}
 	}
