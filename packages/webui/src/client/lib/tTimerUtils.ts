@@ -43,7 +43,7 @@ export function calculateTTimerOverUnder(timer: RundownTTimer, now: number): num
 	const duration = timerStateToDuration(timer.state, now)
 	const estimateDuration = timerStateToDuration(timer.estimateState, now)
 
-	return duration - estimateDuration
+	return estimateDuration - duration
 }
 
 // TODO: remove this mock
