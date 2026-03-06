@@ -277,6 +277,14 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 	// Save remaining current part time for pauseTime calculation
 	const currentPartRemainingTime = totalAccumulator
 
+	// Add the next part to the beginning of playablePartsSlice
+	// getOrderedPartsAfterPlayhead excludes both current and next, so we need to prepend next
+	// This allows the loop to handle it normally, including detecting if it's an anchor
+	const nextPartInstance = playoutModel.nextPartInstance?.partInstance
+	if (nextPartInstance) {
+		playablePartsSlice.unshift(nextPartInstance.part)
+	}
+
 	// Single pass through parts
 	for (const part of playablePartsSlice) {
 		// Detect segment boundary
