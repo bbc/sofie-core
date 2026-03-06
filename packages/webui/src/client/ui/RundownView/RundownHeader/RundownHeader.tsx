@@ -97,14 +97,15 @@ export function RundownHeader({
 						</div>
 
 						<div className="rundown-header__right">
-							<div
+							<button
 								className={`rundown-header__show-timers${simplified ? ' rundown-header__show-timers--simplified' : ''}`}
+								type="button"
 								onClick={() => setSimplified((s) => !s)}
 							>
 								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
 								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
 								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
-							</div>
+							</button>
 							<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
 								<CoreIcon.NrkClose />
 							</NavLink>
