@@ -216,8 +216,7 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 
 	// Get ordered parts after playhead (excludes previous, current, and next)
 	// Use ignoreQuickLoop=true to count parts linearly without loop-back behavior
-	const orderedParts = playoutModel.getAllOrderedParts()
-	const playablePartsSlice = getOrderedPartsAfterPlayhead(context, playoutModel, orderedParts.length, true)
+	const playablePartsSlice = getOrderedPartsAfterPlayhead(context, playoutModel, Infinity, true)
 
 	if (playablePartsSlice.length === 0 && !currentPartInstance) {
 		// No parts to iterate through, clear estimates
