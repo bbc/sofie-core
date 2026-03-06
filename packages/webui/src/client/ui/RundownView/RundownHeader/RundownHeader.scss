@@ -388,11 +388,14 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.3em;
-		color: rgba(255, 255, 255, 0.6);
+		color: #fff;
 		transition: color 0.2s;
 
 		&__label {
 			@extend .rundown-header__hoverable-label;
+			opacity: 1;
+			position: relative;
+			top: -0.4em; /* Match alignment from Countdown.scss */
 		}
 
 		.overtime {
@@ -475,7 +478,7 @@
 	}
 
 	.rundown-header__timers-onair-remaining__label {
-		background-color: $general-live-color;
+		background-color: var(--general-live-color);
 		color: #ffffff;
 		padding: 0.03em 0.45em 0.02em 0.2em;
 		border-radius: 2px 999px 999px 2px;
