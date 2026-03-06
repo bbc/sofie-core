@@ -533,6 +533,10 @@ export async function queueNextSegment(
 	} else {
 		playoutModel.setQueuedSegment(null)
 	}
+
+	// Recalculate timer estimates as the queued segment affects what comes after next
+	recalculateTTimerEstimates(context, playoutModel)
+
 	span?.end()
 	return { queuedSegmentId: queuedSegment?.segment?._id ?? null }
 }
