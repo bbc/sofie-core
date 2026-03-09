@@ -5,7 +5,7 @@ import { useTracker } from '../../../lib/ReactMeteorData/ReactMeteorData'
 import { PartInstances, PieceInstances } from '../../../collections'
 import { VTContent } from '@sofie-automation/blueprints-integration'
 
-export function HeaderFreezeFrameIcon({ partInstanceId }: { partInstanceId: PartInstanceId }) {
+export function HeaderFreezeFrameIcon({ partInstanceId }: { partInstanceId: PartInstanceId }): JSX.Element | null {
 	const timingDurations = useTiming(TimingTickResolution.Synced, TimingDataResolution.Synced)
 
 	const freezeFrameIcon = useTracker(
