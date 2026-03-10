@@ -14,44 +14,6 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
-	tTimers = [
-		{
-			index: 1,
-			label: 'T-timer mock 1',
-			mode: { type: 'countdown' },
-			state: {
-				zeroTime: 1772700194670 + 5 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-			estimateState: {
-				zeroTime: 1772700194670 + 7 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-		{
-			index: 2,
-			label: 'T-timer mock 2',
-			mode: { type: 'freeRun' },
-			state: {
-				zeroTime: 1772700194670 + 45 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-		{
-			index: 3,
-			label: 'T-timer mock 3',
-			mode: null,
-			state: {
-				zeroTime: 1772700194670 - 15 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-	] as unknown as [RundownTTimer, RundownTTimer, RundownTTimer]
-
 	if (!tTimers?.length) {
 		return null
 	}
