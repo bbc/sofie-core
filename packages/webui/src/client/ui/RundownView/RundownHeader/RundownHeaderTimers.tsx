@@ -14,18 +14,23 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
+	// Start of mock data for testing - replace with real data when available
+	const today = new Date()
+	today.setHours(12, 0, 0, 0)
+	const baseTime = today.getTime()
+
 	tTimers = [
 		{
 			index: 1,
 			label: 'T-timer mock 1',
-			mode: { type: 'countdown' },
+			mode: { type: 'timeOfDay' },
 			state: {
-				zeroTime: 1772700194670 + 5 * 60 * 1000,
-				duration: 0,
+				zeroTime: baseTime,
+				duration: 1000,
 				paused: false,
 			},
 			estimateState: {
-				zeroTime: 1772700194670 + 7 * 60 * 1000,
+				zeroTime: baseTime + 7 * 60 * 1000,
 				duration: 0,
 				paused: false,
 			},
@@ -35,7 +40,7 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 			label: 'T-timer mock 2',
 			mode: { type: 'freeRun' },
 			state: {
-				zeroTime: 1772700194670 + 45 * 60 * 1000,
+				zeroTime: baseTime + 45 * 60 * 1000,
 				duration: 0,
 				paused: false,
 			},
@@ -45,12 +50,13 @@ export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 			label: 'T-timer mock 3',
 			mode: null,
 			state: {
-				zeroTime: 1772700194670 - 15 * 60 * 1000,
+				zeroTime: baseTime - 15 * 60 * 1000,
 				duration: 0,
 				paused: false,
 			},
 		},
 	] as unknown as [RundownTTimer, RundownTTimer, RundownTTimer]
+	// End of mock data for testing - remove when real data is available
 
 	if (!tTimers?.length) {
 		return null
