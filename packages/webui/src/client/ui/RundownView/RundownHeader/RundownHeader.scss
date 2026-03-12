@@ -282,14 +282,6 @@
 			white-space: nowrap;
 			line-height: 1.25;
 
-			&.countdown--timeofday {
-				.countdown__digit,
-				.countdown__sep {
-					font-style: italic;
-					font-weight: 300;
-					color: #40b8fa;
-				}
-			}
 			.countdown__label {
 				@extend .rundown-header__hoverable-label;
 				margin-left: 0;
