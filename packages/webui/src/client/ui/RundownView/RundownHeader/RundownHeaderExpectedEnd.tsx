@@ -8,8 +8,8 @@ export function RundownHeaderExpectedEnd({
 	playlist,
 	simplified,
 }: {
-	playlist: DBRundownPlaylist
-	simplified?: boolean
+	readonly playlist: DBRundownPlaylist
+	readonly simplified?: boolean
 }): JSX.Element | null {
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
