@@ -47,7 +47,7 @@ export function RundownHeaderDurations({
 				</Countdown>
 			) : null}
 			{!simplified && estDuration != null ? (
-				<Countdown label={t('Est. Dur')} className="rundown-header__show-timers-countdown" ms={estDuration}>
+				<Countdown label={t('Rem. Dur')} className="rundown-header__show-timers-countdown" ms={estDuration}>
 					{RundownUtils.formatDiffToTimecode(estDuration, false, true, true, true, true)}
 				</Countdown>
 			) : null}
