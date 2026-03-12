@@ -19,7 +19,7 @@ export function RundownHeaderExpectedEnd({
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
 	const estEnd =
-		timingDurations.remainingPlaylistDuration != null && timingDurations.remainingPlaylistDuration > 0
+		timingDurations.remainingPlaylistDuration !== undefined
 			? now + timingDurations.remainingPlaylistDuration
 			: null
 
