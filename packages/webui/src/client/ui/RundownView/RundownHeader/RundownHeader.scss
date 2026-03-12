@@ -43,7 +43,15 @@
 		}
 
 		&.rehearsal {
-			background: $color-header-rehearsal;
+			background-color: #06090d;
+			background-image: repeating-linear-gradient(
+				-45deg,
+				rgba(255, 255, 255, 0.08) 0,
+				rgba(255, 255, 255, 0.08) 18px,
+				transparent 18px,
+				transparent 36px
+			);
+			border-bottom: 1px solid #256b91;
 		}
 	}
 
@@ -60,6 +68,18 @@
 		display: flex;
 		align-items: center;
 		flex: 1;
+	}
+
+	.rundown-header__not-on-air-label {
+		@extend %hoverable-label;
+		opacity: 1;
+		color: #fff;
+		font-size: 0.8em;
+		letter-spacing: 0.02em;
+
+		margin-left: 0.075em;
+		margin-right: 0.25em;
+		white-space: nowrap;
 	}
 
 	.rundown-header__right {
@@ -188,7 +208,7 @@
 
 		.rundown-header__clocks-diff__label {
 			@extend .rundown-header__hoverable-label;
-			font-size: 0.7em;
+			font-size: 0.75em;
 			opacity: 0.6;
 			font-variation-settings:
 				'wdth' 25,
