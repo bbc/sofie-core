@@ -90,8 +90,11 @@ export function RundownHeader({
 									<TimeOfDay className="rundown-header__clocks-time-now" />
 								</div>
 								<div className="rundown-header__clocks-playlist-name">
-									<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
-									{rundownCount > 1 && <span className="playlist-name">{playlist.name}</span>}
+									{rundownCount > 1 ? (
+										<span className="playlist-name">{playlist.name}</span>
+									) : (
+										<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
+									)}
 								</div>
 							</div>
 						</div>
