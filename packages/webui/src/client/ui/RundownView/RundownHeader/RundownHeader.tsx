@@ -98,7 +98,7 @@ export function RundownHeader({
 									{rundownCount > 1 ? (
 										<span className="playlist-name">{playlist.name}</span>
 									) : (
-										<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
+										<span className="rundown-name">{currentRundown?.name}</span>
 									)}
 								</div>
 							</div>
