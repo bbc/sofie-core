@@ -68,6 +68,12 @@
 		display: flex;
 		align-items: center;
 		flex: 1;
+
+		.rundown-header__left-context-menu-wrapper {
+			display: flex;
+			align-items: center;
+			height: 100%;
+		}
 	}
 
 	.rundown-header__not-on-air-label {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ClassNames from 'classnames'
@@ -46,10 +46,19 @@ export function RundownHeader({
 }: IRundownHeaderProps): JSX.Element {
 	const { t } = useTranslation()
 	const [simplified, setSimplified] = useState(false)
+	const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+	const onMenuClose = useCallback(() => setIsMenuOpen(false), [setIsMenuOpen])
 
 	return (
 		<>
-			<RundownContextMenu playlist={playlist} studio={studio} firstRundown={firstRundown} />
+			<RundownContextMenu
+				playlist={playlist}
+				studio={studio}
+				firstRundown={firstRundown}
+				onShow={() => setIsMenuOpen(true)}
+				onHide={() => setIsMenuOpen(false)}
+			/>
 			<Navbar
 				data-bs-theme="dark"
 				fixed="top"
@@ -60,34 +69,37 @@ export function RundownHeader({
 					rehearsal: playlist.rehearsal,
 				})}
 			>
-				<RundownHeaderContextMenuTrigger>
-					<div className="rundown-header__content">
-						<div className="rundown-header__left">
-							<RundownHamburgerButton />
-							{playlist.activationId && playlist.rehearsal && (
-								<span className="rundown-header__not-on-air-label">{t('REHEARSAL')}</span>
-							)}
-							{!playlist.activationId && <span className="rundown-header__not-on-air-label
-							">{t('DEACTIVATED')}</span>}
-							{playlist.currentPartInfo && (
-								<div className="rundown-header__onair">
-									<RundownHeaderSegmentBudget
-										currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-										label={t('Seg. Budg.')}
-									/>
-									<span className="rundown-header__timers-onair-remaining">
-										<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
-										<RundownHeaderPartRemaining
+				<div className="rundown-header__content">
+					<div className="rundown-header__left">
+						<RundownHamburgerButton isOpen={isMenuOpen} onClose={onMenuClose} />
+						<RundownHeaderContextMenuTrigger>
+							<div className="rundown-header__left-context-menu-wrapper">
+								{playlist.activationId && playlist.rehearsal && (
+									<span className="rundown-header__not-on-air-label">{t('REHEARSAL')}</span>
+								)}
+								{!playlist.activationId && <span className="rundown-header__not-on-air-label">{t('DEACTIVATED')}</span>}
+								{playlist.currentPartInfo && (
+									<div className="rundown-header__onair">
+										<RundownHeaderSegmentBudget
 											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-											heavyClassName="overtime"
+											label={t('Seg. Budg.')}
 										/>
-										<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
-									</span>
-								</div>
-							)}
-							<RundownHeaderTimers tTimers={playlist.tTimers} />
-						</div>
+										<span className="rundown-header__timers-onair-remaining">
+											<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
+											<RundownHeaderPartRemaining
+												currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
+												heavyClassName="overtime"
+											/>
+											<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
+										</span>
+									</div>
+								)}
+								<RundownHeaderTimers tTimers={playlist.tTimers} />
+							</div>
+						</RundownHeaderContextMenuTrigger>
+					</div>
 
+					<RundownHeaderContextMenuTrigger>
 						<div className="rundown-header__clocks">
 							<div className="rundown-header__clocks-clock-group">
 								<div className="rundown-header__clocks-top-row">
@@ -98,28 +110,28 @@ export function RundownHeader({
 									{rundownCount > 1 ? (
 										<span className="playlist-name">{playlist.name}</span>
 									) : (
-										<span className="rundown-name">{currentRundown?.name}</span>
+										<span className="rundown-name">{(currentRundown ?? firstRundown)?.name}</span>
 									)}
 								</div>
 							</div>
 						</div>
+					</RundownHeaderContextMenuTrigger>
 
-						<div className="rundown-header__right">
-							<button
-								className={`rundown-header__show-timers${simplified ? ' rundown-header__show-timers--simplified' : ''}`}
-								type="button"
-								onClick={() => setSimplified((s) => !s)}
-							>
-								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
-								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
-								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
-							</button>
-							<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
-								<FontAwesomeIcon icon="close" size="xl" />
-							</NavLink>
-						</div>
+					<div className="rundown-header__right">
+						<button
+							className={`rundown-header__show-timers${simplified ? ' rundown-header__show-timers--simplified' : ''}`}
+							type="button"
+							onClick={() => setSimplified((s) => !s)}
+						>
+							<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
+							<RundownHeaderDurations playlist={playlist} simplified={simplified} />
+							<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
+						</button>
+						<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
+							<FontAwesomeIcon icon="close" size="xl" />
+						</NavLink>
 					</div>
-				</RundownHeaderContextMenuTrigger>
+				</div>
 			</Navbar>
 		</>
 	)
