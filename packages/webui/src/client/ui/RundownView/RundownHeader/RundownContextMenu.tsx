@@ -16,7 +16,7 @@ import {
 import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { UserPermissionsContext } from '../../UserPermissions'
 import * as RundownResolver from '../../../lib/RundownResolver'
-import { checkRundownTimes, useRundownPlaylistOperations } from '../RundownHeader_old/useRundownPlaylistOperations'
+import { checkRundownTimes, useRundownPlaylistOperations } from './useRundownPlaylistOperations.js'
 import { reloadRundownPlaylistClick } from '../RundownNotifier'
 
 export const RUNDOWN_CONTEXT_MENU_ID = 'rundown-context-menu'
