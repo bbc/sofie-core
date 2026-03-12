@@ -3,7 +3,6 @@ import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTi
 import { useTranslation } from 'react-i18next'
 import { Countdown } from './Countdown'
 import { useTiming } from '../RundownTiming/withTiming'
-import { getRemainingDurationFromCurrentPart } from './remainingDuration'
 
 export function RundownHeaderExpectedEnd({
 	playlist,
@@ -18,18 +17,11 @@ export function RundownHeaderExpectedEnd({
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
 	const now = timingDurations.currentTime ?? Date.now()
 
-	let estEnd: number | null = null
-	const currentPartInstanceId = playlist.currentPartInfo?.partInstanceId
-	if (currentPartInstanceId && timingDurations.partStartsAt && timingDurations.partExpectedDurations) {
-		const remaining = getRemainingDurationFromCurrentPart(
-			currentPartInstanceId,
-			timingDurations.partStartsAt,
-			timingDurations.partExpectedDurations
-		)
-		if (remaining != null && remaining > 0) {
-			estEnd = now + remaining
-		}
-	}
+	// Use remainingPlaylistDuration which includes current part's remaining time
+	const estEnd =
+		timingDurations.remainingPlaylistDuration != null && timingDurations.remainingPlaylistDuration > 0
+			? now + timingDurations.remainingPlaylistDuration
+			: null
 
 	if (!expectedEnd && !estEnd) return null
 
