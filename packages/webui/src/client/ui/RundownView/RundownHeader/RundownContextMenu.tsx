@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import Escape from '../../../lib/Escape'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { Rundown, getRundownNrcsName } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { ContextMenu, MenuItem, ContextMenuTrigger } from '@jstarpl/react-contextmenu'
+import { ContextMenu, MenuItem, ContextMenuTrigger, hideMenu, showMenu } from '@jstarpl/react-contextmenu'
 import { contextMenuHoldToDisplayTime, useRundownViewEventBusListener } from '../../../lib/lib'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBars } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons'
 import {
 	ActivateRundownPlaylistEvent,
 	DeactivateRundownPlaylistEvent,
@@ -25,6 +25,8 @@ interface RundownContextMenuProps {
 	playlist: DBRundownPlaylist
 	studio: UIStudio
 	firstRundown: Rundown | undefined
+	onShow?: () => void
+	onHide?: () => void
 }
 
 /**
@@ -32,7 +34,13 @@ interface RundownContextMenuProps {
  * trigger area. It also registers event bus listeners for playlist operations (activate,
  * deactivate, take, reset, etc.) since these are tightly coupled to the menu actions.
  */
-export function RundownContextMenu({ playlist, studio, firstRundown }: Readonly<RundownContextMenuProps>): JSX.Element {
+export function RundownContextMenu({
+	playlist,
+	studio,
+	firstRundown,
+	onShow,
+	onHide,
+}: Readonly<RundownContextMenuProps>): JSX.Element {
 	const { t } = useTranslation()
 	const userPermissions = useContext(UserPermissionsContext)
 	const operations = useRundownPlaylistOperations()
@@ -77,7 +85,7 @@ export function RundownContextMenu({ playlist, studio, firstRundown }: Readonly<
 
 	return (
 		<Escape to="document">
-			<ContextMenu id={RUNDOWN_CONTEXT_MENU_ID}>
+			<ContextMenu id={RUNDOWN_CONTEXT_MENU_ID} onShow={onShow} onHide={onHide}>
 				<div className="react-contextmenu-label">{playlist && playlist.name}</div>
 				{userPermissions.studio ? (
 					<React.Fragment>
@@ -147,33 +155,43 @@ export function RundownHeaderContextMenuTrigger({ children }: Readonly<RundownCo
 /**
  * A hamburger button that opens the context menu on left-click.
  */
-export function RundownHamburgerButton(): JSX.Element {
+export function RundownHamburgerButton({
+	isOpen,
+	onClose,
+}: Readonly<{ isOpen?: boolean; onClose: () => void }>): JSX.Element {
 	const { t } = useTranslation()
 	const buttonRef = useRef<HTMLButtonElement | null>(null)
 
-	const handleClick = useCallback((e: React.MouseEvent) => {
-		e.preventDefault()
-		e.stopPropagation()
+	const handleClick = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
 
-		// Dispatch a custom contextmenu event
-		if (buttonRef.current) {
-			const rect = buttonRef.current.getBoundingClientRect()
-			const event = new MouseEvent('contextmenu', {
-				view: globalThis as unknown as Window,
-				bubbles: true,
-				cancelable: true,
-				clientX: rect.left,
-				clientY: rect.bottom + 5,
-				button: 2,
-				buttons: 2,
-			})
-			buttonRef.current.dispatchEvent(event)
-		}
-	}, [])
+			if (isOpen) {
+				hideMenu({ id: RUNDOWN_CONTEXT_MENU_ID })
+				onClose()
+				return
+			}
+
+			if (buttonRef.current) {
+				const rect = buttonRef.current.getBoundingClientRect()
+				showMenu({
+					position: { x: rect.left, y: rect.bottom + 5 },
+					id: RUNDOWN_CONTEXT_MENU_ID,
+				})
+			}
+		},
+		[isOpen]
+	)
 
 	return (
-		<button ref={buttonRef} className="rundown-header__menu-btn" onClick={handleClick} title={t('Menu')}>
-			<FontAwesomeIcon icon={faBars} />
+		<button
+			ref={buttonRef}
+			className={`rundown-header__menu-btn ${isOpen ? 'active' : ''}`}
+			onClick={handleClick}
+			title={t('Menu')}
+		>
+			<FontAwesomeIcon icon={isOpen ? faTimes : faBars} />
 		</button>
 	)
 }
