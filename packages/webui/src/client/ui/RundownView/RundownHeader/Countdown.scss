@@ -12,7 +12,7 @@
 		@extend %hoverable-label;
 		white-space: nowrap;
 		position: relative;
-		top: -0.3em; /* Visually place the label to vertically align */
+		align-self: center;
 		margin-left: auto;
 		text-align: right;
 		width: 100%;
