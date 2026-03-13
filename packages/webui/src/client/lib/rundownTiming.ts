@@ -473,7 +473,7 @@ export class RundownTimingCalculator {
 						// partExpectedDuration is affected by displayGroups, and if it hasn't played yet then it shouldn't
 						// add any duration to the "remaining" time pool
 						remainingRundownDuration +=
-							calculatePartInstanceExpectedDurationWithTransition(partInstance) || 0 
+							calculatePartInstanceExpectedDurationWithTransition(partInstance) || 0
 						// item is onAir right now, and it's is currently shorter than expectedDuration
 					} else if (
 						lastStartedPlayback &&

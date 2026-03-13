@@ -1,4 +1,5 @@
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { useTiming } from '../RundownTiming/withTiming'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming'
 import { RundownUtils } from '../../../lib/rundown'
@@ -10,7 +11,15 @@ export interface IRundownHeaderTimingDisplayProps {
 export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDisplayProps): JSX.Element | null {
 	const timingDurations = useTiming()
 
-	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
+	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations)
+
+	if (overUnderClock === undefined) return null
+
+	// Hide diff in untimed mode before first timing take
+	if (PlaylistTiming.isPlaylistTimingNone(playlist.timing) && !playlist.startedPlayback) {
+		return null
+	}
+
 	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(overUnderClock), false, false, true, true, true)
 	const isUnder = overUnderClock <= 0
 
