@@ -379,6 +379,11 @@
 		height: 100%;
 		font-size: 1.2em;
 		transition: color 0.2s;
+
+		&:disabled,
+		&.disabled {
+			cursor: default;
+		}
 	}
 
 	.rundown-header__onair {
@@ -560,7 +565,7 @@
 	}
 
 	&:hover {
-		.rundown-header__menu-btn {
+		.rundown-header__menu-btn:not(:disabled) {
 			color: #40b8fa;
 		}
 

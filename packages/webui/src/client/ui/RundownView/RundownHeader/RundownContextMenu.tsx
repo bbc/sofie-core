@@ -169,8 +169,10 @@ export function RundownHeaderContextMenuTrigger({ children }: Readonly<RundownCo
  */
 export function RundownHamburgerButton({
 	isOpen,
+	disabled,
 	onClose,
-}: Readonly<{ isOpen?: boolean; onClose: () => void }>): JSX.Element {
+	onOpen,
+}: Readonly<{ isOpen?: boolean; disabled?: boolean; onClose: () => void; onOpen?: () => void }>): JSX.Element {
 	const { t } = useTranslation()
 	const buttonRef = useRef<HTMLButtonElement | null>(null)
 
@@ -178,6 +180,8 @@ export function RundownHamburgerButton({
 		(e: React.MouseEvent) => {
 			e.preventDefault()
 			e.stopPropagation()
+
+			if (disabled) return
 
 			if (isOpen) {
 				hideMenu({ id: RUNDOWN_CONTEXT_MENU_ID })
@@ -191,15 +195,17 @@ export function RundownHamburgerButton({
 					position: { x: rect.left, y: rect.bottom + 5 },
 					id: RUNDOWN_CONTEXT_MENU_ID,
 				})
+				if (onOpen) onOpen()
 			}
 		},
-		[isOpen, onClose]
+		[isOpen, disabled, onClose, onOpen]
 	)
 
 	return (
 		<button
 			ref={buttonRef}
-			className={`rundown-header__menu-btn ${isOpen ? 'active' : ''}`}
+			className={`rundown-header__menu-btn ${isOpen ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+			disabled={disabled}
 			onMouseDown={handleToggle}
 			onClick={(e) => {
 				// Prevent double trigger if browser emits both mousedown and click
