@@ -162,7 +162,7 @@ export function RundownHamburgerButton({
 	const { t } = useTranslation()
 	const buttonRef = useRef<HTMLButtonElement | null>(null)
 
-	const handleClick = useCallback(
+	const handleToggle = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault()
 			e.stopPropagation()
@@ -181,14 +181,19 @@ export function RundownHamburgerButton({
 				})
 			}
 		},
-		[isOpen]
+		[isOpen, onClose]
 	)
 
 	return (
 		<button
 			ref={buttonRef}
 			className={`rundown-header__menu-btn ${isOpen ? 'active' : ''}`}
-			onClick={handleClick}
+			onMouseDown={handleToggle}
+			onClick={(e) => {
+				// Prevent double trigger if browser emits both mousedown and click
+				e.preventDefault()
+				e.stopPropagation()
+			}}
 			title={t('Menu')}
 		>
 			<FontAwesomeIcon icon={isOpen ? faTimes : faBars} />
