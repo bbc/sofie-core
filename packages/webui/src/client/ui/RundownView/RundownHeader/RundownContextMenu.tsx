@@ -200,7 +200,7 @@ export function RundownHamburgerButton({
 			}}
 			title={t('Menu')}
 		>
-			<FontAwesomeIcon icon={isOpen ? faTimes : faBars} />
+			<FontAwesomeIcon icon={isOpen ? faTimes : faBars} fixedWidth />
 		</button>
 	)
 }
