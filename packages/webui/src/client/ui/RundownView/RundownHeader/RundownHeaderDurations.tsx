@@ -18,13 +18,9 @@ export function RundownHeaderDurations({
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
-	let estDuration = timingDurations.remainingPlaylistDuration
+	const estDuration = timingDurations.remainingPlaylistDuration
 
-	if (!estDuration && PlaylistTiming.isPlaylistTimingNone(playlist.timing)) {
-		estDuration = Object.values<number>(timingDurations.partExpectedDurations || {}).reduce((a, b) => a + b, 0)
-	}
-
-	if (!expectedDuration && !estDuration) return null
+	if (expectedDuration == null && estDuration == null) return null
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
