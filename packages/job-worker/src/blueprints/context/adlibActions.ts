@@ -117,7 +117,7 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		private readonly partAndPieceInstanceService: PartAndPieceInstanceActionService
 	) {
 		super(contextInfo, _context, showStyle, watchedPackages)
-		this.#tTimersService = TTimersService.withPlayoutModel(_playoutModel)
+		this.#tTimersService = TTimersService.withPlayoutModel(_playoutModel, _context)
 	}
 
 	async getUpcomingParts(limit: number = 5): Promise<ReadonlyDeep<IBlueprintPart[]>> {

@@ -43,7 +43,15 @@
 		}
 
 		&.rehearsal {
-			background: $color-header-rehearsal;
+			background-color: #06090d;
+			background-image: repeating-linear-gradient(
+				-45deg,
+				rgba(255, 255, 255, 0.08) 0,
+				rgba(255, 255, 255, 0.08) 18px,
+				transparent 18px,
+				transparent 36px
+			);
+			border-bottom: 1px solid #256b91;
 		}
 	}
 
@@ -59,14 +67,20 @@
 	.rundown-header__left {
 		display: flex;
 		align-items: center;
-		flex: 1;
+		flex: none;
+
+		.rundown-header__left-context-menu-wrapper {
+			display: flex;
+			align-items: center;
+			height: 100%;
+		}
 	}
 
 	.rundown-header__right {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		flex: 1;
+		flex: none;
 		gap: 1em;
 	}
 
@@ -75,6 +89,7 @@
 		align-items: center;
 		justify-content: center;
 		flex: 1;
+		min-width: 0;
 		.timing-clock {
 			color: #40b8fa;
 			font-size: 1.4em;
@@ -136,8 +151,11 @@
 			max-width: 40em;
 			color: #fff;
 			max-height: 0;
+			padding-top: 0.5em;
 			overflow: hidden;
-			transition: max-height 0.2s ease;
+			transition:
+				max-height 0.2s ease,
+				padding 0.2s ease;
 
 			.rundown-name,
 			.playlist-name {
@@ -188,8 +206,9 @@
 
 		.rundown-header__clocks-diff__label {
 			@extend .rundown-header__hoverable-label;
-			font-size: 0.7em;
-			opacity: 0.6;
+			font-size: 0.75em;
+			//opacity: 0.6;
+			color: #999;
 			font-variation-settings:
 				'wdth' 25,
 				'wght' 500,
@@ -306,14 +325,6 @@
 				margin-right: 0em;
 			}
 
-			.countdown__digit {
-				color: #fff;
-			}
-			.countdown__sep {
-				margin: 0 0em;
-				color: #fff;
-			}
-
 			.rundown-header__clocks-timers__timer__over-under {
 				display: inline-block;
 				line-height: -1em;
@@ -365,6 +376,11 @@
 		height: 100%;
 		font-size: 1.2em;
 		transition: color 0.2s;
+
+		&:disabled,
+		&.disabled {
+			cursor: default;
+		}
 	}
 
 	.rundown-header__onair {
@@ -391,7 +407,8 @@
 
 		&__label {
 			@extend .rundown-header__hoverable-label;
-			opacity: 1;
+			//opacity: 1;
+			color: #fff;
 			position: relative;
 			top: -0.16em; /* Match alignment from Countdown.scss */
 		}
@@ -429,15 +446,20 @@
 		text-align: inherit;
 
 		&:hover {
-			text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+			text-shadow: 0 0 5px rgba(255, 255, 255, 1);
 		}
 
 		&:focus-visible {
-			text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+			text-shadow: 0 0 6px rgba(255, 255, 255, 1);
 		}
 
-		&.rundown-header__show-timers--simplified {
-			cursor: pointer;
+		&.rundown-header__show-timers--disabled {
+			cursor: default;
+
+			&:hover,
+			&:focus-visible {
+				text-shadow: none;
+			}
 		}
 	}
 
@@ -486,21 +508,24 @@
 		cursor: pointer;
 		color: #40b8fa;
 		opacity: 0;
+		flex-shrink: 0;
 		transition: opacity 0.2s;
 	}
 
 	&:hover {
-		.rundown-header__menu-btn {
+		.rundown-header__menu-btn:not(:disabled) {
 			color: #40b8fa;
 		}
 
 		.rundown-header__hoverable-label,
 		.countdown__label {
 			opacity: 1;
+			color: #fff;
 		}
 
 		.rundown-header__timers-onair-remaining__label {
-			opacity: 1;
+			//opacity: 1;
+			color: #fff;
 		}
 
 		.rundown-header__close-btn {
@@ -509,9 +534,8 @@
 
 		.rundown-header__clocks-clock-group {
 			.rundown-header__clocks-playlist-name {
-				max-height: 1.5em;
+				max-height: 2em;
 			}
 		}
-
 	}
 }

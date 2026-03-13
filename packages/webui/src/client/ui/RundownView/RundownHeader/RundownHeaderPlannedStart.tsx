@@ -23,13 +23,15 @@ export function RundownHeaderPlannedStart({
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
+			{!simplified && expectedStart !== undefined ? (
 			<Countdown label={t('Plan. Start')} time={expectedStart} className="rundown-header__show-timers-countdown" />
-			{!simplified &&
-				(playlist.startedPlayback ? (
+			) : null}
+			{
+				(playlist.startedPlayback !== undefined ? (
 					<Countdown label={t('Started')} time={playlist.startedPlayback} />
 				) : (
-					<Countdown  label={t('Plan. Start')}>
-						{diff >= 0 && '-'}
+					<Countdown label={t('Start In')}>
+						{diff >= 0 && '+'}
 						{RundownUtils.formatDiffToTimecode(Math.abs(diff), false, false, true, true, true)}
 					</Countdown>
 				))}

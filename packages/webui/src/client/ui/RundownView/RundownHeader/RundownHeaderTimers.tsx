@@ -14,50 +14,6 @@ interface IProps {
 export const RundownHeaderTimers: React.FC<IProps> = ({ tTimers }) => {
 	useTiming()
 
-	// Start of mock data for testing - replace with real data when available
-	const today = new Date()
-	today.setHours(12, 0, 0, 0)
-	const baseTime = today.getTime()
-
-	tTimers = [
-		{
-			index: 1,
-			label: 'T-timer mock 1',
-			mode: { type: 'timeOfDay' },
-			state: {
-				zeroTime: baseTime,
-				duration: 1000,
-				paused: false,
-			},
-			estimateState: {
-				zeroTime: baseTime + 7 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-		{
-			index: 2,
-			label: 'T-timer mock 2',
-			mode: { type: 'freeRun' },
-			state: {
-				zeroTime: baseTime + 45 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-		{
-			index: 3,
-			label: 'T-timer mock 3',
-			mode: null,
-			state: {
-				zeroTime: baseTime - 15 * 60 * 1000,
-				duration: 0,
-				paused: false,
-			},
-		},
-	] as unknown as [RundownTTimer, RundownTTimer, RundownTTimer]
-	// End of mock data for testing - remove when real data is available
-
 	if (!tTimers?.length) {
 		return null
 	}
@@ -79,7 +35,7 @@ interface ISingleTimerProps {
 	timer: RundownTTimer
 }
 
-function SingleTimer({ timer }: ISingleTimerProps) {
+function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const now = getCurrentTime()
 
 	const isRunning = !!timer.state && !timer.state.paused
@@ -92,7 +48,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 	return (
 		<Countdown
 			label={timer.label}
-			className={classNames('rundown-header__clocks-timers__timer', {
+			className={classNames('rundown-header__clocks-timers__timer', 'rundown-header__show-timers-countdown', {
 				'countdown--counter': timer.mode!.type !== 'timeOfDay',
 				'countdown--timeofday': timer.mode!.type === 'timeOfDay',
 				'rundown-header__clocks-timers__timer__countdown': timer.mode!.type === 'countdown',
@@ -104,7 +60,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 				'rundown-header__clocks-timers__timer__isComplete':
 					timer.mode!.type === 'countdown' && timer.state !== null && diff <= 0,
 			})}
-			ms={timer.mode!.type !== 'timeOfDay' ? diff : undefined}
+			ms={timer.mode!.type === 'timeOfDay' ? undefined : diff}
 			postfix={
 				overUnder ? (
 					<span

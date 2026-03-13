@@ -33,6 +33,7 @@ import {
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { convertNoteToNotification } from '../notifications/util.js'
 import { PersistentPlayoutStateStore } from '../blueprints/context/services/PersistantStateStore.js'
+import { recalculateTTimerEstimates } from './tTimers.js'
 
 /**
  * Set or clear the nexted part, from a given PartInstance, or SelectNextPartResult
@@ -95,6 +96,9 @@ export async function setNextPart(
 	playoutModel.updateQuickLoopState()
 
 	await cleanupOrphanedItems(context, playoutModel)
+
+	// Recalculate T-Timer estimates based on the new next part
+	recalculateTTimerEstimates(context, playoutModel)
 
 	if (span) span.end()
 }
@@ -525,6 +529,10 @@ export async function queueNextSegment(
 	} else {
 		playoutModel.setQueuedSegment(null)
 	}
+
+	// Recalculate timer estimates as the queued segment affects what comes after next
+	recalculateTTimerEstimates(context, playoutModel)
+
 	span?.end()
 	return { queuedSegmentId: queuedSegment?.segment?._id ?? null }
 }

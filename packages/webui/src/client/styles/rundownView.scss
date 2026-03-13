@@ -210,15 +210,15 @@ body.no-overflow {
 	right: 0;
 
 	background: linear-gradient(
-			-45deg,
+			45deg,
 			$color-status-fatal 33%,
 			transparent 33%,
 			transparent 66%,
 			$color-status-fatal 66%
-		),
-		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
-		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%),
-		linear-gradient(-45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%);
+		), // Top border
+		linear-gradient(45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%), // Bottom border
+		linear-gradient(45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%), // Left border
+		linear-gradient(45deg, $color-status-fatal 33%, transparent 33%, transparent 66%, $color-status-fatal 66%); // Right border
 	background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
 	background-size:
 		30px 8px,
