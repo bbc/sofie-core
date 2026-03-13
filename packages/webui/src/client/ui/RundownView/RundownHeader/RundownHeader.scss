@@ -67,7 +67,7 @@
 	.rundown-header__left {
 		display: flex;
 		align-items: center;
-		flex: 1;
+		flex: none;
 
 		.rundown-header__left-context-menu-wrapper {
 			display: flex;
@@ -92,7 +92,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		flex: 1;
+		flex: none;
 		gap: 1em;
 	}
 
@@ -101,6 +101,7 @@
 		align-items: center;
 		justify-content: center;
 		flex: 1;
+		min-width: 0;
 		.timing-clock {
 			color: #40b8fa;
 			font-size: 1.4em;
@@ -566,6 +567,7 @@
 		cursor: pointer;
 		color: #40b8fa;
 		opacity: 0;
+		flex-shrink: 0;
 		transition: opacity 0.2s;
 	}
 
@@ -586,12 +588,14 @@
 		.rundown-header__close-btn {
 			opacity: 1;
 		}
+		.rundown-header__close-btn {
+			// Opacity is already 1
+		}
 
 		.rundown-header__clocks-clock-group {
 			.rundown-header__clocks-playlist-name {
 				max-height: 1.5em;
 			}
 		}
-
 	}
 }
