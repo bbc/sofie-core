@@ -35,7 +35,7 @@ interface ISingleTimerProps {
 	timer: RundownTTimer
 }
 
-function SingleTimer({ timer }: ISingleTimerProps) {
+function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 	const now = getCurrentTime()
 
 	const isRunning = !!timer.state && !timer.state.paused
@@ -48,7 +48,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 	return (
 		<Countdown
 			label={timer.label}
-			className={classNames('rundown-header__clocks-timers__timer', {
+			className={classNames('rundown-header__clocks-timers__timer', 'rundown-header__show-timers-countdown', {
 				'countdown--counter': timer.mode!.type !== 'timeOfDay',
 				'countdown--timeofday': timer.mode!.type === 'timeOfDay',
 				'rundown-header__clocks-timers__timer__countdown': timer.mode!.type === 'countdown',
@@ -60,7 +60,7 @@ function SingleTimer({ timer }: ISingleTimerProps) {
 				'rundown-header__clocks-timers__timer__isComplete':
 					timer.mode!.type === 'countdown' && timer.state !== null && diff <= 0,
 			})}
-			ms={timer.mode!.type !== 'timeOfDay' ? diff : undefined}
+			ms={timer.mode!.type === 'timeOfDay' ? undefined : diff}
 			postfix={
 				overUnder ? (
 					<span
