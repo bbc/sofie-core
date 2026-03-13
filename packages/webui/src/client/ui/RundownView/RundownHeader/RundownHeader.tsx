@@ -50,6 +50,7 @@ export function RundownHeader({
 	const timingDurations = useTiming()
 	const [simplified, setSimplified] = useState(false)
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
+	const [isContextMenuOpen, setIsContextMenuOpen] = useState(false)
 
 	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
@@ -84,8 +85,11 @@ export function RundownHeader({
 				playlist={playlist}
 				studio={studio}
 				firstRundown={firstRundown}
-				onShow={() => setIsMenuOpen(true)}
-				onHide={() => setIsMenuOpen(false)}
+				onShow={() => setIsContextMenuOpen(true)}
+				onHide={() => {
+					setIsMenuOpen(false)
+					setIsContextMenuOpen(false)
+				}}
 			/>
 			<Navbar
 				data-bs-theme="dark"
@@ -99,7 +103,12 @@ export function RundownHeader({
 			>
 				<div className="rundown-header__content">
 					<div className="rundown-header__left">
-						<RundownHamburgerButton isOpen={isMenuOpen} onClose={onMenuClose} />
+						<RundownHamburgerButton
+							isOpen={isMenuOpen}
+							disabled={isContextMenuOpen && !isMenuOpen}
+							onOpen={() => setIsMenuOpen(true)}
+							onClose={onMenuClose}
+						/>
 						<RundownHeaderContextMenuTrigger>
 							<div className="rundown-header__left-context-menu-wrapper">
 								{playlist.currentPartInfo && (
