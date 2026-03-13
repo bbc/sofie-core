@@ -100,16 +100,21 @@ export function RundownContextMenu({
 								<MenuItem onClick={operations.activateRehearsal}>{t('Activate (Rehearsal)')}</MenuItem>
 							)
 						) : (
-							<MenuItem onClick={operations.activate}>{t('Activate (On-Air)')}</MenuItem>
+							<MenuItem onClick={operations.activate}>{t('Activate On Air')}</MenuItem>
 						)}
 						{rundownTimesInfo.willShortlyStart && !playlist.activationId && (
-							<MenuItem onClick={operations.activate}>{t('Activate (On-Air)')}</MenuItem>
+							<MenuItem onClick={operations.activate}>{t('Activate On Air')}</MenuItem>
 						)}
-						{playlist.activationId ? <MenuItem onClick={operations.deactivate}>{t('Deactivate')}</MenuItem> : null}
+						{playlist.activationId ? <MenuItem onClick={operations.deactivate}>{t('Deactivate Studio')}</MenuItem> : null}
 						{studio.settings.allowAdlibTestingSegment && playlist.activationId ? (
 							<MenuItem onClick={operations.activateAdlibTesting}>{t('AdLib Testing')}</MenuItem>
 						) : null}
-						{playlist.activationId ? <MenuItem onClick={operations.take}>{t('Take')}</MenuItem> : null}
+						{playlist.activationId ? (
+							<>
+								<MenuItem divider />
+								<MenuItem onClick={operations.take}>{t('Take')}</MenuItem>
+							</>
+						) : null}
 						{studio.settings.allowHold && playlist.activationId ? (
 							<MenuItem onClick={operations.hold}>{t('Hold')}</MenuItem>
 						) : null}
@@ -117,7 +122,10 @@ export function RundownContextMenu({
 							<MenuItem onClick={operations.clearQuickLoop}>{t('Clear QuickLoop')}</MenuItem>
 						) : null}
 						{!(playlist.activationId && !playlist.rehearsal && !studio.settings.allowRundownResetOnAir) ? (
-							<MenuItem onClick={operations.resetRundown}>{t('Reset Rundown')}</MenuItem>
+							<>
+								<MenuItem divider />
+								<MenuItem onClick={operations.resetRundown}>{t('Reset Rundown')}</MenuItem>
+							</>
 						) : null}
 						<MenuItem onClick={operations.reloadRundownPlaylist}>
 							{t('Reload {{nrcsName}} Data', {
@@ -126,7 +134,7 @@ export function RundownContextMenu({
 						</MenuItem>
 						<MenuItem onClick={operations.takeRundownSnapshot}>{t('Store Snapshot')}</MenuItem>
 						<MenuItem divider />
-						<MenuItem onClick={() => history.push('/')}>{t('Close')}</MenuItem>
+						<MenuItem onClick={() => history.push('/')}>{t('Close Rundown')}</MenuItem>
 					</React.Fragment>
 				) : (
 					<React.Fragment>
