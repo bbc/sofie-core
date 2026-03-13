@@ -463,8 +463,13 @@
 			text-shadow: 0 0 12px rgba(255, 255, 255, 1);
 		}
 
-		&.rundown-header__show-timers--simplified {
-			cursor: pointer;
+		&.rundown-header__show-timers--disabled {
+			cursor: default;
+
+			&:hover,
+			&:focus-visible {
+				text-shadow: none;
+			}
 		}
 	}
 
@@ -533,9 +538,6 @@
 
 		.rundown-header__close-btn {
 			opacity: 1;
-		}
-		.rundown-header__close-btn {
-			// Opacity is already 1
 		}
 
 		.rundown-header__clocks-clock-group {

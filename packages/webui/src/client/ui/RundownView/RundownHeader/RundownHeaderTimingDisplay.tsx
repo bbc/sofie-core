@@ -1,5 +1,6 @@
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
+import { useTranslation } from 'react-i18next'
 import { useTiming } from '../RundownTiming/withTiming'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming'
 import { RundownUtils } from '../../../lib/rundown'
@@ -9,6 +10,7 @@ export interface IRundownHeaderTimingDisplayProps {
 }
 
 export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDisplayProps): JSX.Element | null {
+	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
 	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations)
@@ -30,7 +32,7 @@ export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDis
 					isUnder ? 'rundown-header__clocks-diff--under' : 'rundown-header__clocks-diff--over'
 				}`}
 			>
-				<span className="rundown-header__clocks-diff__label">{isUnder ? 'Under' : 'Over'}</span>
+				<span className="rundown-header__clocks-diff__label">{isUnder ? t('Under') : t('Over')}</span>
 				<span className={`rundown-header__clocks-diff__chip--${isUnder ? 'under' : 'over'}`}>
 					{isUnder ? '−' : '+'}
 					{timeStr}
