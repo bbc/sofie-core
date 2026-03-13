@@ -24,12 +24,12 @@ export function RundownHeaderDurations({
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
-			{expectedDuration ? (
+			{!simplified && expectedDuration ? (
 				<Countdown label={t('Plan. Dur')} className="rundown-header__show-timers-countdown" ms={expectedDuration}>
 					{RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true)}
 				</Countdown>
 			) : null}
-			{!simplified && estDuration !== undefined ? (
+			{estDuration !== undefined ? (
 				<Countdown label={t('Rem. Dur')} className="rundown-header__show-timers-countdown" ms={estDuration}>
 					{RundownUtils.formatDiffToTimecode(estDuration, false, true, true, true, true)}
 				</Countdown>
