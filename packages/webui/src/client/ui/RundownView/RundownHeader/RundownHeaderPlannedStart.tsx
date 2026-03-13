@@ -23,8 +23,10 @@ export function RundownHeaderPlannedStart({
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
+			{!simplified && expectedStart !== undefined ? (
 			<Countdown label={t('Plan. Start')} time={expectedStart} className="rundown-header__show-timers-countdown" />
-			{!simplified &&
+			) : null}
+			{
 				(playlist.startedPlayback !== undefined ? (
 					<Countdown label={t('Started')} time={playlist.startedPlayback} />
 				) : (
