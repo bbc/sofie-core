@@ -16,6 +16,8 @@ import { TimeOfDay } from '../RundownTiming/TimeOfDay'
 import { RundownHeaderPartRemaining, RundownHeaderSegmentBudget } from '../RundownHeader/CurrentPartOrSegmentRemaining'
 import { RundownHeaderTimers } from './RundownHeaderTimers'
 
+import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
+import { useTiming } from '../RundownTiming/withTiming'
 import { RundownHeaderTimingDisplay } from './RundownHeaderTimingDisplay'
 import { RundownHeaderPlannedStart } from './RundownHeaderPlannedStart'
 import { RundownHeaderDurations } from './RundownHeaderDurations'
@@ -45,8 +47,34 @@ export function RundownHeader({
 	rundownCount,
 }: IRundownHeaderProps): JSX.Element {
 	const { t } = useTranslation()
+	const timingDurations = useTiming()
 	const [simplified, setSimplified] = useState(false)
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
+	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
+	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
+
+	const hasSimple = !!(expectedStart || expectedDuration || expectedEnd)
+
+	// Fallback duration for untimed playlists
+	const fallbackDuration = PlaylistTiming.isPlaylistTimingNone(playlist.timing)
+		? Object.values<number>(timingDurations.partExpectedDurations || {}).reduce((a, b) => a + b, 0)
+		: undefined
+
+	const hasAdvanced = !!(
+		playlist.startedPlayback ||
+		expectedStart ||
+		timingDurations.remainingPlaylistDuration ||
+		fallbackDuration
+	)
+
+	const canToggle = simplified ? hasAdvanced : hasSimple
+	const toggleSimplified = useCallback(() => {
+		if (canToggle) {
+			setSimplified((s) => !s)
+		}
+	}, [canToggle])
 
 	const onMenuClose = useCallback(() => setIsMenuOpen(false), [setIsMenuOpen])
 
@@ -119,9 +147,12 @@ export function RundownHeader({
 
 					<div className="rundown-header__right">
 						<button
-							className={`rundown-header__show-timers${simplified ? ' rundown-header__show-timers--simplified' : ''}`}
+							className={ClassNames('rundown-header__show-timers', {
+								'rundown-header__show-timers--simplified': simplified,
+								'rundown-header__show-timers--disabled': !canToggle,
+							})}
 							type="button"
-							onClick={() => setSimplified((s) => !s)}
+							onClick={toggleSimplified}
 						>
 							<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
 							<RundownHeaderDurations playlist={playlist} simplified={simplified} />
