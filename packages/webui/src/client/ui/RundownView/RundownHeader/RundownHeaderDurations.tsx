@@ -28,7 +28,7 @@ export function RundownHeaderDurations({
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
-			{expectedDuration !== undefined ? (
+			{expectedDuration ? (
 				<Countdown label={t('Plan. Dur')} className="rundown-header__show-timers-countdown" ms={expectedDuration}>
 					{RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true)}
 				</Countdown>
