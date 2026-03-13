@@ -207,7 +207,8 @@
 		.rundown-header__clocks-diff__label {
 			@extend .rundown-header__hoverable-label;
 			font-size: 0.75em;
-			opacity: 0.6;
+			//opacity: 0.6;
+			color: #999;
 			font-variation-settings:
 				'wdth' 25,
 				'wght' 500,
@@ -406,7 +407,8 @@
 
 		&__label {
 			@extend .rundown-header__hoverable-label;
-			opacity: 1;
+			//opacity: 1;
+			color: #fff;
 			position: relative;
 			top: -0.16em; /* Match alignment from Countdown.scss */
 		}
@@ -444,11 +446,11 @@
 		text-align: inherit;
 
 		&:hover {
-			text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+			text-shadow: 0 0 5px rgba(255, 255, 255, 1);
 		}
 
 		&:focus-visible {
-			text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+			text-shadow: 0 0 6px rgba(255, 255, 255, 1);
 		}
 
 		&.rundown-header__show-timers--disabled {
@@ -518,10 +520,12 @@
 		.rundown-header__hoverable-label,
 		.countdown__label {
 			opacity: 1;
+			color: #fff;
 		}
 
 		.rundown-header__timers-onair-remaining__label {
-			opacity: 1;
+			//opacity: 1;
+			color: #fff;
 		}
 
 		.rundown-header__close-btn {

@@ -71,7 +71,7 @@
 
 	&--timeofday {
 		.countdown__label {
-			font-size: 0.7em;
+			font-size: 0.65em;
 		}
 		.countdown__timeofday {
 			color: #40b8fa;
@@ -81,6 +81,7 @@
 	&__digit {
 		&--dimmed {
 			opacity: 0.4;
+			color: #ffffff;
 		}
 	}
 
@@ -89,6 +90,7 @@
 
 		&--dimmed {
 			opacity: 0.4;
+			color: #ffffff;
 		}
 	}
 }
