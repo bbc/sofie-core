@@ -20,7 +20,7 @@ export function RundownHeaderDurations({
 	// Use remainingPlaylistDuration which includes current part's remaining time
 	const estDuration = timingDurations.remainingPlaylistDuration
 
-	if (expectedDuration == null && estDuration == null) return null
+	if (expectedDuration == undefined && estDuration == undefined) return null
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">

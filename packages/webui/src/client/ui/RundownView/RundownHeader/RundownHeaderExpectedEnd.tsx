@@ -23,7 +23,7 @@ export function RundownHeaderExpectedEnd({
 			? now + timingDurations.remainingPlaylistDuration
 			: null
 
-	if (!expectedEnd && !estEnd) return null
+	if (expectedEnd === undefined && estEnd === null) return null
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
