@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef } from 'react'
+import { useHistory } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Escape from '../../../lib/Escape'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -42,6 +43,7 @@ export function RundownContextMenu({
 	onHide,
 }: Readonly<RundownContextMenuProps>): JSX.Element {
 	const { t } = useTranslation()
+	const history = useHistory()
 	const userPermissions = useContext(UserPermissionsContext)
 	const operations = useRundownPlaylistOperations()
 
@@ -123,6 +125,8 @@ export function RundownContextMenu({
 							})}
 						</MenuItem>
 						<MenuItem onClick={operations.takeRundownSnapshot}>{t('Store Snapshot')}</MenuItem>
+						<MenuItem divider />
+						<MenuItem onClick={() => history.push('/')}>{t('Close')}</MenuItem>
 					</React.Fragment>
 				) : (
 					<React.Fragment>
