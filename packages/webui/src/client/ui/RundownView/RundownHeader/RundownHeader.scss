@@ -76,18 +76,6 @@
 		}
 	}
 
-	.rundown-header__not-on-air-label {
-		@extend %hoverable-label;
-		opacity: 1;
-		color: #fff;
-		font-size: 0.8em;
-		letter-spacing: 0.02em;
-
-		margin-left: 0.075em;
-		margin-right: 0.25em;
-		white-space: nowrap;
-	}
-
 	.rundown-header__right {
 		display: flex;
 		align-items: center;

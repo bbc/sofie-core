@@ -102,10 +102,6 @@ export function RundownHeader({
 						<RundownHamburgerButton isOpen={isMenuOpen} onClose={onMenuClose} />
 						<RundownHeaderContextMenuTrigger>
 							<div className="rundown-header__left-context-menu-wrapper">
-								{playlist.activationId && playlist.rehearsal && (
-									<span className="rundown-header__not-on-air-label">{t('REHEARSAL')}</span>
-								)}
-								{!playlist.activationId && <span className="rundown-header__not-on-air-label">{t('DEACTIVATED')}</span>}
 								{playlist.currentPartInfo && (
 									<div className="rundown-header__onair">
 										<RundownHeaderSegmentBudget
