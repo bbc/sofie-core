@@ -29,7 +29,7 @@ export function RundownHeaderPlannedStart({
 					<Countdown label={t('Started')} time={playlist.startedPlayback} />
 				) : (
 					<Countdown label={t('Start In')}>
-						{diff >= 0 && '-'}
+						{diff >= 0 && '+'}
 						{RundownUtils.formatDiffToTimecode(Math.abs(diff), false, false, true, true, true)}
 					</Countdown>
 				))}
