@@ -101,15 +101,15 @@ export function RundownHeader({
 					rehearsal: playlist.rehearsal,
 				})}
 			>
-				<div className="rundown-header__content">
-					<div className="rundown-header__left">
-						<RundownHamburgerButton
-							isOpen={isMenuOpen}
-							disabled={isContextMenuOpen && !isMenuOpen}
-							onOpen={() => setIsMenuOpen(true)}
-							onClose={onMenuClose}
-						/>
-						<RundownHeaderContextMenuTrigger>
+				<RundownHeaderContextMenuTrigger>
+					<div className="rundown-header__content">
+						<div className="rundown-header__left">
+							<RundownHamburgerButton
+								isOpen={isMenuOpen}
+								disabled={isContextMenuOpen && !isMenuOpen}
+								onOpen={() => setIsMenuOpen(true)}
+								onClose={onMenuClose}
+							/>
 							<div className="rundown-header__left-context-menu-wrapper">
 								{playlist.currentPartInfo && (
 									<div className="rundown-header__onair">
@@ -129,10 +129,8 @@ export function RundownHeader({
 								)}
 								<RundownHeaderTimers tTimers={playlist.tTimers} />
 							</div>
-						</RundownHeaderContextMenuTrigger>
-					</div>
+						</div>
 
-					<RundownHeaderContextMenuTrigger>
 						<div className="rundown-header__clocks">
 							<div className="rundown-header__clocks-clock-group">
 								<div className="rundown-header__clocks-top-row">
@@ -148,26 +146,26 @@ export function RundownHeader({
 								</div>
 							</div>
 						</div>
-					</RundownHeaderContextMenuTrigger>
 
-					<div className="rundown-header__right">
-						<button
-							className={ClassNames('rundown-header__show-timers', {
-								'rundown-header__show-timers--simplified': simplified,
-								'rundown-header__show-timers--disabled': !canToggle,
-							})}
-							type="button"
-							onClick={toggleSimplified}
-						>
-							<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
-							<RundownHeaderDurations playlist={playlist} simplified={simplified} />
-							<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
-						</button>
-						<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
-							<CoreIcon.NrkClose />
-						</NavLink>
+						<div className="rundown-header__right">
+							<button
+								className={ClassNames('rundown-header__show-timers', {
+									'rundown-header__show-timers--simplified': simplified,
+									'rundown-header__show-timers--disabled': !canToggle,
+								})}
+								type="button"
+								onClick={toggleSimplified}
+							>
+								<RundownHeaderPlannedStart playlist={playlist} simplified={simplified} />
+								<RundownHeaderDurations playlist={playlist} simplified={simplified} />
+								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
+							</button>
+							<NavLink to="/" title={t('Exit')} className="rundown-header__close-btn">
+								<CoreIcon.NrkClose />
+							</NavLink>
+						</div>
 					</div>
-				</div>
+				</RundownHeaderContextMenuTrigger>
 			</Navbar>
 		</>
 	)
