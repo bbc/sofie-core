@@ -8,7 +8,9 @@
 	padding: 0;
 	width: 100%;
 	border-bottom: 1px solid #333;
-	transition: background-color 0.5s;
+	transition:
+		background-color 0.5s,
+		border-bottom-color 0.5s;
 	font-family: 'Roboto Flex', 'Roboto', sans-serif;
 	font-feature-settings:
 		'liga' 0,
@@ -25,11 +27,11 @@
 
 	// State-based background colors
 	&.not-active {
-		background: $color-header-inactive;
+		background-color: $color-header-inactive;
 	}
 
 	&.active {
-		background: $color-header-on-air;
+		background-color: $color-header-on-air;
 		border-bottom: 1px solid #256b91;
 
 		.rundown-header__timers-segment-remaining,
@@ -67,7 +69,8 @@
 	.rundown-header__left {
 		display: flex;
 		align-items: center;
-		flex: none;
+		flex: 1 1 0px;
+		min-width: 0;
 
 		.rundown-header__left-context-menu-wrapper {
 			display: flex;
@@ -80,7 +83,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		flex: none;
+		flex: 1 1 0px;
+		min-width: 0;
 		gap: 1em;
 	}
 
@@ -88,7 +92,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex: 1;
+		flex: none;
 		min-width: 0;
 		.timing-clock {
 			color: #40b8fa;
@@ -151,7 +155,7 @@
 			max-width: 40em;
 			color: #fff;
 			max-height: 0;
-			padding-top: 0.5em;
+			padding-top: 0.55em;
 			overflow: hidden;
 			transition:
 				max-height 0.2s ease,
