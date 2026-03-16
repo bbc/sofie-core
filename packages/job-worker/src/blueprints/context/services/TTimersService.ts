@@ -2,7 +2,11 @@ import type {
 	IPlaylistTTimer,
 	IPlaylistTTimerState,
 } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
-import type { RundownTTimer, RundownTTimerIndex,TimerState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type {
+	RundownTTimer,
+	RundownTTimerIndex,
+	TimerState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { assertNever, literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'

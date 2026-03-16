@@ -15,10 +15,7 @@ export interface IRundownContext extends IShowStyleContext {
 export interface IRundownUserContext extends IUserNotesContext, IRundownContext {}
 
 export interface IRundownActivationContext
-	extends IRundownContext,
-		IExecuteTSRActionsContext,
-		IDataStoreMethods,
-		ITTimersContext {
+	extends IRundownContext, IExecuteTSRActionsContext, IDataStoreMethods, ITTimersContext {
 	/** Info about the RundownPlaylist state before the Activation / Deactivation event */
 	readonly previousState: IRundownActivationContextState
 	readonly currentState: IRundownActivationContextState

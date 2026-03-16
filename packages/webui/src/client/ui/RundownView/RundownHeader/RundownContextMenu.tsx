@@ -105,7 +105,9 @@ export function RundownContextMenu({
 						{rundownTimesInfo.willShortlyStart && !playlist.activationId && (
 							<MenuItem onClick={operations.activate}>{t('Activate On Air')}</MenuItem>
 						)}
-						{playlist.activationId ? <MenuItem onClick={operations.deactivate}>{t('Deactivate Studio')}</MenuItem> : null}
+						{playlist.activationId ? (
+							<MenuItem onClick={operations.deactivate}>{t('Deactivate Studio')}</MenuItem>
+						) : null}
 						{studio.settings.allowAdlibTestingSegment && playlist.activationId ? (
 							<MenuItem onClick={operations.activateAdlibTesting}>{t('AdLib Testing')}</MenuItem>
 						) : null}
