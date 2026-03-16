@@ -37,7 +37,13 @@ export {
 
 export type StudioLight = Omit<DBStudio, 'mappingsWithOverrides' | 'blueprintConfigWithOverrides'>
 
-/** A set of available layer groups in a given installation */
+/*
+ Note to developers (2026-03-16):
+ As decided in [RFC #1450](https://github.com/Sofie-Automation/sofie-core/issues/1450)
+ The Studio Data model is to be limited to only contain a single Studio object.
+ This is incrementally being implemented throughout the codebase.
+ In 26.03, Sofie has a migration which refuses to pass until there is only one studio, and will not allow creating more.
+*/
 export interface DBStudio {
 	_id: StudioId
 
