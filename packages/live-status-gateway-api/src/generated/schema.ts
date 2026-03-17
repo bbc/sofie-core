@@ -534,6 +534,10 @@ interface TTimerModeCountdown {
 	 */
 	zeroTime?: number
 	/**
+	 * Unix timestamp (ms) when the timer should automatically pause. Typically set to when the current part ends and overrun begins. When present and current time >= pauseTime, the timer should display as paused at (zeroTime - pauseTime).
+	 */
+	pauseTime?: number
+	/**
 	 * Frozen remaining duration in milliseconds. Present when paused is true.
 	 */
 	remainingMs?: number
@@ -561,6 +565,10 @@ interface TTimerModeFreeRun {
 	 */
 	zeroTime?: number
 	/**
+	 * Unix timestamp (ms) when the timer should automatically pause. Typically set to when the current part ends and overrun begins. When present and current time >= pauseTime, the timer should display as paused at (pauseTime - zeroTime).
+	 */
+	pauseTime?: number
+	/**
 	 * Frozen elapsed time in milliseconds. Present when paused is true.
 	 */
 	elapsedMs?: number
@@ -578,6 +586,10 @@ interface TTimerProjected {
 	 * Unix timestamp in milliseconds of projected arrival at the anchor part
 	 */
 	zeroTime?: number
+	/**
+	 * Unix timestamp (ms) when the projected timer should automatically pause. When present and current time >= pauseTime, the projected duration should be calculated from pauseTime.
+	 */
+	pauseTime?: number
 	/**
 	 * Frozen remaining duration projection in milliseconds
 	 */

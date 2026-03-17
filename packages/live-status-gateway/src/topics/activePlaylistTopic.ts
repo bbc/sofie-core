@@ -261,6 +261,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 						type: 'countdown',
 						paused: true,
 						remainingMs: timer.state.duration,
+						pauseTime: undefined,
 						durationMs: timer.mode.duration,
 						stopAtZero: timer.mode.stopAtZero,
 					}
@@ -268,6 +269,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 						type: 'countdown',
 						paused: false,
 						zeroTime: timer.state.zeroTime,
+						pauseTime: timer.state.pauseTime ?? undefined,
 						durationMs: timer.mode.duration,
 						stopAtZero: timer.mode.stopAtZero,
 					}
@@ -285,11 +287,13 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 						type: 'freeRun',
 						paused: true,
 						elapsedMs: timer.state.duration,
+						pauseTime: timer.state.pauseTime ?? undefined,
 					}
 				: {
 						type: 'freeRun',
 						paused: false,
 						zeroTime: timer.state.zeroTime,
+						pauseTime: timer.state.pauseTime ?? undefined,
 					}
 			return {
 				index,
@@ -312,11 +316,13 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 			return {
 				paused: true,
 				durationMs: projectedState.duration,
+				pauseTime: projectedState.pauseTime ?? undefined,
 			}
 		} else {
 			return {
 				paused: false,
 				zeroTime: projectedState.zeroTime,
+				pauseTime: projectedState.pauseTime ?? undefined,
 			}
 		}
 	}

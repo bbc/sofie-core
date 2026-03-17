@@ -35,6 +35,11 @@ $defs:
                 description: >-
                   Unix timestamp in milliseconds of projected arrival at the anchor part
                 type: number
+              pauseTime:
+                description: >-
+                  Unix timestamp (ms) when the projected timer should automatically pause.
+                  When present and current time >= pauseTime, the projected duration should be calculated from pauseTime.
+                type: number
               durationMs:
                 description: >-
                   Frozen remaining duration projection in milliseconds

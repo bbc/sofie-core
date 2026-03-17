@@ -15,6 +15,12 @@ $defs:
           Unix timestamp (ms) when the timer reaches/reached zero.
           Present when paused is false. The client calculates remaining time as zeroTime - Date.now().
         type: number
+      pauseTime:
+        description: >-
+          Unix timestamp (ms) when the timer should automatically pause.
+          Typically set to when the current part ends and overrun begins.
+          When present and current time >= pauseTime, the timer should display as paused at (zeroTime - pauseTime).
+        type: number
       remainingMs:
         description: >-
           Frozen remaining duration in milliseconds.
@@ -46,6 +52,12 @@ $defs:
         description: >-
           Unix timestamp (ms) when the timer was at zero (i.e. when it was started).
           Present when paused is false. The client calculates elapsed time as Date.now() - zeroTime.
+        type: number
+      pauseTime:
+        description: >-
+          Unix timestamp (ms) when the timer should automatically pause.
+          Typically set to when the current part ends and overrun begins.
+          When present and current time >= pauseTime, the timer should display as paused at (pauseTime - zeroTime).
         type: number
       elapsedMs:
         description: >-

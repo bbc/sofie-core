@@ -785,6 +785,14 @@ channels:
                                       calculates remaining time as zeroTime -
                                       Date.now().
                                     type: number
+                                  pauseTime:
+                                    description: Unix timestamp (ms) when the timer should automatically pause.
+                                      Typically set to when the current part
+                                      ends and overrun begins. When present and
+                                      current time >= pauseTime, the timer
+                                      should display as paused at (zeroTime -
+                                      pauseTime).
+                                    type: number
                                   remainingMs:
                                     description: Frozen remaining duration in milliseconds. Present when paused is
                                       true.
@@ -825,6 +833,14 @@ channels:
                                       The client calculates elapsed time as
                                       Date.now() - zeroTime.
                                     type: number
+                                  pauseTime:
+                                    description: Unix timestamp (ms) when the timer should automatically pause.
+                                      Typically set to when the current part
+                                      ends and overrun begins. When present and
+                                      current time >= pauseTime, the timer
+                                      should display as paused at (pauseTime -
+                                      zeroTime).
+                                    type: number
                                   elapsedMs:
                                     description: Frozen elapsed time in milliseconds. Present when paused is true.
                                     type: number
@@ -852,6 +868,12 @@ channels:
                               zeroTime:
                                 description: Unix timestamp in milliseconds of projected arrival at the anchor
                                   part
+                                type: number
+                              pauseTime:
+                                description: Unix timestamp (ms) when the projected timer should automatically
+                                  pause. When present and current time >=
+                                  pauseTime, the projected duration should be
+                                  calculated from pauseTime.
                                 type: number
                               durationMs:
                                 description: Frozen remaining duration projection in milliseconds
