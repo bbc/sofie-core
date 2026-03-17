@@ -14,7 +14,7 @@ import { PlayoutModel } from './model/PlayoutModel.js'
 import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
-	if (isNaN(index) || index < 1 || index > 3) throw new Error(`T-timer index out of range: ${index}`)
+	if (![1, 2, 3].includes(index)) throw new Error(`T-timer index out of range: ${index}`)
 }
 
 /**

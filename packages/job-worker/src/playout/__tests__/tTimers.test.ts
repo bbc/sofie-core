@@ -43,6 +43,11 @@ describe('tTimers utils', () => {
 		it('should reject NaN', () => {
 			expect(() => validateTTimerIndex(NaN)).toThrow('T-timer index out of range: NaN')
 		})
+
+		it('should reject fractional indices', () => {
+			expect(() => validateTTimerIndex(1.5)).toThrow('T-timer index out of range: 1.5')
+			expect(() => validateTTimerIndex(2.1)).toThrow('T-timer index out of range: 2.1')
+		})
 	})
 
 	describe('pauseTTimer', () => {
