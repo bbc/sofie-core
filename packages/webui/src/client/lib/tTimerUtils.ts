@@ -46,36 +46,6 @@ export function calculateTTimerOverUnder(timer: RundownTTimer, now: number): num
 	return estimateDuration - duration
 }
 
-// TODO: remove this mock
-let mockTimer: RundownTTimer | undefined
-
-export function getDefaultTTimer(_tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]): RundownTTimer | undefined {
-	// FORCE MOCK:
-	/*
-	const active = tTimers.find((t) => t.mode)
-	if (active) return active
-	*/
-
-	if (!mockTimer) {
-		const now = Date.now()
-		mockTimer = {
-			index: 0,
-			label: 'MOCK TIMER',
-			mode: {
-				type: 'countdown',
-			},
-			state: {
-				zeroTime: now + 60 * 60 * 1000, // 1 hour
-				duration: 0,
-				paused: false,
-			},
-			estimateState: {
-				zeroTime: now + 65 * 60 * 1000, // 65 mins -> 5 mins over
-				duration: 0,
-				paused: false,
-			},
-		} as any
-	}
-
-	return mockTimer
+export function getDefaultTTimer(tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]): RundownTTimer | undefined {
+	return tTimers.find((t) => t.mode)
 }
