@@ -235,6 +235,17 @@ export function sourceLayerFrom(apiSourceLayer: APISourceLayer): ISourceLayer {
 		_rank: apiSourceLayer.rank,
 		type: layerType,
 		exclusiveGroup: apiSourceLayer.exclusiveGroup,
+		isRemoteInput: apiSourceLayer.isRemoteInput,
+		isGuestInput: apiSourceLayer.isGuestInput,
+		isClearable: apiSourceLayer.isClearable,
+		isSticky: apiSourceLayer.isSticky,
+		stickyOriginalOnly: apiSourceLayer.stickyOriginalOnly,
+		isQueueable: apiSourceLayer.isQueueable,
+		isHidden: apiSourceLayer.isHidden,
+		allowDisable: apiSourceLayer.allowDisable,
+		onPresenterScreen: apiSourceLayer.onPresenterScreen,
+		onListViewColumn: apiSourceLayer.onListViewColumn,
+		onListViewAdLibColumn: apiSourceLayer.onListViewAdLibColumn,
 	}
 }
 
@@ -298,6 +309,17 @@ export function APISourceLayerFrom(sourceLayer: ISourceLayer): APISourceLayer {
 		rank: sourceLayer._rank,
 		layerType,
 		exclusiveGroup: sourceLayer.exclusiveGroup,
+		isRemoteInput: sourceLayer.isRemoteInput,
+		isGuestInput: sourceLayer.isGuestInput,
+		isClearable: sourceLayer.isClearable,
+		isSticky: sourceLayer.isSticky,
+		stickyOriginalOnly: sourceLayer.stickyOriginalOnly,
+		isQueueable: sourceLayer.isQueueable,
+		isHidden: sourceLayer.isHidden,
+		allowDisable: sourceLayer.allowDisable,
+		onPresenterScreen: sourceLayer.onPresenterScreen,
+		onListViewColumn: sourceLayer.onListViewColumn,
+		onListViewAdLibColumn: sourceLayer.onListViewAdLibColumn,
 	}
 }
 
