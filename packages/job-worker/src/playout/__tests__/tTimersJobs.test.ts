@@ -1,5 +1,5 @@
 import { setupDefaultJobEnvironment, MockJobContext } from '../../__mocks__/context.js'
-import { handleRecalculateTTimerEstimates } from '../tTimersJobs.js'
+import { handleRecalculateTTimerProjections } from '../tTimersJobs.js'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -12,7 +12,7 @@ describe('tTimersJobs', () => {
 		context = setupDefaultJobEnvironment()
 	})
 
-	describe('handleRecalculateTTimerEstimates', () => {
+	describe('handleRecalculateTTimerProjections', () => {
 		it('should handle studio with active playlists', async () => {
 			// Create an active playlist
 			const playlistId = protectString<RundownPlaylistId>('playlist1')
@@ -59,7 +59,7 @@ describe('tTimersJobs', () => {
 			)
 
 			// Should complete without errors
-			await expect(handleRecalculateTTimerEstimates(context)).resolves.toBeUndefined()
+			await expect(handleRecalculateTTimerProjections(context)).resolves.toBeUndefined()
 		})
 
 		it('should handle studio with no active playlists', async () => {
@@ -108,7 +108,7 @@ describe('tTimersJobs', () => {
 			)
 
 			// Should complete without errors (just does nothing)
-			await expect(handleRecalculateTTimerEstimates(context)).resolves.toBeUndefined()
+			await expect(handleRecalculateTTimerProjections(context)).resolves.toBeUndefined()
 		})
 
 		it('should handle multiple active playlists', async () => {
@@ -199,13 +199,13 @@ describe('tTimersJobs', () => {
 			)
 
 			// Should complete without errors, processing both playlists
-			await expect(handleRecalculateTTimerEstimates(context)).resolves.toBeUndefined()
+			await expect(handleRecalculateTTimerProjections(context)).resolves.toBeUndefined()
 		})
 
 		it('should handle playlist deleted between query and lock', async () => {
 			// This test is harder to set up properly, but the function should handle it
 			// by checking if playlist exists after acquiring lock
-			await expect(handleRecalculateTTimerEstimates(context)).resolves.toBeUndefined()
+			await expect(handleRecalculateTTimerProjections(context)).resolves.toBeUndefined()
 		})
 	})
 })

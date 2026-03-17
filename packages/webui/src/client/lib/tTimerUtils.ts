@@ -28,22 +28,22 @@ export function calculateTTimerDiff(timer: RundownTTimer, now: number): number {
 
 /**
  * Calculate the over/under difference between the timer's current value
- * and its estimate.
+ * and its projected time.
  *
  * Positive = over (behind schedule, will reach anchor after timer hits zero)
  * Negative = under (ahead of schedule, will reach anchor before timer hits zero)
  *
- * Returns undefined if no estimate is available.
+ * Returns undefined if no projection is available.
  */
 export function calculateTTimerOverUnder(timer: RundownTTimer, now: number): number | undefined {
-	if (!timer.state || !timer.estimateState) {
+	if (!timer.state || !timer.projectedState) {
 		return undefined
 	}
 
 	const duration = timerStateToDuration(timer.state, now)
-	const estimateDuration = timerStateToDuration(timer.estimateState, now)
+	const projectedDuration = timerStateToDuration(timer.projectedState, now)
 
-	return estimateDuration - duration
+	return projectedDuration - duration
 }
 
 export function getDefaultTTimer(tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]): RundownTTimer | undefined {

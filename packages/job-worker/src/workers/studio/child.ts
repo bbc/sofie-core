@@ -80,7 +80,7 @@ export class StudioWorkerChild {
 		// Queue initial T-Timer recalculation to set up timers after startup
 		this.#queueJob(
 			getStudioQueueName(this.#studioId),
-			StudioJobs.RecalculateTTimerEstimates,
+			StudioJobs.RecalculateTTimerProjections,
 			undefined,
 			undefined
 		).catch((err) => {

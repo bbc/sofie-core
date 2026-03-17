@@ -29,7 +29,7 @@ import { clone, groupByToMapFunc } from '@sofie-automation/corelib/dist/lib'
 import { PlaylistLock } from '../jobs/lock.js'
 import { syncChangesToPartInstances } from './syncChangesToPartInstance.js'
 import { ensureNextPartIsValid } from './updateNext.js'
-import { recalculateTTimerEstimates } from '../playout/tTimers.js'
+import { recalculateTTimerProjections } from '../playout/tTimers.js'
 import { StudioJobs } from '@sofie-automation/corelib/dist/worker/studio'
 import { getTranslatedMessage, ServerTranslatedMesssages } from '../notes.js'
 import _ from 'underscore'
@@ -242,8 +242,8 @@ export async function CommitIngestOperation(
 				// Note: This should trigger a timeline update, one is already queued in the `deferAfterSave` above
 				await ensureNextPartIsValid(context, playoutModel)
 
-				// Recalculate T-Timer estimates after ingest changes
-				recalculateTTimerEstimates(context, playoutModel)
+				// Recalculate T-Timer projections after ingest changes
+				recalculateTTimerProjections(context, playoutModel)
 
 				playoutModel.deferAfterSave(() => {
 					// Run in the background, we don't want to hold onto the lock to do this
@@ -617,8 +617,8 @@ export async function updatePlayoutAfterChangingRundownInPlaylist(
 
 		const shouldUpdateTimeline = await ensureNextPartIsValid(context, playoutModel)
 
-		// Recalculate T-Timer estimates after playlist changes
-		recalculateTTimerEstimates(context, playoutModel)
+		// Recalculate T-Timer projections after playlist changes
+		recalculateTTimerProjections(context, playoutModel)
 
 		if (playoutModel.playlist.activationId || shouldUpdateTimeline) {
 			triggerUpdateTimelineAfterIngestData(context, playoutModel.playlistId)

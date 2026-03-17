@@ -174,7 +174,7 @@ export function calculateNextTimeOfDayTarget(targetTime: string | number): numbe
 }
 
 /**
- * Recalculate T-Timer estimates based on timing anchors using segment budget timing.
+ * Recalculate T-Timer projections based on timing anchors using segment budget timing.
  *
  * Uses a single-pass algorithm with two accumulators:
  * - totalAccumulator: Accumulated time across completed segments
@@ -189,8 +189,8 @@ export function calculateNextTimeOfDayTarget(targetTime: string | number): numbe
  * @param context Job context
  * @param playoutModel The playout model containing the playlist and parts
  */
-export function recalculateTTimerEstimates(context: JobContext, playoutModel: PlayoutModel): void {
-	const span = context.startSpan('recalculateTTimerEstimates')
+export function recalculateTTimerProjections(context: JobContext, playoutModel: PlayoutModel): void {
+	const span = context.startSpan('recalculateTTimerProjections')
 
 	const playlist = playoutModel.playlist
 
@@ -219,10 +219,10 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 	const playablePartsSlice = getOrderedPartsAfterPlayhead(context, playoutModel, Infinity, true)
 
 	if (playablePartsSlice.length === 0 && !currentPartInstance) {
-		// No parts to iterate through, clear estimates
+		// No parts to iterate through, clear projections
 		for (const timer of tTimers) {
 			if (timer.anchorPartId) {
-				playoutModel.updateTTimer({ ...timer, estimateState: undefined })
+				playoutModel.updateTTimer({ ...timer, projectedState: undefined })
 			}
 		}
 		if (span) span.end()
@@ -314,7 +314,7 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 			for (const timerIndex of timersForThisPart) {
 				const timer = tTimers[timerIndex - 1]
 
-				const estimateState: TimerState = isPushing
+				const projectedState: TimerState = isPushing
 					? literal<TimerState>({
 							paused: true,
 							duration: anchorTime,
@@ -326,7 +326,7 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 							pauseTime: now + currentPartRemainingTime, // When current part ends and pushing begins
 						})
 
-				playoutModel.updateTTimer({ ...timer, estimateState })
+				playoutModel.updateTTimer({ ...timer, projectedState })
 			}
 
 			timerAnchors.delete(part._id)
@@ -337,11 +337,11 @@ export function recalculateTTimerEstimates(context: JobContext, playoutModel: Pl
 		segmentAccumulator += partDuration
 	}
 
-	// Clear estimates for unresolved anchors
+	// Clear projections for unresolved anchors
 	for (const [, timerIndices] of timerAnchors.entries()) {
 		for (const timerIndex of timerIndices) {
 			const timer = tTimers[timerIndex - 1]
-			playoutModel.updateTTimer({ ...timer, estimateState: undefined })
+			playoutModel.updateTTimer({ ...timer, projectedState: undefined })
 		}
 	}
 

@@ -1,13 +1,13 @@
 import { JobContext } from '../jobs/index.js'
-import { recalculateTTimerEstimates } from './tTimers.js'
+import { recalculateTTimerProjections } from './tTimers.js'
 import { runWithPlayoutModel, runWithPlaylistLock } from './lock.js'
 
 /**
- * Handle RecalculateTTimerEstimates job
- * This is called after setNext, takes, and ingest changes to update T-Timer estimates
+ * Handle RecalculateTTimerProjections job
+ * This is called after setNext, takes, and ingest changes to update T-Timer projections
  * Since this job doesn't take a playlistId parameter, it finds the active playlist in the studio
  */
-export async function handleRecalculateTTimerEstimates(context: JobContext): Promise<void> {
+export async function handleRecalculateTTimerProjections(context: JobContext): Promise<void> {
 	// Find active playlists in this studio (projection to just get IDs)
 	const activePlaylistIds = await context.directCollections.RundownPlaylists.findFetch(
 		{
@@ -37,7 +37,7 @@ export async function handleRecalculateTTimerEstimates(context: JobContext): Pro
 			}
 
 			await runWithPlayoutModel(context, playlist, lock, null, async (playoutModel) => {
-				recalculateTTimerEstimates(context, playoutModel)
+				recalculateTTimerProjections(context, playoutModel)
 			})
 		})
 	}

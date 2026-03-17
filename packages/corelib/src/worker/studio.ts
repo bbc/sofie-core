@@ -127,10 +127,10 @@ export enum StudioJobs {
 	OnTimelineTriggerTime = 'onTimelineTriggerTime',
 
 	/**
-	 * Recalculate T-Timer estimates based on current playlist state
-	 * Called after setNext, takes, and ingest changes to update timing anchor estimates
+	 * Recalculate T-Timer projections based on current playlist state
+	 * Called after setNext, takes, and ingest changes to update timing anchor projections
 	 */
-	RecalculateTTimerEstimates = 'recalculateTTimerEstimates',
+	RecalculateTTimerProjections = 'recalculateTTimerProjections',
 
 	/**
 	 * Update the timeline with a regenerated Studio Baseline
@@ -423,7 +423,7 @@ export type StudioJobFunc = {
 	[StudioJobs.OnPlayoutPlaybackChanged]: (data: OnPlayoutPlaybackChangedProps) => void
 	[StudioJobs.OnTimelineTriggerTime]: (data: OnTimelineTriggerTimeProps) => void
 
-	[StudioJobs.RecalculateTTimerEstimates]: () => void
+	[StudioJobs.RecalculateTTimerProjections]: () => void
 
 	[StudioJobs.UpdateStudioBaseline]: () => string | false
 	[StudioJobs.CleanupEmptyPlaylists]: () => void

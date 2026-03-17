@@ -73,49 +73,49 @@ export interface IPlaylistTTimer {
 	restart(): boolean
 
 	/**
-	 * Clear any estimate (manual or anchor-based) for this timer
-	 * This removes both manual estimates set via setEstimateTime/setEstimateDuration
-	 * and automatic estimates based on anchor parts set via setEstimateAnchorPart.
+	 * Clear any projection (manual or anchor-based) for this timer
+	 * This removes both manual projections set via setProjectedTime/setProjectedDuration
+	 * and automatic projections based on anchor parts set via setProjectedAnchorPart.
 	 */
-	clearEstimate(): void
+	clearProjected(): void
 
 	/**
-	 * Set the anchor part for automatic estimate calculation
+	 * Set the anchor part for automatic projection calculation
 	 * When set, the server automatically calculates when we expect to reach this part
-	 * based on remaining part durations, and updates the estimate accordingly.
-	 * Clears any manual estimate set via setEstimateTime/setEstimateDuration.
+	 * based on remaining part durations, and updates the projection accordingly.
+	 * Clears any manual projection set via setProjectedTime/setProjectedDuration.
 	 * @param partId The ID of the part to use as timing anchor
 	 */
-	setEstimateAnchorPart(partId: string): void
+	setProjectedAnchorPart(partId: string): void
 
 	/**
-	 * Set the anchor part for automatic estimate calculation, looked up by its externalId.
+	 * Set the anchor part for automatic projection calculation, looked up by its externalId.
 	 * This is a convenience method when you know the externalId of the part (e.g. set during ingest)
 	 * but not its internal PartId. If no part with the given externalId is found, this is a no-op.
-	 * Clears any manual estimate set via setEstimateTime/setEstimateDuration.
+	 * Clears any manual projection set via setProjectedTime/setProjectedDuration.
 	 * @param externalId The externalId of the part to use as timing anchor
 	 */
-	setEstimateAnchorPartByExternalId(externalId: string): void
+	setProjectedAnchorPartByExternalId(externalId: string): void
 
 	/**
-	 * Manually set the estimate as an absolute timestamp
+	 * Manually set the projection as an absolute timestamp
 	 * Use this when you have custom logic for calculating when you expect to reach a timing point.
 	 * Clears any anchor part set via setAnchorPart.
 	 * @param time Unix timestamp (milliseconds) when we expect to reach the timing point
-	 * @param paused If true, we're currently delayed/pushing (estimate won't update with time passing).
-	 *               If false (default), we're progressing normally (estimate counts down in real-time).
+	 * @param paused If true, we're currently delayed/pushing (projection won't update with time passing).
+	 *               If false (default), we're progressing normally (projection counts down in real-time).
 	 */
-	setEstimateTime(time: number, paused?: boolean): void
+	setProjectedTime(time: number, paused?: boolean): void
 
 	/**
-	 * Manually set the estimate as a relative duration from now
-	 * Use this when you want to express the estimate as "X milliseconds from now".
+	 * Manually set the projection as a relative duration from now
+	 * Use this when you want to express the projection as "X milliseconds from now".
 	 * Clears any anchor part set via setAnchorPart.
 	 * @param duration Milliseconds until we expect to reach the timing point
-	 * @param paused If true, we're currently delayed/pushing (estimate won't update with time passing).
-	 *               If false (default), we're progressing normally (estimate counts down in real-time).
+	 * @param paused If true, we're currently delayed/pushing (projection won't update with time passing).
+	 *               If false (default), we're progressing normally (projection counts down in real-time).
 	 */
-	setEstimateDuration(duration: number, paused?: boolean): void
+	setProjectedDuration(duration: number, paused?: boolean): void
 }
 
 export type IPlaylistTTimerState =

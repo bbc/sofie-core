@@ -20,7 +20,7 @@ import {
 	restartTTimer,
 	resumeTTimer,
 	validateTTimerIndex,
-	recalculateTTimerEstimates,
+	recalculateTTimerProjections,
 } from '../../../playout/tTimers.js'
 import { getCurrentTime } from '../../../lib/index.js'
 import type { JobContext } from '../../../jobs/index.js'
@@ -195,56 +195,56 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 		return true
 	}
 
-	clearEstimate(): void {
+	clearProjected(): void {
 		this.#timer = {
 			...this.#timer,
 			anchorPartId: undefined,
-			estimateState: undefined,
+			projectedState: undefined,
 		}
 		this.#emitChange(this.#timer)
 	}
 
-	setEstimateAnchorPart(partId: string): void {
+	setProjectedAnchorPart(partId: string): void {
 		this.#timer = {
 			...this.#timer,
 			anchorPartId: protectString<PartId>(partId),
-			estimateState: undefined, // Clear manual estimate
+			projectedState: undefined, // Clear manual projection
 		}
 		this.#emitChange(this.#timer)
 
-		// Recalculate estimates immediately since we already have the playout model
-		recalculateTTimerEstimates(this.#jobContext, this.#playoutModel)
+		// Recalculate projections immediately since we already have the playout model
+		recalculateTTimerProjections(this.#jobContext, this.#playoutModel)
 	}
 
-	setEstimateAnchorPartByExternalId(externalId: string): void {
+	setProjectedAnchorPartByExternalId(externalId: string): void {
 		const part = this.#playoutModel.getAllOrderedParts().find((p) => p.externalId === externalId)
 		if (!part) return
 
-		this.setEstimateAnchorPart(unprotectString(part._id))
+		this.setProjectedAnchorPart(unprotectString(part._id))
 	}
 
-	setEstimateTime(time: number, paused: boolean = false): void {
-		const estimateState: TimerState = paused
+	setProjectedTime(time: number, paused: boolean = false): void {
+		const projectedState: TimerState = paused
 			? literal<TimerState>({ paused: true, duration: time - getCurrentTime() })
 			: literal<TimerState>({ paused: false, zeroTime: time })
 
 		this.#timer = {
 			...this.#timer,
 			anchorPartId: undefined, // Clear automatic anchor
-			estimateState,
+			projectedState,
 		}
 		this.#emitChange(this.#timer)
 	}
 
-	setEstimateDuration(duration: number, paused: boolean = false): void {
-		const estimateState: TimerState = paused
+	setProjectedDuration(duration: number, paused: boolean = false): void {
+		const projectedState: TimerState = paused
 			? literal<TimerState>({ paused: true, duration })
 			: literal<TimerState>({ paused: false, zeroTime: getCurrentTime() + duration })
 
 		this.#timer = {
 			...this.#timer,
 			anchorPartId: undefined, // Clear automatic anchor
-			estimateState,
+			projectedState,
 		}
 		this.#emitChange(this.#timer)
 	}
