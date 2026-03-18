@@ -36,6 +36,7 @@ import {
 	PreviewPopUpContext,
 } from '../PreviewPopUp/PreviewPopUpContext.js'
 import { useRundownViewEventBusListener } from '../../lib/lib.js'
+import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -185,12 +186,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 			if (studio?.settings.enableUserEdits && !studio?.settings.allowPieceDirectPlay) {
 				const innerPiece = piece.instance.piece
 
-				const hasEditableContent = !!(
-					innerPiece.userEditOperations?.length ||
-					innerPiece.userEditProperties?.pieceTypeProperties ||
-					innerPiece.userEditProperties?.globalProperties ||
-					innerPiece.userEditProperties?.operations?.length
-				)
+				const hasEditableContent = hasUserEditableContent(innerPiece)
 				if (!hasEditableContent) return
 
 				const pieceId = innerPiece._id

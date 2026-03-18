@@ -58,6 +58,7 @@ import * as RundownResolver from '../../lib/RundownResolver.js'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext.js'
 import { BlueprintAssetIcon } from '../../lib/Components/BlueprintAssetIcon.js'
+import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js'
 
 interface IProps {
 	id: string
@@ -1017,12 +1018,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 									if (this.props.studio.settings.enableUserEdits) {
 										const segment = this.props.segment
 
-										const hasEditableContent = !!(
-											segment.userEditOperations?.length ||
-											segment.userEditProperties?.pieceTypeProperties ||
-											segment.userEditProperties?.globalProperties ||
-											segment.userEditProperties?.operations?.length
-										)
+										const hasEditableContent = hasUserEditableContent(segment)
 										if (!hasEditableContent) return
 
 										if (!selectElementContext.isSelected(segment._id)) {

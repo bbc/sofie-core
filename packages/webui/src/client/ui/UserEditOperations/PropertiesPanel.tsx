@@ -22,6 +22,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState.js'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { BlueprintAssetIcon } from '../../lib/Components/BlueprintAssetIcon.js'
+import { ReadonlyDeep } from 'type-fest'
+import {
+	CoreUserEditingDefinition,
+	CoreUserEditingProperties,
+} from '@sofie-automation/corelib/src/dataModel/UserEditingDefinitions.js'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 
@@ -383,5 +388,21 @@ function ActionList({
 				</button>
 			))}
 		</div>
+	)
+}
+
+export function hasUserEditableContent(
+	obj:
+		| ReadonlyDeep<{
+				userEditOperations?: CoreUserEditingDefinition[]
+				userEditProperties?: CoreUserEditingProperties
+		  }>
+		| undefined
+): boolean {
+	return !!(
+		obj?.userEditOperations?.length ||
+		obj?.userEditProperties?.pieceTypeProperties ||
+		obj?.userEditProperties?.globalProperties ||
+		obj?.userEditProperties?.operations?.length
 	)
 }

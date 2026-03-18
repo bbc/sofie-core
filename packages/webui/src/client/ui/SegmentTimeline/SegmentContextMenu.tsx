@@ -17,6 +17,7 @@ import { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataMo
 import * as RundownResolver from '../../lib/RundownResolver.js'
 import { SelectedElement } from '../RundownView/SelectedElementsContext.js'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance.js'
+import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js'
 
 interface IProps {
 	onSetNext: (partInstance: DBPartInstance | DBPart | undefined, e: any, offset?: number, take?: boolean) => void
@@ -120,24 +121,9 @@ export function SegmentContextMenu({
 		part?.instance._id !== playlist.nextPartInfo?.partInstanceId &&
 		part?.instance._id !== playlist.previousPartInfo?.partInstanceId
 
-	const segmentHasEditableContent = !!(
-		segment?.userEditOperations?.length ||
-		segment?.userEditProperties?.pieceTypeProperties ||
-		segment?.userEditProperties?.globalProperties ||
-		segment?.userEditProperties?.operations?.length
-	)
-	const partHasEditableContent = !!(
-		part?.instance.part.userEditOperations?.length ||
-		part?.instance.part.userEditProperties?.pieceTypeProperties ||
-		part?.instance.part.userEditProperties?.globalProperties ||
-		part?.instance.part.userEditProperties?.operations?.length
-	)
-	const pieceHasEditableContent = !!(
-		piece?.instance.piece.userEditOperations?.length ||
-		piece?.instance.piece.userEditProperties?.pieceTypeProperties ||
-		piece?.instance.piece.userEditProperties?.globalProperties ||
-		piece?.instance.piece.userEditProperties?.operations?.length
-	)
+	const segmentHasEditableContent = hasUserEditableContent(segment)
+	const partHasEditableContent = hasUserEditableContent(part?.instance.part)
+	const pieceHasEditableContent = hasUserEditableContent(piece?.instance.piece)
 
 	const isPartOrphaned: boolean | undefined = part ? part.instance.orphaned !== undefined : undefined
 
@@ -318,7 +304,7 @@ export function SegmentContextMenu({
 											<span>{t('Edit Part Properties')}</span>
 										</MenuItem>
 									)}
-									{pieceHasEditableContent && (
+									{pieceHasEditableContent && piece && (
 										<MenuItem onClick={() => onEditProps({ type: 'piece', elementId: piece.instance.piece._id })}>
 											<span>{t('Edit Piece Properties')}</span>
 										</MenuItem>
