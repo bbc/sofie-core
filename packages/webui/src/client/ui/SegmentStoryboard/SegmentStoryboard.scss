@@ -623,6 +623,31 @@ $break-width: 35rem;
 				var(--invalid-reason-color-opaque) 10px
 			);
 	}
+	> .segment-storyboard__part__invalid-part-instance-cover{
+		position: absolute;
+		top: 0;
+		left: 1px;
+		bottom: 0;
+		right: 1px;
+		z-index: 1;
+		pointer-events: all;
+		mix-blend-mode: saturation;
+		background-image:
+			repeating-linear-gradient(
+				45deg,
+				var(--invalid-reason-color-transparent) 0%,
+				var(--invalid-reason-color-transparent) 5px,
+				var(--invalid-reason-color-opaque) 5px,
+				var(--invalid-reason-color-opaque) 10px
+			),
+			repeating-linear-gradient(
+				-45deg,
+				var(--invalid-reason-color-transparent) 0%,
+				var(--invalid-reason-color-transparent) 5px,
+				var(--invalid-reason-color-opaque) 5px,
+				var(--invalid-reason-color-opaque) 10px
+			);
+	}
 
 	> .segment-storyboard__part__floated-cover {
 		position: absolute;

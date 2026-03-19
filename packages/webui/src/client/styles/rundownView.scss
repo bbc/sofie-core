@@ -1099,19 +1099,38 @@ svg.icon {
 		}
 		.segment-timeline__part {
 			.segment-timeline__part__invalid-cover {
+				mix-blend-mode: color-burn;
 				background-image:
 					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 4px,
-						var(--invalid-reason-color-opaque) 4px,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
 						var(--invalid-reason-color-opaque) 8px
 					),
 					repeating-linear-gradient(
 						-45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 4px,
-						var(--invalid-reason-color-opaque) 4px,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
+					) !important;
+			}
+			.segment-timeline__part__invalid-part-instance-cover {
+				mix-blend-mode: saturation;
+				background-image:
+					repeating-linear-gradient(
+						45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
+					),
+					repeating-linear-gradient(
+						-45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
 						var(--invalid-reason-color-opaque) 8px
 					) !important;
 			}
@@ -1579,6 +1598,32 @@ svg.icon {
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
 						var(--invalid-reason-color-opaque) 5px,
+						var(--invalid-reason-color-opaque) 10px
+					);
+			}
+
+			.segment-timeline__part__invalid-part-instance-cover {
+				position: absolute;
+				top: 0;
+				left: 1px;
+				bottom: 0;
+				right: 1px;
+				z-index: 10;
+				pointer-events: all;
+				mix-blend-mode: saturation; 
+				background-image:
+					repeating-linear-gradient(
+						45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 7px,
+						var(--invalid-reason-color-opaque) 7px,
+						var(--invalid-reason-color-opaque) 10px
+					),
+					repeating-linear-gradient(
+						-45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 7px,
+						var(--invalid-reason-color-opaque) 7px,
 						var(--invalid-reason-color-opaque) 10px
 					);
 			}
