@@ -6,6 +6,7 @@ import {
 	QuickLoopMarker,
 	QuickLoopMarkerType,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { assertNever, literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { SelectedPartInstances } from '../collections/partInstancesHandler.js'
@@ -32,13 +33,20 @@ import {
 	QuickLoopMarkerType as QuickLoopMarkerStatusType,
 	TTimerStatus,
 	TTimerIndex,
-	TimerMode,
-	TimerState,
+	TimerModeCountdown,
+	TimerModeFreeRun,
+	TimerModeTimeOfDay,
+	TimerStateRunning,
+	TimerStatePaused,
 } from '@sofie-automation/live-status-gateway-api'
 
 import { CollectionHandlers } from '../liveStatusServer.js'
 import areElementsShallowEqual from '@sofie-automation/shared-lib/dist/lib/isShallowEqual'
 import { Complete, PickKeys } from '@sofie-automation/shared-lib/dist/lib/types'
+
+// Union types for timer modes and states (not exported from API package)
+type TimerMode = TimerModeCountdown | TimerModeFreeRun | TimerModeTimeOfDay
+type TimerState = TimerStateRunning | TimerStatePaused
 
 const THROTTLE_PERIOD_MS = 100
 
@@ -262,40 +270,48 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 		// Always return exactly 3 timers
 		if (!tTimers || tTimers.length === 0) {
 			return [
-				{ index: 1 as TTimerIndex, label: '', configured: false, mode: null, state: null },
-				{ index: 2 as TTimerIndex, label: '', configured: false, mode: null, state: null },
-				{ index: 3 as TTimerIndex, label: '', configured: false, mode: null, state: null },
+				{
+					index: 1 as TTimerIndex,
+					label: '',
+					configured: false,
+					mode: null,
+					state: null,
+					projected: null,
+					anchorPartId: null,
+				},
+				{
+					index: 2 as TTimerIndex,
+					label: '',
+					configured: false,
+					mode: null,
+					state: null,
+					projected: null,
+					anchorPartId: null,
+				},
+				{
+					index: 3 as TTimerIndex,
+					label: '',
+					configured: false,
+					mode: null,
+					state: null,
+					projected: null,
+					anchorPartId: null,
+				},
 			]
 		}
 
 		return [this.transformTTimer(tTimers[0]), this.transformTTimer(tTimers[1]), this.transformTTimer(tTimers[2])]
 	}
 
-	private transformTTimer(timer: RundownTTimer): TTimerStatus {
-		const index = timer.index as TTimerIndex
-
-		if (!timer.mode || !timer.state) {
-			return {
-				index,
-				label: timer.label,
-				configured: false,
-				mode: null,
-				state: null,
-			}
-		}
-
-		// Transform mode - directly pass through
-		const mode: TimerMode = timer.mode as TimerMode
-
-		// Transform state - directly pass through
-		const state: TimerState = timer.state as TimerState
-
+	private transformTTimer({ index, label, mode, state, projectedState, anchorPartId }: RundownTTimer): TTimerStatus {
 		return {
-			index,
-			label: timer.label,
-			configured: true,
-			mode,
-			state,
+			index: index as TTimerIndex,
+			label,
+			configured: !!(mode && state),
+			mode: mode as TimerMode | null,
+			state: state as TimerState | null,
+			projected: projectedState ? (projectedState as TimerState) : null,
+			anchorPartId: anchorPartId ? unprotectString(anchorPartId) : null,
 		}
 	}
 
