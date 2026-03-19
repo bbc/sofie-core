@@ -606,6 +606,7 @@ $break-width: 35rem;
 		right: 1px;
 		z-index: 1;
 		pointer-events: all;
+		mix-blend-mode: color-burn;
 		background-image:
 			repeating-linear-gradient(
 				45deg,
