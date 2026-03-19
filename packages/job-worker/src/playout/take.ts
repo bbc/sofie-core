@@ -259,6 +259,8 @@ export async function performTakeToNextedPart(
 		try {
 			await blueprint.blueprint.onPreTake(
 				new PartEventContext(
+					context,
+					playoutModel,
 					'onPreTake',
 					context.studio,
 					context.getStudioBlueprintConfig(),
@@ -501,6 +503,8 @@ async function afterTakeUpdateTimingsAndEvents(
 				try {
 					await blueprint.blueprint.onRundownFirstTake(
 						new PartEventContext(
+							context,
+							playoutModel,
 							'onRundownFirstTake',
 							context.studio,
 							context.getStudioBlueprintConfig(),
@@ -522,6 +526,8 @@ async function afterTakeUpdateTimingsAndEvents(
 			try {
 				await blueprint.blueprint.onPostTake(
 					new PartEventContext(
+						context,
+						playoutModel,
 						'onPostTake',
 						context.studio,
 						context.getStudioBlueprintConfig(),

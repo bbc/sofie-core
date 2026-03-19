@@ -255,14 +255,15 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 			}
 		}
 
-		if (timer.mode.type === 'countdown') {
+		if (timer.mode.type === 'countdown' || timer.mode.type === 'fromRundownStart') {
+			const duration = timer.mode.type === 'fromRundownStart' ? timer.mode.offset : timer.mode.duration
 			const mode: TTimerModeCountdown = timer.state.paused
 				? {
 						type: 'countdown',
 						paused: true,
 						remainingMs: timer.state.duration,
 						pauseTime: undefined,
-						durationMs: timer.mode.duration,
+						durationMs: duration,
 						stopAtZero: timer.mode.stopAtZero,
 					}
 				: {
@@ -270,7 +271,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 						paused: false,
 						zeroTime: timer.state.zeroTime,
 						pauseTime: timer.state.pauseTime ?? undefined,
-						durationMs: timer.mode.duration,
+						durationMs: duration,
 						stopAtZero: timer.mode.stopAtZero,
 					}
 			return {

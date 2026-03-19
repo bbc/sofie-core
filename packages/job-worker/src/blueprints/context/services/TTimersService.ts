@@ -21,6 +21,7 @@ import {
 	resumeTTimer,
 	validateTTimerIndex,
 	recalculateTTimerProjections,
+	createRundownStartOffsetTTimer,
 } from '../../../playout/tTimers.js'
 import { getCurrentTime } from '../../../lib/index.js'
 import type { JobContext } from '../../../jobs/index.js'
@@ -107,6 +108,14 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 					targetRaw: rawMode.targetRaw,
 					stopAtZero: rawMode.stopAtZero,
 				}
+			case 'fromRundownStart':
+				return {
+					mode: 'fromRundownStart',
+					currentTime,
+					offset: rawMode.offset,
+					targetTime: (this.#playoutModel.playlist.startedPlayback ?? getCurrentTime()) + rawMode.offset,
+					stopAtZero: rawMode.stopAtZero,
+				}
 			default:
 				assertNever(rawMode)
 				return null
@@ -167,6 +176,13 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 			...createFreeRunTTimer({
 				startPaused: options?.startPaused ?? false,
 			}),
+		}
+		this.#emitChange(this.#timer)
+	}
+	startFromRundownStart(offset: number, options?: { stopAtZero?: boolean }): void {
+		this.#timer = {
+			...this.#timer,
+			...createRundownStartOffsetTTimer(offset, { stopAtZero: options?.stopAtZero ?? true }, this.#playoutModel.playlist.startedPlayback ?? getCurrentTime())
 		}
 		this.#emitChange(this.#timer)
 	}

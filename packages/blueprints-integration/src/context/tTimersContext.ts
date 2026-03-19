@@ -52,6 +52,11 @@ export interface IPlaylistTTimer {
 	startFreeRun(options?: { startPaused?: boolean }): void
 
 	/**
+	 * Start from rundown start
+	 */
+	startFromRundownStart(offset: number, options?: { stopAtZero?: boolean; startPaused?: boolean }): void
+
+	/**
 	 * If the current mode supports being paused, pause the timer
 	 * Note: This is supported by the countdown and freerun modes
 	 * @returns True if the timer was paused, false if it could not be paused
@@ -122,6 +127,7 @@ export type IPlaylistTTimerState =
 	| IPlaylistTTimerStateCountdown
 	| IPlaylistTTimerStateFreeRun
 	| IPlaylistTTimerStateTimeOfDay
+	| IPlaylistTTimerStateFromRundownStart
 
 export interface IPlaylistTTimerStateCountdown {
 	/** The mode of the T-timer */
@@ -158,6 +164,20 @@ export interface IPlaylistTTimerStateTimeOfDay {
 	 * (e.g. "14:30", "2023-12-31T23:59:59Z", or a timestamp number)
 	 */
 	readonly targetRaw: string | number
+
+	/** If the countdown is set to stop at zero, or continue into negative values */
+	readonly stopAtZero: boolean
+}
+
+export interface IPlaylistTTimerStateFromRundownStart {
+	/** The mode of the T-timer */
+	readonly mode: 'fromRundownStart'
+	/** The current remaining time of the timer, in milliseconds */
+	readonly currentTime: number
+	/** The target timestamp of the timer, in milliseconds */
+	readonly targetTime: number
+	/** The target offset of the timer, in milliseconds */
+	readonly offset: number
 
 	/** If the countdown is set to stop at zero, or continue into negative values */
 	readonly stopAtZero: boolean

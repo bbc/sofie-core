@@ -4,14 +4,22 @@ import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartIns
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { getCurrentTime } from '../../lib/index.js'
 import { ProcessedStudioConfig, ProcessedShowStyleConfig } from '../config.js'
-import { JobStudio, ProcessedShowStyleCompound } from '../../jobs/index.js'
+import { JobContext, JobStudio, ProcessedShowStyleCompound } from '../../jobs/index.js'
 import { convertPartInstanceToBlueprints } from './lib.js'
 import { RundownContext } from './RundownContext.js'
+import { TTimersService } from './services/TTimersService.js'
+import { PlayoutModel } from '../../playout/model/PlayoutModel.js'
+import { IPlaylistTTimer } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext.js'
+import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist.js'
 
 export class PartEventContext extends RundownContext implements IPartEventContext {
+	readonly #tTimersService: TTimersService
+
 	readonly part: Readonly<IBlueprintPartInstance>
 
 	constructor(
+		readonly context: JobContext,
+		readonly playoutModel: PlayoutModel,
 		eventName: string,
 		studio: ReadonlyDeep<JobStudio>,
 		studioBlueprintConfig: ProcessedStudioConfig,
@@ -33,9 +41,17 @@ export class PartEventContext extends RundownContext implements IPartEventContex
 		)
 
 		this.part = convertPartInstanceToBlueprints(partInstance)
+		this.#tTimersService = TTimersService.withPlayoutModel(playoutModel, context)
 	}
 
 	getCurrentTime(): number {
 		return getCurrentTime()
+	}
+
+	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
+		return this.#tTimersService.getTimer(index)
+	}
+	clearAllTimers(): void {
+		return this.#tTimersService.clearAllTimers()
 	}
 }

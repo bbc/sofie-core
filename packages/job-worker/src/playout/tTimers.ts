@@ -151,6 +151,30 @@ export function createFreeRunTTimer(options: { startPaused: boolean }): {
 		state: options.startPaused ? { paused: true, duration: 0 } : { paused: false, zeroTime: now },
 	}
 }
+/**
+ * Create a new rundownOffset T-timer mode and initial state
+ * @param offset Duration in milliseconds
+ * @param options Options for the timer
+ * @returns The created T-timer mode and state
+ */
+export function createRundownStartOffsetTTimer(
+	offset: number,
+	options: {
+		stopAtZero: boolean
+	},
+	rundownStart: number | undefined
+): { mode: ReadonlyDeep<RundownTTimerMode>; state: ReadonlyDeep<TimerState> } {
+	if (offset <= 0) throw new Error('Duration must be greater than zero')
+
+	return {
+		mode: {
+			type: 'fromRundownStart',
+			offset: offset,
+			stopAtZero: !!options.stopAtZero,
+		},
+		state: rundownStart ? { paused: false, zeroTime: rundownStart + offset } : { paused: true, duration: offset },
+	}
+}
 
 /**
  * Calculate the next target time for a timeOfDay T-timer
@@ -204,6 +228,17 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 			existingTimers.push(timer.index)
 			timerAnchors.set(timer.anchorPartId, existingTimers)
 		}
+
+		// do a sneaky little update for rundownOffsets even though it's not technically a projection
+		if (timer.mode?.type === 'fromRundownStart') {
+			if (timer.state?.paused && playoutModel.playlist.startedPlayback) {
+				// start running
+				playoutModel.updateTTimer({...timer, state: { paused: false, zeroTime: playoutModel.playlist.startedPlayback + timer.mode.offset }})
+			} else if (!timer.state?.paused && !playoutModel.playlist.startedPlayback) {
+				// stop running...
+				playoutModel.updateTTimer({...timer, state: { paused: true, duration: timer.mode.offset }})
+			}
+		} 
 	}
 
 	// If no timers have anchors, nothing to do

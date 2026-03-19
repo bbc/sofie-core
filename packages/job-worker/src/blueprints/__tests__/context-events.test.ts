@@ -14,6 +14,8 @@ import { ReadonlyDeep } from 'type-fest'
 import { convertPartInstanceToBlueprints } from '../context/lib.js'
 import { EmptyPieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { ProcessedShowStyleCompound } from '../../jobs/index.js'
+import { PlayoutModel } from '../../playout/model/PlayoutModel.js'
+import { mock } from 'jest-mock-extended'
 
 describe('Test blueprint api context', () => {
 	async function generateSparsePieceInstances(rundown: DBRundown) {
@@ -82,8 +84,12 @@ describe('Test blueprint api context', () => {
 				_id: protectString('not-a-real-part'),
 			}
 
+					const mockPlayoutModel = mock<PlayoutModel>()
+		
 			const tmpPart = wrapPartToTemporaryInstance(protectString('active'), mockPart as DBPart)
 			const context = new PartEventContext(
+				jobContext,
+				mockPlayoutModel,
 				'fake',
 				jobContext.studio,
 				jobContext.getStudioBlueprintConfig(),

@@ -3,6 +3,7 @@ import type { IBlueprintPartInstance, IBlueprintPieceInstance, IBlueprintSegment
 import type { IRundownContext } from './rundownContext.js'
 import type { IBlueprintExternalMessageQueueObj } from '../message.js'
 import { BlueprintQuickLookInfo } from './quickLoopInfo.js'
+import { ITTimersContext } from './tTimersContext.js'
 
 export interface IEventContext {
 	getCurrentTime(): number
@@ -33,7 +34,7 @@ export interface ITimelineEventContext extends IEventContext, IRundownContext {
 	): string | undefined
 }
 
-export interface IPartEventContext extends IEventContext, IRundownContext {
+export interface IPartEventContext extends IEventContext, ITTimersContext, IRundownContext {
 	readonly part: Readonly<IBlueprintPartInstance>
 }
 
