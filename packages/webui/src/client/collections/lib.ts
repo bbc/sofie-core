@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor'
 import { Mongo } from 'meteor/mongo'
-import { ProtectedString, protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
+import type { ProtectedString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
+import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import type { Collection as RawCollection, Db as RawDb } from 'mongodb'
 import { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
@@ -11,6 +12,18 @@ import {
 	PeripheralDevicePubSubCollectionsNames,
 } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
 import {
+	type MongoCollection,
+	type MongoReadOnlyCollection,
+	type MongoCursor,
+	type FindOptions,
+	type FindOneOptions,
+	type UpdateOptions,
+	type UpsertOptions,
+} from '@sofie-automation/meteor-lib/dist/collections/lib'
+import { CustomCollectionName as CustomCorelibCollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
+import { CorelibPubSubCustomCollections } from '@sofie-automation/corelib/dist/pubsub'
+
+export type {
 	MongoCollection,
 	MongoReadOnlyCollection,
 	MongoCursor,
@@ -18,11 +31,12 @@ import {
 	FindOneOptions,
 	UpdateOptions,
 	UpsertOptions,
+	IndexSpecifier,
+	MongoLiveQueryHandle,
+	ObserveCallbacks,
+	ObserveChangesCallbacks,
+	FieldNames,
 } from '@sofie-automation/meteor-lib/dist/collections/lib'
-import { CustomCollectionName as CustomCorelibCollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
-import { CorelibPubSubCustomCollections } from '@sofie-automation/corelib/dist/pubsub'
-
-export * from '@sofie-automation/meteor-lib/dist/collections/lib'
 
 export const ClientCollections = new Map<CollectionName, MongoCollection<any> | WrappedMongoReadOnlyCollection<any>>()
 function registerClientCollection(
