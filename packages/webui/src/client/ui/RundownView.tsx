@@ -909,6 +909,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 		}
 
 		private onCloseNotifications = () => {
+			NotificationCenter.isOpen = false
 			this.setState({
 				isNotificationsCenterOpen: undefined,
 			})

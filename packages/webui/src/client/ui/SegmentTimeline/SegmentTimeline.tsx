@@ -1022,6 +1022,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 										if (!hasEditableContent) return
 
 										if (!selectElementContext.isSelected(segment._id)) {
+											RundownViewEventBus.emit(RundownViewEvents.CLOSE_NOTIFICATIONS)
 											selectElementContext.clearAndSetSelection({ type: 'segment', elementId: segment._id })
 										} else {
 											selectElementContext.clearSelections()

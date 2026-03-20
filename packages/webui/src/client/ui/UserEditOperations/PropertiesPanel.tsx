@@ -26,7 +26,7 @@ import { ReadonlyDeep } from 'type-fest'
 import {
 	CoreUserEditingDefinition,
 	CoreUserEditingProperties,
-} from '@sofie-automation/corelib/src/dataModel/UserEditingDefinitions.js'
+} from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions.js'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 
@@ -400,7 +400,6 @@ export function hasUserEditableContent(
 		| undefined
 ): boolean {
 	return !!(
-		obj?.userEditOperations?.length ||
 		obj?.userEditProperties?.pieceTypeProperties ||
 		obj?.userEditProperties?.globalProperties ||
 		obj?.userEditProperties?.operations?.length

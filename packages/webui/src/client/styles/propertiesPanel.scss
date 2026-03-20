@@ -234,12 +234,13 @@
 			}
 
 			.propertiespanel-pop-up__button {
+				display: flex;
+				align-items: center;
 				background: #636363;
 				padding: 10px;
 				border-radius: 5px;
 				border: 1px solid #7f7f7f;
 				color: #dfdfdf;
-
 				gap: 0.5em;
 
 				font-size: 0.875em;
