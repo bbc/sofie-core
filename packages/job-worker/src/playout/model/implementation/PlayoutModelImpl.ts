@@ -686,6 +686,16 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			this.setQuickLoopMarker('end', null)
 		}
 
+		// reset rundown offset timers
+		for (const timer of this.playlistImpl.tTimers) {
+			if (timer.mode?.type === 'fromRundownStart') {
+				if (!timer.state?.paused) {
+					// stop running...
+					this.updateTTimer({ ...timer, state: { paused: true, duration: timer.mode.offset } })
+				}
+			}
+		}
+
 		this.#playlistHasChanged = true
 	}
 
@@ -846,6 +856,21 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 		if (!this.playlistImpl.startedPlayback) {
 			this.playlistImpl.startedPlayback = timestamp
+		}
+
+		for (const timer of this.playlistImpl.tTimers) {
+			if (timer.mode?.type === 'fromRundownStart') {
+				if (timer.state?.paused && this.playlistImpl.startedPlayback) {
+					// start running
+					this.updateTTimer({
+						...timer,
+						state: { paused: false, zeroTime: this.playlistImpl.startedPlayback + timer.mode.offset },
+					})
+				} else if (!timer.state?.paused && !this.playlistImpl.startedPlayback) {
+					// stop running...
+					this.updateTTimer({ ...timer, state: { paused: true, duration: timer.mode.offset } })
+				}
+			}
 		}
 
 		this.#playlistHasChanged = true

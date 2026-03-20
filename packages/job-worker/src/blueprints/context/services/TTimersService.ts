@@ -182,7 +182,11 @@ export class PlaylistTTimerImpl implements IPlaylistTTimer {
 	startFromRundownStart(offset: number, options?: { stopAtZero?: boolean }): void {
 		this.#timer = {
 			...this.#timer,
-			...createRundownStartOffsetTTimer(offset, { stopAtZero: options?.stopAtZero ?? true }, this.#playoutModel.playlist.startedPlayback ?? getCurrentTime())
+			...createRundownStartOffsetTTimer(
+				offset,
+				{ stopAtZero: options?.stopAtZero ?? true },
+				this.#playoutModel.playlist.startedPlayback
+			),
 		}
 		this.#emitChange(this.#timer)
 	}

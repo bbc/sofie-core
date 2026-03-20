@@ -228,17 +228,6 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 			existingTimers.push(timer.index)
 			timerAnchors.set(timer.anchorPartId, existingTimers)
 		}
-
-		// do a sneaky little update for rundownOffsets even though it's not technically a projection
-		if (timer.mode?.type === 'fromRundownStart') {
-			if (timer.state?.paused && playoutModel.playlist.startedPlayback) {
-				// start running
-				playoutModel.updateTTimer({...timer, state: { paused: false, zeroTime: playoutModel.playlist.startedPlayback + timer.mode.offset }})
-			} else if (!timer.state?.paused && !playoutModel.playlist.startedPlayback) {
-				// stop running...
-				playoutModel.updateTTimer({...timer, state: { paused: true, duration: timer.mode.offset }})
-			}
-		} 
 	}
 
 	// If no timers have anchors, nothing to do
