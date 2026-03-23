@@ -180,7 +180,14 @@ export function StoryboardPart({
 				</>
 			)}
 			{isInvalid ? (
-				<InvalidPartCover className="segment-storyboard__part__invalid-cover" invalidReason={effectiveInvalidReason} />
+				<InvalidPartCover
+					className={
+						effectiveInvalidReason?.isInstanceInvalid
+							? 'segment-storyboard__part__invalid-part-instance-cover'
+							: 'segment-storyboard__part__invalid-cover'
+					}
+					invalidReason={effectiveInvalidReason}
+				/>
 			) : null}
 			{isFloated ? <div className="segment-storyboard__part__floated-cover"></div> : null}
 			<div className="segment-storyboard__part__title">{part.instance.part.title}</div>

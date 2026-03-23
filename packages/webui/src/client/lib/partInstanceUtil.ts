@@ -8,6 +8,13 @@ export interface PartInstanceLike {
 	invalidReason?: PartInvalidReason
 }
 
+export interface PartInvalidReasonExt extends PartInvalidReason {
+	/**
+	 * If this invalid reason came from the instance (playout) rather than the part (ingest)
+	 */
+	isInstanceInvalid: boolean
+}
+
 /**
  * Get the effective invalidReason for a PartInstance.
  *
@@ -21,16 +28,22 @@ export interface PartInstanceLike {
  * @param partInstance The PartInstance object
  * @returns The effective invalidReason to display, or undefined if none
  */
-export function getEffectiveInvalidReason(partInstance: PartInstanceLike): PartInvalidReason | undefined {
+export function getEffectiveInvalidReason(partInstance: PartInstanceLike): PartInvalidReasonExt | undefined {
 	// Planned invalidReason (from Part/ingest) takes precedence
 	// It shouldn't be possible to create a real PartInstance of an invalid Part
 	if (partInstance.part.invalidReason) {
-		return partInstance.part.invalidReason
+		return {
+			...partInstance.part.invalidReason,
+			isInstanceInvalid: false,
+		}
 	}
 
 	// Runtime invalidReason (from PartInstance/playout)
 	if (partInstance.invalidReason) {
-		return partInstance.invalidReason
+		return {
+			...partInstance.invalidReason,
+			isInstanceInvalid: true,
+		}
 	}
 
 	return undefined

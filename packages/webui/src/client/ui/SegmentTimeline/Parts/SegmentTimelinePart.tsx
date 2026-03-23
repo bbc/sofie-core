@@ -745,7 +745,11 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 					{this.renderTimelineOutputGroups(this.props.part)}
 					{isInvalid ? (
 						<InvalidPartCover
-							className="segment-timeline__part__invalid-cover"
+							className={
+								effectiveInvalidReason?.isInstanceInvalid
+									? 'segment-timeline__part__invalid-part-instance-cover'
+									: 'segment-timeline__part__invalid-cover'
+							}
 							invalidReason={effectiveInvalidReason}
 						/>
 					) : null}

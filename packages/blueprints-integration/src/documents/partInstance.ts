@@ -18,8 +18,10 @@ export interface IBlueprintMutatablePartInstance {
 }
 
 /** The Part instance sent from Core */
-export interface IBlueprintPartInstance<TPrivateData = unknown, TPublicData = unknown>
-	extends IBlueprintMutatablePartInstance {
+export interface IBlueprintPartInstance<
+	TPrivateData = unknown,
+	TPublicData = unknown,
+> extends IBlueprintMutatablePartInstance {
 	_id: string
 	/** The segment ("Title") this line belongs to */
 	segmentId: string
