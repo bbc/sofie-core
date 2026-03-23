@@ -35,6 +35,7 @@ import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceIns
 import { setNextPart } from '../playout/setNext.js'
 import { PartId, RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { WrappedShowStyleBlueprint } from '../blueprints/cache.js'
+import { PersistentPlayoutStateStore } from '../blueprints/context/services/PersistantStateStore.js'
 
 type PlayStatus = 'previous' | 'current' | 'next'
 export interface PartInstanceToSync {
@@ -145,13 +146,21 @@ export class SyncChangesToPartInstancesWorker {
 			if (!this.#blueprint.blueprint.syncIngestUpdateToPartInstance)
 				throw new Error('Blueprint does not have syncIngestUpdateToPartInstance')
 
+			const blueprintPersistentState = new PersistentPlayoutStateStore(
+				this.#playoutModel.playlist.privatePlayoutPersistentState,
+				this.#playoutModel.playlist.publicPlayoutPersistentState
+			)
+
 			// The blueprint handles what in the updated part is going to be synced into the partInstance:
 			this.#blueprint.blueprint.syncIngestUpdateToPartInstance(
 				syncContext,
 				existingResultPartInstance,
 				newResultData,
-				instanceToSync.playStatus
+				instanceToSync.playStatus,
+				blueprintPersistentState
 			)
+
+			blueprintPersistentState.saveToModel(this.#playoutModel)
 		} catch (err) {
 			logger.error(`Error in showStyleBlueprint.syncIngestUpdateToPartInstance: ${stringifyError(err)}`)
 
