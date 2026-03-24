@@ -548,9 +548,8 @@ svg.icon {
 	}
 
 	.segment-timeline__title {
-		display: grid;
-		grid-template-columns: auto;
-		grid-template-rows: [title-title] min-content [title-notifications] 1fr [title-identifiers] min-content [end];
+		display: flex;
+		flex-direction: column;
 
 		margin: 0;
 		padding: 0;
@@ -571,6 +570,12 @@ svg.icon {
 			grid-row: title / timeline-header;
 		}
 
+		.segment-timeline__title__content {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+		}
+
 		h2 {
 			margin: 0;
 			padding: 0.2em;
@@ -580,7 +585,6 @@ svg.icon {
 			hyphens: auto;
 			-webkit-hyphens: auto;
 			-ms-hyphens: auto;
-			grid-row: title-title / title-notifications;
 		}
 
 		.segment-timeline__title__notes {
@@ -589,13 +593,13 @@ svg.icon {
 			line-height: 1.4em;
 			font-size: 0.75em;
 			font-weight: 400;
-			grid-row: title-notifications / title-identifiers;
 		}
 
 		.segment-timeline__part-identifiers {
-			grid-row: title-identifiers / end;
+			margin-top: auto;
 
 			.segment-timeline__part-identifiers__identifier {
+				// The pill-shaped labels that appear in the title area of a segment, showing and linking to the part name or number
 				margin: 0.1rem;
 				padding: 0.1rem 0.35rem 0.1rem 0.35rem;
 				background-color: $part-identifier;
@@ -2520,6 +2524,7 @@ svg.icon {
 			}
 
 			.segment-timeline__identifier {
+				// The Parts identifier label on the right side of the part, showing the Part name or number
 				z-index: -1;
 				padding: 0.1rem 0.35rem 0.1rem 0.6rem;
 				box-sizing: border-box;
