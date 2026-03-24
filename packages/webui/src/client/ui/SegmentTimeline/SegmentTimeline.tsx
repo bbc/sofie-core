@@ -1069,6 +1069,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 										)}
 									</div>
 								)}
+								<div className="segment-timeline__segment-event-identifier">Seg. Identifier</div>
 								{identifiers.length > 0 && (
 									<div className="segment-timeline__part-identifiers">
 										{identifiers.map((ident) => (

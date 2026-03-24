@@ -602,6 +602,7 @@ export const SegmentStoryboard = React.memo(
 							)}
 						</div>
 					)}
+					<div className="segment-timeline__segment-event-identifier">Seg. Identifier</div>
 					{identifiers.length > 0 && (
 						<div className="segment-timeline__part-identifiers">
 							{identifiers.map((ident) => (
