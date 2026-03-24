@@ -47,12 +47,14 @@ export namespace PlaylistTiming {
 				timing.expectedStart ||
 				(timing.expectedDuration ? timing.expectedEnd - timing.expectedDuration : undefined)
 			)
+		} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
+			return timing.expectedStart
 		} else {
 			return undefined
 		}
 	}
 
-	export function getExpectedEnd(timing: RundownPlaylistTiming): number | undefined {
+	export function getExpectedEnd(timing: RundownPlaylistTiming, startedPlayback?: number | undefined): number | undefined {
 		if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
 			return timing.expectedEnd
 		} else if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
@@ -60,6 +62,14 @@ export namespace PlaylistTiming {
 				timing.expectedEnd ||
 				(timing.expectedDuration ? timing.expectedStart + timing.expectedDuration : undefined)
 			)
+		} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
+			if (!startedPlayback) {
+				// before the show, estimate the end from start + dur
+				return timing.expectedStart ? timing.expectedStart + timing.expectedDuration : undefined
+			} else {
+				// after starting the show, project the end from startedPlayback + dur
+				return startedPlayback + timing.expectedDuration
+			}
 		} else {
 			return undefined
 		}
