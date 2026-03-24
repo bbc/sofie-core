@@ -14,12 +14,13 @@ export function RundownHeaderExpectedEnd({
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
+	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing) 
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
 	const now = timingDurations.currentTime ?? Date.now()
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
 	const estEnd =
-		timingDurations.remainingPlaylistDuration !== undefined ? now + timingDurations.remainingPlaylistDuration : null
+		timingDurations.remainingPlaylistDuration !== undefined ? Math.max(now, expectedStart ?? now) + timingDurations.remainingPlaylistDuration : null
 
 	if (expectedEnd === undefined && estEnd === null) return null
 
