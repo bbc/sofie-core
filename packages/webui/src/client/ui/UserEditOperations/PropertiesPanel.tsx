@@ -21,7 +21,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState.js'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { BlueprintAssetIcon } from '../../lib/Components/BlueprintAssetIcon.js'
-import { getSourceLayerClassName } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
+import { RundownUtils } from '../../lib/rundown.js'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 
@@ -278,7 +278,7 @@ function PropertiesEditor({
 						<button
 							className={classNames(
 								'propertiespanel-pop-up__groupselector__button',
-								getSourceLayerClassName(group.sourceLayerType),
+								RundownUtils.getSourceLayerClassName(group.sourceLayerType),
 								selectedGroupId === key && 'active'
 							)}
 							key={key}

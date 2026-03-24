@@ -34,7 +34,6 @@ import {
 import { useRundownViewEventBusListener } from '../../lib/lib.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
-import { getSourceLayerClassName } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 
@@ -596,7 +595,7 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 	}
 
 	if (isInsideViewport) {
-		const typeClass = getSourceLayerClassName(layer.type)
+		const typeClass = RundownUtils.getSourceLayerClassName(layer.type)
 
 		const innerPiece = piece.instance.piece
 
