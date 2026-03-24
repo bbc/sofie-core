@@ -1050,6 +1050,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							renderTag="div"
 						>
 							<div
+								className="segment-timeline__title__content"
 								onDoubleClick={() => {
 									if (this.props.studio.settings.enableUserEdits) {
 										const segment = this.props.segment
