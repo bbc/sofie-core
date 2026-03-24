@@ -1117,7 +1117,7 @@ svg.icon {
 					) !important;
 			}
 			.segment-timeline__part__invalid-part-instance-cover {
-				mix-blend-mode: saturation;
+				mix-blend-mode: overlay;
 				background-image:
 					repeating-linear-gradient(
 						45deg,
@@ -1584,7 +1584,7 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				mix-blend-mode: color-burn;
+				mix-blend-mode: overlay;
 				background-image:
 					repeating-linear-gradient(
 						45deg,
@@ -1610,21 +1610,21 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				mix-blend-mode: saturation; 
+				mix-blend-mode: overlay; 
 				background-image:
 					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 7px,
-						var(--invalid-reason-color-opaque) 7px,
-						var(--invalid-reason-color-opaque) 10px
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
 					),
 					repeating-linear-gradient(
 						-45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 7px,
-						var(--invalid-reason-color-opaque) 7px,
-						var(--invalid-reason-color-opaque) 10px
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
 					);
 			}
 

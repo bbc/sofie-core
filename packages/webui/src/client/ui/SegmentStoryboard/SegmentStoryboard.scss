@@ -606,7 +606,7 @@ $break-width: 35rem;
 		right: 1px;
 		z-index: 1;
 		pointer-events: all;
-		mix-blend-mode: color-burn;
+		mix-blend-mode: overlay;
 		background-image:
 			repeating-linear-gradient(
 				45deg,
@@ -631,7 +631,8 @@ $break-width: 35rem;
 		right: 1px;
 		z-index: 1;
 		pointer-events: all;
-		mix-blend-mode: saturation;
+		mix-blend-mode: overlay;
+		opacity: 100%;
 		background-image:
 			repeating-linear-gradient(
 				45deg,
