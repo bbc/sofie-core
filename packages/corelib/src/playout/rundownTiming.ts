@@ -13,6 +13,7 @@
 
 import {
 	PlaylistTimingBackTime,
+	PlaylistTimingDuration,
 	PlaylistTimingForwardTime,
 	PlaylistTimingNone,
 	PlaylistTimingType,
@@ -32,6 +33,10 @@ export namespace PlaylistTiming {
 
 	export function isPlaylistTimingBackTime(timing: RundownPlaylistTiming): timing is PlaylistTimingBackTime {
 		return timing.type === PlaylistTimingType.BackTime
+	}
+
+	export function isPlaylistDurationTimed(timing: RundownPlaylistTiming): timing is PlaylistTimingDuration {
+		return timing.type === PlaylistTimingType.Duration
 	}
 
 	export function getExpectedStart(timing: RundownPlaylistTiming): number | undefined {
