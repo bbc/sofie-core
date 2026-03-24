@@ -15,7 +15,7 @@ export function RundownHeaderExpectedEnd({
 	const timingDurations = useTiming()
 
 	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
-	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
+	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing, playlist.startedPlayback)
 	const now = timingDurations.currentTime ?? Date.now()
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
