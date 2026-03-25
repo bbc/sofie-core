@@ -658,7 +658,6 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							segment={this.props.segmentui}
 							studio={this.props.studio}
 							parts={this.props.parts}
-							segmentNoteCounts={this.props.segmentNoteCounts}
 							timeScale={this.state.timeScale}
 							maxTimeScale={this.state.maxTimeScale}
 							onRecalculateMaxTimeScale={this.updateMaxTimeScale}

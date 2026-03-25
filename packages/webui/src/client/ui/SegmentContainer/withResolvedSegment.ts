@@ -15,7 +15,6 @@ import {
 	RundownLayoutFilterBase,
 	RundownViewLayout,
 } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
-import { getReactivePieceNoteCountsForSegment } from './getReactivePieceNoteCountsForSegment.js'
 import { SegmentViewMode } from './SegmentViewModes.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { AdlibSegmentUi } from '../../lib/shelf.js'
@@ -93,15 +92,9 @@ export interface IResolvedSegmentProps {
 	showDurationSourceLayers?: Set<ISourceLayer['_id']>
 }
 
-export interface SegmentNoteCounts {
-	criticial: number
-	warning: number
-}
-
 export interface ITrackedResolvedSegmentProps {
 	segmentui: SegmentUi | undefined
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 	hasRemoteItems: boolean
 	hasGuestItems: boolean
 	hasAlreadyPlayed: boolean
@@ -125,7 +118,6 @@ export function withResolvedSegment<T extends IResolvedSegmentProps, IState = {}
 					segmentui: undefined,
 					parts: [],
 					pieces: new Map(),
-					segmentNoteCounts: { criticial: 0, warning: 0 },
 					hasRemoteItems: false,
 					hasGuestItems: false,
 					hasAlreadyPlayed: false,
@@ -240,8 +232,6 @@ export function withResolvedSegment<T extends IResolvedSegmentProps, IState = {}
 				}
 			}
 
-			const segmentNoteCounts = getReactivePieceNoteCountsForSegment(segment)
-
 			let lastValidPartIndex = o.parts.length - 1
 
 			for (let i = lastValidPartIndex; i > 0; i--) {
@@ -280,7 +270,6 @@ export function withResolvedSegment<T extends IResolvedSegmentProps, IState = {}
 			return {
 				segmentui: o.segmentExtended,
 				parts: o.parts,
-				segmentNoteCounts,
 				hasAlreadyPlayed: o.hasAlreadyPlayed,
 				hasRemoteItems: o.hasRemoteItems,
 				hasGuestItems: o.hasGuestItems,

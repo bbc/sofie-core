@@ -209,7 +209,6 @@ export const SegmentAdlibTestingContainer = withResolvedSegment<IProps>(function
 			segment={props.segmentui}
 			studio={props.studio}
 			parts={props.parts}
-			segmentNoteCounts={props.segmentNoteCounts}
 			onItemClick={props.onPieceClick}
 			onItemDoubleClick={props.onPieceDoubleClick}
 			playlist={props.playlist}
