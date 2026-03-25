@@ -54,7 +54,7 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getExpectedEnd(timing: RundownPlaylistTiming, startedPlayback?: number | undefined): number | undefined {
+	export function getExpectedEnd(timing: RundownPlaylistTiming, startedPlayback?: number): number | undefined {
 		if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
 			return timing.expectedEnd
 		} else if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
@@ -84,7 +84,7 @@ export namespace PlaylistTiming {
 			return undefined
 		}
 	}
-
+	
 	export function sortTimings(
 		a: ReadonlyDeep<{ timing: RundownPlaylistTiming }>,
 		b: ReadonlyDeep<{ timing: RundownPlaylistTiming }>
