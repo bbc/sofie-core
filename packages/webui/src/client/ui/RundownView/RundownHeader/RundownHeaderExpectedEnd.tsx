@@ -3,7 +3,6 @@ import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTi
 import { useTranslation } from 'react-i18next'
 import { Countdown } from './Countdown'
 import { useTiming } from '../RundownTiming/withTiming'
-import { RundownPlaylistTiming } from '@sofie-automation/blueprints-integration'
 
 export function RundownHeaderExpectedEnd({
 	playlist,
@@ -15,20 +14,9 @@ export function RundownHeaderExpectedEnd({
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
-	// todo: this should live with the others in client/lib/rundwownTimings.ts
-	function getEstimatedEnd(timing: RundownPlaylistTiming, now: number, remainingPlaylistDuration?: number, startedPlayback?: number): number | undefined {
-		let frontAnchor = PlaylistTiming.getExpectedStart(timing)
-
-		if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
-			frontAnchor = startedPlayback ??PlaylistTiming.getExpectedStart(timing)
-		}
-		
-		return remainingPlaylistDuration !== undefined ? Math.max(now, frontAnchor ?? now) + remainingPlaylistDuration : undefined
-	}
-
 	const now = timingDurations.currentTime ?? Date.now()
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing, playlist.startedPlayback)
-	const estEnd = getEstimatedEnd(playlist.timing, now, timingDurations.remainingPlaylistDuration, playlist.startedPlayback)
+	const estEnd = PlaylistTiming.getEstimatedEnd(playlist.timing, now, timingDurations.remainingPlaylistDuration, playlist.startedPlayback)
 	
 	if (expectedEnd === undefined && estEnd === undefined) return null
 
