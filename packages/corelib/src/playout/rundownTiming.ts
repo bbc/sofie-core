@@ -85,13 +85,18 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getEstimatedEnd(timing: RundownPlaylistTiming, now: number, remainingPlaylistDuration?: number, startedPlayback?: number): number | undefined {
-		let frontAnchor = PlaylistTiming.getExpectedStart(timing)
-		if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
-			frontAnchor = startedPlayback ??PlaylistTiming.getExpectedStart(timing)
+	export function getEstimatedEnd(
+		timing: RundownPlaylistTiming,
+		now: number,
+		remainingPlaylistDuration?: number,
+		startedPlayback?: number
+	): number | undefined {
+		if (remainingPlaylistDuration !== undefined) {
+			const frontAnchor = startedPlayback ? now : Math.max(now, PlaylistTiming.getExpectedStart(timing) ?? now)
+
+			return frontAnchor + remainingPlaylistDuration
 		}
-		
-		return remainingPlaylistDuration !== undefined ? Math.max(now, frontAnchor ?? now) + remainingPlaylistDuration : undefined
+		return undefined
 	}
 
 	export function sortTimings(
