@@ -882,6 +882,10 @@ interface ResolvedPart {
 	 */
 	floated: boolean
 	/**
+	 * Whether this part is excluded from normal timing calculations
+	 */
+	untimed: boolean
+	/**
 	 * Optional explanation for why the part is invalid
 	 */
 	invalidReason?: PartInvalidReason
