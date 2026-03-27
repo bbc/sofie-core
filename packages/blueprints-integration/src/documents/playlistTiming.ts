@@ -51,13 +51,13 @@ export interface PlaylistTimingBackTime extends PlaylistTimingBase {
 }
 
 /**
- * This mode is inteded for shows with a "floating start",
+ * This mode is intended for shows with a "floating start",
  * meaning they will start based on when the show before them on the channel ends.
- * In this mode, we will preserve the Duration and automatically calculate the expectedEnd 
+ * In this mode, we will preserve the Duration and automatically calculate the expectedEnd
  * based on the _actual_ start of the show (playlist.startedPlayback).
- * 
+ *
  * The optional expectedStart property allows setting a start property of the show that will not affect
- * timing calculations, only purpose is to drive UI and inform the users about the preliminary plan as 
+ * timing calculations, only purpose is to drive UI and inform the users about the preliminary plan as
  * planned in the editorial planning tool.
  */
 export interface PlaylistTimingDuration extends PlaylistTimingBase {
@@ -71,4 +71,8 @@ export interface PlaylistTimingDuration extends PlaylistTimingBase {
 	expectedDuration: number
 }
 
-export type RundownPlaylistTiming = PlaylistTimingNone | PlaylistTimingForwardTime | PlaylistTimingBackTime | PlaylistTimingDuration
+export type RundownPlaylistTiming =
+	| PlaylistTimingNone
+	| PlaylistTimingForwardTime
+	| PlaylistTimingBackTime
+	| PlaylistTimingDuration

@@ -16,8 +16,13 @@ export function RundownHeaderExpectedEnd({
 
 	const now = timingDurations.currentTime ?? Date.now()
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing, playlist.startedPlayback)
-	const estEnd = PlaylistTiming.getEstimatedEnd(playlist.timing, now, timingDurations.remainingPlaylistDuration, playlist.startedPlayback)
-	
+	const estEnd = PlaylistTiming.getEstimatedEnd(
+		playlist.timing,
+		now,
+		timingDurations.remainingPlaylistDuration,
+		playlist.startedPlayback
+	)
+
 	if (expectedEnd === undefined && estEnd === undefined) return null
 
 	return (

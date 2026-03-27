@@ -34,7 +34,7 @@ export namespace PlaylistTiming {
 	export function isPlaylistTimingBackTime(timing: RundownPlaylistTiming): timing is PlaylistTimingBackTime {
 		return timing.type === PlaylistTimingType.BackTime
 	}
-	
+
 	export function isPlaylistDurationTimed(timing: RundownPlaylistTiming): timing is PlaylistTimingDuration {
 		return timing.type === PlaylistTimingType.Duration
 	}
@@ -85,12 +85,20 @@ export namespace PlaylistTiming {
 		}
 	}
 
-	export function getEstimatedEnd(timing: RundownPlaylistTiming, now: number, remainingPlaylistDuration?: number, startedPlayback?: number): number | undefined {
-		let frontAnchor = startedPlayback ? now : Math.max(now, PlaylistTiming.getExpectedStart(timing) ?? now)
-		
-		return remainingPlaylistDuration !== undefined ? frontAnchor + remainingPlaylistDuration : undefined
+	export function getEstimatedEnd(
+		timing: RundownPlaylistTiming,
+		now: number,
+		remainingPlaylistDuration?: number,
+		startedPlayback?: number
+	): number | undefined {
+		if (remainingPlaylistDuration !== undefined) {
+			const frontAnchor = startedPlayback ? now : Math.max(now, PlaylistTiming.getExpectedStart(timing) ?? now)
+
+			return frontAnchor + remainingPlaylistDuration
+		}
+		return undefined
 	}
-	
+
 	export function sortTimings(
 		a: ReadonlyDeep<{ timing: RundownPlaylistTiming }>,
 		b: ReadonlyDeep<{ timing: RundownPlaylistTiming }>
