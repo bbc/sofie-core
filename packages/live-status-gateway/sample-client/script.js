@@ -267,10 +267,14 @@ function updateTTimers(tTimers) {
 		} else if (timer.state.pauseTime && now >= timer.state.pauseTime) {
 			// Timer has reached its pauseTime - freeze at that moment
 			currentTime = timer.state.zeroTime - timer.state.pauseTime
-			valueSpan.textContent = formatMillisecondsToTime(currentTime) + ` (pauseTime: ${formatTimestampToTimeOfDay(timer.state.pauseTime)})`
+			valueSpan.textContent =
+				formatMillisecondsToTime(currentTime) +
+				` (pauseTime: ${formatTimestampToTimeOfDay(timer.state.pauseTime)})`
 		} else {
 			currentTime = timer.state.zeroTime - now
-			valueSpan.textContent = formatMillisecondsToTime(currentTime) + ` (zeroTime: ${formatTimestampToTimeOfDay(timer.state.zeroTime)})`
+			valueSpan.textContent =
+				formatMillisecondsToTime(currentTime) +
+				` (zeroTime: ${formatTimestampToTimeOfDay(timer.state.zeroTime)})`
 		}
 
 		// Update projected time if available

@@ -181,7 +181,8 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 								? this._activePlaylist.timing.expectedStart
 								: undefined,
 						expectedEnd:
-							this._activePlaylist.timing.type !== PlaylistTimingType.None && this._activePlaylist.timing.type !== PlaylistTimingType.Duration
+							this._activePlaylist.timing.type !== PlaylistTimingType.None &&
+							this._activePlaylist.timing.type !== PlaylistTimingType.Duration
 								? this._activePlaylist.timing.expectedEnd
 								: undefined,
 					},

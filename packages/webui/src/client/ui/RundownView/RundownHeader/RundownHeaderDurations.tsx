@@ -18,7 +18,7 @@ export function RundownHeaderDurations({
 	// @todo: this _should_ use PlaylistTiming.getExpectedDuration as show above,
 	// but I don't dare changing its behaviour to return for PlaylistTimingType.None within the scope of this task
 	// same issue in RundownHeader.tsx
-	const expectedDuration = playlist.timing.expectedDuration 
+	const expectedDuration = playlist.timing.expectedDuration
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
 	const estDuration = timingDurations.remainingPlaylistDuration
