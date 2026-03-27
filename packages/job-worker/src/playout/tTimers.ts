@@ -238,7 +238,8 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 	let currentSegmentId: SegmentId | undefined = undefined
 
 	// Handle current part/segment
-	if (currentPartInstance) {
+	// TODO: We should consider how to handle the case where the current part is untimed - for now, we just skip it in the calculations
+	if (currentPartInstance && !currentPartInstance.part.untimed) {
 		currentSegmentId = currentPartInstance.segmentId
 		const currentSegment = playoutModel.findSegment(currentPartInstance.segmentId)
 		const currentSegmentBudget = currentSegment?.segment.segmentTiming?.budgetDuration
@@ -332,9 +333,11 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 			timerAnchors.delete(part._id)
 		}
 
-		// Accumulate this part's duration
-		const partDuration = part.expectedDurationWithTransition ?? part.expectedDuration ?? 0
-		segmentAccumulator += partDuration
+		// Accumulate this part's duration (skip untimed parts)
+		if (!part.untimed) {
+			const partDuration = part.expectedDurationWithTransition ?? part.expectedDuration ?? 0
+			segmentAccumulator += partDuration
+		}
 	}
 
 	// Clear projections for unresolved anchors
