@@ -86,12 +86,9 @@ export namespace PlaylistTiming {
 	}
 
 	export function getEstimatedEnd(timing: RundownPlaylistTiming, now: number, remainingPlaylistDuration?: number, startedPlayback?: number): number | undefined {
-		let frontAnchor = PlaylistTiming.getExpectedStart(timing)
-		if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
-			frontAnchor = startedPlayback ??PlaylistTiming.getExpectedStart(timing)
-		}
+		let frontAnchor = startedPlayback ? now : Math.max(now, PlaylistTiming.getExpectedStart(timing) ?? now)
 		
-		return remainingPlaylistDuration !== undefined ? Math.max(now, frontAnchor ?? now) + remainingPlaylistDuration : undefined
+		return remainingPlaylistDuration !== undefined ? frontAnchor + remainingPlaylistDuration : undefined
 	}
 	
 	export function sortTimings(
