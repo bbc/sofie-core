@@ -377,6 +377,9 @@ function updateModelWithGeneratedPart(
 					]),
 				}
 			: undefined,
+		segmentHeaderNotes: blueprintPart.part.segmentHeaderNotes?.map((note) =>
+			wrapTranslatableMessageFromBlueprints(note, [blueprintId])
+		),
 		userEditOperations: translateUserEditsFromBlueprint(blueprintPart.part.userEditOperations, [blueprintId]),
 		userEditProperties: translateUserEditPropertiesFromBlueprint(blueprintPart.part.userEditProperties, [
 			blueprintId,
