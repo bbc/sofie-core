@@ -12,9 +12,10 @@ import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/Part
 import { literal } from 'shuttle-webhid'
 import { Notifications } from '../../collections'
 import { getIgnorePieceContentStatus } from '../../lib/localStorage'
-import { UISegmentPartNotes, UIPieceContentStatuses, UIPartInstances } from '../Collections'
+import { UISegmentPartNotes, UIPieceContentStatuses, UIPartInstances, UIParts } from '../Collections'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import type { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
+import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 
 export interface SegmentHeaderNotesProps {
 	/** Override the classname of the root div */
@@ -77,7 +78,7 @@ function getReactivePieceNoteCountsForSegment(segmentId: SegmentId): SegmentNote
 	const segmentNoteCounts: SegmentNoteCounts = {
 		criticalNotes: 0,
 		warningNotes: 0,
-		headerNotes: [], // TODO - define
+		headerNotes: [],
 	}
 
 	const rawNotes = UISegmentPartNotes.find({ segmentId }, { fields: { note: 1 } }).fetch() as Pick<
@@ -144,9 +145,15 @@ function getReactivePieceNoteCountsForSegment(segmentId: SegmentId): SegmentNote
 		{
 			fields: {
 				_id: 1,
+				// @ts-expect-error deep property
+				'part._id': 1,
+				'part._rank': 1,
+				'part.segmentHeaderNotes': 1,
 			},
 		}
-	).fetch() as Array<Pick<PartInstance, '_id'>>
+	).fetch() as Array<
+		Pick<PartInstance, '_id'> & { part: Pick<PartInstance['part'], '_id' | '_rank' | 'segmentHeaderNotes'> }
+	>
 	const rawNotifications = Notifications.find(
 		{
 			$or: [
@@ -177,6 +184,38 @@ function getReactivePieceNoteCountsForSegment(segmentId: SegmentId): SegmentNote
 			default:
 				assertNever(notification.severity)
 		}
+	}
+
+	const partsForSegment = UIParts.find(
+		{ segmentId },
+		{
+			fields: {
+				_id: 1,
+				_rank: 1,
+				segmentHeaderNotes: 1,
+			},
+		}
+	).fetch() as Array<Pick<DBPart, '_id' | '_rank' | 'segmentHeaderNotes'>>
+
+	// Collect the segment header notes from the parts in part rank order, with partinstance taking priority over the part
+	const partIdsWithInstance = new Set(partInstancesForSegment.map((pi) => pi.part._id))
+
+	const mergedNoteEntries: Array<{ rank: number; notes: ITranslatableMessage[] }> = []
+	for (const partInstance of partInstancesForSegment) {
+		if (partInstance.part.segmentHeaderNotes?.length) {
+			mergedNoteEntries.push({ rank: partInstance.part._rank, notes: partInstance.part.segmentHeaderNotes })
+		}
+	}
+	for (const part of partsForSegment) {
+		if (partIdsWithInstance.has(part._id)) continue
+		if (part.segmentHeaderNotes?.length) {
+			mergedNoteEntries.push({ rank: part._rank, notes: part.segmentHeaderNotes })
+		}
+	}
+
+	mergedNoteEntries.sort((a, b) => a.rank - b.rank)
+	for (const entry of mergedNoteEntries) {
+		segmentNoteCounts.headerNotes.push(...entry.notes)
 	}
 
 	return segmentNoteCounts
