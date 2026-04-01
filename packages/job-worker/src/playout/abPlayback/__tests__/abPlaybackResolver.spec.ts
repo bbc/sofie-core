@@ -665,7 +665,7 @@ describe('resolveAbAssignmentsFromRequests', () => {
 				name: 'c',
 				start: 10000,
 				end: 15000,
-				playerId: 1,
+				playerId: 2,
 				pieceNames: ['p3'],
 			},
 			// lookaheads (in order of future use)
@@ -686,8 +686,8 @@ describe('resolveAbAssignmentsFromRequests', () => {
 		expect(res.failedRequired).toEqual([])
 		expectGotPlayer(res, 'a', 2)
 		expectGotPlayer(res, 'b', 1)
-		expectGotPlayer(res, 'c', 1)
-		expectGotPlayer(res, 'z', 2)
+		expectGotPlayer(res, 'c', 2)
+		expectGotPlayer(res, 'z', 1)
 	})
 
 	test('Preserve on-air optional over a required', () => {
