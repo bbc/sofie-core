@@ -10,10 +10,16 @@ class MockWebSocket extends EventEmitter {
 	private cachedId = ''
 	private initialized = true
 
-	constructor(_url: string, _options?: { [name: string]: unknown }) {
+	constructor(url: string, _options?: { [name: string]: unknown }) {
 		super()
+		const isValidHost = url.includes('127.0.0.1')
 		setTimeout(() => {
-			this.emit('open')
+			if (isValidHost) {
+				this.emit('open')
+			} else {
+				this.emit('error', new Error('Network error'))
+				this.emit('close', 1006, Buffer.from('Network error'))
+			}
 		}, 1)
 	}
 
@@ -203,7 +209,7 @@ class MockWebSocket extends EventEmitter {
 		}
 	}
 	close(): void {
-		this.emit('close', 200, Buffer.from('I had a great time!'))
+		this.emit('close', 1200, Buffer.from('I had a great time!'))
 	}
 }
 

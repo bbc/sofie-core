@@ -8,7 +8,6 @@ import {
 import { CoreConnection, PeripheralDevicePubSub, PeripheralDevicePubSubCollectionsNames } from '../index.js'
 import { DDPConnectorOptions } from '../lib/ddpClient.js'
 jest.mock('ws')
-jest.mock('got')
 
 process.on('unhandledRejection', (reason) => {
 	console.log('Unhandled Promise rejection!', reason)
