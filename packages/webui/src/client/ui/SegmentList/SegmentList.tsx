@@ -18,9 +18,10 @@ import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { ISourceLayerExtended } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
 import {
-	isLoopRunning,
-	isQuickLoopStart,
-	isQuickLoopEnd,
+	isLoopRunning as getIsLoopRunning,
+	isQuickLoopStart as getIsQuickLoopStart,
+	isQuickLoopEnd as getIsQuickLoopEnd,
+	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
 } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 
 interface IProps {
@@ -139,6 +140,9 @@ const SegmentListInner = React.forwardRef<HTMLDivElement, IProps>(function Segme
 		// if (isLivePart) currentPartIndex = index
 		// if (isNextPart) nextPartIndex = index
 
+		const isPlaylistLooping = getIsLoopRunning(props.playlist)
+		const isEntirePlaylistLooping = getIsEntirePlaylistLooping(props.playlist)
+
 		if (part.instance.part.invalid && part.instance.part.gap) return null
 
 		const partComponent = (
@@ -161,9 +165,10 @@ const SegmentListInner = React.forwardRef<HTMLDivElement, IProps>(function Segme
 				doesPlaylistHaveNextPart={playlistHasNextPart}
 				onPieceDoubleClick={props.onPieceDoubleClick}
 				onContextMenu={props.onContextMenu}
-				isPlaylistLooping={isLoopRunning(props.playlist)}
-				isQuickLoopStart={isQuickLoopStart(part.partId, props.playlist)}
-				isQuickLoopEnd={isQuickLoopEnd(part.partId, props.playlist)}
+				isPlaylistLooping={isPlaylistLooping}
+				isEntirePlaylistLooping={isEntirePlaylistLooping}
+				isQuickLoopStart={getIsQuickLoopStart(part.partId, props.playlist)}
+				isQuickLoopEnd={getIsQuickLoopEnd(part.partId, props.playlist)}
 			/>
 		)
 
