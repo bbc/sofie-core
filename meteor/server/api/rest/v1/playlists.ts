@@ -14,7 +14,7 @@ import {
 	RundownPlaylistId,
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import { Match, check } from '../../../lib/check'
 import { PlaylistsRestAPI } from '../../../lib/rest/v1'
 import { Meteor } from 'meteor/meteor'
