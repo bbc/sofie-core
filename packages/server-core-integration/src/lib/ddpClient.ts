@@ -12,7 +12,7 @@ import { EventEmitter } from 'events'
 import got from 'got'
 import { ProtectedString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 
-export interface TLSOpts {
+export interface DDPTLSOptions {
 	// Described in https://nodejs.org/api/tls.html#tls_tls_connect_options_callback
 
 	/* Necessary only if the server uses a self-signed certificate.*/
@@ -41,7 +41,7 @@ export interface DDPConnectorOptions {
 	debug?: boolean
 	autoReconnect?: boolean // default: true
 	autoReconnectTimer?: number
-	tlsOpts?: TLSOpts
+	tlsOpts?: DDPTLSOptions
 	useSockJs?: boolean
 	url?: string
 	maintainCollections?: boolean
@@ -391,7 +391,7 @@ export class DDPClient extends EventEmitter<DDPClientEvents> {
 	}
 	public static readonly supportedDdpVersions = ['1', 'pre2', 'pre1']
 
-	private tlsOpts!: TLSOpts
+	private tlsOpts!: DDPTLSOptions
 	private isConnecting = false
 	private isReconnecting = false
 	private isClosing = false
