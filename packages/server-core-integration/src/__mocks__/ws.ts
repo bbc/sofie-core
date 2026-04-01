@@ -6,11 +6,11 @@ import * as EJSON from 'ejson'
 
 const literal = <T>(t: T) => t
 
-export class Client extends EventEmitter {
+class MockWebSocket extends EventEmitter {
 	private cachedId = ''
 	private initialized = true
 
-	constructor(_url: string, _protcols?: Array<string> | null, _options?: { [name: string]: unknown }) {
+	constructor(_url: string, _options?: { [name: string]: unknown }) {
 		super()
 		setTimeout(() => {
 			this.emit('open')
@@ -21,46 +21,50 @@ export class Client extends EventEmitter {
 		const message = EJSON.parse(data) as AnyMessage
 		// console.log(util.inspect(message, { depth: 10 }))
 		if (message.msg === 'connect') {
-			this.emit('message', {
-				data: EJSON.stringify(
+			this.emit(
+				'message',
+				EJSON.stringify(
 					literal<AnyMessage>({
 						msg: 'connected',
 						session: 'wibble',
 					})
-				),
-			})
+				)
+			)
 			return
 		}
 		if (message.msg === 'method') {
 			if (message.method === 'peripheralDevice.initialize') {
 				this.initialized = true
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'result',
 							id: message.id,
 							result: message.params![0],
 						})
-					),
-				})
+					)
+				)
 				return
 			}
 			if (message.method === 'systemTime.getTimeDiff') {
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'result',
 							id: message.id,
 							result: { currentTime: Date.now() },
 						})
-					),
-				})
+					)
+				)
 				return
 			}
 			if (message.method === 'peripheralDevice.status') {
 				if (this.initialized) {
-					this.emit('message', {
-						data: EJSON.stringify(
+					this.emit(
+						'message',
+						EJSON.stringify(
 							literal<AnyMessage>({
 								msg: 'result',
 								id: message.id,
@@ -68,22 +72,24 @@ export class Client extends EventEmitter {
 									statusCode: (message.params![2] as any).statusCode,
 								},
 							})
-						),
-					})
+						)
+					)
 					if ((message.params![2] as any).messages[0].indexOf('Jest ') >= 0) {
-						this.emit('message', {
-							data: EJSON.stringify(
+						this.emit(
+							'message',
+							EJSON.stringify(
 								literal<AnyMessage>({
 									msg: 'changed',
 									collection: 'peripheralDeviceForDevice',
 									id: 'JestTest',
 								})
-							),
-						})
+							)
+						)
 					}
 				} else {
-					this.emit('message', {
-						data: EJSON.stringify(
+					this.emit(
+						'message',
+						EJSON.stringify(
 							literal<AnyMessage>({
 								msg: 'result',
 								id: message.id,
@@ -92,14 +98,15 @@ export class Client extends EventEmitter {
 									errorType: 'Meteor.Error',
 								},
 							})
-						),
-					})
+						)
+					)
 				}
 				return
 			}
 			if (message.method === 'peripheralDevice.testMethod') {
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'result',
 							id: message.id,
@@ -112,25 +119,27 @@ export class Client extends EventEmitter {
 									}
 								: undefined,
 						})
-					),
-				})
+					)
+				)
 				return
 			}
 			if (message.method === 'peripheralDevice.unInitialize') {
 				this.initialized = false
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'result',
 							id: message.id,
 							result: message.params![0],
 						})
-					),
-				})
+					)
+				)
 				return
 			}
-			this.emit('message', {
-				data: EJSON.stringify(
+			this.emit(
+				'message',
+				EJSON.stringify(
 					literal<AnyMessage>({
 						msg: 'result',
 						id: message.id,
@@ -140,60 +149,62 @@ export class Client extends EventEmitter {
 							errorType: 'Meteor.Error',
 						},
 					})
-				),
-			})
+				)
+			)
 			return
 		}
 		if (message.msg === 'sub') {
 			this.cachedId = message.params![0] as any
 			setTimeout(() => {
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'added',
 							collection: message.name,
 							id: this.cachedId,
 						})
-					),
-				})
+					)
+				)
 			}, 1)
 			setTimeout(() => {
-				this.emit('message', {
-					data: EJSON.stringify(
+				this.emit(
+					'message',
+					EJSON.stringify(
 						literal<AnyMessage>({
 							msg: 'ready',
 							subs: [message.id],
 						})
-					),
-				})
+					)
+				)
 			}, 100)
 			return
 		}
 		if (message.msg === 'unsub') {
-			this.emit('message', {
-				data: JSON.stringify(
+			this.emit(
+				'message',
+				JSON.stringify(
 					literal<AnyMessage>({
 						msg: 'removed',
 						collection: 'peripheralDeviceForDevice',
 						id: this.cachedId,
 					})
-				),
-			})
-			this.emit('message', {
-				data: JSON.stringify(
+				)
+			)
+			this.emit(
+				'message',
+				JSON.stringify(
 					literal<AnyMessage>({
 						msg: 'nosub',
 						id: message.id,
 					})
-				),
-			})
+				)
+			)
 		}
 	}
 	close(): void {
-		this.emit('close', {
-			code: 200,
-			reason: 'I had a great time!',
-			wasClean: true,
-		})
+		this.emit('close', 200, Buffer.from('I had a great time!'))
 	}
 }
+
+export default MockWebSocket

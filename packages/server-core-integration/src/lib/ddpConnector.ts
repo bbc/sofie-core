@@ -4,7 +4,7 @@ import { DDPClient, DDPConnectorOptions } from './ddpClient.js'
 export type DDPConnectorEvents = {
 	error: [e: any]
 	failed: [error: Error]
-	message: [message: any]
+	message: [message: string]
 
 	connectionChanged: [connected: boolean]
 	connected: []
@@ -20,7 +20,7 @@ export class DDPConnector extends EventEmitter<DDPConnectorEvents> {
 	private _connectionId: string | undefined = undefined
 
 	private ddpIsOpen = false
-	private _monitorDDPConnectionInterval: any = null
+	private _monitorDDPConnectionInterval: NodeJS.Timeout | null = null
 
 	constructor(options: DDPConnectorOptions) {
 		super()
@@ -48,8 +48,8 @@ export class DDPConnector extends EventEmitter<DDPConnectorEvents> {
 			this.ddpClient.on('socket-close', () => {
 				this._onclientConnectionChange(false)
 			})
-			this.ddpClient.on('message', (message: any) => this._onClientMessage(message))
-			this.ddpClient.on('socket-error', (error: any) => this._onClientError(error))
+			this.ddpClient.on('message', (message) => this._onClientMessage(message))
+			this.ddpClient.on('socket-error', (error) => this._onClientError(error))
 		} else {
 			if (this.ddpClient.socket) {
 				this.ddpClient.close()
@@ -162,7 +162,7 @@ export class DDPConnector extends EventEmitter<DDPConnectorEvents> {
 		}
 		this._monitorDDPConnection()
 	}
-	private _onClientMessage(message: any) {
+	private _onClientMessage(message: string) {
 		// message
 		this.emit('message', message)
 	}
