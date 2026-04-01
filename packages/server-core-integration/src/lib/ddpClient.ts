@@ -9,7 +9,6 @@
 import WebSocket from 'ws'
 import * as EJSON from 'ejson'
 import { EventEmitter } from 'events'
-import got from 'got'
 import { ProtectedString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 
 export interface DDPTLSOptions {
@@ -42,7 +41,6 @@ export interface DDPConnectorOptions {
 	autoReconnect?: boolean // default: true
 	autoReconnectTimer?: number
 	tlsOpts?: DDPTLSOptions
-	useSockJs?: boolean
 	url?: string
 	maintainCollections?: boolean
 	ddpVersion?: '1' | 'pre2' | 'pre1'
@@ -357,10 +355,6 @@ export class DDPClient extends EventEmitter<DDPClientEvents> {
 	public get ssl(): boolean {
 		return this.sslInt
 	}
-	private useSockJSInt!: boolean
-	public get useSockJS(): boolean {
-		return this.useSockJSInt
-	}
 	private autoReconnectInt!: boolean
 	public get autoReconnect(): boolean {
 		return this.autoReconnectInt
@@ -420,7 +414,6 @@ export class DDPClient extends EventEmitter<DDPClientEvents> {
 		this.pathInt = opts.path
 		this.sslInt = opts.ssl || this.port === 443
 		this.tlsOpts = opts.tlsOpts || {}
-		this.useSockJSInt = opts.useSockJs || false
 		this.autoReconnectInt = opts.autoReconnect === false ? false : true
 		this.autoReconnectTimerInt = opts.autoReconnectTimer || 500
 		this.maintainCollectionsInt = opts.maintainCollections || true
@@ -693,14 +686,7 @@ export class DDPClient extends EventEmitter<DDPClientEvents> {
 			})
 		}
 
-		if (this.useSockJS) {
-			this.makeSockJSConnection().catch((e) => {
-				this.emit('failed', e)
-			})
-		} else {
-			const url = this.buildWsUrl()
-			this.makeWebSocketConnection(url)
-		}
+		this.makeWebSocketConnection(this.buildWsUrl())
 	}
 
 	private endPendingMethodCalls(): void {
@@ -727,53 +713,14 @@ export class DDPClient extends EventEmitter<DDPClientEvents> {
 		}
 	}
 
-	private async makeSockJSConnection(): Promise<void> {
-		const protocol = this.ssl ? 'https://' : 'http://'
-		if (this.path && !this.path?.endsWith('/')) {
-			this.pathInt = this.path + '/'
-		}
-		const url = `${protocol}${this.host}:${this.port}/${this.path || ''}sockjs/info`
-
-		try {
-			const response = await got(url, {
-				headers: this.getHeadersWithDefaults(),
-				https: {
-					certificateAuthority: this.tlsOpts.ca,
-					key: this.tlsOpts.key,
-					certificate: this.tlsOpts.cert,
-					checkServerIdentity: this.tlsOpts.checkServerIdentity,
-					rejectUnauthorized: this.tlsOpts.rejectUnauthorized !== false,
-				},
-				responseType: 'json',
-			})
-			// Info object defined here(?): https://github.com/sockjs/sockjs-node/blob/master/lib/info.js
-			const info = response.body as { base_url: string }
-			if (!info || !info.base_url) {
-				const url = this.buildWsUrl()
-				this.makeWebSocketConnection(url)
-			} else if (info.base_url.indexOf('http') === 0) {
-				const url = (info.base_url + '/websocket').replace(/^http/, 'ws')
-				this.makeWebSocketConnection(url)
-			} else {
-				const path = info.base_url + '/websocket'
-				const url = this.buildWsUrl(path)
-				this.makeWebSocketConnection(url)
-			}
-		} catch (err) {
-			this.recoverNetworkError(err)
-		}
-	}
-
-	private buildWsUrl(path?: string): string {
-		let url: string
-		path = path || this.path || 'websocket'
-		const protocol = this.ssl ? 'wss://' : 'ws://'
-		if (this.url && !this.useSockJS) {
-			url = this.url
+	private buildWsUrl(): string {
+		if (this.url) {
+			return this.url
 		} else {
-			url = `${protocol}${this.host}:${this.port}${path.indexOf('/') === 0 ? path : '/' + path}`
+			const path = this.path || 'websocket'
+			const protocol = this.ssl ? 'wss://' : 'ws://'
+			return `${protocol}${this.host}:${this.port}${path.indexOf('/') === 0 ? path : '/' + path}`
 		}
-		return url
 	}
 
 	private makeWebSocketConnection(url: string): void {

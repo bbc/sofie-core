@@ -7170,7 +7170,6 @@ __metadata:
     "@types/koa": "npm:^3.0.1"
     "@types/ws": "npm:^8.5.10"
     ejson: "npm:^2.2.3"
-    got: "npm:^11.8.6"
     koa: "npm:^3.1.1"
     tslib: "npm:^2.8.1"
     underscore: "npm:^1.13.7"

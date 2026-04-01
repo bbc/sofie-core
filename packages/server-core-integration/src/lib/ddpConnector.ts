@@ -35,7 +35,6 @@ export class DDPConnector extends EventEmitter<DDPConnectorEvents> {
 			path: this._options.path || '',
 			ssl: this._options.ssl || false,
 			tlsOpts: this._options.tlsOpts || {},
-			useSockJs: true,
 			autoReconnect: false, // we'll handle reconnections ourselves
 			autoReconnectTimer: 1000,
 			maintainCollections: true,
