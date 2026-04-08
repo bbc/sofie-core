@@ -378,7 +378,7 @@
 	.rundown-header__menu-btn {
 		background: none;
 		border: none;
-		color: #40b8fa99;
+		color: rgba(255, 255, 255, 0.7);
 		cursor: pointer;
 		padding: 0 1em;
 		display: flex;
@@ -595,7 +595,7 @@
 		align-items: center;
 		margin-right: 0.75em;
 		cursor: pointer;
-		color: #40b8fa;
+		color: rgba(255, 255, 255, 0.7);
 		opacity: 0;
 		flex-shrink: 0;
 		transition: opacity 0.2s;
@@ -627,7 +627,7 @@
 
 	&:hover {
 		.rundown-header__menu-btn:not(:disabled) {
-			color: #40b8fa;
+			color: rgba(255, 255, 255, 0.8);
 		}
 
 		.rundown-header__hoverable-label,
