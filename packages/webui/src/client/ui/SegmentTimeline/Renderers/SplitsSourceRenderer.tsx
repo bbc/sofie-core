@@ -5,8 +5,8 @@ import ClassNames from 'classnames'
 import { CustomLayerItemRenderer, ICustomLayerItemProps } from './CustomLayerItemRenderer.js'
 
 import { SplitsContent } from '@sofie-automation/blueprints-integration'
-import { RundownUtils } from '../../../lib/rundown.js'
 import { getSplitPreview, SplitRole, SplitSubItem } from '../../../lib/ui/splitPreview.js'
+import { RundownUtils } from '../../../lib/rundown.js'
 
 type IProps = ICustomLayerItemProps
 

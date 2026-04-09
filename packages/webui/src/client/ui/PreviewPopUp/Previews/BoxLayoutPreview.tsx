@@ -1,9 +1,9 @@
 import { SplitsContentBoxContent, SplitsContentBoxProperties } from '@sofie-automation/blueprints-integration'
 import classNames from 'classnames'
 import { useMemo } from 'react'
-import { RundownUtils } from '../../../lib/rundown.js'
 import { getSplitPreview, SplitRole } from '../../../lib/ui/splitPreview.js'
 import { ReadonlyDeep } from 'type-fest'
+import { RundownUtils } from '../../../lib/rundown.js'
 
 interface BoxLayoutPreviewProps {
 	content: {

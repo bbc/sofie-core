@@ -3,13 +3,11 @@ import _ from 'underscore'
 import { ISourceLayer, NoteSeverity, PieceLifespan } from '@sofie-automation/blueprints-integration'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { withTracker } from '../../lib/ReactMeteorData/react-meteor-data.js'
-import { IOutputLayerExtended, ISourceLayerExtended, PartExtended, SegmentExtended } from '../../lib/RundownResolver.js'
 import { IContextMenuContext } from '../RundownView.js'
 import { equalSets } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { RundownUtils } from '../../lib/rundown.js'
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { DBPart, PartExtended } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { slowDownReactivity } from '../../lib/reactiveData/reactiveDataHelper.js'
 import { memoizedIsolatedAutorun } from '../../lib/memoizedIsolatedAutorun.js'
 import { getIsFilterActive } from '../../lib/rundownLayouts.js'
@@ -21,8 +19,6 @@ import { getReactivePieceNoteCountsForSegment } from './getReactivePieceNoteCoun
 import { SegmentViewMode } from './SegmentViewModes.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { AdlibSegmentUi } from '../../lib/shelf.js'
-import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import {
 	PartId,
 	RundownId,
@@ -32,11 +28,16 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { PieceInstances, Segments } from '../../collections/index.js'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil.js'
-import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import { SegmentExtended, SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil.js'
-import type { PieceUi } from '@sofie-automation/meteor-lib/dist/uiTypes/Piece'
-
-export type { PieceUi } from '@sofie-automation/meteor-lib/dist/uiTypes/Piece'
+import {
+	IOutputLayerExtended,
+	ISourceLayerExtended,
+	UIShowStyleBase,
+} from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
+import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 
 export interface SegmentUi extends SegmentExtended {
 	/** Output layers available in the installation used by this segment */
@@ -65,7 +66,7 @@ export interface IResolvedSegmentProps {
 	segmentId: SegmentId
 	segmentsIdsBefore: Set<SegmentId>
 	rundownIdsBefore: RundownId[]
-	rundownsToShowstyles: ReadonlyMap<RundownId, ShowStyleBaseId>
+	rundownsToShowStyles: ReadonlyMap<RundownId, ShowStyleBaseId>
 	studio: UIStudio
 	showStyleBase: UIShowStyleBase
 	playlist: DBRundownPlaylist
@@ -201,19 +202,23 @@ export function withResolvedSegment<T extends IResolvedSegmentProps, IState = {}
 			const rundownIndex = rundownOrder.indexOf(segment.rundownId)
 
 			const o = RundownUtils.getResolvedSegment(
-				props.showStyleBase,
-				props.studio,
-				props.playlist,
-				props.rundown,
-				segment,
-				props.segmentsIdsBefore,
-				rundownOrder.slice(0, rundownIndex),
-				props.rundownsToShowstyles,
-				orderedAllPartIds,
-				currentPartInstance,
-				nextPartInstance,
-				true,
-				true
+				{
+					showStyleBase: props.showStyleBase,
+					studio: props.studio,
+					playlist: props.playlist,
+					rundown: props.rundown,
+					segment,
+					segmentsToReceiveOnRundownEndFromSet: props.segmentsIdsBefore,
+					rundownsToReceiveOnShowStyleEndFrom: rundownOrder.slice(0, rundownIndex),
+					rundownsToShowStyles: props.rundownsToShowStyles,
+					orderedAllPartIds,
+					currentPartInstance,
+					nextPartInstance,
+				},
+				{
+					pieceInstanceSimulation: true,
+					includeDisabledPieces: true,
+				}
 			)
 
 			if (props.rundownViewLayout && o.segmentExtended) {

@@ -10,7 +10,6 @@ import {
 	withTracker,
 } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
 import { getCurrentTime } from '../../../lib/systemTime.js'
-import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import { PieceIconContainer } from '../ClockViewPieceIcons/ClockViewPieceIcon.js'
 import { PieceNameContainer } from '../ClockViewPieceIcons/ClockViewPieceName.js'
@@ -29,9 +28,7 @@ import {
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
-import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { UIShowStyleBases, UIStudios } from '../../Collections.js'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { PieceInstances, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../../collections/index.js'
 import { RundownPlaylistCollectionUtil } from '../../../collections/rundownPlaylistUtil.js'
 import { CorelibPubSub } from '@sofie-automation/corelib/dist/pubsub'
@@ -43,12 +40,14 @@ import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownHeader/C
 import { AdjustLabelFit } from '../../util/AdjustLabelFit.js'
 import { AutoNextStatus } from '../../RundownView/RundownTiming/AutoNextStatus.js'
 import { useTranslation } from 'react-i18next'
-import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
+import { DBShowStyleBase, UIShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { TTimerDisplay } from '../TTimerDisplay.js'
 import { getDefaultTTimer } from '../../../lib/tTimerUtils.js'
 import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance.js'
 import { DirectorScreenTop } from './DirectorScreenTop.js'
 import { useTiming } from '../../RundownView/RundownTiming/withTiming.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
 
 interface SegmentUi extends DBSegment {
 	items: Array<PartUi>
@@ -150,7 +149,7 @@ function getShowStyleBaseIdSegmentPartUi(
 		segments: DBSegment[]
 		parts: DBPart[]
 	},
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowStyles: Map<RundownId, ShowStyleBaseId>,
 	currentPartInstance: PartInstance | undefined,
 	nextPartInstance: PartInstance | undefined
 ): {
@@ -196,19 +195,25 @@ function getShowStyleBaseIdSegmentPartUi(
 			// re-evaluated when a piece like that appears.
 
 			const o = RundownUtils.getResolvedSegment(
-				showStyleBase,
-				studio,
-				playlist,
-				currentRundown,
-				orderedSegmentsAndParts.segments[segmentIndex],
-				new Set(orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)),
-				rundownOrder.slice(0, rundownIndex),
-				rundownsToShowstyles,
-				orderedSegmentsAndParts.parts.map((part) => part._id),
-				currentPartInstance,
-				nextPartInstance,
-				true,
-				true
+				{
+					showStyleBase,
+					studio,
+					playlist,
+					rundown: currentRundown,
+					segment: orderedSegmentsAndParts.segments[segmentIndex],
+					segmentsToReceiveOnRundownEndFromSet: new Set(
+						orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)
+					),
+					rundownsToReceiveOnShowStyleEndFrom: rundownOrder.slice(0, rundownIndex),
+					rundownsToShowStyles,
+					orderedAllPartIds: orderedSegmentsAndParts.parts.map((part) => part._id),
+					currentPartInstance,
+					nextPartInstance,
+				},
+				{
+					pieceInstanceSimulation: true,
+					includeDisabledPieces: true,
+				}
 			)
 
 			segment = {

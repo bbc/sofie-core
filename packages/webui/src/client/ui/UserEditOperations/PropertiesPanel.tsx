@@ -16,7 +16,6 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
 import { useSelectedElements, useSelectedElementsContext } from '../RundownView/SelectedElementsContext.js'
-import { RundownUtils } from '../../lib/rundown.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState.js'
@@ -27,6 +26,7 @@ import {
 	CoreUserEditingDefinition,
 	CoreUserEditingProperties,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions.js'
+import { RundownUtils } from '../../lib/rundown.js'
 
 type PendingChange = DefaultUserOperationEditProperties['payload']
 

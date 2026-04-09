@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react'
 import ClassNames from 'classnames'
-import { RundownUtils } from '../../../lib/rundown.js'
 import { ILayerItemRendererProps } from './ItemRendererFactory.js'
 import { VTContent, LiveSpeakContent } from '@sofie-automation/blueprints-integration'
 import { getElementDocumentOffset, OffsetPosition } from '../../../utils/positions.js'
@@ -14,6 +13,7 @@ import {
 	IPreviewPopUpSession,
 	convertSourceLayerItemToPreview,
 } from '../../PreviewPopUp/PreviewPopUpContext.js'
+import { RundownUtils } from '../../../lib/rundown.js'
 
 export const VTListItemRenderer: React.FunctionComponent<ILayerItemRendererProps> = (
 	props: ILayerItemRendererProps
