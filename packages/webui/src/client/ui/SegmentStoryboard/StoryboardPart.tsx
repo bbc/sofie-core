@@ -34,6 +34,7 @@ interface IProps {
 	isLastSegment?: boolean
 	isLastPartInSegment?: boolean
 	isPlaylistLooping?: boolean
+	isEntirePlaylistLooping?: boolean
 	isEndOfLoopingShow?: boolean
 	isQuickLoopStart: boolean
 	isQuickLoopEnd: boolean
@@ -56,6 +57,7 @@ export function StoryboardPart({
 	isLastPartInSegment,
 	isLastSegment,
 	isPlaylistLooping,
+	isEntirePlaylistLooping,
 	isEndOfLoopingShow,
 	isQuickLoopStart,
 	isQuickLoopEnd,
@@ -127,7 +129,7 @@ export function StoryboardPart({
 	const isInvalid = part.instance.part.invalid
 	const isFloated = part.instance.part.floated
 	const isInsideQuickLoop = timingDurations.partsInQuickLoop?.[getPartInstanceTimingId(part.instance)] ?? false
-	const isOutsideActiveQuickLoop = !isInsideQuickLoop && isPlaylistLooping && !isNextPart
+	const isOutsideActiveQuickLoop = !isInsideQuickLoop && isPlaylistLooping && !isEntirePlaylistLooping && !isNextPart
 
 	return (
 		<ContextMenuTrigger
