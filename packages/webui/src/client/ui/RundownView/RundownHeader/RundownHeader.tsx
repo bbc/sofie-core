@@ -7,9 +7,7 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { RundownLayoutRundownHeader } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
 import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import Navbar from 'react-bootstrap/Navbar'
 import { RundownContextMenu, RundownHeaderContextMenuTrigger, RundownHamburgerButton } from './RundownContextMenu'
 import { TimeOfDay } from '../RundownTiming/TimeOfDay'
@@ -24,6 +22,8 @@ import { RundownHeaderDurations } from './RundownHeaderDurations'
 import { RundownHeaderExpectedEnd } from './RundownHeaderExpectedEnd'
 import { HeaderFreezeFrameIcon } from './HeaderFreezeFrameIcon'
 import './RundownHeader.scss'
+import { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio'
 
 interface IRundownHeaderProps {
 	playlist: DBRundownPlaylist

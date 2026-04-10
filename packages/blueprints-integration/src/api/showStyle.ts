@@ -141,7 +141,12 @@ export interface ShowStyleBlueprintManifest<
 		privateData: unknown | undefined,
 		publicData: unknown | undefined,
 		actionOptions: { [key: string]: any } | undefined
-	) => Promise<void>
+	) => Promise<{
+		/**
+		 * To be set if the payload sent by the user is invalid. When set, a 409 `ValidationFailed` message will be displayed to the User.
+		 */
+		validationErrors: any
+	} | void>
 
 	/** Generate adlib piece from ingest data */
 	getAdlibItem?: (

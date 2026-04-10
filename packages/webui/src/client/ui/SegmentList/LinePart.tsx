@@ -2,13 +2,12 @@ import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import React, { useCallback, useState } from 'react'
-import { ISourceLayerExtended, PartExtended } from '../../lib/RundownResolver.js'
 import { contextMenuHoldToDisplayTime } from '../../lib/lib.js'
 import { RundownUtils } from '../../lib/rundown.js'
 import { getElementDocumentOffset } from '../../utils/positions.js'
 import { IContextMenuContext } from '../RundownView.js'
 import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
-import { PieceUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import { SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { SegmentTimelinePartElementId } from '../SegmentTimeline/Parts/SegmentTimelinePart.js'
 import { LinePartIdentifier } from './LinePartIdentifier.js'
 import { LinePartPieceIndicators } from './LinePartPieceIndicators.js'
@@ -17,6 +16,9 @@ import { LinePartTitle } from './LinePartTitle.js'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { RundownTimingContext, getPartInstanceTimingId } from '../../lib/rundownTiming.js'
 import { LoopingIcon } from '../../lib/ui/icons/looping.js'
+import { ISourceLayerExtended } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
+import { PartExtended } from '@sofie-automation/corelib/src/dataModel/Part.js'
 
 interface IProps {
 	segment: SegmentUi
@@ -29,6 +31,7 @@ interface IProps {
 	isQuickLoopEnd: boolean
 	// isLastSegment?: boolean
 	// isLastPartInSegment?: boolean
+	isEntirePlaylistLooping: boolean
 	isPlaylistLooping: boolean
 	indicatorColumns: Record<string, ISourceLayerExtended[]>
 	adLibIndicatorColumns: Record<string, ISourceLayerExtended[]>
@@ -55,6 +58,7 @@ export function LinePart({
 	indicatorColumns,
 	adLibIndicatorColumns,
 	isPlaylistLooping,
+	isEntirePlaylistLooping,
 	isQuickLoopStart,
 	isQuickLoopEnd,
 	onContextMenu,
@@ -78,7 +82,8 @@ export function LinePart({
 
 	const timingId = getPartInstanceTimingId(part.instance)
 	const isInsideQuickLoop = (timingDurations.partsInQuickLoop || {})[timingId]
-	const isOutsideActiveQuickLoop = isPlaylistLooping && !isInsideQuickLoop && !isNextPart && !hasAlreadyPlayed
+	const isOutsideActiveQuickLoop =
+		isPlaylistLooping && !isInsideQuickLoop && !isEntirePlaylistLooping && !isNextPart && !hasAlreadyPlayed
 
 	const getPartContext = useCallback(() => {
 		const partElement = document.querySelector('#' + SegmentTimelinePartElementId + part.instance._id)

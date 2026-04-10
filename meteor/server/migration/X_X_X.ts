@@ -64,7 +64,7 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 		canBeRunAutomatically: true,
 		validate: async () => {
 			const playlistCount = await RundownPlaylists.countDocuments({ tTimers: { $exists: false } })
-			if (playlistCount > 1) return `There are ${playlistCount} RundownPlaylists without T-timers`
+			if (playlistCount > 0) return `There are ${playlistCount} RundownPlaylists without T-timers`
 			return false
 		},
 		migrate: async () => {

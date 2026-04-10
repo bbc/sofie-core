@@ -10,20 +10,19 @@ import { RundownUtils } from '../../lib/rundown.js'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SegmentDuration } from '../RundownView/RundownTiming/SegmentDuration.js'
-import { PartExtended } from '../../lib/RundownResolver.js'
 import { memoizedIsolatedAutorun } from '../../lib/memoizedIsolatedAutorun.js'
 import { slowDownReactivity } from '../../lib/reactiveData/reactiveDataHelper.js'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
+import { DBPart, PartExtended } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { dashboardElementStyle } from './DashboardPanel.js'
 import { RundownLayoutsAPI } from '../../lib/rundownLayouts.js'
 import { getIsFilterActive } from '../../lib/rundownLayouts.js'
-import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { PartId, RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil.js'
 import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil.js'
 import { useTranslation } from 'react-i18next'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
+import { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
 
 interface ISegmentTimingPanelProps {
 	visible?: boolean
@@ -131,25 +130,31 @@ export const SegmentTimingPanel = withTracker<ISegmentTimingPanelProps, {}, ISeg
 
 			if (!rundown) return { active }
 
-			const rundownsToShowstyles = new Map()
+			const rundownsToShowStyles = new Map()
 			for (const rundown of rundowns) {
-				rundownsToShowstyles.set(rundown._id, rundown.showStyleBaseId)
+				rundownsToShowStyles.set(rundown._id, rundown.showStyleBaseId)
 			}
 
 			const o = RundownUtils.getResolvedSegment(
-				props.showStyleBase,
-				props.studio,
-				props.playlist,
-				rundown,
-				liveSegment,
-				new Set(orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)),
-				rundownOrder.slice(0, rundownIndex),
-				rundownsToShowstyles,
-				orderedAllPartIds,
-				currentPartInstance,
-				nextPartInstance,
-				true,
-				true
+				{
+					showStyleBase: props.showStyleBase,
+					studio: props.studio,
+					playlist: props.playlist,
+					rundown,
+					segment: liveSegment,
+					segmentsToReceiveOnRundownEndFromSet: new Set(
+						orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)
+					),
+					rundownsToReceiveOnShowStyleEndFrom: rundownOrder.slice(0, rundownIndex),
+					rundownsToShowStyles,
+					orderedAllPartIds,
+					currentPartInstance,
+					nextPartInstance,
+				},
+				{
+					pieceInstanceSimulation: true,
+					includeDisabledPieces: true,
+				}
 			)
 
 			return { active, liveSegment, parts: o.parts }

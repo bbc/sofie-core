@@ -12,7 +12,6 @@ import {
 } from '../../lib/ReactMeteorData/ReactMeteorData.js'
 import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { getCurrentTime } from '../../lib/systemTime.js'
-import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import { PieceIconContainer } from '../PieceIcons/PieceIcon.js'
 import { PieceNameContainer } from '../PieceIcons/PieceName.js'
@@ -37,9 +36,7 @@ import { ShelfDashboardLayout } from '../Shelf/ShelfDashboardLayout.js'
 import { parse as queryStringParse } from 'query-string'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
 import { getPlaylistTimingDiff, RundownTimingContext } from '../../lib/rundownTiming.js'
-import { UIShowStyleBase } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { UIShowStyleBases, UIStudios } from '../Collections.js'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import {
 	PieceInstances,
 	RundownLayouts,
@@ -55,7 +52,11 @@ import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil.js'
 import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 import { TTimerDisplay } from './TTimerDisplay.js'
 import { getDefaultTTimer } from '../../lib/tTimerUtils.js'
+import { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
 
+// TODO: We have another definition of this in the Director screen, and there is also another SegmentUI type. We should look into clearing this up.
 interface SegmentUi extends DBSegment {
 	items: Array<PartUi>
 }
@@ -96,7 +97,7 @@ function getShowStyleBaseIdSegmentPartUi(
 		segments: DBSegment[]
 		parts: DBPart[]
 	},
-	rundownsToShowstyles: Map<RundownId, ShowStyleBaseId>,
+	rundownsToShowStyles: Map<RundownId, ShowStyleBaseId>,
 	currentPartInstance: PartInstance | undefined,
 	nextPartInstance: PartInstance | undefined,
 	studio: UIStudio | undefined
@@ -139,19 +140,25 @@ function getShowStyleBaseIdSegmentPartUi(
 			// re-evaluated when a piece like that appears.
 
 			const o = RundownUtils.getResolvedSegment(
-				showStyleBase,
-				studio,
-				playlist,
-				currentRundown,
-				orderedSegmentsAndParts.segments[segmentIndex],
-				new Set(orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)),
-				rundownOrder.slice(0, rundownIndex),
-				rundownsToShowstyles,
-				orderedSegmentsAndParts.parts.map((part) => part._id),
-				currentPartInstance,
-				nextPartInstance,
-				true,
-				true
+				{
+					showStyleBase,
+					studio,
+					playlist,
+					rundown: currentRundown,
+					segment: orderedSegmentsAndParts.segments[segmentIndex],
+					segmentsToReceiveOnRundownEndFromSet: new Set(
+						orderedSegmentsAndParts.segments.map((s) => s._id).slice(0, segmentIndex)
+					),
+					rundownsToReceiveOnShowStyleEndFrom: rundownOrder.slice(0, rundownIndex),
+					rundownsToShowStyles,
+					orderedAllPartIds: orderedSegmentsAndParts.parts.map((part) => part._id),
+					currentPartInstance,
+					nextPartInstance,
+				},
+				{
+					pieceInstanceSimulation: true,
+					includeDisabledPieces: true,
+				}
 			)
 
 			segment = {
