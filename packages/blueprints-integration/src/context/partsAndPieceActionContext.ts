@@ -1,13 +1,14 @@
 import { ReadonlyDeep } from 'type-fest'
 import {
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPart,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	Time,
 } from '../index.js'
 import { BlueprintQuickLookInfo } from './quickLoopInfo.js'
@@ -50,7 +51,7 @@ export interface IPartAndPieceActionContext {
 	/** Gets the Part for a Piece retrieved from findLastScriptedPieceOnLayer. This primarily allows for accessing metadata of the Part */
 	getPartForPreviousPiece(piece: IBlueprintPieceDB): Promise<IBlueprintPart | undefined>
 	/** Gets the Segment. This primarily allows for accessing metadata */
-	getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined>
+	getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined>
 
 	/** Get a list of the upcoming Parts in the Rundown, in the order that they will be Taken
 	 *
@@ -67,10 +68,16 @@ export interface IPartAndPieceActionContext {
 	/** Update a piecesInstance */
 	updatePieceInstance(pieceInstanceId: string, piece: Partial<IBlueprintPiece>): Promise<IBlueprintPieceInstance>
 
-	/** Update a partInstance */
+	/**
+	 * Update a partInstance
+	 * @param part Which part to update
+	 * @param props Properties of the Part itself
+	 * @param instanceProps Properties of the PartInstance (runtime state)
+	 */
 	updatePartInstance(
 		part: 'current' | 'next',
-		props: Partial<IBlueprintMutatablePart>
+		props: Partial<IBlueprintMutatablePart>,
+		instanceProps?: Partial<IBlueprintMutatablePartInstance>
 	): Promise<IBlueprintPartInstance>
 	/** Inform core that a take out of the partinstance should be blocked until the specified time */
 	blockTakeUntil(time: Time | null): Promise<void>

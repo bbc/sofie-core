@@ -1,24 +1,27 @@
 import {
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPart,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	IEventContext,
 	IShowStyleUserContext,
 } from '../index.js'
 import { ITriggerIngestChangeContext } from './executeTsrActionContext.js'
 import { BlueprintQuickLookInfo } from './quickLoopInfo.js'
 import { ReadonlyDeep } from 'type-fest'
+import type { ITTimersContext } from './tTimersContext.js'
 
 /**
  * Context in which 'current' is the part currently on air, and 'next' is the partInstance being set as Next
  * This is similar to `IPartAndPieceActionContext`, but has more limits on what is allowed to be changed.
  */
-export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContext, ITriggerIngestChangeContext {
+export interface IOnSetAsNextContext
+	extends IShowStyleUserContext, IEventContext, ITriggerIngestChangeContext, ITTimersContext {
 	/** Information about the current loop, if there is one */
 	readonly quickLoopInfo: BlueprintQuickLookInfo | null
 
@@ -56,7 +59,7 @@ export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContex
 	/** Gets the Part for a Piece retrieved from findLastScriptedPieceOnLayer. This primarily allows for accessing metadata of the Part */
 	getPartForPreviousPiece(piece: IBlueprintPieceDB): Promise<IBlueprintPart | undefined>
 	/** Gets the Segment. This primarily allows for accessing metadata */
-	getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined>
+	getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined>
 
 	/** Get a list of the upcoming Parts in the Rundown, in the order that they will be Taken
 	 *
@@ -73,10 +76,16 @@ export interface IOnSetAsNextContext extends IShowStyleUserContext, IEventContex
 	/** Update a piecesInstance */
 	updatePieceInstance(pieceInstanceId: string, piece: Partial<IBlueprintPiece>): Promise<IBlueprintPieceInstance>
 
-	/** Update a partInstance */
+	/**
+	 * Update a partInstance
+	 * @param part Which part to update
+	 * @param props Properties of the Part itself
+	 * @param instanceProps Properties of the PartInstance (runtime state)
+	 */
 	updatePartInstance(
 		part: 'current' | 'next',
-		props: Partial<IBlueprintMutatablePart>
+		props: Partial<IBlueprintMutatablePart>,
+		instanceProps?: Partial<IBlueprintMutatablePartInstance>
 	): Promise<IBlueprintPartInstance>
 
 	/**

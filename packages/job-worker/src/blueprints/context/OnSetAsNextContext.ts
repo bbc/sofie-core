@@ -3,13 +3,14 @@ import { ContextInfo } from './CommonContext.js'
 import { ShowStyleUserContext } from './ShowStyleUserContext.js'
 import {
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPart,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	IEventContext,
 	IOnSetAsNextContext,
 } from '@sofie-automation/blueprints-integration'
@@ -27,11 +28,16 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { selectNewPartWithOffsets } from '../../playout/moveNextPart.js'
 import { getOrderedPartsAfterPlayhead } from '../../playout/lookahead/util.js'
 import { convertPartToBlueprints, emitIngestOperation } from './lib.js'
+import { TTimersService } from './services/TTimersService.js'
+import type { IPlaylistTTimer } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
+import type { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 export class OnSetAsNextContext
 	extends ShowStyleUserContext
 	implements IOnSetAsNextContext, IEventContext, IPartAndPieceInstanceActionContext
 {
+	readonly #tTimersService: TTimersService
+
 	public pendingMoveNextPart: { selectedPart: ReadonlyDeep<DBPart> | null } | undefined = undefined
 
 	constructor(
@@ -44,6 +50,7 @@ export class OnSetAsNextContext
 		public readonly manuallySelected: boolean
 	) {
 		super(contextInfo, context, showStyle, watchedPackages)
+		this.#tTimersService = TTimersService.withPlayoutModel(playoutModel, context)
 	}
 
 	public get quickLoopInfo(): BlueprintQuickLookInfo | null {
@@ -78,7 +85,7 @@ export class OnSetAsNextContext
 		return this.partAndPieceInstanceService.getResolvedPieceInstances(part)
 	}
 
-	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegment | undefined> {
+	async getSegment(segment: 'current' | 'next'): Promise<IBlueprintSegmentDB | undefined> {
 		return this.partAndPieceInstanceService.getSegment(segment)
 	}
 
@@ -124,9 +131,10 @@ export class OnSetAsNextContext
 
 	async updatePartInstance(
 		part: 'current' | 'next',
-		props: Partial<IBlueprintMutatablePart<unknown>>
+		props: Partial<IBlueprintMutatablePart<unknown>>,
+		instanceProps: Partial<IBlueprintMutatablePartInstance> = {}
 	): Promise<IBlueprintPartInstance<unknown>> {
-		return this.partAndPieceInstanceService.updatePartInstance(part, props)
+		return this.partAndPieceInstanceService.updatePartInstance(part, props, instanceProps)
 	}
 
 	async removePieceInstances(part: 'current' | 'next', pieceInstanceIds: string[]): Promise<string[]> {
@@ -162,5 +170,12 @@ export class OnSetAsNextContext
 
 	getCurrentTime(): number {
 		return getCurrentTime()
+	}
+
+	getTimer(index: RundownTTimerIndex): IPlaylistTTimer {
+		return this.#tTimersService.getTimer(index)
+	}
+	clearAllTimers(): void {
+		this.#tTimersService.clearAllTimers()
 	}
 }

@@ -3,13 +3,14 @@ import { PlayoutModel } from '../../../playout/model/PlayoutModel.js'
 import { PlayoutPartInstanceModel } from '../../../playout/model/PlayoutPartInstanceModel.js'
 import {
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPart,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
 	IBlueprintPieceDB,
 	IBlueprintPieceInstance,
 	IBlueprintResolvedPieceInstance,
-	IBlueprintSegment,
+	IBlueprintSegmentDB,
 	OmitId,
 	SomeContent,
 	Time,
@@ -20,6 +21,7 @@ import {
 	convertPartInstanceToBlueprints,
 	convertPartToBlueprints,
 	convertPartialBlueprintMutablePartToCore,
+	convertPartialBlueprintMutatablePartInstanceToCore,
 	convertPieceInstanceToBlueprints,
 	convertPieceToBlueprints,
 	convertResolvedPieceInstanceToBlueprints,
@@ -145,7 +147,7 @@ export class PartAndPieceInstanceActionService {
 		)
 		return resolvedInstances.map(convertResolvedPieceInstanceToBlueprints)
 	}
-	getSegment(segment: 'current' | 'next'): IBlueprintSegment | undefined {
+	getSegment(segment: 'current' | 'next'): IBlueprintSegmentDB | undefined {
 		const partInstance = this.#getPartInstance(segment)
 		if (!partInstance) return undefined
 
@@ -363,7 +365,8 @@ export class PartAndPieceInstanceActionService {
 
 	async updatePartInstance(
 		part: 'current' | 'next',
-		props: Partial<IBlueprintMutatablePart>
+		props: Partial<IBlueprintMutatablePart>,
+		instanceProps: Partial<IBlueprintMutatablePartInstance>
 	): Promise<IBlueprintPartInstance> {
 		const partInstance = this.#getPartInstance(part)
 		if (!partInstance) {
@@ -371,8 +374,23 @@ export class PartAndPieceInstanceActionService {
 		}
 
 		const playoutUpdatePart = convertPartialBlueprintMutablePartToCore(props, this.showStyleCompound.blueprintId)
+		const playoutUpdatePartInstance = convertPartialBlueprintMutatablePartInstanceToCore(
+			instanceProps,
+			this.showStyleCompound.blueprintId
+		)
 
-		if (!partInstance.updatePartProps(playoutUpdatePart)) {
+		const partPropsUpdated = partInstance.updatePartProps(playoutUpdatePart)
+		let instancePropsUpdated = false
+
+		if (playoutUpdatePartInstance && 'invalidReason' in playoutUpdatePartInstance) {
+			if (part !== 'next') {
+				throw new Error(`Can only set invalidReason on the next PartInstance`)
+			}
+			partInstance.setInvalidReason(playoutUpdatePartInstance.invalidReason)
+			instancePropsUpdated = true
+		}
+
+		if (!partPropsUpdated && !instancePropsUpdated) {
 			throw new Error('Some valid properties must be defined')
 		}
 

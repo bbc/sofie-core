@@ -1,13 +1,15 @@
 import type { IRundownUserContext } from './rundownContext.js'
 import type {
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPartInstance,
 	IBlueprintPiece,
 	IBlueprintPieceInstance,
 } from '../documents/index.js'
 import type { IEventContext } from './eventContext.js'
+import type { ITTimersContext } from './tTimersContext.js'
 
-export interface ISyncIngestUpdateToPartInstanceContext extends IRundownUserContext, IEventContext {
+export interface ISyncIngestUpdateToPartInstanceContext extends IRundownUserContext, ITTimersContext, IEventContext {
 	/** Sync a pieceInstance. Inserts the pieceInstance if new, updates if existing. Optionally pass in a mutated Piece, to override the content of the instance */
 	syncPieceInstance(
 		pieceInstanceId: string,
@@ -37,8 +39,15 @@ export interface ISyncIngestUpdateToPartInstanceContext extends IRundownUserCont
 	// /** Remove a ActionInstance */
 	// removeActionInstances(...actionInstanceIds: string[]): string[]
 
-	/** Update a partInstance */
-	updatePartInstance(props: Partial<IBlueprintMutatablePart>): IBlueprintPartInstance
+	/**
+	 * Update a partInstance
+	 * @param props Properties of the Part itself
+	 * @param instanceProps Properties of the PartInstance (runtime state)
+	 */
+	updatePartInstance(
+		props: Partial<IBlueprintMutatablePart>,
+		instanceProps?: Partial<IBlueprintMutatablePartInstance>
+	): IBlueprintPartInstance
 
 	/** Remove the partInstance. This is only valid when `playstatus: 'next'` */
 	removePartInstance(): void

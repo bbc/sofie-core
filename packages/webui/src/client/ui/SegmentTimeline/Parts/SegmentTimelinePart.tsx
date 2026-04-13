@@ -4,7 +4,7 @@ import { withTranslation, WithTranslation, TFunction } from 'react-i18next'
 
 import ClassNames from 'classnames'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { SegmentUi, PartUi, IOutputLayerUi, PieceUi } from '../SegmentTimelineContainer.js'
+import { SegmentUi, PartUi, IOutputLayerUi } from '../SegmentTimelineContainer.js'
 import {
 	TimingDataResolution,
 	TimingTickResolution,
@@ -37,10 +37,18 @@ import {
 import { OutputGroup } from './OutputGroup.js'
 import { InvalidPartCover } from './InvalidPartCover.js'
 import { DefaultUserOperationsTypes, ISourceLayer, UserEditingType } from '@sofie-automation/blueprints-integration'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { LIVE_LINE_TIME_PADDING } from '../Constants.js'
-import * as RundownResolver from '../../../lib/RundownResolver.js'
 import { Events as MOSEvents } from '../../../lib/data/mos/plugin-support.js'
+import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../../lib/partInstanceUtil.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
+import {
+	isLoopRunning as getIsLoopRunning,
+	isQuickLoopStart as getIsQuickLoopStart,
+	isQuickLoopEnd as getIsQuickLoopEnd,
+	isEndOfLoopingShow as getIsEndOfLoopingShow,
+	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
+} from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 
 export const SegmentTimelineLineElementId = 'rundown__segment__line__'
 export const SegmentTimelinePartElementId = 'rundown__segment__part__'
@@ -662,21 +670,27 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		const { t } = this.props
 
 		const innerPart = this.props.part.instance.part
+		const partInstance = this.props.part.instance
 
 		const isEndOfShow =
 			this.props.isLastSegment &&
 			this.props.isLastInSegment &&
 			(!this.state.isLive || (this.state.isLive && !this.props.playlist.nextPartInfo))
-		const isPlaylistLooping = RundownResolver.isLoopRunning(this.props.playlist)
-		const isPartEndOfLoopingShow = RundownResolver.isEndOfLoopingShow(
+		const isPlaylistLooping = getIsLoopRunning(this.props.playlist)
+		const isPartEndOfLoopingShow = getIsEndOfLoopingShow(
 			this.props.playlist,
 			this.props.isLastSegment,
 			this.props.isLastInSegment,
 			this.props.part.instance.part
 		)
+
+		// Get effective invalidReason: planned (Part) takes precedence over runtime (PartInstance)
+		const effectiveInvalidReason = getEffectiveInvalidReason(partInstance)
+		const isInvalid = isPartInstanceInvalid(partInstance)
+
 		let invalidReasonColorVars: CSSProperties | undefined = undefined
-		if (innerPart.invalidReason && innerPart.invalidReason.color) {
-			const invalidColor = SegmentTimelinePartClass.convertHexToRgb(innerPart.invalidReason.color)
+		if (effectiveInvalidReason && 'color' in effectiveInvalidReason && effectiveInvalidReason.color) {
+			const invalidColor = SegmentTimelinePartClass.convertHexToRgb(effectiveInvalidReason.color)
 			if (invalidColor) {
 				invalidReasonColorVars = {
 					['--invalid-reason-color-opaque']: `rgba(${invalidColor.red}, ${invalidColor.green}, ${invalidColor.blue}, 1)`,
@@ -686,9 +700,12 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		}
 
 		const isOutsideActiveQuickLoop =
-			!this.state.isInQuickLoop && RundownResolver.isLoopRunning(this.props.playlist) && !this.state.isNext
-		const isQuickLoopStart = RundownResolver.isQuickLoopStart(this.props.part.partId, this.props.playlist)
-		const isQuickLoopEnd = RundownResolver.isQuickLoopEnd(this.props.part.partId, this.props.playlist)
+			!this.state.isInQuickLoop &&
+			getIsLoopRunning(this.props.playlist) &&
+			!getIsEntirePlaylistLooping(this.props.playlist) &&
+			!this.state.isNext
+		const isQuickLoopStart = getIsQuickLoopStart(this.props.part.partId, this.props.playlist)
+		const isQuickLoopEnd = getIsQuickLoopEnd(this.props.part.partId, this.props.playlist)
 
 		if (
 			this.state.isInsideViewport &&
@@ -701,7 +718,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						{
 							live: this.state.isLive,
 							next: (this.state.isNext || this.props.isAfterLastValidInSegmentAndItsLive) && !innerPart.invalid,
-							invalid: innerPart.invalid && !innerPart.gap,
+							invalid: isInvalid && !innerPart.gap,
 							floated: innerPart.floated,
 							gap: innerPart.gap,
 							'invert-flash': this.state.highlight,
@@ -736,8 +753,15 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						</div>
 					)}
 					{this.renderTimelineOutputGroups(this.props.part)}
-					{innerPart.invalid ? (
-						<InvalidPartCover className="segment-timeline__part__invalid-cover" part={innerPart} />
+					{isInvalid ? (
+						<InvalidPartCover
+							className={
+								effectiveInvalidReason?.isInstanceInvalid
+									? 'segment-timeline__part__invalid-part-instance-cover'
+									: 'segment-timeline__part__invalid-cover'
+							}
+							invalidReason={effectiveInvalidReason}
+						/>
 					) : null}
 					{innerPart.floated ? <div className="segment-timeline__part__floated-cover"></div> : null}
 					{this.props.playlist.nextTimeOffset &&
@@ -746,7 +770,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 								className={ClassNames('segment-timeline__part__nextline', {
 									// This is the base, basic line
 									'auto-next':
-										!innerPart.invalid &&
+										!isInvalid &&
 										!innerPart.gap &&
 										((this.state.isNext && this.props.autoNextPart) ||
 											(!this.state.isNext && this.props.part.willProbablyAutoNext)),

@@ -142,7 +142,12 @@ export interface ShowStyleBlueprintManifest<
 		privateData: unknown | undefined,
 		publicData: unknown | undefined,
 		actionOptions: { [key: string]: any } | undefined
-	) => Promise<void>
+	) => Promise<{
+		/**
+		 * To be set if the payload sent by the user is invalid. When set, a 409 `ValidationFailed` message will be displayed to the User.
+		 */
+		validationErrors: any
+	} | void>
 
 	/** Generate adlib piece from ingest data */
 	getAdlibItem?: (
@@ -224,7 +229,10 @@ export interface ShowStyleBlueprintManifest<
 		playoutPersistentState: BlueprintPlayoutPersistentStore<TimelinePersistentState>
 	) => Promise<void>
 	/** Called after a Take action */
-	onPostTake?: (context: IPartEventContext) => Promise<void>
+	onPostTake?: (
+		context: IPartEventContext,
+		playoutPersistentState: BlueprintPlayoutPersistentStore<TimelinePersistentState>
+	) => Promise<void>
 
 	/**
 	 * Called when a part is set as Next, including right after a Take.
@@ -296,6 +304,15 @@ export interface BlueprintResultPart {
 }
 
 export interface BlueprintSyncIngestNewData {
+	/** All parts in the rundown, including the new/updated part */
+	allParts: IBlueprintPartDB[]
+	/**
+	 * An approximate index of the current part in the allParts array
+	 * Note: this will not always be an integer, such as when the part is an adlib part
+	 * `null` means the part could not be placed
+	 */
+	currentPartIndex: number | null
+
 	// source: BlueprintSyncIngestDataSource
 	/** The new part */
 	part: IBlueprintPartDB | undefined

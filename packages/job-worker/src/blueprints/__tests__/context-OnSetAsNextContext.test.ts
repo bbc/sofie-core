@@ -9,13 +9,22 @@ import { OnSetAsNextContext } from '../context/index.js'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 
 describe('Test blueprint api context', () => {
 	async function getTestee(setManually = false, rehearsal?: boolean) {
 		const mockActionService = mock<PartAndPieceInstanceActionService>()
 		const mockPlayoutModel = mock<PlayoutModel>()
 		Object.defineProperty(mockPlayoutModel, 'playlist', {
-			get: () => ({ rehearsal }),
+			get: () =>
+				({
+					rehearsal,
+					tTimers: [
+						{ index: 1, label: 'Timer 1', mode: null, state: null },
+						{ index: 2, label: 'Timer 2', mode: null, state: null },
+						{ index: 3, label: 'Timer 3', mode: null, state: null },
+					],
+				}) satisfies Partial<DBRundownPlaylist>,
 		})
 		const context = new OnSetAsNextContext(
 			{
@@ -177,7 +186,25 @@ describe('Test blueprint api context', () => {
 
 			await context.updatePartInstance('next', { title: 'My Part' } as Partial<IBlueprintMutatablePart<unknown>>)
 			expect(mockActionService.updatePartInstance).toHaveBeenCalledTimes(1)
-			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith('next', { title: 'My Part' })
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith('next', { title: 'My Part' }, {})
+		})
+
+		test('updatePartInstance with instanceProps', async () => {
+			const { context, mockActionService } = await getTestee()
+
+			await context.updatePartInstance(
+				'next',
+				{ title: 'My Part' } as Partial<IBlueprintMutatablePart<unknown>>,
+				{ invalidReason: { key: 'test' } }
+			)
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledTimes(1)
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith(
+				'next',
+				{ title: 'My Part' },
+				{
+					invalidReason: { key: 'test' },
+				}
+			)
 		})
 
 		test('manuallySelected when false', async () => {
