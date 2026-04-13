@@ -66,7 +66,7 @@ export function SegmentHeaderNotes({ classname, segmentId, onHeaderNoteClick }: 
 			)}
 
 			{headerNotes.map((event, index) => (
-				<div key={index} className="segment-timeline__segment-event-identifier">
+				<div key={index} className="segment-timeline__segment-header-note-identifier">
 					{event.key}
 				</div>
 			))}
