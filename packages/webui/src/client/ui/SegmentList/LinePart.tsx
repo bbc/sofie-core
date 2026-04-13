@@ -32,6 +32,7 @@ interface IProps {
 	isQuickLoopEnd: boolean
 	// isLastSegment?: boolean
 	// isLastPartInSegment?: boolean
+	isEntirePlaylistLooping: boolean
 	isPlaylistLooping: boolean
 	indicatorColumns: Record<string, ISourceLayerExtended[]>
 	adLibIndicatorColumns: Record<string, ISourceLayerExtended[]>
@@ -58,6 +59,7 @@ export function LinePart({
 	indicatorColumns,
 	adLibIndicatorColumns,
 	isPlaylistLooping,
+	isEntirePlaylistLooping,
 	isQuickLoopStart,
 	isQuickLoopEnd,
 	onContextMenu,
@@ -81,7 +83,8 @@ export function LinePart({
 
 	const timingId = getPartInstanceTimingId(part.instance)
 	const isInsideQuickLoop = (timingDurations.partsInQuickLoop || {})[timingId]
-	const isOutsideActiveQuickLoop = isPlaylistLooping && !isInsideQuickLoop && !isNextPart && !hasAlreadyPlayed
+	const isOutsideActiveQuickLoop =
+		isPlaylistLooping && !isInsideQuickLoop && !isEntirePlaylistLooping && !isNextPart && !hasAlreadyPlayed
 
 	// Check for both planned and runtime invalidReason
 	const isInvalid = isPartInstanceInvalid(part.instance)

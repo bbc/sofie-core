@@ -42,10 +42,11 @@ import { logger } from '../../lib/logging.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import {
-	isLoopRunning,
-	isEndOfLoopingShow,
-	isQuickLoopStart,
-	isQuickLoopEnd,
+	isLoopRunning as getIsLoopRunning,
+	isEndOfLoopingShow as getIsEndOfLoopingShow,
+	isQuickLoopStart as getIsQuickLoopStart,
+	isQuickLoopEnd as getIsQuickLoopEnd,
+	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
 } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 
 interface IProps {
@@ -206,7 +207,8 @@ export const SegmentStoryboard = React.memo(
 			squishedPartsNum > 1 ? Math.max(4, (spaceLeft - PART_WIDTH) / (squishedPartsNum - 1)) : null
 
 		const playlistHasNextPart = !!props.playlist.nextPartInfo
-		const playlistIsLooping = isLoopRunning(props.playlist)
+		const isPlaylistLooping = getIsLoopRunning(props.playlist)
+		const isEntirePlaylistLooping = getIsEntirePlaylistLooping(props.playlist)
 
 		renderedParts.forEach((part, index) => {
 			const isLivePart = part.instance._id === props.playlist.currentPartInfo?.partInstanceId
@@ -227,15 +229,16 @@ export const SegmentStoryboard = React.memo(
 					isNextPart={isNextPart}
 					isLastPartInSegment={part.instance._id === lastValidPartId}
 					isLastSegment={props.isLastSegment}
-					isEndOfLoopingShow={isEndOfLoopingShow(
+					isEndOfLoopingShow={getIsEndOfLoopingShow(
 						props.playlist,
 						props.isLastSegment,
 						part.instance._id === lastValidPartId,
 						part.instance.part
 					)}
-					isQuickLoopStart={isQuickLoopStart(part.partId, props.playlist)}
-					isQuickLoopEnd={isQuickLoopEnd(part.partId, props.playlist)}
-					isPlaylistLooping={playlistIsLooping}
+					isQuickLoopStart={getIsQuickLoopStart(part.partId, props.playlist)}
+					isQuickLoopEnd={getIsQuickLoopEnd(part.partId, props.playlist)}
+					isPlaylistLooping={isPlaylistLooping}
+					isEntirePlaylistLooping={isEntirePlaylistLooping}
 					doesPlaylistHaveNextPart={playlistHasNextPart}
 					displayLiveLineCounter={props.displayLiveLineCounter}
 					inHold={!!(props.playlist.holdState && props.playlist.holdState !== RundownHoldState.COMPLETE)}

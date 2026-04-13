@@ -43,10 +43,11 @@ import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../../lib/p
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import {
-	isLoopRunning,
+	isLoopRunning as getIsLoopRunning,
 	isQuickLoopStart as getIsQuickLoopStart,
 	isQuickLoopEnd as getIsQuickLoopEnd,
-	isEndOfLoopingShow,
+	isEndOfLoopingShow as getIsEndOfLoopingShow,
+	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
 } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 
 export const SegmentTimelineLineElementId = 'rundown__segment__line__'
@@ -675,8 +676,8 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			this.props.isLastSegment &&
 			this.props.isLastInSegment &&
 			(!this.state.isLive || (this.state.isLive && !this.props.playlist.nextPartInfo))
-		const isPlaylistLooping = isLoopRunning(this.props.playlist)
-		const isPartEndOfLoopingShow = isEndOfLoopingShow(
+		const isPlaylistLooping = getIsLoopRunning(this.props.playlist)
+		const isPartEndOfLoopingShow = getIsEndOfLoopingShow(
 			this.props.playlist,
 			this.props.isLastSegment,
 			this.props.isLastInSegment,
@@ -699,7 +700,10 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		}
 
 		const isOutsideActiveQuickLoop =
-			!this.state.isInQuickLoop && isLoopRunning(this.props.playlist) && !this.state.isNext
+			!this.state.isInQuickLoop &&
+			getIsLoopRunning(this.props.playlist) &&
+			!getIsEntirePlaylistLooping(this.props.playlist) &&
+			!this.state.isNext
 		const isQuickLoopStart = getIsQuickLoopStart(this.props.part.partId, this.props.playlist)
 		const isQuickLoopEnd = getIsQuickLoopEnd(this.props.part.partId, this.props.playlist)
 
