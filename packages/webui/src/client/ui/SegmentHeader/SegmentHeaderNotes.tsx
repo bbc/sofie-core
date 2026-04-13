@@ -8,7 +8,6 @@ import { UIPieceContentStatus } from '@sofie-automation/corelib/dist/dataModel/P
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import { MongoFieldSpecifierOnes } from '@sofie-automation/corelib/dist/mongo'
 import { UISegmentPartNote } from '@sofie-automation/meteor-lib/dist/api/rundownNotifications'
-import { PartInstance } from '@sofie-automation/meteor-lib/dist/collections/PartInstances'
 import { literal } from 'shuttle-webhid'
 import { Notifications } from '../../collections'
 import { getIgnorePieceContentStatus } from '../../lib/localStorage'
@@ -16,6 +15,7 @@ import { UISegmentPartNotes, UIPieceContentStatuses, UIPartInstances, UIParts } 
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData'
 import type { ITranslatableMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import type { PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 
 export interface SegmentHeaderNotesProps {
 	/** Override the classname of the root div */
