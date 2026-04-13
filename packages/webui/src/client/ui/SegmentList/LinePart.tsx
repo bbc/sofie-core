@@ -16,6 +16,7 @@ import { LinePartTitle } from './LinePartTitle.js'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { RundownTimingContext, getPartInstanceTimingId } from '../../lib/rundownTiming.js'
 import { LoopingIcon } from '../../lib/ui/icons/looping.js'
+import { isPartInstanceInvalid } from '../../lib/partInstanceUtil.js'
 import { ISourceLayerExtended } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { PartExtended } from '@sofie-automation/corelib/src/dataModel/Part.js'
@@ -82,6 +83,9 @@ export function LinePart({
 	const isInsideQuickLoop = (timingDurations.partsInQuickLoop || {})[timingId]
 	const isOutsideActiveQuickLoop = isPlaylistLooping && !isInsideQuickLoop && !isNextPart && !hasAlreadyPlayed
 
+	// Check for both planned and runtime invalidReason
+	const isInvalid = isPartInstanceInvalid(part.instance)
+
 	const getPartContext = useCallback(() => {
 		const partElement = document.querySelector('#' + SegmentTimelinePartElementId + part.instance._id)
 		const partDocumentOffset = getElementDocumentOffset(partElement)
@@ -139,7 +143,7 @@ export function LinePart({
 					'segment-opl__part--has-played': hasAlreadyPlayed && (!isPlaylistLooping || !isInsideQuickLoop),
 					'segment-opl__part--outside-quickloop': isOutsideActiveQuickLoop,
 					'segment-opl__part--quickloop-start': isQuickLoopStart,
-					'segment-opl__part--invalid': part.instance.part.invalid,
+					'segment-opl__part--invalid': isInvalid,
 					'segment-opl__part--timing-sibling': isPreceededByTimingGroupSibling,
 				}),
 				//@ts-expect-error A Data attribute is perfectly fine

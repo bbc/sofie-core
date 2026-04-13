@@ -39,6 +39,7 @@ import { InvalidPartCover } from './InvalidPartCover.js'
 import { DefaultUserOperationsTypes, ISourceLayer, UserEditingType } from '@sofie-automation/blueprints-integration'
 import { LIVE_LINE_TIME_PADDING } from '../Constants.js'
 import { Events as MOSEvents } from '../../../lib/data/mos/plugin-support.js'
+import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../../lib/partInstanceUtil.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import {
@@ -668,6 +669,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		const { t } = this.props
 
 		const innerPart = this.props.part.instance.part
+		const partInstance = this.props.part.instance
 
 		const isEndOfShow =
 			this.props.isLastSegment &&
@@ -680,9 +682,14 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			this.props.isLastInSegment,
 			this.props.part.instance.part
 		)
+
+		// Get effective invalidReason: planned (Part) takes precedence over runtime (PartInstance)
+		const effectiveInvalidReason = getEffectiveInvalidReason(partInstance)
+		const isInvalid = isPartInstanceInvalid(partInstance)
+
 		let invalidReasonColorVars: CSSProperties | undefined = undefined
-		if (innerPart.invalidReason && innerPart.invalidReason.color) {
-			const invalidColor = SegmentTimelinePartClass.convertHexToRgb(innerPart.invalidReason.color)
+		if (effectiveInvalidReason && 'color' in effectiveInvalidReason && effectiveInvalidReason.color) {
+			const invalidColor = SegmentTimelinePartClass.convertHexToRgb(effectiveInvalidReason.color)
 			if (invalidColor) {
 				invalidReasonColorVars = {
 					['--invalid-reason-color-opaque']: `rgba(${invalidColor.red}, ${invalidColor.green}, ${invalidColor.blue}, 1)`,
@@ -707,7 +714,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						{
 							live: this.state.isLive,
 							next: (this.state.isNext || this.props.isAfterLastValidInSegmentAndItsLive) && !innerPart.invalid,
-							invalid: innerPart.invalid && !innerPart.gap,
+							invalid: isInvalid && !innerPart.gap,
 							floated: innerPart.floated,
 							gap: innerPart.gap,
 							'invert-flash': this.state.highlight,
@@ -742,8 +749,15 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						</div>
 					)}
 					{this.renderTimelineOutputGroups(this.props.part)}
-					{innerPart.invalid ? (
-						<InvalidPartCover className="segment-timeline__part__invalid-cover" part={innerPart} />
+					{isInvalid ? (
+						<InvalidPartCover
+							className={
+								effectiveInvalidReason?.isInstanceInvalid
+									? 'segment-timeline__part__invalid-part-instance-cover'
+									: 'segment-timeline__part__invalid-cover'
+							}
+							invalidReason={effectiveInvalidReason}
+						/>
 					) : null}
 					{innerPart.floated ? <div className="segment-timeline__part__floated-cover"></div> : null}
 					{this.props.playlist.nextTimeOffset &&
@@ -752,7 +766,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 								className={ClassNames('segment-timeline__part__nextline', {
 									// This is the base, basic line
 									'auto-next':
-										!innerPart.invalid &&
+										!isInvalid &&
 										!innerPart.gap &&
 										((this.state.isNext && this.props.autoNextPart) ||
 											(!this.state.isNext && this.props.part.willProbablyAutoNext)),

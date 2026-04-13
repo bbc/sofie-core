@@ -1113,18 +1113,38 @@ svg.icon {
 		}
 		.segment-timeline__part {
 			.segment-timeline__part__invalid-cover {
-				background-image: repeating-linear-gradient(
+				mix-blend-mode: color-burn;
+				background-image:
+					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 4px,
-						var(--invalid-reason-color-opaque) 4px,
+						var(--invalid-reason-color-transparent) 5px,
+						var(--invalid-reason-color-opaque) 5px,
 						var(--invalid-reason-color-opaque) 8px
 					),
 					repeating-linear-gradient(
 						-45deg,
 						var(--invalid-reason-color-transparent) 0%,
-						var(--invalid-reason-color-transparent) 4px,
-						var(--invalid-reason-color-opaque) 4px,
+						var(--invalid-reason-color-transparent) 5px,
+						var(--invalid-reason-color-opaque) 5px,
+						var(--invalid-reason-color-opaque) 8px
+					) !important;
+			}
+			.segment-timeline__part__invalid-part-instance-cover {
+				mix-blend-mode: color-burn;
+				background-image:
+					repeating-linear-gradient(
+						45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
+					),
+					repeating-linear-gradient(
+						-45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
 						var(--invalid-reason-color-opaque) 8px
 					) !important;
 			}
@@ -1395,7 +1415,8 @@ svg.icon {
 						left: 2px;
 						right: 2px;
 						z-index: 3;
-						background: repeating-linear-gradient(
+						background:
+							repeating-linear-gradient(
 								45deg,
 								var(--invalid-reason-color-opaque) 0,
 								var(--invalid-reason-color-opaque) 5px,
@@ -1577,19 +1598,47 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				background-image: repeating-linear-gradient(
+				mix-blend-mode: color-burn;
+				background-image:
+					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
 						var(--invalid-reason-color-opaque) 5px,
-						var(--invalid-reason-color-opaque) 10px
+						var(--invalid-reason-color-opaque) 8px
 					),
 					repeating-linear-gradient(
 						-45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
 						var(--invalid-reason-color-opaque) 5px,
-						var(--invalid-reason-color-opaque) 10px
+						var(--invalid-reason-color-opaque) 8px
+					);
+			}
+
+			.segment-timeline__part__invalid-part-instance-cover {
+				position: absolute;
+				top: 0;
+				left: 1px;
+				bottom: 0;
+				right: 1px;
+				z-index: 10;
+				pointer-events: all;
+				mix-blend-mode: color-burn; 
+				background-image:
+					repeating-linear-gradient(
+						45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
+					),
+					repeating-linear-gradient(
+						-45deg,
+						var(--invalid-reason-color-transparent) 0%,
+						var(--invalid-reason-color-transparent) 6px,
+						var(--invalid-reason-color-opaque) 6px,
+						var(--invalid-reason-color-opaque) 8px
 					);
 			}
 
