@@ -1,20 +1,20 @@
 import { faQuestionCircle, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { getSchemaUIField, JSONSchema, SchemaFormUIField } from '@sofie-automation/blueprints-integration'
+import { getSchemaUIField, type JSONSchema, SchemaFormUIField } from '@sofie-automation/blueprints-integration'
 import { objectPathGet } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { useTranslation } from 'react-i18next'
-import {
+import type {
 	OverrideOpHelperForItemContents,
 	WrappedOverridableItemNormal,
 } from '../../../ui/Settings/util/OverrideOpHelper.js'
-import { LabelActual, LabelAndOverridesProps } from '../../Components/LabelAndOverrides.js'
+import { LabelActual, type LabelAndOverridesProps } from '../../Components/LabelAndOverrides.js'
 import { hasOpWithPath } from '../../Components/util.js'
-import { SchemaFormCommonProps, translateStringIfHasNamespaces } from '../schemaFormUtil.js'
+import { type SchemaFormCommonProps, translateStringIfHasNamespaces } from '../schemaFormUtil.js'
 import { SchemaFormWithState } from '../SchemaFormWithState.js'
-import { TypeName } from '@sofie-automation/shared-lib/src/lib/JSONSchemaTypes.js'
+import { TypeName } from '@sofie-automation/shared-lib/dist/lib/JSONSchemaTypes'
 import { BlueprintAssetIcon } from '../../Components/BlueprintAssetIcon.js'
 
 export const OneOfButtonsWithOverrides = (
@@ -152,6 +152,12 @@ function OneOfVariantButtonComplex({
 }>): JSX.Element {
 	const typeValue = schema.properties?.[discProperty]?.const
 
+	const handleUpdateRef = useRef(handleUpdate)
+
+	useEffect(() => {
+		handleUpdateRef.current = handleUpdate
+	}, [handleUpdate])
+
 	const [editingValue, setEditingValue] = useState<Record<string, any>>(
 		selected
 			? (value ?? {
@@ -173,13 +179,13 @@ function OneOfVariantButtonComplex({
 
 	useEffect(() => {
 		if (selected && value !== undefined && oldValue.current !== value && oldValue.current === undefined) {
-			handleUpdate?.(editingValue)
+			handleUpdateRef.current?.(editingValue)
 		} else if (selected && value !== undefined && oldValue.current !== value) {
 			setEditingValue(value)
 		}
 
 		oldValue.current = value
-	}, [value, discProperty, typeValue, editingValue, selected, handleUpdate])
+	}, [value, discProperty, typeValue, editingValue, selected])
 
 	const variantTitle = getSchemaUIField(schema, SchemaFormUIField.Title)
 	const variantIcon = getSchemaUIField(schema, SchemaFormUIField.Icon)
@@ -191,17 +197,17 @@ function OneOfVariantButtonComplex({
 					...update,
 				}))
 			} else {
-				handleUpdate?.(update)
+				handleUpdateRef.current?.(update)
 			}
 		},
-		[selected, handleUpdate]
+		[selected]
 	)
 
 	const handleSelect = useCallback(() => {
 		if (!selected) {
-			handleUpdate?.(editingValue)
+			handleUpdateRef.current?.(editingValue)
 		}
-	}, [editingValue, discProperty, typeValue, selected, handleUpdate])
+	}, [editingValue, discProperty, typeValue, selected])
 
 	return (
 		<label className="field-one-of-button-complex">

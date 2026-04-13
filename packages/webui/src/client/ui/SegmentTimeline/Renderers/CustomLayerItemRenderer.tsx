@@ -10,8 +10,8 @@ import type { OffsetPosition } from '../../../utils/positions.js'
 import { LoopingPieceIcon } from '../../../lib/ui/icons/looping.js'
 import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { BlueprintAssetIcon } from '../../../lib/Components/BlueprintAssetIcon.js'
-import { ReadonlyObjectDeep } from 'type-fest/source/readonly-deep.js'
-import {
+import type { ReadonlyObjectDeep } from 'type-fest/source/readonly-deep.js'
+import type {
 	CoreUserEditingDefinitionAction,
 	CoreUserEditingDefinitionForm,
 	CoreUserEditingDefinitionSofie,
@@ -126,6 +126,46 @@ export class CustomLayerItemRenderer<IProps extends ICustomLayerItemProps, IStat
 		return <LoopingPieceIcon className="segment-timeline__piece__label-icon" playing={this.props.showPreviewPopUp} />
 	}
 
+	private operationWithUsefulIcon(
+		op:
+			| ReadonlyObjectDeep<CoreUserEditingDefinitionState>
+			| ReadonlyObjectDeep<CoreUserEditingDefinitionAction>
+			| ReadonlyObjectDeep<CoreUserEditingDefinitionForm>
+			| ReadonlyObjectDeep<CoreUserEditingDefinitionSofie>
+	): op is ReadonlyObjectDeep<CoreUserEditingDefinitionState> | ReadonlyObjectDeep<CoreUserEditingDefinitionAction> {
+		return (
+			((op.type === UserEditingType.ACTION || op.type === UserEditingType.STATE) &&
+				((op.icon && op.isActive) || (op.iconInactive && !op.isActive))) ||
+			false
+		)
+	}
+
+	protected customPieceIconsChanged(prevProps: Readonly<IProps>): boolean {
+		if (this.props.piece.instance.piece.userEditOperations === prevProps.piece.instance.piece.userEditOperations) {
+			return false
+		}
+
+		if (
+			this.props.piece.instance.piece.userEditOperations?.length !==
+			prevProps.piece.instance.piece.userEditOperations?.length
+		) {
+			return true
+		}
+
+		const currentIconSignature =
+			this.props.piece.instance.piece.userEditOperations
+				?.filter(this.operationWithUsefulIcon)
+				?.map((op) => `${op.id}:${op.isActive}:${op.icon ?? ''}:${op.iconInactive ?? ''}`)
+				.join('|') ?? ''
+		const prevIconSignature =
+			prevProps.piece.instance.piece.userEditOperations
+				?.filter(this.operationWithUsefulIcon)
+				?.map((op) => `${op.id}:${op.isActive}:${op.icon ?? ''}:${op.iconInactive ?? ''}`)
+				.join('|') ?? ''
+
+		return currentIconSignature !== prevIconSignature
+	}
+
 	protected renderCustomPieceIcons(): JSX.Element | null {
 		if (
 			!this.props.piece.instance.piece.userEditOperations ||
@@ -133,23 +173,9 @@ export class CustomLayerItemRenderer<IProps extends ICustomLayerItemProps, IStat
 		)
 			return null
 
-		function operationWithUsefulIcon(
-			op:
-				| ReadonlyObjectDeep<CoreUserEditingDefinitionState>
-				| ReadonlyObjectDeep<CoreUserEditingDefinitionAction>
-				| ReadonlyObjectDeep<CoreUserEditingDefinitionForm>
-				| ReadonlyObjectDeep<CoreUserEditingDefinitionSofie>
-		): op is ReadonlyObjectDeep<CoreUserEditingDefinitionState> | ReadonlyObjectDeep<CoreUserEditingDefinitionAction> {
-			return (
-				((op.type === UserEditingType.ACTION || op.type === UserEditingType.STATE) &&
-					((op.icon && op.isActive) || (op.iconInactive && !op.isActive))) ||
-				false
-			)
-		}
-
 		return (
 			<>
-				{this.props.piece.instance.piece.userEditOperations.filter(operationWithUsefulIcon).map((op) => (
+				{this.props.piece.instance.piece.userEditOperations.filter(this.operationWithUsefulIcon).map((op) => (
 					<div className="segment-timeline__piece__label label-icon label-custom-icon" key={op.id}>
 						{op.isActive && op.icon && <BlueprintAssetIcon src={op.icon} />}
 						{!op.isActive && op.iconInactive && <BlueprintAssetIcon src={op.iconInactive} />}
