@@ -605,7 +605,7 @@ svg.icon {
 				background-color: $part-identifier;
 				color: $part-identifier-text;
 				border-radius: 99px;
-				font-family: "Roboto Flex", "Roboto", sans-serif;
+				font-family: 'Roboto Flex', 'Roboto', sans-serif;
 				font-style: normal;
 				font-size: 0.9rem;
 				letter-spacing: 0.03em;
@@ -635,17 +635,17 @@ svg.icon {
 				}
 			}
 		}
-		.segment-timeline__segment-event-identifier{
+		.segment-timeline__segment-header-note-identifier {
 			// The pill-shaped labels that appear in the segment header, showing extra information about the segment.
 			align-self: flex-start;
 			display: inline-block;
 			margin-top: auto;
 			margin: 0.25rem;
 			padding: 0.1rem 0.35rem 0.1rem 0.35rem;
-			background-color: $segment-event-identifier;
-			color: $segment-event-identifier-text;
+			background-color: $segment-header-note-identifier;
+			color: $segment-header-note-identifier-text;
 			border-radius: 99px;
-			font-family: "Roboto Flex", "Roboto", sans-serif;
+			font-family: 'Roboto Flex', 'Roboto', sans-serif;
 			font-style: normal;
 			font-size: 0.9rem;
 			letter-spacing: 0.03em;
@@ -1169,7 +1169,8 @@ svg.icon {
 		}
 		.segment-timeline__part {
 			.segment-timeline__part__invalid-cover {
-				background-image: repeating-linear-gradient(
+				background-image:
+					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 4px,
@@ -1451,7 +1452,8 @@ svg.icon {
 						left: 2px;
 						right: 2px;
 						z-index: 3;
-						background: repeating-linear-gradient(
+						background:
+							repeating-linear-gradient(
 								45deg,
 								var(--invalid-reason-color-opaque) 0,
 								var(--invalid-reason-color-opaque) 5px,
@@ -1633,7 +1635,8 @@ svg.icon {
 				right: 1px;
 				z-index: 10;
 				pointer-events: all;
-				background-image: repeating-linear-gradient(
+				background-image:
+					repeating-linear-gradient(
 						45deg,
 						var(--invalid-reason-color-transparent) 0%,
 						var(--invalid-reason-color-transparent) 5px,
@@ -2565,7 +2568,7 @@ svg.icon {
 
 				background-color: $part-identifier;
 				color: $part-identifier-text;
-				font-family: "Roboto Flex", "Roboto", sans-serif;
+				font-family: 'Roboto Flex', 'Roboto', sans-serif;
 				font-style: normal;
 				font-size: 0.9rem;
 				letter-spacing: 0.03em;
