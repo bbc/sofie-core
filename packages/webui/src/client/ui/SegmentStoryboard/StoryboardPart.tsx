@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
-import { PartExtended } from '../../lib/RundownResolver.js'
 import { IOutputLayerUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { StoryboardPartSecondaryPieces } from './StoryboardPartSecondaryPieces/StoryboardPartSecondaryPieces.js'
 import { StoryboardPartThumbnail } from './StoryboardPartThumbnail/StoryboardPartThumbnail.js'
@@ -11,7 +10,7 @@ import { getElementDocumentOffset } from '../../utils/positions.js'
 import { IContextMenuContext } from '../RundownView.js'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { SegmentTimelinePartElementId } from '../SegmentTimeline/Parts/SegmentTimelinePart.js'
-import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownTiming/CurrentPartOrSegmentRemaining.js'
+import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 import { getAllowSpeaking, getAllowVibrating } from '../../lib/localStorage.js'
 import { HighlightEvent, RundownViewEvents } from '@sofie-automation/meteor-lib/dist/triggers/RundownViewEventBus'
 import { Meteor } from 'meteor/meteor'
@@ -24,6 +23,7 @@ import { RundownTimingContext, getPartInstanceTimingId } from '../../lib/rundown
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { LoopingIcon } from '../../lib/ui/icons/looping.js'
 import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../lib/partInstanceUtil.js'
+import { PartExtended } from '@sofie-automation/corelib/src/dataModel/Part.js'
 
 interface IProps {
 	className?: string

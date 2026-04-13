@@ -127,6 +127,12 @@ export enum StudioJobs {
 	OnTimelineTriggerTime = 'onTimelineTriggerTime',
 
 	/**
+	 * Recalculate T-Timer projections based on current playlist state
+	 * Called after setNext, takes, and ingest changes to update timing anchor projections
+	 */
+	RecalculateTTimerProjections = 'recalculateTTimerProjections',
+
+	/**
 	 * Update the timeline with a regenerated Studio Baseline
 	 * Has no effect if a Playlist is active
 	 */
@@ -286,6 +292,7 @@ export interface ExecuteBucketAdLibOrActionProps extends RundownPlayoutPropsBase
 export interface ExecuteActionResult {
 	queuedPartInstanceId?: PartInstanceId
 	taken?: boolean
+	validationErrors?: any
 }
 export interface TakeNextPartProps extends RundownPlayoutPropsBase {
 	fromPartInstanceId: PartInstanceId | null
@@ -416,6 +423,8 @@ export type StudioJobFunc = {
 
 	[StudioJobs.OnPlayoutPlaybackChanged]: (data: OnPlayoutPlaybackChangedProps) => void
 	[StudioJobs.OnTimelineTriggerTime]: (data: OnTimelineTriggerTimeProps) => void
+
+	[StudioJobs.RecalculateTTimerProjections]: () => void
 
 	[StudioJobs.UpdateStudioBaseline]: () => string | false
 	[StudioJobs.CleanupEmptyPlaylists]: () => void

@@ -16,6 +16,7 @@ import {
 	DBRundownPlaylist,
 	QuickLoopMarker,
 	RundownHoldState,
+	RundownTTimer,
 	SelectedPartInstance,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { ReadonlyDeep } from 'type-fest'
@@ -80,6 +81,7 @@ import {
 	getStudioTimeline,
 } from '../../timeline/generate.js'
 import { deNowifyMultiGatewayTimeline } from '../../timeline/multi-gateway.js'
+import { validateTTimerIndex } from '../../tTimers.js'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -735,11 +737,11 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 			this.#playlistHasChanged
 				? this.context.directCollections.RundownPlaylists.replace(this.playlistImpl)
 				: undefined,
-			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances),
 			writeAdlibTestingSegments(this.context, this.rundownsImpl),
 			...Array.from(partInstancesByRundownId.entries()).map(async ([rundownId, partInstances]) =>
 				writeExpectedPackagesForPlayoutSources(this.context, this.playlistId, rundownId, partInstances)
 			),
+			...writePartInstancesAndPieceInstances(this.context, this.allPartInstances), // After the ExpectedPackages, as this clears the change flags
 			this.#baselineHelper.saveAllToDatabase(),
 			this.#notificationsHelper.saveAllToDatabase(),
 			this.context.saveRouteSetChanges(),
@@ -900,6 +902,13 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 
 	updateQuickLoopState(): void {
 		this.playlistImpl.quickLoop = this.quickLoopService.getUpdatedProps()
+		this.#playlistHasChanged = true
+	}
+
+	updateTTimer(timer: RundownTTimer): void {
+		validateTTimerIndex(timer.index)
+
+		this.playlistImpl.tTimers[timer.index - 1] = timer
 		this.#playlistHasChanged = true
 	}
 

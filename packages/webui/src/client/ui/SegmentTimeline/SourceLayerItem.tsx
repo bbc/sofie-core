@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ISourceLayerUi, IOutputLayerUi, PartUi, PieceUi } from './SegmentTimelineContainer.js'
+import { ISourceLayerUi, IOutputLayerUi, PartUi } from './SegmentTimelineContainer.js'
 import {
 	SourceLayerType,
 	PieceLifespan,
@@ -24,7 +24,6 @@ import RundownViewEventBus, {
 } from '@sofie-automation/meteor-lib/dist/triggers/RundownViewEventBus'
 import { pieceUiClassNames } from '../../lib/ui/pieceUiClassNames.js'
 import { TransitionSourceRenderer } from './Renderers/TransitionSourceRenderer.js'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import { ReadonlyDeep } from 'type-fest'
 import { useSelectedElementsContext } from '../RundownView/SelectedElementsContext.js'
 import { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
@@ -37,6 +36,8 @@ import {
 } from '../PreviewPopUp/PreviewPopUpContext.js'
 import { useRundownViewEventBusListener } from '../../lib/lib.js'
 import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 const LEFT_RIGHT_ANCHOR_SPACER = 15
 const MARGINAL_ANCHORED_WIDTH = 5
 

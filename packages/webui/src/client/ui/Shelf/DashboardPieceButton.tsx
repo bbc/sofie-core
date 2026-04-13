@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Meteor } from 'meteor/meteor'
 import ClassNames from 'classnames'
-import { RundownUtils } from '../../lib/rundown.js'
 import { ISourceLayer, IOutputLayer, SourceLayerType, VTContent } from '@sofie-automation/blueprints-integration'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
 import { IAdLibListItem } from './AdLibListItem.js'
@@ -12,13 +11,14 @@ import { StyledTimecode } from '../../lib/StyledTimecode.js'
 import { useContentStatusForAdlibPiece, WithMediaObjectStatusProps } from '../SegmentTimeline/withMediaObjectStatus.js'
 
 import { isTouchDevice } from '../../lib/lib.js'
-import { UIStudio } from '@sofie-automation/meteor-lib/dist/api/studios'
 import {
 	convertSourceLayerItemToPreview,
 	IPreviewPopUpContext,
 	IPreviewPopUpSession,
 	PreviewPopUpContext,
 } from '../PreviewPopUp/PreviewPopUpContext.js'
+import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { RundownUtils } from '../../lib/rundown.js'
 
 export interface IDashboardButtonProps {
 	piece: IAdLibListItem

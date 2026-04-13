@@ -21,7 +21,6 @@ import {
 } from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
 import { PreviewContext } from './TriggeredActionsEditor.js'
 import { IWrappedAdLib } from '@sofie-automation/meteor-lib/dist/triggers/actionFilterChainCompilers'
-import { RundownUtils } from '../../../../lib/rundown.js'
 import { useTranslation } from 'react-i18next'
 import { TriggerEditor } from './triggerEditors/TriggerEditor.js'
 import { EditAttribute } from '../../../../lib/EditAttribute.js'
@@ -42,6 +41,7 @@ import { catchError } from '../../../../lib/lib.js'
 import { toTriggersComputation, UiTriggersContext } from '../../../../lib/triggers/triggersContext.js'
 import { last, literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { LabelActual } from '../../../../lib/Components/LabelAndOverrides.js'
+import { RundownUtils } from '../../../../lib/rundown.js'
 
 interface IProps {
 	sourceLayers: SourceLayers | undefined

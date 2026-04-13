@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import ClassNames from 'classnames'
-import { RundownUtils } from '../../../lib/rundown.js'
 import { ILayerItemRendererProps } from './ItemRendererFactory.js'
 import { NoraContent, PieceLifespan } from '@sofie-automation/blueprints-integration'
 import { getElementDocumentOffset, OffsetPosition } from '../../../utils/positions.js'
@@ -15,6 +14,7 @@ import {
 	IPreviewPopUpSession,
 	convertSourceLayerItemToPreview,
 } from '../../PreviewPopUp/PreviewPopUpContext.js'
+import { RundownUtils } from '../../../lib/rundown.js'
 
 export const L3rdListItemRenderer: React.FunctionComponent<ILayerItemRendererProps> = (
 	props: ILayerItemRendererProps

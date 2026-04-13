@@ -3,16 +3,16 @@ import classNames from 'classnames'
 import { useContext } from 'react'
 import { AreaZoom } from './index.js'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { PieceExtended } from '../../../lib/RundownResolver.js'
 import { getAllowSpeaking, getAllowVibrating } from '../../../lib/localStorage.js'
 import { getPartInstanceTimingValue } from '../../../lib/rundownTiming.js'
 import { AutoNextStatus } from '../../RundownView/RundownTiming/AutoNextStatus.js'
-import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownTiming/CurrentPartOrSegmentRemaining.js'
+import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 import { PartCountdown } from '../../RundownView/RundownTiming/PartCountdown.js'
 import { PartDisplayDuration } from '../../RundownView/RundownTiming/PartDuration.js'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../../RundownView/RundownTiming/withTiming.js'
 import { PartUi } from '../../SegmentContainer/withResolvedSegment.js'
 import { Piece } from './Piece.js'
+import { PieceExtended } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 
 interface IProps {
 	part: PartUi
