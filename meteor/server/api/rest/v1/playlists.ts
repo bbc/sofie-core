@@ -281,7 +281,7 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 					)
 				)
 
-			const result = await ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 				this.context.getMethodContext(connection),
 				event,
 				getCurrentTime(),
@@ -300,8 +300,6 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 					actionOptions: adLibOptions,
 				}
 			)
-			if (ClientAPI.isClientResponseError(result)) return result
-			return ClientAPI.responseSuccess(result.result ?? {})
 		} else {
 			return ClientAPI.responseError(
 				UserError.from(new Error(`No adLib with Id ${adLibId}`), UserErrorMessage.AdlibNotFound, undefined, 412)
@@ -353,7 +351,7 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			)
 		}
 
-		const result = await ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
@@ -371,8 +369,6 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 				triggerMode: triggerMode ?? undefined,
 			}
 		)
-		if (ClientAPI.isClientResponseError(result)) return result
-		return ClientAPI.responseSuccess(result.result ?? {})
 	}
 
 	async moveNextPart(
