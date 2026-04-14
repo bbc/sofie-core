@@ -51,9 +51,13 @@ import { handleSwitchRouteSet } from '../../studio/routeSet.js'
 import { handleCleanupOrphanedExpectedPackageReferences } from '../../playout/expectedPackages.js'
 import {
 	handleRecalculateTTimerProjections,
+	handleTTimerClearProjected,
 	handleTTimerPause,
 	handleTTimerRestart,
 	handleTTimerResume,
+	handleTTimerSetProjectedAnchorPart,
+	handleTTimerSetProjectedDuration,
+	handleTTimerSetProjectedTime,
 	handleTTimerStartCountdown,
 	handleTTimerStartFreeRun,
 } from '../../playout/tTimersJobs.js'
@@ -129,4 +133,8 @@ export const studioJobHandlers: StudioJobHandlers = {
 	[StudioJobs.TTimerPause]: handleTTimerPause,
 	[StudioJobs.TTimerResume]: handleTTimerResume,
 	[StudioJobs.TTimerRestart]: handleTTimerRestart,
+	[StudioJobs.TTimerClearProjected]: handleTTimerClearProjected,
+	[StudioJobs.TTimerSetProjectedAnchorPart]: handleTTimerSetProjectedAnchorPart,
+	[StudioJobs.TTimerSetProjectedTime]: handleTTimerSetProjectedTime,
+	[StudioJobs.TTimerSetProjectedDuration]: handleTTimerSetProjectedDuration,
 }

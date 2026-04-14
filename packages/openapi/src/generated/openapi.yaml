@@ -2366,6 +2366,309 @@ paths:
                   message:
                     type: string
                     example: Internal Server Error
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/clear:
+    post:
+      operationId: tTimerProjectedClear
+      tags:
+        - playlists
+      summary: Clear the projection state of a timer.
+      parameters:
+        - name: playlistId
+          in: path
+          description: Target playlist.
+          required: true
+          schema:
+            type: string
+        - name: timerIndex
+          in: path
+          description: Index of the timer (1, 2, or 3).
+          required: true
+          schema:
+            type: integer
+            description: Index of the timer (1, 2, or 3).
+            enum:
+              - 1
+              - 2
+              - 3
+      responses:
+        '200':
+          description: Action successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+        '404':
+          description: The specified Playlist does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: The specified Playlist was not found
+        '500':
+          description: An error unlikely to be the fault of the caller has occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 500
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/anchor-part:
+    post:
+      operationId: tTimerProjectedAnchorPart
+      tags:
+        - playlists
+      summary: Set the anchor part for automatic projection calculation.
+      parameters:
+        - name: playlistId
+          in: path
+          description: Target playlist.
+          required: true
+          schema:
+            type: string
+        - name: timerIndex
+          in: path
+          description: Index of the timer (1, 2, or 3).
+          required: true
+          schema:
+            type: integer
+            description: Index of the timer (1, 2, or 3).
+            enum:
+              - 1
+              - 2
+              - 3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              description: |
+                Set the anchor part for automatic projection calculation.\n
+                Provide either `partId` (internal PartId) or `externalId` (ingest part externalId).\n
+                If `partId` is provided and it does not match an internal PartId, it may be treated as an externalId.
+              properties:
+                partId:
+                  type: string
+                  description: Internal PartId (or part externalId).
+                externalId:
+                  type: string
+                  description: Part externalId.
+              anyOf:
+                - required:
+                    - partId
+                - required:
+                    - externalId
+              example:
+                externalId: myPartExternalId
+      responses:
+        '200':
+          description: Action successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+        '404':
+          description: The specified Playlist does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: The specified Playlist was not found
+        '500':
+          description: An error unlikely to be the fault of the caller has occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 500
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/time:
+    post:
+      operationId: tTimerProjectedTime
+      tags:
+        - playlists
+      summary: Set the timer projection as an absolute unix timestamp.
+      parameters:
+        - name: playlistId
+          in: path
+          description: Target playlist.
+          required: true
+          schema:
+            type: string
+        - name: timerIndex
+          in: path
+          description: Index of the timer (1, 2, or 3).
+          required: true
+          schema:
+            type: integer
+            description: Index of the timer (1, 2, or 3).
+            enum:
+              - 1
+              - 2
+              - 3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                time:
+                  type: number
+                  description: Unix timestamp (milliseconds) for the projection target.
+                  example: 1707024000000
+                paused:
+                  type: boolean
+                  description: When true, the projection is treated as paused (does not change as time passes).
+              required:
+                - time
+      responses:
+        '200':
+          description: Action successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+        '404':
+          description: The specified Playlist does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: The specified Playlist was not found
+        '500':
+          description: An error unlikely to be the fault of the caller has occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 500
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/duration:
+    post:
+      operationId: tTimerProjectedDuration
+      tags:
+        - playlists
+      summary: Set the timer projection as a duration from now.
+      parameters:
+        - name: playlistId
+          in: path
+          description: Target playlist.
+          required: true
+          schema:
+            type: string
+        - name: timerIndex
+          in: path
+          description: Index of the timer (1, 2, or 3).
+          required: true
+          schema:
+            type: integer
+            description: Index of the timer (1, 2, or 3).
+            enum:
+              - 1
+              - 2
+              - 3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                duration:
+                  type: number
+                  description: Duration in milliseconds from now for the projection target.
+                  example: 60000
+                paused:
+                  type: boolean
+                  description: When true, the projection is treated as paused (does not change as time passes).
+              required:
+                - duration
+      responses:
+        '200':
+          description: Action successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+        '404':
+          description: The specified Playlist does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: The specified Playlist was not found
+        '500':
+          description: An error unlikely to be the fault of the caller has occurred.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 500
+                  message:
+                    type: string
+                    example: Internal Server Error
   /studios:
     get:
       operationId: getStudios

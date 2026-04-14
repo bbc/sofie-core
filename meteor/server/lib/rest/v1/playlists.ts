@@ -346,4 +346,72 @@ export interface PlaylistsRestAPI {
 		rundownPlaylistId: RundownPlaylistId,
 		timerIndex: RundownTTimerIndex
 	): Promise<ClientAPI.ClientResponse<void>>
+
+	/**
+	 * Clear any projection state (manual or anchor-based) for a T-timer.
+	 * @param connection Connection data including client and header details
+	 * @param event User event string
+	 * @param rundownPlaylistId Target Playlist.
+	 * @param timerIndex Index of the timer (1-3).
+	 */
+	tTimerClearProjected(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex
+	): Promise<ClientAPI.ClientResponse<void>>
+
+	/**
+	 * Set the anchor part for automatic projection calculation.
+	 * @param connection Connection data including client and header details
+	 * @param event User event string
+	 * @param rundownPlaylistId Target Playlist.
+	 * @param timerIndex Index of the timer (1-3).
+	 * @param partId Part id (internal) or part externalId (will be resolved by the worker)
+	 * @param externalId Part externalId (will be resolved by the worker)
+	 */
+	tTimerSetProjectedAnchorPart(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		partId?: PartId,
+		externalId?: string
+	): Promise<ClientAPI.ClientResponse<void>>
+
+	/**
+	 * Set the projection as an absolute timestamp.
+	 * @param connection Connection data including client and header details
+	 * @param event User event string
+	 * @param rundownPlaylistId Target Playlist.
+	 * @param timerIndex Index of the timer (1-3).
+	 * @param time Unix timestamp (ms)
+	 * @param paused If true, the projection is treated as paused (doesn't count down with time)
+	 */
+	tTimerSetProjectedTime(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		time: number,
+		paused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>>
+
+	/**
+	 * Set the projection as a duration from now.
+	 * @param connection Connection data including client and header details
+	 * @param event User event string
+	 * @param rundownPlaylistId Target Playlist.
+	 * @param timerIndex Index of the timer (1-3).
+	 * @param duration Duration in milliseconds.
+	 * @param paused If true, the projection is treated as paused (doesn't count down with time)
+	 */
+	tTimerSetProjectedDuration(
+		connection: Meteor.Connection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		duration: number,
+		paused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>>
 }

@@ -238,6 +238,22 @@ export enum StudioJobs {
 	 * Restart a T-timer
 	 */
 	TTimerRestart = 'tTimerRestart',
+	/**
+	 * Clear the projection state of a T-timer
+	 */
+	TTimerClearProjected = 'tTimerClearProjected',
+	/**
+	 * Set the projection anchor part of a T-timer
+	 */
+	TTimerSetProjectedAnchorPart = 'tTimerSetProjectedAnchorPart',
+	/**
+	 * Set the projection time of a T-timer
+	 */
+	TTimerSetProjectedTime = 'tTimerSetProjectedTime',
+	/**
+	 * Set the projection duration of a T-timer
+	 */
+	TTimerSetProjectedDuration = 'tTimerSetProjectedDuration',
 }
 
 export interface RundownPlayoutPropsBase {
@@ -419,6 +435,20 @@ export type TTimerPauseProps = TTimerPropsBase
 export type TTimerResumeProps = TTimerPropsBase
 export type TTimerRestartProps = TTimerPropsBase
 
+export type TTimerClearProjectedProps = TTimerPropsBase
+export interface TTimerSetProjectedAnchorPartProps extends TTimerPropsBase {
+	partId?: PartId
+	externalId?: string
+}
+export interface TTimerSetProjectedTimeProps extends TTimerPropsBase {
+	time: number
+	paused: boolean
+}
+export interface TTimerSetProjectedDurationProps extends TTimerPropsBase {
+	duration: number
+	paused: boolean
+}
+
 export interface CleanupOrphanedExpectedPackageReferencesProps {
 	playlistId: RundownPlaylistId
 	rundownId: RundownId
@@ -494,6 +524,10 @@ export type StudioJobFunc = {
 	[StudioJobs.TTimerPause]: (data: TTimerPauseProps) => void
 	[StudioJobs.TTimerResume]: (data: TTimerResumeProps) => void
 	[StudioJobs.TTimerRestart]: (data: TTimerRestartProps) => void
+	[StudioJobs.TTimerClearProjected]: (data: TTimerClearProjectedProps) => void
+	[StudioJobs.TTimerSetProjectedAnchorPart]: (data: TTimerSetProjectedAnchorPartProps) => void
+	[StudioJobs.TTimerSetProjectedTime]: (data: TTimerSetProjectedTimeProps) => void
+	[StudioJobs.TTimerSetProjectedDuration]: (data: TTimerSetProjectedDurationProps) => void
 }
 
 export function getStudioQueueName(id: StudioId): string {

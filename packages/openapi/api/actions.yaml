@@ -84,6 +84,14 @@ paths:
     $ref: 'definitions/playlists.yaml#/resources/tTimerResume'
   /playlists/{playlistId}/t-timers/{timerIndex}/restart:
     $ref: 'definitions/playlists.yaml#/resources/tTimerRestart'
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/clear:
+    $ref: 'definitions/playlists.yaml#/resources/tTimerProjectedClear'
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/anchor-part:
+    $ref: 'definitions/playlists.yaml#/resources/tTimerProjectedAnchorPart'
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/time:
+    $ref: 'definitions/playlists.yaml#/resources/tTimerProjectedTime'
+  /playlists/{playlistId}/t-timers/{timerIndex}/projected/duration:
+    $ref: 'definitions/playlists.yaml#/resources/tTimerProjectedDuration'
   # studio operations
   /studios:
     $ref: 'definitions/studios.yaml#/resources/studios'
