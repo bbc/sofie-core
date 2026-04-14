@@ -639,25 +639,25 @@ describe('resolveAbAssignmentsFromRequests', () => {
 		expectGotPlayer(res, 'd', undefined)
 	})
 
-	test('Autonext pgm/pvw', () => {
+	test('Autonext lookahead assignment with more clips than players', () => {
 		const requests: SessionRequest[] = [
-			// second part
-			{
-				id: 'b',
-				name: 'b',
-				start: 5000,
-				end: 10000,
-				playerId: 1,
-				pieceNames: ['p2'],
-			},
 			// first part
 			{
 				id: 'a',
 				name: 'a',
 				start: 1000,
 				end: 5000,
-				playerId: 2,
+				playerId: 1,
 				pieceNames: ['p1'],
+			},
+			// second part
+			{
+				id: 'b',
+				name: 'b',
+				start: 5000,
+				end: 10000,
+				playerId: 2,
+				pieceNames: ['p2'],
 			},
 			// third part
 			{
@@ -665,7 +665,7 @@ describe('resolveAbAssignmentsFromRequests', () => {
 				name: 'c',
 				start: 10000,
 				end: 15000,
-				playerId: 2,
+				playerId: 1,
 				pieceNames: ['p3'],
 			},
 			// lookaheads (in order of future use)
@@ -674,7 +674,6 @@ describe('resolveAbAssignmentsFromRequests', () => {
 				name: 'z',
 				start: 0,
 				end: 100,
-				playerId: 2,
 				lookaheadRank: 1,
 				pieceNames: [],
 			},
@@ -684,10 +683,10 @@ describe('resolveAbAssignmentsFromRequests', () => {
 		expect(res).toBeTruthy()
 		expect(res.failedOptional).toEqual([])
 		expect(res.failedRequired).toEqual([])
-		expectGotPlayer(res, 'a', 2)
-		expectGotPlayer(res, 'b', 1)
-		expectGotPlayer(res, 'c', 2)
-		expectGotPlayer(res, 'z', 1)
+		expectGotPlayer(res, 'a', 1)
+		expectGotPlayer(res, 'b', 2)
+		expectGotPlayer(res, 'c', 1)
+		expectGotPlayer(res, 'z', 2)
 	})
 
 	test('Preserve on-air optional over a required', () => {
