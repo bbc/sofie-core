@@ -289,7 +289,7 @@ describe('tTimers utils', () => {
 			})
 		})
 
-		it('should return null for freeRun timer', () => {
+		it('should restart a running freeRun timer', () => {
 			const timer: RundownTTimer = {
 				index: 2,
 				label: 'Test',
@@ -299,7 +299,34 @@ describe('tTimers utils', () => {
 				state: { paused: false, zeroTime: 5000 },
 			}
 
-			expect(restartTTimer(timer)).toBeNull()
+			expect(restartTTimer(timer)).toEqual({
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: false, zeroTime: 10000 }, // now
+			})
+		})
+
+		it('should restart a paused freeRun timer (stays paused)', () => {
+			const timer: RundownTTimer = {
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: 12345 },
+			}
+
+			expect(restartTTimer(timer)).toEqual({
+				index: 2,
+				label: 'Test',
+				mode: {
+					type: 'freeRun',
+				},
+				state: { paused: true, duration: 0 },
+			})
 		})
 
 		it('should return null for timer with no mode', () => {
