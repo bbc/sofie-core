@@ -276,7 +276,7 @@ export async function executeActionInner(
 	if (result && typeof result === 'object' && result.message) {
 		const messageStr = interpollateTranslation(result.message.key, result.message.args)
 		throw UserError.from(
-			new Error(`AdLib Action "${actionParameters.actionId}" failed: ${messageStr}`),
+			new Error(`${messageStr}`),
 			UserErrorMessage.ValidationFailed,
 			{ message: messageStr, rawMessage: result.message, details: result.details },
 			typeof result.errorCode === 'number' ? Math.max(Math.min(Math.round(result.errorCode), 499), 400) : 409
