@@ -658,13 +658,15 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 		stopAtZero?: boolean,
 		startPaused?: boolean
 	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
 		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
-			rundownPlaylistId,
+			playlist._id,
 			() => {
-				check(rundownPlaylistId, String)
+				check(playlist._id, String)
 				check(timerIndex, Number)
 				check(duration, Number)
 				check(stopAtZero, Match.Optional(Boolean))
@@ -672,7 +674,7 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 			},
 			StudioJobs.TTimerStartCountdown,
 			{
-				playlistId: rundownPlaylistId,
+				playlistId: playlist._id,
 				timerIndex,
 				duration,
 				stopAtZero: !!stopAtZero,
@@ -688,19 +690,21 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 		timerIndex: RundownTTimerIndex,
 		startPaused?: boolean
 	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
 		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
-			rundownPlaylistId,
+			playlist._id,
 			() => {
-				check(rundownPlaylistId, String)
+				check(playlist._id, String)
 				check(timerIndex, Number)
 				check(startPaused, Match.Optional(Boolean))
 			},
 			StudioJobs.TTimerStartFreeRun,
 			{
-				playlistId: rundownPlaylistId,
+				playlistId: playlist._id,
 				timerIndex,
 				startPaused: !!startPaused,
 			}
@@ -713,18 +717,20 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 		rundownPlaylistId: RundownPlaylistId,
 		timerIndex: RundownTTimerIndex
 	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
 		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
-			rundownPlaylistId,
+			playlist._id,
 			() => {
-				check(rundownPlaylistId, String)
+				check(playlist._id, String)
 				check(timerIndex, Number)
 			},
 			StudioJobs.TTimerPause,
 			{
-				playlistId: rundownPlaylistId,
+				playlistId: playlist._id,
 				timerIndex,
 			}
 		)
@@ -736,18 +742,20 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 		rundownPlaylistId: RundownPlaylistId,
 		timerIndex: RundownTTimerIndex
 	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
 		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
-			rundownPlaylistId,
+			playlist._id,
 			() => {
-				check(rundownPlaylistId, String)
+				check(playlist._id, String)
 				check(timerIndex, Number)
 			},
 			StudioJobs.TTimerResume,
 			{
-				playlistId: rundownPlaylistId,
+				playlistId: playlist._id,
 				timerIndex,
 			}
 		)
@@ -759,18 +767,20 @@ class PlaylistsServerAPI implements PlaylistsRestAPI {
 		rundownPlaylistId: RundownPlaylistId,
 		timerIndex: RundownTTimerIndex
 	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
 		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
 			this.context.getMethodContext(connection),
 			event,
 			getCurrentTime(),
-			rundownPlaylistId,
+			playlist._id,
 			() => {
-				check(rundownPlaylistId, String)
+				check(playlist._id, String)
 				check(timerIndex, Number)
 			},
 			StudioJobs.TTimerRestart,
 			{
-				playlistId: rundownPlaylistId,
+				playlistId: playlist._id,
 				timerIndex,
 			}
 		)
