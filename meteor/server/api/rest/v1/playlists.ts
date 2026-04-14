@@ -39,6 +39,15 @@ import { TriggerReloadDataResponse } from '@sofie-automation/meteor-lib/dist/api
 import { ServerRundownAPI } from '../../rundown'
 import { triggerWriteAccess } from '../../../security/securityVerify'
 
+function parseTimerIndex(rawTimerIndex: string): RundownTTimerIndex {
+	const timerIndex = Number(rawTimerIndex)
+	if (!Number.isInteger(timerIndex) || timerIndex < 1 || timerIndex > 3) {
+		throw new Meteor.Error(400, `Invalid timerIndex`)
+	}
+
+	return timerIndex as RundownTTimerIndex
+}
+
 class PlaylistsServerAPI implements PlaylistsRestAPI {
 	constructor(private context: ServerAPIContext) {}
 
@@ -1149,7 +1158,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		playlistsAPIFactory,
 		async (serverAPI, connection, event, params, body) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
-			const timerIndex = Number.parseInt(params.timerIndex) as RundownTTimerIndex
+			const timerIndex = parseTimerIndex(params.timerIndex)
 			logger.info(`API POST: t-timer countdown ${rundownPlaylistId} ${timerIndex}`)
 
 			check(rundownPlaylistId, String)
@@ -1173,7 +1182,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		playlistsAPIFactory,
 		async (serverAPI, connection, event, params, body) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
-			const timerIndex = Number.parseInt(params.timerIndex) as RundownTTimerIndex
+			const timerIndex = parseTimerIndex(params.timerIndex)
 			logger.info(`API POST: t-timer free-run ${rundownPlaylistId} ${timerIndex}`)
 
 			check(rundownPlaylistId, String)
@@ -1195,7 +1204,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		playlistsAPIFactory,
 		async (serverAPI, connection, event, params, _) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
-			const timerIndex = Number.parseInt(params.timerIndex) as RundownTTimerIndex
+			const timerIndex = parseTimerIndex(params.timerIndex)
 			logger.info(`API POST: t-timer pause ${rundownPlaylistId} ${timerIndex}`)
 
 			check(rundownPlaylistId, String)
@@ -1211,7 +1220,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		playlistsAPIFactory,
 		async (serverAPI, connection, event, params, _) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
-			const timerIndex = Number.parseInt(params.timerIndex) as RundownTTimerIndex
+			const timerIndex = parseTimerIndex(params.timerIndex)
 			logger.info(`API POST: t-timer resume ${rundownPlaylistId} ${timerIndex}`)
 
 			check(rundownPlaylistId, String)
@@ -1227,7 +1236,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		playlistsAPIFactory,
 		async (serverAPI, connection, event, params, _) => {
 			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
-			const timerIndex = Number.parseInt(params.timerIndex) as RundownTTimerIndex
+			const timerIndex = parseTimerIndex(params.timerIndex)
 			logger.info(`API POST: t-timer restart ${rundownPlaylistId} ${timerIndex}`)
 
 			check(rundownPlaylistId, String)

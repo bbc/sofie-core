@@ -52,6 +52,36 @@ describe('Playlists REST API Routes', () => {
 		)
 	})
 
+	test('T-timer countdown handler should reject malformed timerIndex', async () => {
+		const countdownRoute = mockRegisterRoute.mock.calls.find(
+			(call) => call[1] === '/playlists/:playlistId/t-timers/:timerIndex/countdown'
+		)
+		const handler = countdownRoute[4]
+
+		const params = { playlistId: 'playlist0', timerIndex: '1foo' }
+		const body = { duration: 60, stopAtZero: true, startPaused: false }
+		const connection = {} as any
+		const event = 'test-event'
+
+		await expect(handler(mockServerAPI, connection, event, params, body)).rejects.toMatchObject({ error: 400 })
+		expect(mockServerAPI.tTimerStartCountdown).not.toHaveBeenCalled()
+	})
+
+	test('T-timer countdown handler should reject out-of-range timerIndex', async () => {
+		const countdownRoute = mockRegisterRoute.mock.calls.find(
+			(call) => call[1] === '/playlists/:playlistId/t-timers/:timerIndex/countdown'
+		)
+		const handler = countdownRoute[4]
+
+		const params = { playlistId: 'playlist0', timerIndex: '4' }
+		const body = { duration: 60, stopAtZero: true, startPaused: false }
+		const connection = {} as any
+		const event = 'test-event'
+
+		await expect(handler(mockServerAPI, connection, event, params, body)).rejects.toMatchObject({ error: 400 })
+		expect(mockServerAPI.tTimerStartCountdown).not.toHaveBeenCalled()
+	})
+
 	test('should register T-timer pause route', () => {
 		const pauseRoute = mockRegisterRoute.mock.calls.find(
 			(call) => call[1] === '/playlists/:playlistId/t-timers/:timerIndex/pause'
