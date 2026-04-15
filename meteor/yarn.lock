@@ -1395,8 +1395,8 @@ __metadata:
   resolution: "@sofie-automation/shared-lib@portal:../packages/shared-lib::locator=automation-core%40workspace%3A."
   dependencies:
     "@mos-connection/model": "npm:^5.0.0-alpha.0"
-    kairos-lib: "npm:^0.2.3"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-chore-update-atem-state-20260309-091304-dea89c910.0"
+    kairos-lib: "npm:^1.0.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
     tslib: "npm:^2.8.1"
     type-fest: "npm:^4.41.0"
   languageName: node
@@ -6690,12 +6690,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kairos-lib@npm:0.2.3, kairos-lib@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "kairos-lib@npm:0.2.3"
+"kairos-lib@npm:1.0.0, kairos-lib@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "kairos-lib@npm:1.0.0"
   dependencies:
     tslib: "npm:^2.8.1"
-  checksum: 10/d1be6e208896839ea693924b26f185a6b7e7dff9b1f964e4283df2e2d438554f396b4cad7cb696dcd111a2a554c12c9642bf92f7037bd8059e96a118c3a4c2c9
+  checksum: 10/e7a40a5b83199b529b27cbd9b445aee7027ea890209e02fd3d3b17db12b9c86871cc4a4c3e52575ce43c64c8f2712a7be88f29b0d75ab0d94faf4efba6907686
   languageName: node
   linkType: hard
 
@@ -9864,13 +9864,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-types@npm:10.0.0-nightly-chore-update-atem-state-20260309-091304-dea89c910.0":
-  version: 10.0.0-nightly-chore-update-atem-state-20260309-091304-dea89c910.0
-  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-chore-update-atem-state-20260309-091304-dea89c910.0"
+"timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0":
+  version: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
+  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
   dependencies:
-    kairos-lib: "npm:0.2.3"
+    kairos-lib: "npm:1.0.0"
     tslib: "npm:^2.8.1"
-  checksum: 10/5558f4a80ebc60f3f86e76172965fce0f415cfd76fd109f0c84ad6873521a1dbe054a60e1c8d87535b2e16df3be25e637099742b38628be9c794f1701762903a
+  checksum: 10/712578068c41e6ac25c5f305528933f2c5c878230304fed9faa38d2d21d6fc1923bd7ad0f412fe9bf8fd684830ee628e92352ce882740c59ef9d181a98c95b7f
   languageName: node
   linkType: hard
 
