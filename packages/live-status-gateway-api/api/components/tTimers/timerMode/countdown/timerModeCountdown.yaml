@@ -8,7 +8,8 @@ $defs:
         type: string
         const: countdown
       duration:
-        type: number
+        type: integer
+        minimum: 0
         description: The original countdown duration in milliseconds (used for reset)
       stopAtZero:
         type: boolean
