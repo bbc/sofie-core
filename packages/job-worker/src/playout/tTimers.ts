@@ -76,7 +76,9 @@ export function restartTTimer(timer: ReadonlyDeep<RundownTTimer>): ReadonlyDeep<
 		}
 	} else if (timer.mode.type === 'freeRun') {
 		// Reset the free-run timer back to zero, preserving paused/running state
-		return timer.state.paused ? { ...timer, state: { paused: true, duration: 0 } } : { ...timer, state: { paused: false, zeroTime: getCurrentTime() } }
+		return timer.state.paused
+			? { ...timer, state: { paused: true, duration: 0 } }
+			: { ...timer, state: { paused: false, zeroTime: getCurrentTime() } }
 	} else if (timer.mode.type === 'timeOfDay') {
 		const nextTime = calculateNextTimeOfDayTarget(timer.mode.targetRaw)
 		// If we can't calculate the next time, or it's the same, we can't restart

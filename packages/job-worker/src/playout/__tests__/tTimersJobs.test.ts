@@ -15,7 +15,7 @@ import {
 	defaultRundown,
 	defaultRundownPlaylist,
 	defaultSegment,
-} from '../../__mocks__/defaultCollectionObjects'
+} from '../../__mocks__/defaultCollectionObjects.js'
 
 describe('tTimersJobs', () => {
 	let context: MockJobContext
