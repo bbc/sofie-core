@@ -1,4 +1,4 @@
-import React, { type CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 import classNames from 'classnames'
 import { RundownUtils } from '../rundown.js'
 import './OverUnderChip.scss'
@@ -54,9 +54,6 @@ function OverUnderChipInner({ valueMs, format = 'playlistDiff', className, style
 		switch (format) {
 			case 'timerPostfix':
 				return RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, false, true, false, true)
-			case 'screenOverlay':
-				// Match legacy `OverUnderTimer` formatting used by prompter/presenter/director overlays
-				return RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, true, true, false, true)
 			case 'playlistDiff':
 			default:
 				return RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, false, true, true, true)
@@ -73,4 +70,3 @@ function OverUnderChipInner({ valueMs, format = 'playlistDiff', className, style
 		</span>
 	)
 }
-

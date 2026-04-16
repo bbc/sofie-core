@@ -19,17 +19,15 @@ export function RundownStatusBar({
 
 	return (
 		<div
-			className={ClassNames('presenter-screen__rundown-status-bar', className, {
-				'presenter-screen__rundown-status-bar--no-title': !showPlaylistName,
+			className={ClassNames('rundown-status-bar', className, {
+				'rundown-status-bar--no-title': !showPlaylistName,
 			})}
 		>
 			{showPlaylistName && (
-				<div className="presenter-screen__rundown-status-bar__rundown-name">{playlist ? playlist.name : 'UNKNOWN'}</div>
+				<div className="rundown-status-bar__rundown-name">{playlist ? playlist.name : 'UNKNOWN'}</div>
 			)}
-			<div className="presenter-screen__rundown-status-bar__right">
-				<div className="presenter-screen__rundown-status-bar__t-timer">
-					{!!activeTTimer && <TTimerDisplay timer={activeTTimer} />}
-				</div>
+			<div className="rundown-status-bar__right">
+				<div className="rundown-status-bar__t-timer">{!!activeTTimer && <TTimerDisplay timer={activeTTimer} />}</div>
 			</div>
 		</div>
 	)

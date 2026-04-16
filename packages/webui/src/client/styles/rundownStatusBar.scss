@@ -5,7 +5,7 @@
  */
 @import 'colorScheme';
 
-.presenter-screen__rundown-status-bar {
+.rundown-status-bar {
 	display: grid;
 	grid-template-columns: auto fit-content(1em);
 	grid-template-rows: fit-content(1em);
@@ -14,14 +14,14 @@
 	padding: 0 0 0 0.2em;
 	background: rgba(0, 0, 0, 0.75);
 
-	.presenter-screen__rundown-status-bar__rundown-name {
+	.rundown-status-bar__rundown-name {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 		line-height: 1.44em;
 	}
 
-	.presenter-screen__rundown-status-bar__right {
+	.rundown-status-bar__right {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
@@ -30,13 +30,7 @@
 		background: #333;
 	}
 
-	.presenter-screen__rundown-status-bar__t-timer {
-		font-size: 1.2em;
-		display: flex;
-		align-items: center;
-	}
-
-	.presenter-screen__rundown-status-bar__countdown {
+	.rundown-status-bar__countdown {
 		white-space: nowrap;
 
 		font-weight: 600;
@@ -62,7 +56,7 @@
 		}
 	}
 
-	&.presenter-screen__rundown-status-bar--no-title {
+	&.rundown-status-bar--no-title {
 		background: transparent;
 	}
 }

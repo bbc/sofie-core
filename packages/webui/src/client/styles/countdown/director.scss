@@ -22,8 +22,6 @@ $hold-status-color: $liveline-timecode-color;
 	.screen-timing-clock {
 		z-index: 2000;
 		font-size: 9vmin;
-		--overUnderChipPaddingY: 0em;
-		--overUnderChipPaddingX: 0.2em;
 	}
 
 	.director-screen__top {
@@ -485,13 +483,12 @@ $hold-status-color: $liveline-timecode-color;
 			font-weight: 600;
 		}
 	}
-}
-
-.director-screen__bottom-bar {
-	position: fixed;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 20;
-	font-size: 4.95vh;
+	.director-screen__bottom-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 20;
+		font-size: 4.58vh;
+	}
 }
