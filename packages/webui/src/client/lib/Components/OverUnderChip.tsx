@@ -6,7 +6,7 @@ import { useTiming } from '../../ui/RundownView/RundownTiming/withTiming.js'
 import { getPlaylistTimingDiff } from '../rundownTiming.js'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist/RundownPlaylist.js'
 
-export type OverUnderChipFormat = 'playlistDiff' | 'timerPostfix' | 'screenOverlay'
+export type OverUnderChipFormat = 'playlistDiff' | 'timerPostfix'
 
 type OverUnderChipBaseProps = {
 	className?: string

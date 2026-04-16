@@ -30,30 +30,10 @@
 		background: #333;
 	}
 
-	.rundown-status-bar__countdown {
+	.rundown-status-bar__t-timer {
+		display: flex;
+		align-items: center;
 		white-space: nowrap;
-
-		font-weight: 600;
-		font-size: 1.2em;
-		align-self: center;
-
-		&.heavy-light {
-			display: inline-block;
-			border-radius: 1em;
-			padding: 0 0.2em 0 0.1em;
-
-			&.light {
-				// Match `.screen-timing-clock.heavy-light.light`
-				background-color: #ffe900;
-				color: #000;
-			}
-
-			&.heavy {
-				// Match `.screen-timing-clock.heavy-light.heavy`
-				background-color: $general-fast-color;
-				color: #000;
-			}
-		}
 	}
 
 	&.rundown-status-bar--no-title {

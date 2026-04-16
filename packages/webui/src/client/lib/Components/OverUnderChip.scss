@@ -29,13 +29,6 @@
 		'YTDE' var(--overUnderChipYtde, -203),
 		'YTUC' var(--overUnderChipYtuc, 712);
 
-	&.screen-timing-clock {
-		--overUnderChipWght: 700;
-		--overUnderChipOpsz: 20;
-		--overUnderChipYopq: 92;
-		--overUnderChipYtlc: 514;
-	}
-
 	&.over-under-chip--over {
 		--overUnderChipWght: 700;
 		background-color: $general-late-color;
@@ -45,4 +38,12 @@
 		--overUnderChipWght: 500;
 		background-color: #ff0; // Should probably be changed to $general-fast-color;
 	}
+}
+
+// Optional preset for when the chip is used as a large screen overlay.
+.over-under-chip--overlay {
+	--overUnderChipWght: 700;
+	--overUnderChipOpsz: 20;
+	--overUnderChipYopq: 92;
+	--overUnderChipYtlc: 514;
 }

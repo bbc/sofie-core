@@ -518,7 +518,7 @@ function PresenterScreenContentDefaultLayout({
 		return (
 			<div className="presenter-screen">
 				<div className="presenter-screen__part presenter-screen__part--current-part">
-					<OverUnderChip className="screen-timing-clock" rundownPlaylist={playlist} />
+					<OverUnderChip className="screen-timing-clock over-under-chip--overlay" rundownPlaylist={playlist} />
 					<div
 						className={ClassNames('presenter-screen__segment-name', {
 							live: currentSegment !== undefined,

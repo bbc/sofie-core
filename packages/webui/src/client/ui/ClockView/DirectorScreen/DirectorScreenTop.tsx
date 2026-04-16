@@ -78,7 +78,7 @@ export function DirectorScreenTop({
 				)}
 				<div className="director-screen__top__spacer"></div>
 			</div>
-			<OverUnderChip className="screen-timing-clock" valueMs={overUnderClock} />
+			<OverUnderChip className="screen-timing-clock over-under-chip--overlay" valueMs={overUnderClock} />
 		</>
 	)
 }

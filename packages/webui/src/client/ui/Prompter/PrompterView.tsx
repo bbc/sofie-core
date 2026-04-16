@@ -605,7 +605,10 @@ export class PrompterViewContent extends React.Component<Translated<IProps & ITr
 								allowTestingAdlibsToPersist={this.props.studio?.settings.allowTestingAdlibsToPersist ?? false}
 							>
 								{this.configOptions.showOverUnder && (
-									<OverUnderChip className="screen-timing-clock" rundownPlaylist={this.props.rundownPlaylist} />
+									<OverUnderChip
+										className="screen-timing-clock over-under-chip--overlay"
+										rundownPlaylist={this.props.rundownPlaylist}
+									/>
 								)}
 							</Prompter>
 							<RundownStatusBar

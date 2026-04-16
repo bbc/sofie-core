@@ -60,11 +60,7 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 					mode.type === 'countdown' && timer.state !== null && diff >= 0,
 			})}
 			ms={mode.type === 'timeOfDay' ? undefined : diff}
-			postfix={
-				overUnder ? (
-					<OverUnderChip valueMs={overUnder} format="timerPostfix" />
-				) : undefined
-			}
+			postfix={overUnder ? <OverUnderChip valueMs={overUnder} format="timerPostfix" /> : undefined}
 		>
 			{timeStr}
 		</Countdown>
