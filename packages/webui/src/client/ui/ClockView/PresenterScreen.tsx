@@ -55,7 +55,7 @@ import { RundownStatusBar } from './RundownStatusBar.js'
 import { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
-import { OverUnderTimer } from '../Prompter/OverUnderTimer.js'
+import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
 
 // TODO: We have another definition of this in the Director screen, and there is also another SegmentUI type. We should look into clearing this up.
 interface SegmentUi extends DBSegment {
@@ -509,18 +509,8 @@ function PresenterScreenContentDefaultLayout({
 	nextPartInstance,
 	nextSegment,
 	rundownIds,
-	margin,
-	fontSize,
 }: Readonly<PresenterScreenProps & PresenterScreenTrackedProps & { timingDurations: RundownTimingContext }>) {
 	if (playlist && playlistId && segments) {
-		const overUnderStyle: CSSProperties = {
-			marginTop: margin ? `${margin}vh` : undefined,
-			marginBottom: margin ? `${margin}vh` : undefined,
-			marginRight: margin ? `${margin}vw` : undefined,
-			marginLeft: margin ? `${margin}vw` : undefined,
-			fontSize: (fontSize ?? 0) > 12 ? `12vmin` : undefined,
-		}
-
 		const currentPartOrSegmentCountdown =
 			timingDurations.remainingBudgetOnCurrentSegment ?? timingDurations.remainingTimeOnCurrentPart ?? 0
 
@@ -529,11 +519,7 @@ function PresenterScreenContentDefaultLayout({
 		return (
 			<div className="presenter-screen">
 				<div className="presenter-screen__part presenter-screen__part--current-part">
-					<OverUnderTimer
-						rundownPlaylist={playlist}
-						className="screen-timing-clock heavy-light heavy"
-						style={overUnderStyle}
-					/>
+					<OverUnderChip className="screen-timing-clock" rundownPlaylist={playlist} />
 					<div
 						className={ClassNames('presenter-screen__segment-name', {
 							live: currentSegment !== undefined,

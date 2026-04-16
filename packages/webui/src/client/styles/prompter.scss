@@ -288,37 +288,11 @@ body.prompter-scrollbar {
 }
 
 .screen-timing-clock {
-	font-family: Roboto Flex;
 	position: fixed;
 	display: block;
 	top: 0;
 	right: 0;
-	left: auto;
-	font-size: 9.8vmin;
-	padding: 0.05em 0.3em;
-	border-radius: 1em;
-	box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
-	line-height: 1;
-	margin: 0;
-
-	&.heavy-light {
-		font-weight: 600;
-
-		&.light {
-			// color: $general-late-color;
-			background-color: #ffe900;
-			color: #000;
-		}
-
-		&.heavy {
-			color: black;
-			text-shadow:
-				0.02em 1px 0px #000,
-				0.02em -1px 0px #000,
-				-0.02em -1px 0px #000,
-				-0.02em 1px 0px #000;
-		}
-	}
+	font-size: 9vmin;
 }
 
 .prompter-rundown-status-bar {

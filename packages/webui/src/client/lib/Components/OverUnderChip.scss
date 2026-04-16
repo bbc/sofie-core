@@ -1,6 +1,7 @@
 @import '../../styles/colorScheme';
 
 .over-under-chip {
+	font-family: Roboto Flex;
 	display: inline-block;
 	border-radius: 999px;
 	white-space: nowrap;
@@ -12,7 +13,6 @@
 	margin-left: var(--overUnderChipMarginLeft, 0em);
 	margin-top: var(--overUnderChipMarginTop, 0em);
 	line-height: var(--overUnderChipLineHeight, 1);
-	font-size: 1em;
 
 	font-variation-settings:
 		'wdth' var(--overUnderChipWdth, 25),
@@ -39,4 +39,3 @@
 		background-color: #ff0; // Should probably be changed to $general-fast-color;
 	}
 }
-

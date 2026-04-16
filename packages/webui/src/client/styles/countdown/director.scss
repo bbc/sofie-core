@@ -21,7 +21,7 @@ $hold-status-color: $liveline-timecode-color;
 	// Ensure it layers above the fixed top bar.
 	.screen-timing-clock {
 		z-index: 2000;
-		font-size: 9.8vmin;
+		font-size: 9vmin;
 		--overUnderChipPaddingY: 0em;
 		--overUnderChipPaddingX: 0.2em;
 	}

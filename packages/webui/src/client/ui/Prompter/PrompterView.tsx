@@ -38,6 +38,7 @@ import { MeteorCall } from '../../lib/meteorApi.js'
 import { MdDisplay } from './Formatted/MdDisplay.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { OverUnderTimer } from './OverUnderTimer.js'
+import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
 
 const DEFAULT_UPDATE_THROTTLE = 250 //ms
 const PIECE_MISSING_UPDATE_THROTTLE = 2000 //ms
@@ -613,11 +614,7 @@ export class PrompterViewContent extends React.Component<Translated<IProps & ITr
 								allowTestingAdlibsToPersist={this.props.studio?.settings.allowTestingAdlibsToPersist ?? false}
 							>
 								{this.configOptions.showOverUnder && (
-									<OverUnderTimer
-										rundownPlaylist={this.props.rundownPlaylist}
-										className="screen-timing-clock heavy-light heavy"
-										style={overUnderStyle}
-									/>
+									<OverUnderChip className="screen-timing-clock" rundownPlaylist={this.props.rundownPlaylist} />
 								)}
 							</Prompter>
 							<RundownStatusBar
