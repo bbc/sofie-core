@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance'
 import { OverUnderTimer } from '../../Prompter/OverUnderTimer.js'
+import { OverUnderChip } from '../../../lib/Components/OverUnderChip.js'
 
 export interface DirectorScreenTopProps {
 	playlist: DBRundownPlaylist
@@ -78,7 +79,7 @@ export function DirectorScreenTop({
 				)}
 				<div className="director-screen__top__spacer"></div>
 			</div>
-			<OverUnderTimer className="screen-timing-clock heavy-light heavy" valueMs={overUnderClock} />
+			<OverUnderChip className="screen-timing-clock" valueMs={overUnderClock} />
 		</>
 	)
 }
