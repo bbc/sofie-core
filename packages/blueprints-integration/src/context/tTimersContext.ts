@@ -67,7 +67,7 @@ export interface IPlaylistTTimer {
 
 	/**
 	 * If the timer can be restarted, restore it to its initial/restarted state
-	 * Note: This is supported by the countdown and timeOfDay modes
+	 * Note: This is supported by the countdown, freeRun, and timeOfDay modes
 	 * @returns True if the timer was restarted, false if it could not be restarted
 	 */
 	restart(): boolean

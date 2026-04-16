@@ -764,7 +764,7 @@ describe('PlaylistTTimerImpl', () => {
 			})
 		})
 
-		it('should return false for freeRun timer', () => {
+		it('should restart a freeRun timer', () => {
 			const tTimers = createEmptyTTimers()
 			tTimers[0].mode = { type: 'freeRun' }
 			tTimers[0].state = { paused: false, zeroTime: 5000 }
@@ -775,8 +775,13 @@ describe('PlaylistTTimerImpl', () => {
 
 			const result = timer.restart()
 
-			expect(result).toBe(false)
-			expect(updateFn).not.toHaveBeenCalled()
+			expect(result).toBe(true)
+			expect(updateFn).toHaveBeenCalledWith({
+				index: 1,
+				label: 'Timer 1',
+				mode: { type: 'freeRun' },
+				state: { paused: false, zeroTime: 10000 }, // reset to now
+			})
 		})
 
 		it('should restart a timeOfDay timer with valid targetRaw', () => {
