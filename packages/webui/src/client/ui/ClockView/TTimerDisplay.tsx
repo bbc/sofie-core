@@ -3,7 +3,7 @@ import { RundownUtils } from '../../lib/rundown.js'
 import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../lib/tTimerUtils.js'
 import { useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import classNames from 'classnames'
-import { OverUnderTimer } from '../Prompter/OverUnderTimer.js'
+import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
 
 interface TTimerDisplayProps {
 	timer: RundownTTimer
@@ -39,7 +39,7 @@ export function TTimerDisplay({ timer }: Readonly<TTimerDisplayProps>): JSX.Elem
 					</span>
 				))}
 			</span>
-			<OverUnderTimer valueMs={overUnder} />
+			<OverUnderChip valueMs={overUnder} format="screenOverlay" className="over-under-timer" />
 		</div>
 	)
 }

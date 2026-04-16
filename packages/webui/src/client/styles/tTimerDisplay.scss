@@ -17,8 +17,7 @@
 	overflow: hidden;
 
 	font-family: Roboto Flex;
-	font-weight: bold;
-	font-size: 1.2em;
+	font-size: 1em;
 	letter-spacing: -0.01em;
 	line-height: 1;
 
@@ -50,47 +49,4 @@
 			}
 		}
 	}
-}
-
-/**
- * Shared over/under pill styling (used by `OverUnderTimer` in multiple screens).
- *
- * View-level placement/scaling should be applied by the embedding view (eg. prompter/presenter/director),
- * but the core look of the pill itself is defined here.
- */
-.over-under-timer {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	min-width: 3.5em;
-	border-radius: 1em;
-	margin: 0 0 0 0.2em;
-	padding: 0 0.25em;
-
-	font-variant-numeric: tabular-nums;
-	text-shadow:
-		0.003em 0.5px 0px #000,
-		0.003em -0.5px 0px #000,
-		-0.003em -0.5px 0px #000,
-		-0.003em 0.5px 0px #000;
-
-	&--over {
-		background-color: $over-under-over-color;
-		color: black;
-	}
-
-	&--under {
-		background-color: #ffe900;
-		color: #000;
-	}
-}
-
-/**
- * When the over/under pill is used as a standalone screen overlay (eg. prompter/presenter),
- * don't apply the spacing/min-width that the inline `TTimerDisplay` layout expects.
- */
-.screen-timing-clock.over-under-timer {
-	min-width: auto;
-	margin: 0;
 }

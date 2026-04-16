@@ -37,7 +37,6 @@ import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
 import { MeteorCall } from '../../lib/meteorApi.js'
 import { MdDisplay } from './Formatted/MdDisplay.js'
 import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
-import { OverUnderTimer } from './OverUnderTimer.js'
 import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
 
 const DEFAULT_UPDATE_THROTTLE = 250 //ms
@@ -590,14 +589,6 @@ export class PrompterViewContent extends React.Component<Translated<IProps & ITr
 
 	render(): JSX.Element {
 		const { t } = this.props
-
-		const overUnderStyle: React.CSSProperties = {
-			marginTop: this.configOptions.margin ? `${this.configOptions.margin}vh` : undefined,
-			marginBottom: this.configOptions.margin ? `${this.configOptions.margin}vh` : undefined,
-			marginRight: this.configOptions.margin ? `${this.configOptions.margin}vw` : undefined,
-			marginLeft: this.configOptions.margin ? `${this.configOptions.margin}vw` : undefined,
-			fontSize: (this.configOptions.fontSize ?? 0) > 12 ? `12vmin` : undefined,
-		}
 
 		return (
 			<React.Fragment>
