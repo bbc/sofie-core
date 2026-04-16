@@ -62,7 +62,7 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 			ms={mode.type === 'timeOfDay' ? undefined : diff}
 			postfix={
 				overUnder ? (
-					<RundownHeaderOverUnderChip valueMs={overUnder} variant="compact" format="timerPostfix" />
+					<RundownHeaderOverUnderChip valueMs={overUnder} format="timerPostfix" />
 				) : undefined
 			}
 		>

@@ -1,22 +1,21 @@
-import React from 'react'
+import React, { type CSSProperties } from 'react'
 import classNames from 'classnames'
 import { RundownUtils } from '../../../lib/rundown.js'
 
-export type RundownHeaderOverUnderChipVariant = 'default' | 'compact'
 export type RundownHeaderOverUnderChipFormat = 'playlistDiff' | 'timerPostfix'
 
 export interface IRundownHeaderOverUnderChipProps {
 	valueMs: number
-	variant?: RundownHeaderOverUnderChipVariant
 	format?: RundownHeaderOverUnderChipFormat
 	className?: string
+	style?: CSSProperties
 }
 
 export function RundownHeaderOverUnderChip({
 	valueMs,
-	variant = 'default',
 	format = 'playlistDiff',
 	className,
+	style,
 }: Readonly<IRundownHeaderOverUnderChipProps>): JSX.Element {
 	const isUnder = valueMs <= 0
 	const timeStr =
@@ -28,10 +27,10 @@ export function RundownHeaderOverUnderChip({
 		<span
 			className={classNames(
 				'rundown-header__over-under-chip',
-				`rundown-header__over-under-chip--${variant}`,
 				isUnder ? 'rundown-header__over-under-chip--under' : 'rundown-header__over-under-chip--over',
 				className
 			)}
+			style={style}
 		>
 			{isUnder ? '−' : '+'}
 			{timeStr}

@@ -32,7 +32,7 @@ export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDis
 		<div className="rundown-header__clocks-timing-display">
 			<span className="rundown-header__clocks-diff">
 				<span className="rundown-header__clocks-diff__label">{isUnder ? t('Under') : t('Over')}</span>
-				<RundownHeaderOverUnderChip valueMs={overUnderClock} variant="default" format="playlistDiff" />
+				<RundownHeaderOverUnderChip valueMs={overUnderClock} format="playlistDiff" />
 			</span>
 		</div>
 	)

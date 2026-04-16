@@ -214,6 +214,16 @@
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 
+		// Over/under chip defaults for the playlist diff context
+		.rundown-header__over-under-chip {
+			font-size: 1.3em;
+			--rhChipPaddingY: 0em;
+			--rhChipPaddingX: 0.3em;
+			--rhChipLineHeight: 1em;
+			--rhChipOpsz: 25;
+			--rhChipWdth: 25;
+		}
+
 		.rundown-header__clocks-diff__label {
 			@extend %hoverable-label;
 			font-size: 0.75em;
@@ -242,72 +252,35 @@
 		letter-spacing: -0.02em;
 		font-variant-numeric: tabular-nums;
 		color: #000;
+		padding: var(--rhChipPaddingY, 0.05em) var(--rhChipPaddingX, 0.25em);
+		margin-left: var(--rhChipMarginLeft, 0em);
+		margin-top: var(--rhChipMarginTop, 0em);
+		line-height: var(--rhChipLineHeight, 1);
+		font-size: 1em;
 
-		&.rundown-header__over-under-chip--default {
-			font-size: 1.3em;
-			padding: 0em 0.3em;
-			line-height: 1em;
-			font-variation-settings:
-				'wdth' 25,
-				'wght' 500,
-				'slnt' 0,
-				'GRAD' 0,
-				'opsz' 25,
-				'XOPQ' 96,
-				'XTRA' 468,
-				'YOPQ' 79,
-				'YTAS' 750,
-				'YTFI' 738,
-				'YTLC' 548,
-				'YTDE' -203,
-				'YTUC' 712;
-		}
-
-		&.rundown-header__over-under-chip--compact {
-			font-size: 0.75em;
-			padding: 0.05em 0.25em;
-			margin-left: 0.25em;
-			margin-top: 0em;
-			line-height: 1;
-			font-variation-settings:
-				'wdth' 25,
-				'wght' 600,
-				'slnt' 0,
-				'GRAD' 0,
-				'opsz' 14,
-				'XOPQ' 96,
-				'XTRA' 468,
-				'YOPQ' 79,
-				'YTAS' 750,
-				'YTFI' 738,
-				'YTLC' 548,
-				'YTDE' -203,
-				'YTUC' 712;
-		}
+		font-variation-settings:
+			'wdth' var(--rhChipWdth, 25),
+			'wght' var(--rhChipWght, 600),
+			'slnt' var(--rhChipSlnt, 0),
+			'GRAD' var(--rhChipGrad, 0),
+			'opsz' var(--rhChipOpsz, 14),
+			'XOPQ' var(--rhChipXopq, 96),
+			'XTRA' var(--rhChipXtra, 468),
+			'YOPQ' var(--rhChipYopq, 79),
+			'YTAS' var(--rhChipYtas, 750),
+			'YTFI' var(--rhChipYtfi, 738),
+			'YTLC' var(--rhChipYtlc, 548),
+			'YTDE' var(--rhChipYtde, -203),
+			'YTUC' var(--rhChipYtuc, 712);
 
 		&.rundown-header__over-under-chip--over {
+			--rhChipWght: 700;
 			background-color: $general-late-color;
 		}
 
 		&.rundown-header__over-under-chip--under {
+			--rhChipWght: 500;
 			background-color: #ff0; // Should probably be changed to $general-fast-color;
-		}
-
-		&.rundown-header__over-under-chip--default.rundown-header__over-under-chip--over {
-			font-variation-settings:
-				'wdth' 25,
-				'wght' 700,
-				'slnt' 0,
-				'GRAD' 0,
-				'opsz' 25,
-				'XOPQ' 96,
-				'XTRA' 468,
-				'YOPQ' 79,
-				'YTAS' 750,
-				'YTFI' 738,
-				'YTLC' 548,
-				'YTDE' -203,
-				'YTUC' 712;
 		}
 	}
 
@@ -328,6 +301,18 @@
 			display: contents;
 			white-space: nowrap;
 			line-height: 1.25;
+
+			// Over/under chip defaults for the timer postfix context
+			.rundown-header__over-under-chip {
+				font-size: 0.75em;
+				--rhChipPaddingY: 0.05em;
+				--rhChipPaddingX: 0.25em;
+				--rhChipMarginLeft: 0.25em;
+				--rhChipMarginTop: 0em;
+				--rhChipLineHeight: 1;
+				--rhChipOpsz: 14;
+				--rhChipWdth: 25;
+			}
 
 			.countdown__label {
 				@extend %hoverable-label;
