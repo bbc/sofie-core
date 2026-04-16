@@ -215,13 +215,13 @@
 		white-space: nowrap;
 
 		// Over/under chip defaults for the playlist diff context
-		.rundown-header__over-under-chip {
+		.over-under-chip {
 			font-size: 1.3em;
-			--rhChipPaddingY: 0em;
-			--rhChipPaddingX: 0.3em;
-			--rhChipLineHeight: 1em;
-			--rhChipOpsz: 25;
-			--rhChipWdth: 25;
+			--overUnderChipPaddingY: 0em;
+			--overUnderChipPaddingX: 0.3em;
+			--overUnderChipLineHeight: 1em;
+			--overUnderChipOpsz: 25;
+			--overUnderChipWdth: 25;
 		}
 
 		.rundown-header__clocks-diff__label {
@@ -245,45 +245,6 @@
 
 	}
 
-	.rundown-header__over-under-chip {
-		display: inline-block;
-		border-radius: 999px;
-		white-space: nowrap;
-		letter-spacing: -0.02em;
-		font-variant-numeric: tabular-nums;
-		color: #000;
-		padding: var(--rhChipPaddingY, 0.05em) var(--rhChipPaddingX, 0.25em);
-		margin-left: var(--rhChipMarginLeft, 0em);
-		margin-top: var(--rhChipMarginTop, 0em);
-		line-height: var(--rhChipLineHeight, 1);
-		font-size: 1em;
-
-		font-variation-settings:
-			'wdth' var(--rhChipWdth, 25),
-			'wght' var(--rhChipWght, 600),
-			'slnt' var(--rhChipSlnt, 0),
-			'GRAD' var(--rhChipGrad, 0),
-			'opsz' var(--rhChipOpsz, 14),
-			'XOPQ' var(--rhChipXopq, 96),
-			'XTRA' var(--rhChipXtra, 468),
-			'YOPQ' var(--rhChipYopq, 79),
-			'YTAS' var(--rhChipYtas, 750),
-			'YTFI' var(--rhChipYtfi, 738),
-			'YTLC' var(--rhChipYtlc, 548),
-			'YTDE' var(--rhChipYtde, -203),
-			'YTUC' var(--rhChipYtuc, 712);
-
-		&.rundown-header__over-under-chip--over {
-			--rhChipWght: 700;
-			background-color: $general-late-color;
-		}
-
-		&.rundown-header__over-under-chip--under {
-			--rhChipWght: 500;
-			background-color: #ff0; // Should probably be changed to $general-fast-color;
-		}
-	}
-
 	.rundown-header__clocks-timers {
 		margin-left: auto;
 		display: grid;
@@ -303,15 +264,15 @@
 			line-height: 1.25;
 
 			// Over/under chip defaults for the timer postfix context
-			.rundown-header__over-under-chip {
+			.over-under-chip {
 				font-size: 0.75em;
-				--rhChipPaddingY: 0.05em;
-				--rhChipPaddingX: 0.25em;
-				--rhChipMarginLeft: 0.25em;
-				--rhChipMarginTop: 0em;
-				--rhChipLineHeight: 1;
-				--rhChipOpsz: 14;
-				--rhChipWdth: 25;
+				--overUnderChipPaddingY: 0.05em;
+				--overUnderChipPaddingX: 0.25em;
+				--overUnderChipMarginLeft: 0.25em;
+				--overUnderChipMarginTop: 0em;
+				--overUnderChipLineHeight: 1;
+				--overUnderChipOpsz: 14;
+				--overUnderChipWdth: 25;
 			}
 
 			.countdown__label {

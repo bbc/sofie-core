@@ -3,7 +3,7 @@ import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTi
 import { useTranslation } from 'react-i18next'
 import { useTiming } from '../RundownTiming/withTiming'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming'
-import { RundownHeaderOverUnderChip } from './RundownHeaderOverUnderChip'
+import { OverUnderChip } from '../../../lib/Components/OverUnderChip'
 
 export interface IRundownHeaderTimingDisplayProps {
 	playlist: DBRundownPlaylist
@@ -32,7 +32,7 @@ export function RundownHeaderTimingDisplay({ playlist }: IRundownHeaderTimingDis
 		<div className="rundown-header__clocks-timing-display">
 			<span className="rundown-header__clocks-diff">
 				<span className="rundown-header__clocks-diff__label">{isUnder ? t('Under') : t('Over')}</span>
-				<RundownHeaderOverUnderChip valueMs={overUnderClock} format="playlistDiff" />
+				<OverUnderChip valueMs={overUnderClock} format="playlistDiff" />
 			</span>
 		</div>
 	)

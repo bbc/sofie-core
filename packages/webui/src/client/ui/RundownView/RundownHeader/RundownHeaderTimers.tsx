@@ -6,7 +6,7 @@ import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../../lib/tTim
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime'
 import { Countdown } from './Countdown'
-import { RundownHeaderOverUnderChip } from './RundownHeaderOverUnderChip'
+import { OverUnderChip } from '../../../lib/Components/OverUnderChip'
 
 interface IProps {
 	tTimers: [RundownTTimer, RundownTTimer, RundownTTimer]
@@ -62,7 +62,7 @@ function SingleTimer({ timer }: Readonly<ISingleTimerProps>) {
 			ms={mode.type === 'timeOfDay' ? undefined : diff}
 			postfix={
 				overUnder ? (
-					<RundownHeaderOverUnderChip valueMs={overUnder} format="timerPostfix" />
+					<OverUnderChip valueMs={overUnder} format="timerPostfix" />
 				) : undefined
 			}
 		>
