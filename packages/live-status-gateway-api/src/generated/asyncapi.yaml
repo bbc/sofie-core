@@ -1550,7 +1550,6 @@ channels:
                           - externalId
                           - name
                           - rank
-                          - description
                           - segments
                         additionalProperties: false
                         examples:
