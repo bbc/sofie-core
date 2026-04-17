@@ -12,7 +12,7 @@ import {
 	SegmentId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { QueueNextSegmentResult, TakeNextPartResult } from '@sofie-automation/corelib/dist/worker/studio'
-import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import { Meteor } from 'meteor/meteor'
 
 /* *************************************************************************
