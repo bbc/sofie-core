@@ -874,6 +874,14 @@ interface ResolvedPart {
 	 */
 	rank: number
 	/**
+	 * Whether this part is invalid and should not be taken
+	 */
+	invalid: boolean
+	/**
+	 * Optional explanation for why the part is invalid
+	 */
+	invalidReason?: PartInvalidReason
+	/**
 	 * Set only for the current or next part
 	 */
 	state?: ResolvedPartState
@@ -894,6 +902,33 @@ interface ResolvedPart {
 	 */
 	pieces: ResolvedPiece[]
 	additionalProperties?: Record<string, any>
+}
+
+/**
+ * Optional explanation for why the part is invalid
+ */
+interface PartInvalidReason {
+	/**
+	 * Human-readable message explaining why the part is invalid
+	 */
+	message: string
+	/**
+	 * Severity hint for displaying the invalid reason
+	 */
+	severity?: NotificationSeverity
+	/**
+	 * Optional UI color hint
+	 */
+	color?: string
+}
+
+/**
+ * Severity level of the notification.
+ */
+enum NotificationSeverity {
+	WARNING = 'warning',
+	ERROR = 'error',
+	INFO = 'info',
 }
 
 /**
@@ -1369,15 +1404,6 @@ interface NotificationObj {
 	modified?: number
 }
 
-/**
- * Severity level of the notification.
- */
-enum NotificationSeverity {
-	WARNING = 'warning',
-	ERROR = 'error',
-	INFO = 'info',
-}
-
 interface NotificationTargetRundown {
 	/**
 	 * Possible NotificationTarget types
@@ -1498,6 +1524,8 @@ export {
 	OutputLayer,
 	ResolvedSegmentTiming,
 	ResolvedPart,
+	PartInvalidReason,
+	NotificationSeverity,
 	ResolvedPartState,
 	ResolvedPartTiming,
 	ResolvedPiece,
@@ -1518,7 +1546,6 @@ export {
 	BucketAdLibStatus,
 	NotificationsEvent,
 	NotificationObj,
-	NotificationSeverity,
 	NotificationTargetRundown,
 	NotificationTargetType,
 	NotificationTargetRundownPlaylist,
