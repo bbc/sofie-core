@@ -42,7 +42,7 @@ function OverUnderChipFromPlaylist(
 	props: Readonly<OverUnderChipBaseProps & { rundownPlaylist: DBRundownPlaylist }>
 ): JSX.Element | null {
 	const timingDurations = useTiming()
-	const valueMs = getPlaylistTimingDiff(props.rundownPlaylist, timingDurations) ?? 0
+	const valueMs = getPlaylistTimingDiff(props.rundownPlaylist, timingDurations)
 	return <OverUnderChipInner {...props} valueMs={valueMs} />
 }
 

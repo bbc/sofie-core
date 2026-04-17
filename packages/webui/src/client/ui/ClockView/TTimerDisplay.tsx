@@ -3,7 +3,7 @@ import { RundownUtils } from '../../lib/rundown.js'
 import { calculateTTimerDiff, calculateTTimerOverUnder } from '../../lib/tTimerUtils.js'
 import { useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
-import { Countdown } from '../RundownView/RundownHeader/Countdown'
+import { Countdown } from '../RundownView/RundownHeader/Countdown.js'
 
 interface TTimerDisplayProps {
 	timer: RundownTTimer

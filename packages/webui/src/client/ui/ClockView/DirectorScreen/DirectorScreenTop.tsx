@@ -67,7 +67,7 @@ export function DirectorScreenTop({
 								value={
 									rehearsalInProgress
 										? (partInstanceToCountTimeFrom?.timings?.take || 0) + expectedDuration - now
-										: getCurrentTime() - (expectedStart + expectedDuration)
+										: now - (expectedStart + expectedDuration)
 								}
 							/>
 						</div>

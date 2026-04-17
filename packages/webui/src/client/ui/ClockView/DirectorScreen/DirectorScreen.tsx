@@ -759,12 +759,7 @@ function DirectorScreenRender({
 						) : null}
 					</div>
 				</div>
-				<RundownStatusBar
-					playlist={playlist}
-					className="director-screen__bottom-bar"
-					showPlaylistName={false}
-					showDiff={false}
-				/>
+				<RundownStatusBar playlist={playlist} className="director-screen__bottom-bar" showPlaylistName={false} />
 			</div>
 		)
 	}
