@@ -822,10 +822,6 @@ interface OutputLayer {
 	 */
 	isPGM: boolean
 	/**
-	 * Output layer type (numeric enum)
-	 */
-	type: number
-	/**
 	 * The set of sourceLayer ids that feed this output layer
 	 */
 	sourceLayerIds: string[]
@@ -881,6 +877,10 @@ interface ResolvedPart {
 	 * Set only for the current or next part
 	 */
 	state?: ResolvedPartState
+	/**
+	 * Whether this part was created by an adlib
+	 */
+	createdByAdLib: boolean
 	/**
 	 * Optional arbitrary data
 	 */
@@ -971,6 +971,10 @@ interface ResolvedPiece {
 	 */
 	outputLayerId: string
 	/**
+	 * Whether this piece was created by an adlib
+	 */
+	createdByAdLib: boolean
+	/**
 	 * Optional arbitrary data
 	 */
 	publicData?: any
@@ -995,15 +999,15 @@ interface ResolvedPieceTiming {
 	/**
 	 * Start offset of the piece (ms) from the beginning of the part
 	 */
-	startMs: number
+	startMs?: number
 	/**
 	 * Resolved duration of the piece (ms)
 	 */
-	durationMs: number
+	durationMs?: number
 	/**
 	 * Preroll duration for the piece (ms)
 	 */
-	prerollMs: number
+	prerollMs?: number
 }
 
 interface ActivePiecesEvent {
