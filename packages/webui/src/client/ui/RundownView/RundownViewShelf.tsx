@@ -244,7 +244,6 @@ class RundownViewShelfInner extends React.Component<
 									isOnAir={this.isAdLibOnAir(adLibPiece)}
 									isNext={this.isAdLibNext(adLibPiece)}
 									displayStyle={PieceDisplayStyle.BUTTONS}
-									widthScale={3.27} // @todo: css
 									isSelected={false}
 									toggleOnSingleClick={
 										(this.props.miniShelfFilter as DashboardLayoutFilter)?.toggleOnSingleClick ||
