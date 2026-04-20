@@ -33,4 +33,3 @@ export interface IDashboardButtonProps {
 export const DEFAULT_BUTTON_WIDTH = 6.40625
 export const DEFAULT_BUTTON_HEIGHT = 5.625
 export const HOVER_TIMEOUT = 5000
-

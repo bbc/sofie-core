@@ -4,18 +4,21 @@ import { PieceDisplayStyle } from '@sofie-automation/meteor-lib/dist/collections
 import { RundownUtils } from '../../../lib/rundown.js'
 import type { ReadonlyDeep } from 'type-fest'
 import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
+import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
+import { SourceLayerType } from '@sofie-automation/blueprints-integration'
 import type { IPreviewPopUpContext } from '../../PreviewPopUp/PreviewPopUpContext.js'
 import type { IDashboardButtonProps } from './types.js'
 import { DEFAULT_BUTTON_HEIGHT, DEFAULT_BUTTON_WIDTH } from './types.js'
 import { DashboardButtonTagStrip } from './subcomponents/DashboardButtonTagStrip.js'
 import { HotkeyBadge } from './subcomponents/HotkeyBadge.js'
 import { EditableLabel } from './subcomponents/EditableLabel.js'
-import { MediaRegion } from './subcomponents/MediaRegion.js'
+import { MediaBox } from './subcomponents/MediaBox.js'
 import { useDashboardButtonInteractions } from './useDashboardButtonInteractions.js'
 
 export type DashboardPieceButtonContentProps = React.PropsWithChildren<IDashboardButtonProps> & {
 	contentStatus: ReadonlyDeep<PieceContentStatusObj> | undefined
 	previewContext: IPreviewPopUpContext
+	showHotkey?: boolean
 }
 
 export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, DashboardPieceButtonContentProps>(
@@ -38,6 +41,7 @@ export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, Dash
 			editableName,
 			onNameChanged,
 			studio,
+			showHotkey = true,
 		} = props
 
 		const [label, setLabel] = useState(piece.name)
@@ -108,6 +112,38 @@ export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, Dash
 		)
 
 		const isList = displayStyle === PieceDisplayStyle.LIST
+		const hasMediaBox = useMemo(() => {
+			if (disableHoverInspector || !layer) return false
+			if (!(layer.type === SourceLayerType.VT || layer.type === SourceLayerType.LIVE_SPEAK)) return false
+
+			const isButtons = displayStyle === PieceDisplayStyle.BUTTONS
+			const shouldRenderThumbnail = isButtons || (isList && showThumbnailsInList)
+			if (!shouldRenderThumbnail) return false
+
+			const chosenUrl = props.contentStatus?.thumbnailUrl || props.contentStatus?.previewUrl
+			if (chosenUrl) return true
+
+			switch (props.contentStatus?.status) {
+				case PieceStatusCode.SOURCE_BROKEN:
+				case PieceStatusCode.SOURCE_MISSING:
+				case PieceStatusCode.SOURCE_UNKNOWN_STATE:
+				case PieceStatusCode.SOURCE_NOT_READY:
+				case PieceStatusCode.UNKNOWN:
+				case undefined:
+					return true
+				default:
+					return false
+			}
+		}, [
+			disableHoverInspector,
+			layer,
+			displayStyle,
+			isList,
+			showThumbnailsInList,
+			props.contentStatus?.previewUrl,
+			props.contentStatus?.thumbnailUrl,
+			props.contentStatus?.status,
+		])
 
 		return (
 			<div
@@ -121,6 +157,8 @@ export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, Dash
 						disabled: disabled,
 						list: isList,
 						selected: isNext || isSelected,
+						'dashboard-panel__panel__button--has-hotkey': showHotkey && Boolean(piece.hotkey),
+						'dashboard-panel__panel__button--no-media': showHotkey && Boolean(piece.hotkey) && !hasMediaBox,
 					},
 					RundownUtils.getPieceStatusClassName(props.contentStatus?.status),
 					...(piece.tags ? piece.tags.map((tag) => `piece-tag--${tag}`) : [])
@@ -152,7 +190,7 @@ export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, Dash
 				data-obj-id={piece._id}
 			>
 				<div className="dashboard-panel__panel__button__content">
-					<MediaRegion
+					<MediaBox
 						piece={piece}
 						layer={layer}
 						studio={studio}
@@ -161,7 +199,7 @@ export const DashboardPieceButtonContent = React.forwardRef<HTMLDivElement, Dash
 						disableHoverInspector={disableHoverInspector}
 						contentStatus={props.contentStatus}
 					/>
-					<HotkeyBadge hotkey={piece.hotkey} />
+					{showHotkey ? <HotkeyBadge hotkey={'A'} /> : null}
 					<div className="dashboard-panel__panel__button__label-container">
 						<DashboardButtonTagStrip layerTypeClassName={layerTypeClassName} />
 						<EditableLabel

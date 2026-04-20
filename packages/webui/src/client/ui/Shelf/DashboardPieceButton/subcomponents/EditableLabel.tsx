@@ -8,18 +8,27 @@ type Props = {
 }
 
 export function EditableLabel(props: Props): JSX.Element {
-	if (props.editable) {
-		return (
-			<textarea
-				ref={props.labelRef}
-				className="dashboard-panel__panel__button__label dashboard-panel__panel__button__label--editable"
-				value={props.label}
-				onChange={props.onChange}
-				onBlur={props.onBlur}
-				onKeyUp={props.onKeyUp}
-			/>
-		)
-	}
-
-	return <div className="dashboard-panel__panel__button__label">{props.label}</div>
+	return (
+		<div
+			className={[
+				'dashboard-panel__panel__button__label',
+				props.editable ? 'dashboard-panel__panel__button__label--editable' : undefined,
+			]
+				.filter(Boolean)
+				.join(' ')}
+		>
+			{props.editable ? (
+				<textarea
+					ref={props.labelRef}
+					className="dashboard-panel__panel__button__label__content dashboard-panel__panel__button__label__content--editable"
+					value={props.label}
+					onChange={props.onChange}
+					onBlur={props.onBlur}
+					onKeyUp={props.onKeyUp}
+				/>
+			) : (
+				<div className="dashboard-panel__panel__button__label__content">{props.label}</div>
+			)}
+		</div>
+	)
 }

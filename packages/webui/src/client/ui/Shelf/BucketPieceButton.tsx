@@ -1,15 +1,13 @@
-import { useContext, type PropsWithChildren } from 'react'
+import { type PropsWithChildren } from 'react'
 import type { IDashboardButtonProps } from './DashboardPieceButton/types'
-import { DashboardPieceButtonContent } from './DashboardPieceButton/DashboardPieceButtonContent.js'
+import { DashboardPieceButton } from './DashboardPieceButton/DashboardPieceButton.js'
 
 import { useDrop, useDrag, type DragSourceMonitor } from 'react-dnd'
 import { DragDropItemTypes } from '../DragDropItemTypes.js'
 import type { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
-import { useContentStatusForItem } from '../SegmentTimeline/withMediaObjectStatus.js'
 import type { BucketAdLibActionUi, BucketAdLibItem } from './RundownViewBuckets.js'
 import type { IBlueprintActionTriggerMode } from '@sofie-automation/blueprints-integration'
 import type { BucketId, PieceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { PreviewPopUpContext } from '../PreviewPopUp/PreviewPopUpContext.js'
 
 interface IBucketPieceDragObject {
 	id: PieceId
@@ -35,8 +33,6 @@ export interface BucketPieceButtonBaseProps {
 export function BucketPieceButton(
 	props: PropsWithChildren<IDashboardButtonProps> & BucketPieceButtonBaseProps
 ): JSX.Element {
-	const contentStatus = useContentStatusForItem(props.piece)
-
 	const [, connectDropTarget] = useDrop<IBucketPieceDragObject, {}, {}>({
 		accept: DragDropItemTypes.BUCKET_ADLIB_PIECE,
 		canDrop(_props, _monitor) {
@@ -99,13 +95,10 @@ export function BucketPieceButton(
 		}),
 	})
 
-	const previewContext = useContext(PreviewPopUpContext)
-
 	return (
-		<DashboardPieceButtonContent
+		<DashboardPieceButton
 			{...props}
-			previewContext={previewContext}
-			contentStatus={contentStatus}
+			showHotkey={false}
 			ref={(node) => {
 				connectDragSource(connectDropTarget(node))
 			}}

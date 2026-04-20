@@ -19,7 +19,25 @@ export function useDashboardButtonInteractions(args: {
 	canOverflowHorizontally: boolean | undefined
 	onToggleAdLib: IDashboardButtonProps['onToggleAdLib']
 	onSelectAdLib: IDashboardButtonProps['onSelectAdLib']
-}) {
+}): {
+	elementRef: React.MutableRefObject<HTMLDivElement | null>
+	timePosition: number
+	setTimePosition: React.Dispatch<React.SetStateAction<number>>
+	updatePositionAndSize: () => void
+	onPointerEnter: (e: React.PointerEvent<HTMLDivElement>) => void
+	onPointerLeave: () => void
+	onMouseDown: (e: React.PointerEvent<HTMLDivElement>) => void
+	onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void
+	onPointerOut: (e: React.PointerEvent<HTMLDivElement>) => void
+	onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void
+	onClick: (e: React.MouseEvent<HTMLDivElement>) => void
+	onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void
+	onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void
+	onTouchMove: (e: React.TouchEvent<HTMLDivElement>) => void
+	onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => void
+	onTouchEnd: () => void
+	deferredNameChange: (fn: () => void) => void
+} {
 	const elementRef = useRef<HTMLDivElement | null>(null)
 	const pointerIdRef = useRef<number | null>(null)
 	const positionAndSizeRef = useRef<{ top: number; left: number; width: number; height: number } | null>(null)
@@ -170,4 +188,3 @@ export function useDashboardButtonInteractions(args: {
 		deferredNameChange,
 	}
 }
-

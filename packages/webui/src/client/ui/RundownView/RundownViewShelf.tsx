@@ -9,7 +9,6 @@ import type {
 	SourceLayers,
 	UIShowStyleBase,
 } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
-import { DashboardPieceButton } from '../Shelf/DashboardPieceButton.js'
 import type { IBlueprintActionTriggerMode, ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { contextMenuHoldToDisplayTime, UserAgentPointer, USER_AGENT_POINTER_PROPERTY } from '../../lib/lib.js'
 import {
@@ -33,6 +32,7 @@ import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { ContextType, setShelfContextMenuContext } from '../Shelf/ShelfContextMenu.js'
 import type { PartInstanceId, PieceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import { DashboardPieceButton } from '../Shelf/DashboardPieceButton/DashboardPieceButton.js'
 
 interface IRundownViewShelfProps {
 	studio: UIStudio
@@ -249,6 +249,7 @@ class RundownViewShelfInner extends React.Component<
 										(this.props.miniShelfFilter as DashboardLayoutFilter)?.toggleOnSingleClick ||
 										this.state.singleClickMode
 									}
+									compact={true}
 								>
 									{adLibPiece.name}
 								</DashboardPieceButton>

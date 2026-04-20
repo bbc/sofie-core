@@ -1,31 +1,19 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ClassNames from 'classnames'
 import { PieceDisplayStyle } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
 import { RundownUtils } from '../../../lib/rundown.js'
-import type { ReadonlyDeep } from 'type-fest'
-import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { SourceLayerType } from '@sofie-automation/blueprints-integration'
-import { PreviewPopUpContext } from '../../PreviewPopUp/PreviewPopUpContext.js'
-import { useContentStatusForItem } from '../../SegmentTimeline/withMediaObjectStatus.js'
-import type { IDashboardButtonProps } from './types.js'
 import { DEFAULT_BUTTON_HEIGHT, DEFAULT_BUTTON_WIDTH } from './types.js'
 import { DashboardButtonTagStrip } from './subcomponents/DashboardButtonTagStrip.js'
 import { HotkeyBadge } from './subcomponents/HotkeyBadge.js'
 import { EditableLabel } from './subcomponents/EditableLabel.js'
 import { MediaBox } from './subcomponents/MediaBox.js'
 import { useDashboardButtonInteractions } from './useDashboardButtonInteractions.js'
+import { DashboardPieceButtonContentProps } from './DashboardPieceButtonContent.js'
 
-export type DashboardPieceButtonProps = React.PropsWithChildren<IDashboardButtonProps> & {
-	compact?: boolean
-	showHotkey?: boolean
-}
-
-export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPieceButtonProps>(
-	function DashboardPieceButton(props, forwardedRef): JSX.Element {
-		const contentStatus = useContentStatusForItem(props.piece)
-		const previewContext = useContext(PreviewPopUpContext)
-
+export const DashboardPieceButtonCompactContent = React.forwardRef<HTMLDivElement, DashboardPieceButtonContentProps>(
+	function DashboardPieceButtonCompactContent(props, forwardedRef): JSX.Element {
 		const {
 			piece,
 			layer,
@@ -44,7 +32,6 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 			editableName,
 			onNameChanged,
 			studio,
-			compact,
 			showHotkey = true,
 		} = props
 
@@ -65,8 +52,8 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 		const interactions = useDashboardButtonInteractions({
 			piece,
 			layer,
-			contentStatus,
-			previewContext,
+			contentStatus: props.contentStatus,
+			previewContext: props.previewContext,
 			toggleOnSingleClick,
 			queueAllAdlibs,
 			canOverflowHorizontally,
@@ -124,10 +111,10 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 			const shouldRenderThumbnail = isButtons || (isList && showThumbnailsInList)
 			if (!shouldRenderThumbnail) return false
 
-			const chosenUrl = contentStatus?.thumbnailUrl || contentStatus?.previewUrl
+			const chosenUrl = props.contentStatus?.thumbnailUrl || props.contentStatus?.previewUrl
 			if (chosenUrl) return true
 
-			switch (contentStatus?.status) {
+			switch (props.contentStatus?.status) {
 				case PieceStatusCode.SOURCE_BROKEN:
 				case PieceStatusCode.SOURCE_MISSING:
 				case PieceStatusCode.SOURCE_UNKNOWN_STATE:
@@ -144,9 +131,9 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 			displayStyle,
 			isList,
 			showThumbnailsInList,
-			contentStatus?.previewUrl,
-			contentStatus?.thumbnailUrl,
-			contentStatus?.status,
+			props.contentStatus?.previewUrl,
+			props.contentStatus?.thumbnailUrl,
+			props.contentStatus?.status,
 		])
 
 		return (
@@ -154,7 +141,7 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 				className={ClassNames(
 					'dashboard-panel__panel__button',
 					{
-						'dashboard-panel__panel__button--compact': Boolean(compact),
+						'dashboard-panel__panel__button--compact': true,
 						invalid: piece.invalid,
 						floated: piece.floated,
 						active,
@@ -165,7 +152,7 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 						'dashboard-panel__panel__button--has-hotkey': showHotkey && Boolean(piece.hotkey),
 						'dashboard-panel__panel__button--no-media': showHotkey && Boolean(piece.hotkey) && !hasMediaBox,
 					},
-					RundownUtils.getPieceStatusClassName(contentStatus?.status),
+					RundownUtils.getPieceStatusClassName(props.contentStatus?.status),
 					...(piece.tags ? piece.tags.map((tag) => `piece-tag--${tag}`) : [])
 				)}
 				style={{
@@ -202,7 +189,7 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 						displayStyle={displayStyle}
 						showThumbnailsInList={showThumbnailsInList}
 						disableHoverInspector={disableHoverInspector}
-						contentStatus={contentStatus as ReadonlyDeep<PieceContentStatusObj> | undefined}
+						contentStatus={props.contentStatus}
 					/>
 					{showHotkey ? <HotkeyBadge hotkey={piece.hotkey} /> : null}
 					<div className="dashboard-panel__panel__button__label-container">
@@ -217,7 +204,7 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 							onBlur={onLabelBlur}
 							onKeyUp={onLabelKeyUp}
 						/>
-						{compact ? <DashboardButtonTagStrip layerTypeClassName={layerTypeClassName} /> : null}
+						<DashboardButtonTagStrip layerTypeClassName={layerTypeClassName} />
 					</div>
 				</div>
 			</div>

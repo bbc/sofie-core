@@ -13,7 +13,12 @@ export function usePreviewPopUpSession(args: {
 	layerType: ISourceLayer['type'] | undefined
 	piece: IAdLibListItem
 	contentStatus: ReadonlyDeep<PieceContentStatusObj> | undefined
-}) {
+}): {
+	openPreview: (e: EventTarget, time: number) => void
+	closePreview: () => void
+	setPointerTime: (time: number) => void
+	hasPreview: boolean
+} {
 	const previewSessionRef = useRef<IPreviewPopUpSession | null>(null)
 	const hoverTimeoutRef = useRef<number | null>(null)
 
@@ -65,13 +70,16 @@ export function usePreviewPopUpSession(args: {
 		}
 	}, [])
 
-	const setPointerTime = useCallback((time: number) => {
-		previewSessionRef.current?.setPointerTime(time)
-		if (hoverTimeoutRef.current) {
-			Meteor.clearTimeout(hoverTimeoutRef.current)
-			startHoverTimeout()
-		}
-	}, [startHoverTimeout])
+	const setPointerTime = useCallback(
+		(time: number) => {
+			previewSessionRef.current?.setPointerTime(time)
+			if (hoverTimeoutRef.current) {
+				Meteor.clearTimeout(hoverTimeoutRef.current)
+				startHoverTimeout()
+			}
+		},
+		[startHoverTimeout]
+	)
 
 	return {
 		openPreview,
@@ -80,4 +88,3 @@ export function usePreviewPopUpSession(args: {
 		hasPreview: previewRequest.contents.length > 0,
 	}
 }
-

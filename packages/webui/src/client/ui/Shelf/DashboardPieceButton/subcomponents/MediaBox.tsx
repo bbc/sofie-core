@@ -3,9 +3,9 @@ import { PieceDisplayStyle } from '@sofie-automation/meteor-lib/dist/collections
 import { SourceLayerType, VTContent } from '@sofie-automation/blueprints-integration'
 import type { ReadonlyDeep } from 'type-fest'
 import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
-import type { IDashboardButtonProps } from '../types'
-import { DashboardButtonSubLabel } from './DashboardButtonSubLabel'
-import { DashboardButtonThumbnail } from './DashboardButtonThumbnail'
+import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
+import type { IDashboardButtonProps } from '../types.js'
+import { DashboardButtonSubLabel } from './DashboardButtonSubLabel.js'
 import { DashboardPieceButtonSplitPreview } from '../../DashboardPieceButtonSplitPreview.js'
 import SplitInputIcon from '../../../PieceIcons/Renderers/SplitInputIcon.js'
 
@@ -16,7 +16,7 @@ type Props = Pick<
 	contentStatus: ReadonlyDeep<PieceContentStatusObj> | undefined
 }
 
-export function MediaRegion(props: Props): JSX.Element | null {
+export function MediaBox(props: Props): JSX.Element | null {
 	const { piece, layer, studio, displayStyle, showThumbnailsInList, disableHoverInspector, contentStatus } = props
 
 	const isList = displayStyle === PieceDisplayStyle.LIST
@@ -24,6 +24,19 @@ export function MediaRegion(props: Props): JSX.Element | null {
 	const shouldRenderThumbnail = isButtons || (isList && showThumbnailsInList)
 
 	const chosenUrl = useMemo(() => contentStatus?.thumbnailUrl || contentStatus?.previewUrl, [contentStatus])
+	const isBrokenOrMissing = useMemo(() => {
+		switch (contentStatus?.status) {
+			case PieceStatusCode.SOURCE_BROKEN:
+			case PieceStatusCode.SOURCE_MISSING:
+			case PieceStatusCode.SOURCE_UNKNOWN_STATE:
+			case PieceStatusCode.SOURCE_NOT_READY:
+			case PieceStatusCode.UNKNOWN:
+			case undefined:
+				return true
+			default:
+				return false
+		}
+	}, [contentStatus?.status])
 
 	if (disableHoverInspector || !layer) return null
 
@@ -31,12 +44,24 @@ export function MediaRegion(props: Props): JSX.Element | null {
 		const vtContent = piece.content as VTContent | undefined
 		const sourceDuration = vtContent?.sourceDuration
 
+		const showMediaBox = shouldRenderThumbnail && (Boolean(chosenUrl) || isBrokenOrMissing)
+
 		return (
 			<>
-				{sourceDuration ? (
+				{showMediaBox ? (
+					<div className="dashboard-panel__panel__button__thumbnail">
+						<div className="dashboard-panel__panel__button__thumbnail__aspect">
+							{chosenUrl ? <img src={chosenUrl} alt="" /> : null}
+							{sourceDuration ? (
+								<div className="dashboard-panel__panel__button__thumbnail__overlay">
+									<DashboardButtonSubLabel sourceDuration={sourceDuration} studioSettings={studio?.settings} />
+								</div>
+							) : null}
+						</div>
+					</div>
+				) : sourceDuration ? (
 					<DashboardButtonSubLabel sourceDuration={sourceDuration} studioSettings={studio?.settings} />
 				) : null}
-				{chosenUrl && shouldRenderThumbnail ? <DashboardButtonThumbnail url={chosenUrl} /> : null}
 			</>
 		)
 	}
