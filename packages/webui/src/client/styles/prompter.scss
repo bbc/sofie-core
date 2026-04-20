@@ -131,15 +131,7 @@ body.prompter-scrollbar {
 		&.live {
 			//border-bottom: 0.2em solid #f55;
 			// Layer the director-style gradient over the live color
-			background:
-				linear-gradient(
-					90deg,
-					rgba(223, 0, 0, 0) 0%,
-					rgba(223, 0, 0, 0) 50%,
-					rgba(116, 0, 0, 0.808) 68%,
-					rgba(0, 0, 0, 0.8) 73%
-				),
-				$general-live-color;
+			background: $general-live-color;
 			color: #fff;
 			-webkit-text-stroke: black;
 			-webkit-text-stroke-width: 0.025em;
@@ -293,6 +285,7 @@ body.prompter-scrollbar {
 	top: 0;
 	right: 0;
 	font-size: 9vmin;
+	box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.5);
 }
 
 .prompter-rundown-status-bar {
