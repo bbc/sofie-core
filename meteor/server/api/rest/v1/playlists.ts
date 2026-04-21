@@ -991,6 +991,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		new Map([
 			[400, []],
 			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[409, [UserErrorMessage.ValidationFailed]],
 			[412, [UserErrorMessage.InactiveRundown, UserErrorMessage.NoCurrentPart, UserErrorMessage.AdlibNotFound]],
 		]),
 		playlistsAPIFactory,
@@ -1028,6 +1029,7 @@ export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>)
 		new Map([
 			[400, []],
 			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[409, [UserErrorMessage.ValidationFailed]],
 			[
 				412,
 				[
