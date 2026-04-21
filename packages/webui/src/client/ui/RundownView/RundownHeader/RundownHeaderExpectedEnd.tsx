@@ -30,7 +30,7 @@ export function RundownHeaderExpectedEnd({
 			{!simplified && expectedEnd !== undefined ? (
 				<Countdown label={t('Plan. End')} time={expectedEnd} className="rundown-header__show-timers-countdown" />
 			) : null}
-			{estEnd !== null ? (
+			{estEnd !== undefined ? (
 				<Countdown label={t('Est. End')} time={estEnd} className="rundown-header__show-timers-countdown" />
 			) : null}
 		</div>
