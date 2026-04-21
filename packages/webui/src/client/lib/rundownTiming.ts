@@ -855,6 +855,13 @@ export function getPlaylistTimingDiff(
 		frontAnchor = Math.max(currentTime, playlist.startedPlayback ?? Math.max(timing.expectedStart, currentTime))
 	} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
 		backAnchor = timingContext.nextRundownAnchor ?? timing.expectedEnd
+	} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
+		const backAnchorTimeWithoutBreaks =
+			timingContext.nextRundownAnchor ??
+			PlaylistTiming.getExpectedEnd(timing, playlist.startedPlayback) ??
+			currentTime + timing.expectedDuration
+		backAnchor = timingContext.nextRundownAnchor ?? backAnchorTimeWithoutBreaks
+		frontAnchor = Math.max(currentTime, playlist.startedPlayback || PlaylistTiming.getExpectedStart(timing) || 0)
 	}
 
 	let diff = PlaylistTiming.isPlaylistTimingNone(timing)
@@ -880,9 +887,11 @@ export function getPlaylistTimingDiff(
 			diff =
 				(timingContext.asPlayedPlaylistDuration || 0) -
 				(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
-		} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
-			// we want to see how late we've ended compared to the expectedEnd
-			diff = startedPlayback + (timingContext.asPlayedPlaylistDuration || 0) - timing.expectedEnd
+		} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
+			//  we want to know how heavy/light we were compared to the original plan
+			diff =
+				(timingContext.asPlayedPlaylistDuration || 0) -
+				(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
 		}
 	}
 
