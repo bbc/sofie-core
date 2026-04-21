@@ -3,7 +3,10 @@ import { Mongo } from 'meteor/mongo'
 import { type ProtectedString, protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 import type { Collection as RawCollection, Db as RawDb } from 'mongodb'
-import type { CollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
+import type {
+	CollectionName,
+	CustomCollectionName as CustomCorelibCollectionName,
+} from '@sofie-automation/corelib/dist/dataModel/Collections'
 import type { MongoModifier, MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import type { CustomCollectionName, MeteorPubSubCustomCollections } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import type {
@@ -19,7 +22,6 @@ import type {
 	UpdateOptions,
 	UpsertOptions,
 } from '@sofie-automation/meteor-lib/dist/collections/lib'
-import type { CustomCollectionName as CustomCorelibCollectionName } from '@sofie-automation/corelib/dist/dataModel/Collections'
 import type { CorelibPubSubCustomCollections } from '@sofie-automation/corelib/dist/pubsub'
 
 export type {

@@ -1,7 +1,6 @@
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import classNames from 'classnames'
-import type React from 'react'
 import { useCallback, useState } from 'react'
 import { contextMenuHoldToDisplayTime } from '../../lib/lib.js'
 import { RundownUtils } from '../../lib/rundown.js'

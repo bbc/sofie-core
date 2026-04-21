@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { PieceInstancePiece } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import { RundownUtils } from '../../../lib/rundown.js'
 import { PieceLifespan } from '@sofie-automation/blueprints-integration'

@@ -1,4 +1,3 @@
-import type React from 'react'
 import { renderHook, act } from '@testing-library/react'
 import { SelectedElementProvider, useSelectedElementsContext, useElementSelection } from '../SelectedElementsContext.js'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'

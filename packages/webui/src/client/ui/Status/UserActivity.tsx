@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useState, useLayoutEffect } from 'react'
 import { useSubscription, useTracker } from '../../lib/ReactMeteorData/react-meteor-data.js'
 import type { Time } from '@sofie-automation/shared-lib/dist/lib/lib'

@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { LinePartAdLibIndicator } from './LinePartPieceIndicator/LinePartAdLibIndicator.js'
 import { LinePartPieceIndicator } from './LinePartPieceIndicator/LinePartPieceIndicator.js'

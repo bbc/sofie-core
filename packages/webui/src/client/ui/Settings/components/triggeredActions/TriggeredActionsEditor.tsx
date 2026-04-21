@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useState, useEffect, useContext, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSubscription, useTracker } from '../../../../lib/ReactMeteorData/ReactMeteorData.js'

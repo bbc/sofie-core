@@ -1,4 +1,3 @@
-import type React from 'react'
 import _ from 'underscore'
 import {
 	type FilterType,

@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { IContextMenuContext } from '../../RundownView.js'
 import type { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentTimelineContainer.js'

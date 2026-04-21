@@ -1,4 +1,3 @@
-import type React from 'react'
 import { assertNever, clone } from '@sofie-automation/corelib/dist/lib'
 import type { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { CoreUserEditingDefinition } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions'

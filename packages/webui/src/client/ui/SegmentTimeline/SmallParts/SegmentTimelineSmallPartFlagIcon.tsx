@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { PieceIconContainerNoSub } from '../../PieceIcons/PieceIcon.js'
 import type { PartUi } from './../SegmentTimelineContainer.js'

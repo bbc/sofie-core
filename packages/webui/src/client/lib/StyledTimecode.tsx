@@ -1,4 +1,3 @@
-import type React from 'react'
 import ClassNames from 'classnames'
 import { formatDurationAsTimecode } from '@sofie-automation/corelib/dist/lib'
 import type { Time } from '@sofie-automation/shared-lib/dist/lib/lib'

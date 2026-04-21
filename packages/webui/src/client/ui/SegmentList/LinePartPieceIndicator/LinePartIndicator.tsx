@@ -1,5 +1,4 @@
 import classNames from 'classnames'
-import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import type { AdLibPieceUi } from '../../../lib/shelf.js'
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'

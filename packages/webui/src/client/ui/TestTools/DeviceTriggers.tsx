@@ -1,5 +1,4 @@
-import type React from 'react'
-import { Fragment, useState } from 'react'
+import { Fragment, useState, type FunctionComponent } from 'react'
 import { useSubscription, useTracker } from '../../lib/ReactMeteorData/react-meteor-data'
 import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
 import { useTranslation } from 'react-i18next'
@@ -21,7 +20,7 @@ interface DeviceTriggersViewRouteParams {
 	peripheralDeviceId: string
 }
 
-const DeviceTriggersView: React.FC = function TimelineDatastoreView() {
+const DeviceTriggersView: FunctionComponent = function TimelineDatastoreView() {
 	const { t } = useTranslation()
 	const { peripheralDeviceId } = useParams<DeviceTriggersViewRouteParams>()
 

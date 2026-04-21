@@ -12,7 +12,6 @@ import { i18nTranslator } from '../../ui/i18n.js'
 import type { RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
 import { PopUpPanel } from '../../ui/RundownView/PopUpPanel.js'
-import classNames from 'classnames'
 
 interface IPopUpProps {
 	id?: string
@@ -471,7 +470,7 @@ export const NotificationCenterPanel = (props: {
 	hideRundownHeader?: boolean
 }): JSX.Element => (
 	<PopUpPanel
-		className={classNames('notification-center-panel', {
+		className={ClassNames('notification-center-panel', {
 			'notification-center-panel--no-rundown-header': props.hideRundownHeader,
 		})}
 	>

@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useContext, useRef, useState } from 'react'
 import type { ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { getElementDocumentOffset, type OffsetPosition } from '../../../utils/positions.js'

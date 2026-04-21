@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import ClassNames from 'classnames'
 

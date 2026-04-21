@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useState, useEffect, useLayoutEffect } from 'react'
 import classNames from 'classnames'
 import { usePopper } from 'react-popper'

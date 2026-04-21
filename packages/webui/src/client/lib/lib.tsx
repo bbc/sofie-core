@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Meteor } from 'meteor/meteor'
 import _ from 'underscore'

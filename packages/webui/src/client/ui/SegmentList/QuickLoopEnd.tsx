@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useMemo } from 'react'
 
 function widthInBase(pieceMaxDuration: number, timelineBase: number): number {

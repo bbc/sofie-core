@@ -1,4 +1,3 @@
-import type React from 'react'
 import { memo, useEffect } from 'react'
 import _ from 'underscore'
 import ClassNames from 'classnames'

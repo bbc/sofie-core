@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback, useMemo } from 'react'
 import ClassNames from 'classnames'
 import Form from 'react-bootstrap/esm/Form'

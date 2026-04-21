@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownView/RundownTiming/withTiming.js'
 import { SIMULATED_PLAYBACK_HARD_MARGIN } from '../SegmentTimeline/Constants.js'

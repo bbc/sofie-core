@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useState, useRef, useEffect, useContext } from 'react'
 import ClassNames from 'classnames'
 import type { ILayerItemRendererProps } from './ItemRendererFactory.js'

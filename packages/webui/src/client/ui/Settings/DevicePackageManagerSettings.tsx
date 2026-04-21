@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useTracker } from '../../lib/ReactMeteorData/react-meteor-data.js'

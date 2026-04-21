@@ -1,6 +1,4 @@
-import type { MouseEventHandler } from 'react'
-import type React from 'react'
-import { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useState, type MouseEventHandler } from 'react'
 import _ from 'underscore'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { literal } from '@sofie-automation/corelib/dist/lib'

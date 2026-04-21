@@ -1,4 +1,3 @@
-import type React from 'react'
 import Escape from './../lib/Escape.js'
 
 interface IProps {

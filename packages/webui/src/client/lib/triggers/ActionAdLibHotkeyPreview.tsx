@@ -1,5 +1,4 @@
 import type { ISourceLayer } from '@sofie-automation/blueprints-integration'
-import type React from 'react'
 import { useContext, useState, useEffect } from 'react'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import { useTracker } from '../ReactMeteorData/ReactMeteorData.js'

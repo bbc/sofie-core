@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect } from 'react'
 import { NoticeLevel, NotificationCenter, Notification, type NotificationAction } from './notifications.js'
 import { getRandomString } from '@sofie-automation/corelib/dist/lib'

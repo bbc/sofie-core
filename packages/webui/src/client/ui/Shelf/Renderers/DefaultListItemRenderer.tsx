@@ -1,4 +1,3 @@
-import type React from 'react'
 import ClassNames from 'classnames'
 import type { ILayerItemRendererProps } from './ItemRendererFactory.js'
 import { ActionAdLibHotkeyPreview } from '../../../lib/triggers/ActionAdLibHotkeyPreview.js'

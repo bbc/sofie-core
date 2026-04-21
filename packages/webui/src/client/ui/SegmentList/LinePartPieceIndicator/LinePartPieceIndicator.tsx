@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useMemo } from 'react'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import StudioContext from '../../RundownView/StudioContext.js'

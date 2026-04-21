@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import Escape from './../../../lib/Escape.js'
 import { unprotectString } from '@sofie-automation/corelib/dist/protectedString'

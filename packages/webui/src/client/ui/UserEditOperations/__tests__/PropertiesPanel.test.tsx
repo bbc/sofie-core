@@ -1,4 +1,3 @@
-import type React from 'react'
 import { renderHook, act, render, screen, waitFor, type RenderOptions } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { MeteorCall } from '../../../lib/meteorApi.js'

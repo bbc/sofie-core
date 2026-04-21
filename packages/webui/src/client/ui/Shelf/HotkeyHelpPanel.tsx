@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useContext } from 'react'
 import type { Sorensen } from '@sofie-automation/sorensen'
 import { useTranslation } from 'react-i18next'

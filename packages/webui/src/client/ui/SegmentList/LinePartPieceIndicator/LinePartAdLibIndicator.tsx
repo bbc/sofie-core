@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback, useMemo } from 'react'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'

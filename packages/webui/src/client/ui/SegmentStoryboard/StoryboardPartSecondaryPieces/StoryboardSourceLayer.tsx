@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { getCurrentTime } from '../../../lib/systemTime.js'

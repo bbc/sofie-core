@@ -1,6 +1,4 @@
-import type { CSSProperties } from 'react'
-import type React from 'react'
-import { useEffect, useRef, useLayoutEffect } from 'react'
+import { useEffect, useRef, useLayoutEffect, type CSSProperties, type FunctionComponent } from 'react'
 
 export interface AdjustLabelFitProps {
 	/**
@@ -79,7 +77,7 @@ export interface AdjustLabelFitProps {
  * A component that automatically adjusts text to fit within a specified width
  * using font size scaling, variable font width adjustment, and letter spacing.
  */
-export const AdjustLabelFit: React.FC<AdjustLabelFitProps> = ({
+export const AdjustLabelFit: FunctionComponent<AdjustLabelFitProps> = ({
 	label,
 	width,
 	fontFamily,

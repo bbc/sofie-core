@@ -1,4 +1,4 @@
-import { type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import classNames from 'classnames'
 import { RundownUtils } from '../rundown.js'
 import './OverUnderChip.scss'

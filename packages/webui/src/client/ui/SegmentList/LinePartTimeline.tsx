@@ -1,5 +1,4 @@
 import { PieceLifespan, SourceLayerType } from '@sofie-automation/blueprints-integration'
-import type React from 'react'
 import { useMemo } from 'react'
 import { findPieceExtendedToShowFromOrderedResolvedInstances } from '../PieceIcons/utils.js'
 import { LinePartMainPiece } from './LinePartMainPiece/LinePartMainPiece.js'

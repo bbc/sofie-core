@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback } from 'react'
 import Form from 'react-bootstrap/Form'
 

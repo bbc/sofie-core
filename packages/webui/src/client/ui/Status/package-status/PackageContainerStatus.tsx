@@ -1,4 +1,3 @@
-import type React from 'react'
 import Tooltip from 'rc-tooltip'
 import { useTranslation } from 'react-i18next'
 import ClassNames from 'classnames'

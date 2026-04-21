@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import {
+	type DBRundownPlaylist,
+	RundownHoldState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { IContextMenuContext } from '../RundownView.js'
 import type { IOutputLayerUi, PartUi, SegmentNoteCounts, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
@@ -36,7 +39,6 @@ import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
 import { ErrorBoundary } from '../../lib/ErrorBoundary.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
 import type { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { SegmentTimeAnchorTime } from '../RundownView/RundownTiming/SegmentTimeAnchorTime.js'
 import { logger } from '../../lib/logging.js'
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'

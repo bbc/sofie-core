@@ -4,7 +4,10 @@ import { type WithTranslation, withTranslation } from 'react-i18next'
 import ClassNames from 'classnames'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 
-import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import {
+	type DBRundownPlaylist,
+	RundownHoldState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { SegmentUi, PartUi, IOutputLayerUi } from './SegmentTimelineContainer.js'
 import { TimelineGrid } from './TimelineGrid.js'
 import { SegmentTimelinePart, SegmentTimelinePartClass } from './Parts/SegmentTimelinePart.js'
@@ -46,7 +49,6 @@ import { SegmentTimelineZoomButtons } from './SegmentTimelineZoomButtons.js'
 import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
 import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { SegmentNoteCounts } from '../SegmentContainer/withResolvedSegment.js'
 import {
 	withTiming,

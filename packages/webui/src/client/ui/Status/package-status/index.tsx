@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useMemo } from 'react'
 import { useSubscriptionIfEnabled, useTracker } from '../../../lib/ReactMeteorData/react-meteor-data.js'
 import type { ExpectedPackageWorkStatus } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackageWorkStatuses'

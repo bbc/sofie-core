@@ -1,4 +1,3 @@
-import type React from 'react'
 import { WarningIconSmall } from '../../lib/ui/icons/notifications.js'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { type TFunction, useTranslation } from 'react-i18next'

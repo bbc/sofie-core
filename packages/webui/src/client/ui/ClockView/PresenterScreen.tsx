@@ -35,7 +35,7 @@ import { RundownLayoutsAPI } from '../../lib/rundownLayouts.js'
 import { ShelfDashboardLayout } from '../Shelf/ShelfDashboardLayout.js'
 import { parse as queryStringParse } from 'query-string'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
-import { type RundownTimingContext } from '../../lib/rundownTiming.js'
+import type { RundownTimingContext } from '../../lib/rundownTiming.js'
 import { UIShowStyleBases, UIStudios } from '../Collections.js'
 import {
 	PieceInstances,
@@ -51,9 +51,9 @@ import { useRundownAndShowStyleIdsForPlaylist } from '../util/useRundownAndShowS
 import { RundownPlaylistClientUtil } from '../../lib/rundownPlaylistUtil.js'
 import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 import { RundownStatusBar } from './RundownStatusBar.js'
-import { type UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
-import { type UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
-import { type PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
+import type { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import type { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
 import { OverUnderChip } from '../../lib/Components/OverUnderChip.js'
 
 // TODO: We have another definition of this in the Director screen, and there is also another SegmentUI type. We should look into clearing this up.

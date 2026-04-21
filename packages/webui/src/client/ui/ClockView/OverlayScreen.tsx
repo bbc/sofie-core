@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect } from 'react'
 import Moment from 'react-moment'
 import { useTranslation } from 'react-i18next'

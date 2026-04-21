@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTracker } from '../../lib/ReactMeteorData/ReactMeteorData.js'
 import Escape from './../../lib/Escape.js'

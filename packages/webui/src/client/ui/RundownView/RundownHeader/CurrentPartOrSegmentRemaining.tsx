@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useRef } from 'react'
 import ClassNames from 'classnames'
 import { TimingDataResolution, TimingTickResolution, useTiming } from '../RundownTiming/withTiming.js'

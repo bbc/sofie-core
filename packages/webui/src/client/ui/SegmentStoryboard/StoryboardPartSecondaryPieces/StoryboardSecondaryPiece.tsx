@@ -1,6 +1,4 @@
-import type { RefObject } from 'react'
-import type React from 'react'
-import { useImperativeHandle, useContext, useRef, useState } from 'react'
+import { useImperativeHandle, useContext, useRef, useState, type RefObject } from 'react'
 import { type ISourceLayer, SourceLayerType } from '@sofie-automation/blueprints-integration'
 import { DefaultRenderer } from './Renderers/DefaultRenderer.js'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'

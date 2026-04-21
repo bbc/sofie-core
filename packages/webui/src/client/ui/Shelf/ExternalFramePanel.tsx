@@ -37,8 +37,7 @@ import type {
 	RundownId,
 	RundownPlaylistId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { MOS_DATA_IS_STRICT } from '@sofie-automation/meteor-lib/dist/mos'
-import { mosTypes, MOS } from '@sofie-automation/meteor-lib/dist/mos'
+import { MOS_DATA_IS_STRICT, mosTypes, MOS } from '@sofie-automation/meteor-lib/dist/mos'
 import { RundownPlaylistCollectionUtil } from '../../collections/rundownPlaylistUtil.js'
 import { logger } from '../../lib/logging.js'
 import RundownViewEventBus, {

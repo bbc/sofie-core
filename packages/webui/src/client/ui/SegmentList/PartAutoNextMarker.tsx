@@ -1,5 +1,4 @@
 import classNames from 'classnames'
-import type React from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 

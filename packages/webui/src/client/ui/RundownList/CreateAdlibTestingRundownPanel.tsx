@@ -1,4 +1,3 @@
-import type React from 'react'
 import { memo, useEffect, useState } from 'react'
 import type { CreateAdlibTestingRundownOption } from '@sofie-automation/meteor-lib/dist/api/showStyles'
 import { MeteorCall } from '../../lib/meteorApi.js'

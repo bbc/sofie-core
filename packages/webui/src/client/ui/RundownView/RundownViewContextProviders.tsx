@@ -1,4 +1,3 @@
-import type React from 'react'
 import { RundownTimingProvider } from './RundownTiming/RundownTimingProvider'
 import StudioContext from './StudioContext'
 import { RundownPlaylistOperationsContextProvider } from './RundownHeader/useRundownPlaylistOperations.js'

@@ -1,6 +1,4 @@
-import type { CSSProperties } from 'react'
-import type React from 'react'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type CSSProperties } from 'react'
 import { SmallPartFlag } from '../../../lib/ui/icons/segment.js'
 import type { ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { SegmentTimelineSmallPartFlagIcon } from './SegmentTimelineSmallPartFlagIcon.js'

@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { LeftArrow, RightArrow } from '../../lib/ui/icons/segment.js'
 import { getElementWidth } from '../../utils/dimensions.js'

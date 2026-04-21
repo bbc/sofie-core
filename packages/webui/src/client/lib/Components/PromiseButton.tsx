@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import ClassNames from 'classnames'
 import { logger } from '../logging.js'
