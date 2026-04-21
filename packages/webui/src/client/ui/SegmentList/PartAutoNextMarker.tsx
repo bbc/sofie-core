@@ -1,5 +1,6 @@
 import classNames from 'classnames'
-import React, { useMemo } from 'react'
+import type React from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 function widthInBase(pieceMaxDuration: number, timelineBase: number): number {

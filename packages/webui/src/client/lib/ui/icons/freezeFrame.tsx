@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 
 export function FreezeFrameIcon(props: Readonly<React.SVGProps<SVGSVGElement>>): JSX.Element {
 	return (

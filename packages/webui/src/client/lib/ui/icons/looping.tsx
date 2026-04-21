@@ -1,6 +1,8 @@
-import React, { JSX, useEffect, useRef } from 'react'
+import type { JSX } from 'react'
+import type React from 'react'
+import { useEffect, useRef } from 'react'
 import loopAnimation from './icon-loop.json'
-import Lottie, { LottieComponentProps, LottieRefCurrentProps } from 'lottie-react'
+import Lottie, { type LottieComponentProps, type LottieRefCurrentProps } from 'lottie-react'
 
 export function LoopingIcon(props?: Readonly<React.SVGProps<SVGSVGElement>>): JSX.Element {
 	return (

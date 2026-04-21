@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 
 export function BaseRemoteInputIcon(props: Readonly<React.PropsWithChildren<{ className: string }>>): JSX.Element {
 	return (
