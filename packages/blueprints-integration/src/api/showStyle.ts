@@ -117,7 +117,8 @@ export interface ShowStyleBlueprintManifest<
 		context: ISyncIngestUpdateToPartInstanceContext,
 		existingPartInstance: BlueprintSyncIngestPartInstance,
 		newData: BlueprintSyncIngestNewData,
-		playoutStatus: 'previous' | 'current' | 'next'
+		playoutStatus: 'previous' | 'current' | 'next',
+		playoutPersistentState: BlueprintPlayoutPersistentStore<TimelinePersistentState>
 	) => void
 
 	/**
