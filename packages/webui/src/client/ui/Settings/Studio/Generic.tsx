@@ -27,6 +27,7 @@ import { TextInputControl } from '../../../lib/Components/TextInput.js'
 import { DropdownInputControl, type DropdownInputOption } from '../../../lib/Components/DropdownInput.js'
 import { useTracker } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
 import Button from 'react-bootstrap/Button'
+import { ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 
 interface IStudioGenericPropertiesProps {
 	studio: DBStudio
@@ -182,6 +183,22 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 		[t]
 	)
 
+	const shelfAdlibButtonSizeOptions: DropdownInputOption<ShelfButtonSize.COMPACT | ShelfButtonSize.LARGE>[] = useMemo(
+		() => [
+			{
+				name: t('Large'),
+				value: ShelfButtonSize.LARGE,
+				i: 0,
+			},
+			{
+				name: t('Compact'),
+				value: ShelfButtonSize.COMPACT,
+				i: 1,
+			},
+		],
+		[t]
+	)
+
 	return (
 		<>
 			<LabelAndOverridesForInt
@@ -311,6 +328,18 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
 			</LabelAndOverridesForCheckbox>
+
+			<LabelAndOverridesForDropdown
+				label={t('Mini shelf AdLib button size')}
+				item={wrappedItem}
+				itemKey={'shelfAdlibButtonSize'}
+				overrideHelper={overrideHelper}
+				options={shelfAdlibButtonSizeOptions}
+			>
+				{(value, handleUpdate, options) => (
+					<DropdownInputControl options={options} value={value} handleUpdate={handleUpdate} />
+				)}
+			</LabelAndOverridesForDropdown>
 
 			<LabelAndOverridesForCheckbox
 				label={t('Enable User Editing')}

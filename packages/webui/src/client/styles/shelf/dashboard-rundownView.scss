@@ -1,9 +1,25 @@
 .segment-timeline + .rundown-view-shelf {
-	padding: 0 4em 1.2em 13.3em;
+	padding: 13px 0em 0 0;
 }
 
+@import './rundownViewShelfAdlibSizeToggle';
+
 .rundown-view-shelf.dashboard-panel {
-	background: none;
-	border: none;
-	margin: 0 0;
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	margin: -11px 0.8em 0 178px;
+	border-radius: 0 0 11px 11px;
+	z-index: 0;
+	box-shadow: 7px 6px 15px 0px rgba(0, 0, 0, 0.2);
+	display: flex;
+	.dashboard-panel__panel {
+		flex-wrap: wrap;
+		padding-left: 44px;
+		margin: -11px 0 0 0;
+		padding: 11px 2px 2px 0;
+		overflow: unset;
+		.dashboard-panel__panel__button {
+			z-index: 3;
+		}
+	}
 }

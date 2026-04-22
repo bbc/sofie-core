@@ -1,9 +1,9 @@
 import {
-	ForceQuickLoopAutoNext,
 	JSONBlobStringify,
 	PieceLifespan,
 	StatusCode,
 } from '@sofie-automation/blueprints-integration'
+import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import {
 	PartInstanceId,

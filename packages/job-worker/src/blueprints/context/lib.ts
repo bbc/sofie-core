@@ -401,7 +401,7 @@ export function convertSegmentToBlueprints(segment: ReadonlyDeep<DBSegment>): IB
 		isHidden: segment.isHidden,
 		identifier: segment.identifier,
 		displayAs: segment.displayAs,
-		showShelf: segment.showShelf,
+		displayMinishelf: segment.displayMinishelf,
 		segmentTiming: segment.segmentTiming,
 		userEditOperations: translateUserEditsToBlueprint(segment.userEditOperations),
 		userEditProperties: translateUserEditPropertiesToBlueprint(segment.userEditProperties),

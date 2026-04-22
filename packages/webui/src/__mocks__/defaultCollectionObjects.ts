@@ -6,7 +6,9 @@ import type { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { IBlueprintPieceType, PieceLifespan } from '@sofie-automation/blueprints-integration'
-import { type Piece, EmptyPieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
+import { ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
+import { EmptyPieceTimelineObjectsBlob } from '@sofie-automation/corelib/dist/dataModel/Piece'
+import type { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import type { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import type { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
@@ -111,6 +113,7 @@ export function defaultStudio(_id: StudioId): DBStudio {
 			allowPieceDirectPlay: true,
 			enableBuckets: true,
 			enableEvaluationForm: true,
+			shelfAdlibButtonSize: ShelfButtonSize.LARGE,
 		}),
 		_rundownVersionHash: '',
 		routeSetsWithOverrides: wrapDefaultObject({}),

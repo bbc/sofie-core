@@ -150,74 +150,81 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 		])
 
 		return (
-			<div
-				className={ClassNames(
-					'dashboard-panel__panel__button',
-					{
-						'dashboard-panel__panel__button--compact': Boolean(compact),
-						invalid: piece.invalid,
-						floated: piece.floated,
-						active,
-						live: isOnAir,
-						disabled: disabled,
-						list: isList,
-						selected: isNext || isSelected,
-						'dashboard-panel__panel__button--has-hotkey': showHotkey && Boolean(piece.hotkey),
-						'dashboard-panel__panel__button--no-media': showHotkey && Boolean(piece.hotkey) && !hasMediaBox,
-					},
-					RundownUtils.getPieceStatusClassName(contentStatus?.status),
-					...(piece.tags ? piece.tags.map((tag) => `piece-tag--${tag}`) : [])
-				)}
-				style={{
-					width: isList ? 'calc(100% - 8px)' : widthScale ? widthScale * DEFAULT_BUTTON_WIDTH + 'em' : undefined,
-					height: !isList && heightScale ? heightScale * DEFAULT_BUTTON_HEIGHT + 'em' : undefined,
-				}}
-				onClick={interactions.onClick}
-				onDoubleClick={interactions.onDoubleClick}
-				ref={(node) => {
-					interactions.elementRef.current = node
-					if (typeof forwardedRef === 'function') {
-						forwardedRef(node)
-					} else if (forwardedRef) {
-						;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
-					}
-				}}
-				onMouseDown={interactions.onMouseDown}
-				onPointerEnter={interactions.onPointerEnter}
-				onPointerLeave={interactions.onPointerLeave}
-				onMouseMove={interactions.onMouseMove}
-				onPointerDown={interactions.onPointerDown}
-				onPointerOut={interactions.onPointerOut}
-				onPointerUp={interactions.onPointerUp}
-				onTouchStart={interactions.onTouchStart}
-				onTouchEnd={interactions.onTouchEnd}
-				onTouchMove={interactions.onTouchMove}
-				data-obj-id={piece._id}
-			>
-				<div className="dashboard-panel__panel__button__content">
-					<MediaBox
-						piece={piece}
-						layer={layer}
-						studio={studio}
-						displayStyle={displayStyle}
-						showThumbnailsInList={showThumbnailsInList}
-						disableHoverInspector={disableHoverInspector}
-						contentStatus={contentStatus as ReadonlyDeep<PieceContentStatusObj> | undefined}
-					/>
-					{showHotkey ? <HotkeyBadge hotkey={piece.hotkey} /> : null}
-					<div className="dashboard-panel__panel__button__label-container">
-						<DashboardButtonTagStrip layerTypeClassName={layerTypeClassName} />
-						<EditableLabel
-							editable={editableName}
-							label={label}
-							labelRef={(el) => {
-								labelElRef.current = el
-							}}
-							onChange={onLabelChange}
-							onBlur={onLabelBlur}
-							onKeyUp={onLabelKeyUp}
-						/>
-						{compact ? <DashboardButtonTagStrip layerTypeClassName={layerTypeClassName} /> : null}
+			<div className={ClassNames('dashboard-panel__panel__button-wrapper', { live: isOnAir, next: isNext })}>
+				<div
+					className={ClassNames(
+						'dashboard-panel__panel__button',
+						{
+							'dashboard-panel__panel__button--compact': Boolean(compact),
+							invalid: piece.invalid,
+							floated: piece.floated,
+							active,
+							live: isOnAir,
+							disabled: disabled,
+							list: isList,
+							selected: isNext || isSelected,
+							'dashboard-panel__panel__button--has-hotkey': showHotkey && Boolean(piece.hotkey),
+							'dashboard-panel__panel__button--no-media': showHotkey && Boolean(piece.hotkey) && !hasMediaBox,
+							'dashboard-panel__panel__button--no-thumbnail': !hasMediaBox,
+						},
+						RundownUtils.getPieceStatusClassName(contentStatus?.status),
+						...(piece.tags ? piece.tags.map((tag) => `piece-tag--${tag}`) : [])
+					)}
+					style={{
+						width: isList ? 'calc(100% - 8px)' : widthScale ? widthScale * DEFAULT_BUTTON_WIDTH + 'em' : undefined,
+						height: !isList && heightScale ? heightScale * DEFAULT_BUTTON_HEIGHT + 'em' : undefined,
+					}}
+					onClick={interactions.onClick}
+					onDoubleClick={interactions.onDoubleClick}
+					ref={(node) => {
+						interactions.elementRef.current = node
+						if (typeof forwardedRef === 'function') {
+							forwardedRef(node)
+						} else if (forwardedRef) {
+							;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+						}
+					}}
+					onMouseDown={interactions.onMouseDown}
+					onPointerEnter={interactions.onPointerEnter}
+					onPointerLeave={interactions.onPointerLeave}
+					onMouseMove={interactions.onMouseMove}
+					onPointerDown={interactions.onPointerDown}
+					onPointerOut={interactions.onPointerOut}
+					onPointerUp={interactions.onPointerUp}
+					onTouchStart={interactions.onTouchStart}
+					onTouchEnd={interactions.onTouchEnd}
+					onTouchMove={interactions.onTouchMove}
+					data-obj-id={piece._id}
+				>
+					<div className="dashboard-panel__panel__button__content">
+						{showHotkey ? <HotkeyBadge hotkey={piece.hotkey} /> : null}
+						<DashboardButtonTagStrip className={layerTypeClassName}>
+							<MediaBox
+								piece={piece}
+								layer={layer}
+								studio={studio}
+								displayStyle={displayStyle}
+								showThumbnailsInList={showThumbnailsInList}
+								disableHoverInspector={disableHoverInspector}
+								contentStatus={contentStatus as ReadonlyDeep<PieceContentStatusObj> | undefined}
+							/>
+							<DashboardButtonTagStrip
+								className={ClassNames(layerTypeClassName, 'dashboard-panel__panel__button__tag-container--inner')}
+							>
+								<div className="dashboard-panel__panel__button__label-container">
+									<EditableLabel
+										editable={editableName}
+										label={label}
+										labelRef={(el) => {
+											labelElRef.current = el
+										}}
+										onChange={onLabelChange}
+										onBlur={onLabelBlur}
+										onKeyUp={onLabelKeyUp}
+									/>
+								</div>
+							</DashboardButtonTagStrip>
+						</DashboardButtonTagStrip>
 					</div>
 				</div>
 			</div>
