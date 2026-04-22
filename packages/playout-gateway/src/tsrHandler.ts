@@ -82,6 +82,7 @@ export class TSRHandler {
 	// private _config: TSRConfig
 	private _coreHandler!: CoreHandler
 	private _triggerupdateExpectedPlayoutItemsTimeout: NodeJS.Timeout | null = null
+	private _triggerUpdateEventSubscriptionsTimeout: NodeJS.Timeout | null = null
 	private _coreTsrHandlers: { [deviceId: string]: CoreTSRDeviceHandler } = {}
 	private _observers: Array<Observer<any>> = []
 	private _cachedStudioId: StudioId | null = null
@@ -542,6 +543,20 @@ export class TSRHandler {
 			this._triggerUpdateDatastore()
 		}
 		this._observers.push(timelineDatastoreObserver)
+
+		const externalEventSubscriptionsObserver = this._coreHandler.core.observe(
+			PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions
+		)
+		externalEventSubscriptionsObserver.added = () => {
+			this._triggerUpdateEventSubscriptions()
+		}
+		externalEventSubscriptionsObserver.changed = () => {
+			this._triggerUpdateEventSubscriptions()
+		}
+		externalEventSubscriptionsObserver.removed = () => {
+			this._triggerUpdateEventSubscriptions()
+		}
+		this._observers.push(externalEventSubscriptionsObserver)
 	}
 	private resendStatuses(): void {
 		_.each(this._coreTsrHandlers, (tsrHandler) => {
@@ -840,6 +855,42 @@ export class TSRHandler {
 	private _triggerUpdateDatastore() {
 		if (!this._initialized) return
 		this._updateDatastore().catch((e) => this.logger.error('Error in _updateDatastore', e))
+	}
+	private _triggerUpdateEventSubscriptions() {
+		if (!this._initialized) return
+		if (this._triggerUpdateEventSubscriptionsTimeout) {
+			clearTimeout(this._triggerUpdateEventSubscriptionsTimeout)
+		}
+		this._triggerUpdateEventSubscriptionsTimeout = setTimeout(() => {
+			this._updateEventSubscriptions().catch((e) => {
+				this.logger.error('Error in _updateEventSubscriptions', e)
+			})
+		}, 200)
+	}
+	private async _updateEventSubscriptions() {
+		const subscriptionDocs = this._coreHandler.core
+			.getCollection(PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions)
+			.find({})
+
+		// Aggregate subscriptions from all active rundowns, group by deviceId
+		const subscriptionsByDeviceId = new Map<string, Set<string>>()
+		for (const doc of subscriptionDocs) {
+			for (const sub of doc.externalEventSubscriptions) {
+				let events = subscriptionsByDeviceId.get(sub.deviceId)
+				if (!events) {
+					events = new Set()
+					subscriptionsByDeviceId.set(sub.deviceId, events)
+				}
+				events.add(sub.event as string)
+			}
+		}
+
+		await Promise.all(
+			_.map(this.tsr.connectionManager.getConnections(), async (container) => {
+				const events = subscriptionsByDeviceId.get(container.deviceId) ?? new Set<string>()
+				await container.device.setEventSubscriptions(Array.from(events))
+			})
+		)
 	}
 	private async _updateDatastore() {
 		const datastoreCollection = this._coreHandler.core.getCollection(

@@ -11,6 +11,7 @@ import { PeripheralDeviceCommand } from '../core/model/PeripheralDeviceCommand.j
 import { ExpectedPlayoutItemPeripheralDevice } from '../expectedPlayoutItem.js'
 import { DeviceTriggerMountedAction, PreviewWrappedAdLib } from '../input-gateway/deviceTriggerPreviews.js'
 import { IngestRundownStatus } from '../ingest/rundownStatus.js'
+import type { BlueprintExternalEventSubscription } from '@sofie-automation/blueprints-integration'
 
 /**
  * Ids of possible DDP subscriptions for any PeripheralDevice.
@@ -59,6 +60,11 @@ export enum PeripheralDevicePubSub {
 	 * Ingest status of rundowns for a PeripheralDevice
 	 */
 	ingestDeviceRundownStatus = 'ingestDeviceRundownStatus',
+
+	// Playout gateway (external event subscriptions):
+
+	/** Playout gateway: External event subscriptions from blueprints for active rundowns in the Studio */
+	externalEventSubscriptionsForDevice = 'externalEventSubscriptionsForDevice',
 }
 
 /**
@@ -127,6 +133,17 @@ export interface PeripheralDevicePubSubTypes {
 		deviceId: PeripheralDeviceId,
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
+
+	[PeripheralDevicePubSub.externalEventSubscriptionsForDevice]: (
+		deviceId: PeripheralDeviceId,
+		token?: string
+	) => PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions
+}
+
+/** Subscriptions to external device events, as declared by a blueprint for one rundown */
+export interface RundownExternalEventSubscriptions {
+	_id: RundownId
+	externalEventSubscriptions: BlueprintExternalEventSubscription[]
 }
 
 export enum PeripheralDevicePubSubCollectionsNames {
@@ -149,6 +166,9 @@ export enum PeripheralDevicePubSubCollectionsNames {
 	packageManagerExpectedPackages = 'packageManagerExpectedPackages',
 
 	ingestRundownStatus = 'ingestRundownStatus',
+
+	// Custom collections (playout gateway):
+	rundownExternalEventSubscriptions = 'rundownExternalEventSubscriptions',
 }
 
 export type PeripheralDevicePubSubCollections = {
@@ -171,4 +191,6 @@ export type PeripheralDevicePubSubCollections = {
 	[PeripheralDevicePubSubCollectionsNames.packageManagerExpectedPackages]: PackageManagerExpectedPackage
 
 	[PeripheralDevicePubSubCollectionsNames.ingestRundownStatus]: IngestRundownStatus
+
+	[PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions]: RundownExternalEventSubscriptions
 }
