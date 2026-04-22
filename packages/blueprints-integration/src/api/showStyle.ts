@@ -53,7 +53,7 @@ import type { SofieIngestSegment } from '../ingest-types.js'
 import { PackageStatusMessage } from '@sofie-automation/shared-lib/dist/packageStatusMessages'
 import { BlueprintPlayoutPersistentStore } from '../context/playoutStore.js'
 import type { ITranslatableMessage } from '../translations.js'
-import type { BlueprintExternalEvent, BlueprintExternalEventSubscriptions } from '../externalEvent.js'
+import type { BlueprintExternalEvent, BlueprintExternalEventSubscription } from '../externalEvent.js'
 
 export { PackageStatusMessage }
 
@@ -300,7 +300,7 @@ export interface BlueprintResultRundown {
 	globalPieces?: IBlueprintRundownPiece[]
 	baseline: BlueprintResultBaseline
 	/** Subscriptions to external events (e.g. TSR device state changes) for this rundown */
-	externalEventSubscriptions?: BlueprintExternalEventSubscriptions
+	externalEventSubscriptions?: BlueprintExternalEventSubscription[]
 }
 export interface BlueprintResultSegment {
 	segment: IBlueprintSegment

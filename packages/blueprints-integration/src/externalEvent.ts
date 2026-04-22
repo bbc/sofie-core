@@ -15,19 +15,27 @@ export type BlueprintExternalTSREvent = TSR.SomeTSRStateEvent & { type: 'tsr' }
 export type BlueprintExternalEvent = BlueprintExternalTSREvent
 // | { type: 'input'; ... }  // example future scope
 
+export type TSREventDeviceType = {
+	[K in keyof TSR.TSREventTypesMap]: TSR.TSREventTypesMap[K] extends never ? never : K
+}[keyof TSR.TSREventTypesMap]
+
 /** A subscription to a single named event on a TSR playout device */
-export interface TSRExternalEventSubscription {
+export type TSRExternalEventSubscription<TDevice extends TSREventDeviceType> = {
+	type: 'tsr'
 	/** The id of the playout device, e.g. `'atem0'` */
 	deviceId: string
+	/** The type of the playout device */
+	deviceType: TDevice
 	/** The event key to subscribe to, e.g. `'me.0.programInput'` */
-	event: string
+	event: keyof TSR.TSREventTypesMap[TDevice]
 }
 
 /**
- * The set of external event subscriptions declared alongside a rundown.
- * Sofie will forward these to the relevant devices so that only subscribed events
- * are delivered to the blueprint's {@link onExternalEvent} handler.
+ * A subscription to a named event on any TSR playout device.
+ *
+ * This is a discriminated union over all known device types, so `deviceType` and `event`
+ * are always correlated — the compiler will reject an ATEM event key on an Abstract device, etc.
  */
-export interface BlueprintExternalEventSubscriptions {
-	tsr: TSRExternalEventSubscription[]
-}
+export type BlueprintExternalEventSubscription = {
+	[TDevice in TSREventDeviceType]: TSRExternalEventSubscription<TDevice>
+}[TSREventDeviceType]
