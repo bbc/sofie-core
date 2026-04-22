@@ -454,6 +454,11 @@ export class TSRHandler {
 		this.tsr.connectionManager.on('connectionEvent:timeTrace', (_id, trace) => {
 			sendTrace(trace)
 		})
+		this.tsr.connectionManager.on('connectionEvent:stateEvent', (_id, events) => {
+			this._coreHandler.core.coreMethods
+				.reportExternalEvents(events.map((e) => ({ ...e, type: 'tsr' as const })))
+				.catch((e: unknown) => this.logger.error('Error when reporting external events to core', e))
+		})
 	}
 
 	private setupObservers(): void {
