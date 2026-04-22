@@ -31,6 +31,7 @@ import {
 	DiffTimeResult,
 	TimeDiff,
 	PlayoutChangedResults,
+	PeripheralDeviceExternalEvent,
 } from './peripheralDeviceAPI.js'
 import { MediaObject } from '../core/model/MediaObjects.js'
 
@@ -96,6 +97,11 @@ export interface NewPeripheralDeviceAPI {
 	ping(deviceId: PeripheralDeviceId, deviceToken: string): Promise<void>
 	getPeripheralDevice(deviceId: PeripheralDeviceId, deviceToken: string): Promise<PeripheralDeviceForDevice>
 	playoutPlaybackChanged(deviceId: PeripheralDeviceId, deviceToken: string, r: PlayoutChangedResults): Promise<void>
+	reportExternalEvents(
+		deviceId: PeripheralDeviceId,
+		deviceToken: string,
+		events: PeripheralDeviceExternalEvent[]
+	): Promise<void>
 	pingWithCommand(
 		deviceId: PeripheralDeviceId,
 		deviceToken: string,
@@ -366,6 +372,8 @@ export enum PeripheralDeviceAPIMethods {
 	'timelineTriggerTime' = 'peripheralDevice.timeline.setTimelineTriggerTime',
 
 	'playoutPlaybackChanged' = 'peripheralDevice.playout.playbackChanged',
+
+	'reportExternalEvents' = 'peripheralDevice.playout.reportExternalEvents',
 
 	'getDebugStates' = 'peripheralDevice.playout.getDebugStates',
 
