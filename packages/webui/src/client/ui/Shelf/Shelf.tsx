@@ -167,6 +167,12 @@ export class ShelfBase extends React.Component<Translated<IShelfProps>, IState> 
 			RundownViewEventBus.off(RundownViewEvents.TAKE, this.onTake)
 		}
 
+		// If unmounted mid-resize, finish the resize so document.body.style.cursor
+		// (set to 'grabbing' in beginResize) is restored.
+		if (this.state.moving) {
+			this.endResize()
+		}
+
 		// Ensure document-level drag/touch listeners are removed if unmounted mid-resize.
 		document.removeEventListener('mouseup', this.dropHandle)
 		document.removeEventListener('mouseleave', this.dropHandle)

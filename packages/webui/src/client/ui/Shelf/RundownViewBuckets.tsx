@@ -153,6 +153,13 @@ export const RundownViewBuckets = withTranslation()(
 			RundownViewEventBus.off(RundownViewEvents.DELETE_BUCKET_ADLIB, this.deleteBucketAdLib)
 			RundownViewEventBus.off(RundownViewEvents.RENAME_BUCKET_ADLIB, this.beginRenameBucketAdLib)
 
+			// If unmounted mid-resize, restore visual drag state (cursor + iframe pointer-events)
+			// that beginResize set, so they aren't left stuck. _targetBucket is the de-facto
+			// "resize in progress" flag (set in beginResize, used in endResize).
+			if (this._targetBucket) {
+				this.endResize()
+			}
+
 			// Ensure document-level drag/touch listeners are removed if unmounted mid-resize.
 			document.removeEventListener('mouseup', this.dropHandle)
 			document.removeEventListener('mouseleave', this.dropHandle)
