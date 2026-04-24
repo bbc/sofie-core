@@ -34,6 +34,7 @@ export class SegmentTimelineZoomControls extends React.Component<IPropsHeader, I
 
 	private _isTouch = false
 	private resizeObserver: ResizeObserver | undefined
+	private _touchEndHandler: (() => void) | undefined
 
 	SMALL_WIDTH_BREAKPOINT = 25
 
@@ -107,6 +108,10 @@ export class SegmentTimelineZoomControls extends React.Component<IPropsHeader, I
 			document.removeEventListener('mousemove', this.zoomAreaMove)
 		} else {
 			document.removeEventListener('touchmove', this.zoomAreaMove)
+			if (this._touchEndHandler) {
+				document.removeEventListener('touchend', this._touchEndHandler)
+				this._touchEndHandler = undefined
+			}
 		}
 
 		this.setState({
@@ -136,9 +141,10 @@ export class SegmentTimelineZoomControls extends React.Component<IPropsHeader, I
 			const et = e as React.TouchEvent<HTMLDivElement>
 			if (et.touches.length === 1) {
 				document.addEventListener('touchmove', this.zoomAreaMove)
-				document.addEventListener('touchend', () => {
+				this._touchEndHandler = () => {
 					this.zoomAreaEndMove()
-				})
+				}
+				document.addEventListener('touchend', this._touchEndHandler)
 
 				clientX = et.touches[0].clientX
 				clientY = et.touches[0].clientY
