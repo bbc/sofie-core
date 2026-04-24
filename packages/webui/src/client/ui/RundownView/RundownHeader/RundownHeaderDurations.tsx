@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Countdown } from './Countdown'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown.js'
+import { PlaylistTiming } from '@sofie-automation/corelib/src/playout/rundownTiming.js'
 
 export function RundownHeaderDurations({
 	playlist,
@@ -14,11 +15,8 @@ export function RundownHeaderDurations({
 	const { t } = useTranslation()
 	const timingDurations = useTiming()
 
-	// const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
-	// @todo: this _should_ use PlaylistTiming.getExpectedDuration as show above,
-	// but I don't dare changing its behaviour to return for PlaylistTimingType.None within the scope of this task
-	// same issue in RundownHeader.tsx
-	const expectedDuration = playlist.timing.expectedDuration
+	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
+	
 
 	// Use remainingPlaylistDuration which includes current part's remaining time
 	const estDuration = timingDurations.remainingPlaylistDuration

@@ -76,13 +76,7 @@ export namespace PlaylistTiming {
 	}
 
 	export function getExpectedDuration(timing: RundownPlaylistTiming): number | undefined {
-		if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
-			return timing.expectedDuration
-		} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
-			return timing.expectedDuration
-		} else {
-			return undefined
-		}
+		return timing.expectedDuration
 	}
 
 	export function getEstimatedEnd(
