@@ -56,7 +56,6 @@ export function RundownHeader({
 	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
-	
 
 	const hasSimple = !!(expectedStart || expectedDuration || expectedEnd)
 

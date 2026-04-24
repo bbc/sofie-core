@@ -281,8 +281,7 @@ const getDirectorScreenReactive = (props: DirectorScreenProps): DirectorScreenTr
 		}
 
 		showStyleBaseIds = rundowns.map((rundown) => rundown.showStyleBaseId)
-		const { currentPartInstance, nextPartInstance } =
-			RundownPlaylistClientUtil.getSelectedPartInstances(playlist)
+		const { currentPartInstance, nextPartInstance } = RundownPlaylistClientUtil.getSelectedPartInstances(playlist)
 
 		const partInstance = currentPartInstance ?? nextPartInstance
 		if (partInstance) {
@@ -384,10 +383,7 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 	useSubscription(CorelibPubSub.showStyleVariants, null, showStyleVariantIds)
 	useSubscription(MeteorPubSub.rundownLayouts, showStyleBaseIds)
 
-	const {
-		currentPartInstance,
-		nextPartInstance,
-	} = useTracker(
+	const { currentPartInstance, nextPartInstance } = useTracker(
 		() => {
 			const playlist = RundownPlaylists.findOne(props.playlistId, {
 				fields: {
