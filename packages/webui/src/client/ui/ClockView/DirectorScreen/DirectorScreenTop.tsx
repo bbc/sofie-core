@@ -27,17 +27,15 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 
 	let currentEndTarget = undefined
-	if (rehearsalInProgress) {
-		currentEndTarget = (playlist.startedPlayback || 0) + (expectedDuration || 0)
+	if (rehearsalInProgress && expectedDuration > 0) {
+		currentEndTarget = playlist.startedPlayback! + expectedDuration
 	} else if (expectedEnd) {
 		currentEndTarget = expectedEnd
 	}
 
 	let countDownToEnd = undefined
-	if (rehearsalInProgress) {
-		countDownToEnd = (playlist.startedPlayback || 0) + expectedDuration - now
-	} else if (expectedEnd) {
-		countDownToEnd = expectedEnd - now
+	if (currentEndTarget !== undefined) {
+		countDownToEnd = currentEndTarget - now
 	}
 
 	const { t } = useTranslation()

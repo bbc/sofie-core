@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Countdown } from './Countdown'
 import { useTiming } from '../RundownTiming/withTiming'
 import { RundownUtils } from '../../../lib/rundown.js'
-import { PlaylistTiming } from '@sofie-automation/corelib/src/playout/rundownTiming.js'
+import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 
 export function RundownHeaderDurations({
 	playlist,
