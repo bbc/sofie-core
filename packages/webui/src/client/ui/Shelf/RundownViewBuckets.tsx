@@ -152,6 +152,14 @@ export const RundownViewBuckets = withTranslation()(
 
 			RundownViewEventBus.off(RundownViewEvents.DELETE_BUCKET_ADLIB, this.deleteBucketAdLib)
 			RundownViewEventBus.off(RundownViewEvents.RENAME_BUCKET_ADLIB, this.beginRenameBucketAdLib)
+
+			// Ensure document-level drag/touch listeners are removed if unmounted mid-resize.
+			document.removeEventListener('mouseup', this.dropHandle)
+			document.removeEventListener('mouseleave', this.dropHandle)
+			document.removeEventListener('mousemove', this.dragHandle)
+			document.removeEventListener('touchmove', this.touchMoveHandle)
+			document.removeEventListener('touchcancel', this.touchOffHandle)
+			document.removeEventListener('touchend', this.touchOffHandle)
 		}
 
 		componentDidUpdate(prevProps: IBucketsProps) {

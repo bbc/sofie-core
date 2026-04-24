@@ -166,6 +166,14 @@ export class ShelfBase extends React.Component<Translated<IShelfProps>, IState> 
 		if (this.props.fullViewport) {
 			RundownViewEventBus.off(RundownViewEvents.TAKE, this.onTake)
 		}
+
+		// Ensure document-level drag/touch listeners are removed if unmounted mid-resize.
+		document.removeEventListener('mouseup', this.dropHandle)
+		document.removeEventListener('mouseleave', this.dropHandle)
+		document.removeEventListener('mousemove', this.dragHandle)
+		document.removeEventListener('touchmove', this.touchMoveHandle)
+		document.removeEventListener('touchcancel', this.touchOffHandle)
+		document.removeEventListener('touchend', this.touchOffHandle)
 	}
 
 	componentDidUpdate(prevProps: IShelfProps, prevState: IState): void {

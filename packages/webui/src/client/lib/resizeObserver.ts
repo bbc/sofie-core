@@ -9,4 +9,5 @@ export function onElementResize(
 
 export function offElementResize(resizeObserver: ResizeObserver, el: HTMLElement): void {
 	resizeObserver.unobserve(el)
+	resizeObserver.disconnect()
 }

@@ -19,20 +19,37 @@ interface INoraEditorProps {
 
 class NoraItemEditor extends React.Component<INoraEditorProps> {
 	iframe: HTMLIFrameElement | null = null
+	private iframeContentWindow: Window | null = null
 
 	componentDidMount(): void {
 		this.setUpEventListeners(window)
 	}
 
 	componentDidUpdate(_prevProps: INoraEditorProps): void {
-		if (this.iframe && this.iframe.contentWindow) {
-			this.setUpEventListeners(this.iframe.contentWindow)
+		if (this.iframe && this.iframe.contentWindow && this.iframe.contentWindow !== this.iframeContentWindow) {
+			// Tear down listener on a previous iframe contentWindow (if any) and attach to the new one
+			if (this.iframeContentWindow) {
+				this.iframeContentWindow.removeEventListener('message', this.onMessage)
+			}
+			this.iframeContentWindow = this.iframe.contentWindow
+			this.iframeContentWindow.addEventListener('message', this.onMessage)
 		}
-		this.setUpEventListeners(window)
 
 		// if (JSON.stringify(prevProps.payload) !== JSON.stringify(this.props.payload)) {
 		// 	this.postIframePayload()
 		// }
+	}
+
+	componentWillUnmount(): void {
+		window.removeEventListener('message', this.onMessage)
+		if (this.iframeContentWindow) {
+			try {
+				this.iframeContentWindow.removeEventListener('message', this.onMessage)
+			} catch {
+				// contentWindow may already be torn down; ignore
+			}
+			this.iframeContentWindow = null
+		}
 	}
 
 	shouldComponentUpdate(): boolean {
@@ -46,10 +63,12 @@ class NoraItemEditor extends React.Component<INoraEditorProps> {
 		}
 	}
 
+	private onMessage = (event: MessageEvent) => {
+		this.handleMessage(event)
+	}
+
 	private setUpEventListeners(target: Window) {
-		target.addEventListener('message', (event) => {
-			this.handleMessage(event)
-		})
+		target.addEventListener('message', this.onMessage)
 	}
 
 	private handleMessage(event: MessageEvent) {

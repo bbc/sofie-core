@@ -59,11 +59,22 @@ export function slowDownReactivity<T extends (...args: any) => any>(fnc: T, dela
 export abstract class WithManagedTracker {
 	private _autoruns: Tracker.Computation[] = []
 	private _subs: Meteor.SubscriptionHandle[] = []
+	private _stopSubsTimeout: ReturnType<typeof setTimeout> | null = null
 
 	stop(): void {
 		this._autoruns.forEach((comp) => comp.stop())
-		setTimeout(() => {
-			this._subs.forEach((comp) => comp.stop())
+		this._autoruns = []
+		// If a previous stop() is already pending, cancel it; otherwise repeated
+		// stop()/recreate cycles can stack timers that all hold references to this
+		// instance and its subscriptions.
+		if (this._stopSubsTimeout !== null) {
+			clearTimeout(this._stopSubsTimeout)
+		}
+		const subsToStop = this._subs
+		this._subs = []
+		this._stopSubsTimeout = setTimeout(() => {
+			this._stopSubsTimeout = null
+			subsToStop.forEach((comp) => comp.stop())
 		}, 2000) // wait for a couple of seconds, before unsubscribing
 	}
 
