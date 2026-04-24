@@ -9,29 +9,26 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { getCurrentTime } from '../../../lib/systemTime.js'
 import { useTranslation } from 'react-i18next'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
-import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance'
 import { OverUnderChip } from '../../../lib/Components/OverUnderChip.js'
 
 export interface DirectorScreenTopProps {
 	playlist: DBRundownPlaylist
-	partInstanceToCountTimeFrom: PartInstance | undefined
 }
 
 export function DirectorScreenTop({
 	playlist,
-	partInstanceToCountTimeFrom,
 }: Readonly<DirectorScreenTopProps>): JSX.Element {
 	const timingDurations = useTiming()
 
-	const rehearsalInProgress = Boolean(playlist.rehearsal && partInstanceToCountTimeFrom?.timings?.take)
+	const rehearsalInProgress = Boolean(playlist.rehearsal && playlist.startedPlayback)
 
 	const expectedStart = rehearsalInProgress
-		? partInstanceToCountTimeFrom?.timings?.take || 0
+		? playlist.startedPlayback || 0
 		: PlaylistTiming.getExpectedStart(playlist.timing) || 0
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing) || 0
 
 	const expectedEnd = rehearsalInProgress
-		? (partInstanceToCountTimeFrom?.timings?.take || 0) + expectedDuration
+		? (playlist.startedPlayback || 0) + expectedDuration
 		: PlaylistTiming.getExpectedEnd(playlist.timing)
 
 	const now = timingDurations.currentTime ?? getCurrentTime()
@@ -66,7 +63,7 @@ export function DirectorScreenTop({
 							<TimeSincePlannedEndComponent
 								value={
 									rehearsalInProgress
-										? (partInstanceToCountTimeFrom?.timings?.take || 0) + expectedDuration - now
+										? (playlist.startedPlayback || 0) + expectedDuration - now
 										: now - (expectedStart + expectedDuration)
 								}
 							/>
