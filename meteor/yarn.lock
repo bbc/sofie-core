@@ -1638,7 +1638,7 @@ __metadata:
   dependencies:
     "@mos-connection/model": "npm:^5.0.0-alpha.0"
     kairos-lib: "npm:^1.0.0"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
     tslib: "npm:^2.8.1"
     type-fest: "npm:^4.41.0"
   languageName: node
@@ -10249,13 +10249,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0":
-  version: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
-  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+"timeline-state-resolver-types@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0":
+  version: 10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0
+  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
   dependencies:
     kairos-lib: "npm:1.0.0"
     tslib: "npm:^2.8.1"
-  checksum: 10/712578068c41e6ac25c5f305528933f2c5c878230304fed9faa38d2d21d6fc1923bd7ad0f412fe9bf8fd684830ee628e92352ce882740c59ef9d181a98c95b7f
+  checksum: 10/086e07fbad4f2d1cd601fe8b8cc3c690e5a0e073bc8c05bd5e1a2a8a3248d9004103338785e367326873d9da0c28f48788c581e01c21145dd956ac07cd755f9c
   languageName: node
   linkType: hard
 

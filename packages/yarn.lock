@@ -7142,7 +7142,7 @@ __metadata:
   dependencies:
     "@mos-connection/model": "npm:^5.0.0-alpha.0"
     kairos-lib: "npm:^1.0.0"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
     tslib: "npm:^2.8.1"
     type-fest: "npm:^4.41.0"
   languageName: unknown
@@ -23576,7 +23576,7 @@ asn1@evs-broadcast/node-asn1:
     "@sofie-automation/shared-lib": "npm:26.3.0-2"
     debug: "npm:^4.4.3"
     influx: "npm:^5.12.0"
-    timeline-state-resolver: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+    timeline-state-resolver: "npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
     tslib: "npm:^2.8.1"
     underscore: "npm:^1.13.8"
     winston: "npm:^3.19.0"
@@ -28334,30 +28334,30 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-api@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0":
-  version: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
-  resolution: "timeline-state-resolver-api@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+"timeline-state-resolver-api@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0":
+  version: 10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0
+  resolution: "timeline-state-resolver-api@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
   dependencies:
     tslib: "npm:^2.8.1"
   peerDependencies:
-    timeline-state-resolver-types: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
-  checksum: 10/1050973d9d4f4db3188270793e9b6e2d18af995383b692d819d0237b42c18332a5c44287e1847bffd983dfaf19486c38d088368470c17d7bdd6dee80f361508f
+    timeline-state-resolver-types: 10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0
+  checksum: 10/0ac4e0fdf9bdc29c79be9a2f05a82123b85c2b3dd09abab73500a77ed5c76764c5451aaa0a72e906197d662eb62fce6eabca8a3c58f0a1ab9e538c3309586c18
   languageName: node
   linkType: hard
 
-"timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0":
-  version: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
-  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+"timeline-state-resolver-types@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0":
+  version: 10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0
+  resolution: "timeline-state-resolver-types@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
   dependencies:
     kairos-lib: "npm:1.0.0"
     tslib: "npm:^2.8.1"
-  checksum: 10/712578068c41e6ac25c5f305528933f2c5c878230304fed9faa38d2d21d6fc1923bd7ad0f412fe9bf8fd684830ee628e92352ce882740c59ef9d181a98c95b7f
+  checksum: 10/086e07fbad4f2d1cd601fe8b8cc3c690e5a0e073bc8c05bd5e1a2a8a3248d9004103338785e367326873d9da0c28f48788c581e01c21145dd956ac07cd755f9c
   languageName: node
   linkType: hard
 
-"timeline-state-resolver@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0":
-  version: 10.0.0-nightly-main-20260415-093148-f35c4cadc.0
-  resolution: "timeline-state-resolver@npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+"timeline-state-resolver@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0":
+  version: 10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0
+  resolution: "timeline-state-resolver@npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
   dependencies:
     "@tv2media/v-connection": "npm:^7.3.4"
     atem-connection: "npm:3.7.0"
@@ -28382,8 +28382,8 @@ asn1@evs-broadcast/node-asn1:
     sprintf-js: "npm:^1.1.3"
     superfly-timeline: "npm:^9.2.0"
     threadedclass: "npm:^1.4.0"
-    timeline-state-resolver-api: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
-    timeline-state-resolver-types: "npm:10.0.0-nightly-main-20260415-093148-f35c4cadc.0"
+    timeline-state-resolver-api: "npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
+    timeline-state-resolver-types: "npm:10.0.0-nightly-rjmunro-error-message-customisation-20260423-144524-bb8ca5ca0.0"
     tslib: "npm:^2.8.1"
     tv-automation-quantel-gateway-client: "npm:^3.1.7"
     type-fest: "npm:^3.13.1"
@@ -28391,7 +28391,7 @@ asn1@evs-broadcast/node-asn1:
     utf-8-validate: "npm:^6.0.6"
     ws: "npm:^8.19.0"
     xml-js: "npm:^1.6.11"
-  checksum: 10/67ad96bc74087c01c6bbb32ffaa192c5b15abc766f7523afbc5f4d714495a3a221adb937926759512fa0105215fa6a81a2746d16bd5e91e613cd60101a3c6fab
+  checksum: 10/6201fc1fb368f58f0e90721bc0dcec9adac5e55adf4c153f30e32c198f62a803d72038d3d2c47d334428141aebba96c897747a98cf94029e809e4c50e392c27c
   languageName: node
   linkType: hard
 
