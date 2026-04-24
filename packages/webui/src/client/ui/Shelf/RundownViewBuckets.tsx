@@ -222,6 +222,7 @@ export const RundownViewBuckets = withTranslation()(
 			}
 
 			document.body.style.cursor = ''
+			this._targetBucket = undefined
 		}
 
 		beginResize = (x: number, y: number, targetBucket: Bucket, targetElement: HTMLElement) => {
