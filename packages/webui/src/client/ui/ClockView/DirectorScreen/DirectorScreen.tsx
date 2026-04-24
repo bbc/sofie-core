@@ -380,6 +380,7 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 
 	useSubscription(CorelibPubSub.segments, rundownIds, {})
 	useSubscription(CorelibPubSub.parts, rundownIds, null)
+	useSubscription(MeteorPubSub.uiParts, playlist?._id ?? null)
 	useSubscription(MeteorPubSub.uiPartInstances, playlist?.activationId ?? null)
 	useSubscriptions(
 		MeteorPubSub.uiShowStyleBase,
