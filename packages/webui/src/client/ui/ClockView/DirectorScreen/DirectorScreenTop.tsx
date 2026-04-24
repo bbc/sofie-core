@@ -1,7 +1,7 @@
 import {
 	PlannedEndComponent,
-	TimeSincePlannedEndComponent,
 	TimeToPlannedEndComponent,
+	TimeSincePlannedEndComponent,
 } from '../../../lib/Components/CounterComponents'
 import { useTiming } from '../../RundownView/RundownTiming/withTiming.js'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming.js'
@@ -15,64 +15,68 @@ export interface DirectorScreenTopProps {
 	playlist: DBRundownPlaylist
 }
 
-export function DirectorScreenTop({
-	playlist,
-}: Readonly<DirectorScreenTopProps>): JSX.Element {
+export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>): JSX.Element {
 	const timingDurations = useTiming()
 
 	const rehearsalInProgress = Boolean(playlist.rehearsal && playlist.startedPlayback)
 
-	const expectedStart = rehearsalInProgress
-		? playlist.startedPlayback || 0
-		: PlaylistTiming.getExpectedStart(playlist.timing) || 0
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing) || 0
-
-	const expectedEnd = rehearsalInProgress
-		? (playlist.startedPlayback || 0) + expectedDuration
-		: PlaylistTiming.getExpectedEnd(playlist.timing)
-
+	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing, playlist.startedPlayback)
 	const now = timingDurations.currentTime ?? getCurrentTime()
 
 	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
+
+	let currentEndTarget = undefined
+	if (rehearsalInProgress) {
+		currentEndTarget = (playlist.startedPlayback || 0) + (expectedDuration || 0)
+	} else if (expectedEnd) {
+		currentEndTarget = expectedEnd
+	}
+
+	let countDownToEnd = undefined
+	if (rehearsalInProgress) {
+		countDownToEnd = (playlist.startedPlayback || 0) + expectedDuration - now
+	} else if (expectedEnd) {
+		countDownToEnd = expectedEnd - now
+	}
 
 	const { t } = useTranslation()
 
 	return (
 		<>
 			<div className="director-screen__top">
-				{expectedEnd ? (
+				{currentEndTarget !== undefined ? (
 					<div className="director-screen__top__planned-end">
 						<div>
-							<PlannedEndComponent value={expectedEnd} />
+							<PlannedEndComponent value={currentEndTarget} />
 						</div>
-						{t('Planned End')}
+						{rehearsalInProgress ? t('Rehearsal end') : t('Planned end')}
 					</div>
 				) : null}
-				{expectedEnd && expectedEnd > now ? (
+
+				{/* Countdown to an end (planned or rehearsal) */}
+				{countDownToEnd !== undefined && countDownToEnd >= 0 ? (
 					<div className="director-screen__top__time-to director-screen__top__planned-container director-screen__top__center">
 						<div>
-							<TimeToPlannedEndComponent value={now - expectedEnd} />
+							<TimeToPlannedEndComponent value={countDownToEnd} />
 						</div>
 						<span className="director-screen__top__planned-to director-screen__top__center">
 							{rehearsalInProgress ? t('Time to rehearsal end') : t('Time to planned end')}
 						</span>
 					</div>
-				) : (
+				) : null}
+
+				{/* Count up past an end (planned or rehearsal) */}
+				{countDownToEnd !== undefined && countDownToEnd < 0 ? (
 					<div className="director-screen__top__planned-container director-screen__top__center">
 						<div>
-							<TimeSincePlannedEndComponent
-								value={
-									rehearsalInProgress
-										? (playlist.startedPlayback || 0) + expectedDuration - now
-										: now - (expectedStart + expectedDuration)
-								}
-							/>
+							<TimeSincePlannedEndComponent value={countDownToEnd} />
 						</div>
 						<span className="director-screen__top__planned-since director-screen__top__center">
 							{rehearsalInProgress ? t('Time since rehearsal end') : t('Time since planned end')}
 						</span>
 					</div>
-				)}
+				) : null}
 				<div className="director-screen__top__spacer"></div>
 			</div>
 			<OverUnderChip className="screen-timing-clock over-under-chip--overlay" valueMs={overUnderClock} />
