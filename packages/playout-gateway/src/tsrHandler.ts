@@ -456,6 +456,9 @@ export class TSRHandler {
 			sendTrace(trace)
 		})
 		this.tsr.connectionManager.on('connectionEvent:stateEvent', (_id, events) => {
+			this.logger.debug(
+				`connectionEvent:stateEvent: received ${events.length} event(s) from device "${_id}": ${events.map((e) => e.event).join(', ')}`
+			)
 			this._coreHandler.core.coreMethods
 				.reportExternalEvents(events.map((e) => ({ ...e, type: 'tsr' as const })))
 				.catch((e: unknown) => this.logger.error('Error when reporting external events to core', e))
@@ -872,9 +875,16 @@ export class TSRHandler {
 			.getCollection(PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions)
 			.find({})
 
+		this.logger.debug(
+			`_updateEventSubscriptions: ${subscriptionDocs.length} rundown subscription doc(s) in collection`
+		)
+
 		// Aggregate subscriptions from all active rundowns, group by deviceId
 		const subscriptionsByDeviceId = new Map<string, Set<string>>()
 		for (const doc of subscriptionDocs) {
+			this.logger.debug(
+				`_updateEventSubscriptions: rundown "${doc._id}" has ${doc.externalEventSubscriptions.length} subscription(s)`
+			)
 			for (const sub of doc.externalEventSubscriptions) {
 				let events = subscriptionsByDeviceId.get(sub.deviceId)
 				if (!events) {
@@ -885,9 +895,16 @@ export class TSRHandler {
 			}
 		}
 
+		if (subscriptionsByDeviceId.size === 0) {
+			this.logger.debug('_updateEventSubscriptions: no subscriptions — clearing all devices')
+		}
+
 		await Promise.all(
 			_.map(this.tsr.connectionManager.getConnections(), async (container) => {
 				const events = subscriptionsByDeviceId.get(container.deviceId) ?? new Set<string>()
+				this.logger.debug(
+					`_updateEventSubscriptions: setting ${events.size} event subscription(s) on device "${container.deviceId}": [${Array.from(events).join(', ')}]`
+				)
 				await container.device.setEventSubscriptions(Array.from(events))
 			})
 		)

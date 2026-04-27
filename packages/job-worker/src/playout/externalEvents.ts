@@ -26,9 +26,14 @@ import { BlueprintExternalEvent } from '@sofie-automation/blueprints-integration
 export async function handleOnExternalEvents(context: JobContext, data: OnExternalEventsProps): Promise<void> {
 	if (!data.events.length) return
 
+	logger.debug(`handleOnExternalEvents: received ${data.events.length} event(s)`)
+
 	await runJobWithStudioPlayoutModel(context, async (studioPlayoutModel) => {
 		const activePlaylists = studioPlayoutModel.getActiveRundownPlaylists()
-		if (activePlaylists.length === 0) return
+		if (activePlaylists.length === 0) {
+			logger.debug('handleOnExternalEvents: no active playlists — events discarded')
+			return
+		}
 
 		for (const playlist of activePlaylists) {
 			await runJobWithPlayoutModel(context, { playlistId: playlist._id }, null, async (playoutModel) => {
@@ -54,7 +59,12 @@ async function executeOnExternalEventsForPlaylist(
 	}
 
 	const currentRundown = playoutModel.getRundown(activePartInfo.rundownId)
-	if (!currentRundown) return
+	if (!currentRundown) {
+		logger.error(
+			`executeOnExternalEventsForPlaylist: rundown "${activePartInfo.rundownId}" not found in playlist "${playlist._id}" — events will be lost`
+		)
+		return
+	}
 
 	const showStyle = await context.getShowStyleCompound(
 		currentRundown.rundown.showStyleVariantId,
@@ -62,7 +72,16 @@ async function executeOnExternalEventsForPlaylist(
 	)
 	const blueprint = await context.getShowStyleBlueprint(showStyle._id)
 
-	if (!blueprint.blueprint.onExternalEvent) return
+	if (!blueprint.blueprint.onExternalEvent) {
+		logger.debug(
+			`executeOnExternalEventsForPlaylist: blueprint for show style "${showStyle._id}" has no onExternalEvent handler — events discarded`
+		)
+		return
+	}
+
+	logger.debug(
+		`executeOnExternalEventsForPlaylist: invoking onExternalEvent for playlist "${playlist._id}" with ${wireEvents.length} event(s): ${wireEvents.map((e) => `${e.type}/${(e as { event?: string }).event ?? '?'}`).join(', ')}`
+	)
 
 	const now = getCurrentTime()
 
