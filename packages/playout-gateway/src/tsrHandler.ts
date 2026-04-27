@@ -548,7 +548,7 @@ export class TSRHandler {
 		this._observers.push(timelineDatastoreObserver)
 
 		const externalEventSubscriptionsObserver = this._coreHandler.core.observe(
-			PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions
+			PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions
 		)
 		externalEventSubscriptionsObserver.added = () => {
 			this._triggerUpdateEventSubscriptions()
@@ -872,27 +872,20 @@ export class TSRHandler {
 	}
 	private async _updateEventSubscriptions() {
 		const subscriptionDocs = this._coreHandler.core
-			.getCollection(PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions)
+			.getCollection(PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions)
 			.find({})
 
-		this.logger.debug(
-			`_updateEventSubscriptions: ${subscriptionDocs.length} rundown subscription doc(s) in collection`
-		)
+		this.logger.debug(`_updateEventSubscriptions: ${subscriptionDocs.length} subscription doc(s) in collection`)
 
-		// Aggregate subscriptions from all active rundowns, group by deviceId
+		// Aggregate subscriptions, group by deviceId
 		const subscriptionsByDeviceId = new Map<string, Set<string>>()
-		for (const doc of subscriptionDocs) {
-			this.logger.debug(
-				`_updateEventSubscriptions: rundown "${doc._id}" has ${doc.externalEventSubscriptions.length} subscription(s)`
-			)
-			for (const sub of doc.externalEventSubscriptions) {
-				let events = subscriptionsByDeviceId.get(sub.deviceId)
-				if (!events) {
-					events = new Set()
-					subscriptionsByDeviceId.set(sub.deviceId, events)
-				}
-				events.add(sub.event as string)
+		for (const sub of subscriptionDocs) {
+			let events = subscriptionsByDeviceId.get(sub.deviceId)
+			if (!events) {
+				events = new Set()
+				subscriptionsByDeviceId.set(sub.deviceId, events)
 			}
+			events.add(sub.event)
 		}
 
 		if (subscriptionsByDeviceId.size === 0) {

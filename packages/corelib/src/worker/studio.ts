@@ -1,7 +1,5 @@
-import {
-	PlayoutChangedResults,
-	PeripheralDeviceExternalEvent,
-} from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
+import { PlayoutChangedResults } from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
+import type { PeripheralDeviceExternalEvent } from '@sofie-automation/shared-lib/dist/peripheralDevice/externalEvents'
 import {
 	AdLibActionId,
 	BucketAdLibActionId,

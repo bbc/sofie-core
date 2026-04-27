@@ -7,11 +7,15 @@ import {
 	PackageManagerExpectedPackage,
 } from '../package-manager/publications.js'
 import { PeripheralDeviceId, RundownId, RundownPlaylistId } from '../core/model/Ids.js'
+import { ProtectedString } from '../lib/protectedString.js'
 import { PeripheralDeviceCommand } from '../core/model/PeripheralDeviceCommand.js'
 import { ExpectedPlayoutItemPeripheralDevice } from '../expectedPlayoutItem.js'
 import { DeviceTriggerMountedAction, PreviewWrappedAdLib } from '../input-gateway/deviceTriggerPreviews.js'
 import { IngestRundownStatus } from '../ingest/rundownStatus.js'
-import type { BlueprintExternalEventSubscription } from '@sofie-automation/blueprints-integration'
+import type {
+	PeripheralDeviceExternalEvent,
+	PeripheralDeviceExternalEventSubscription,
+} from '../peripheralDevice/externalEvents.js'
 
 /**
  * Ids of possible DDP subscriptions for any PeripheralDevice.
@@ -133,17 +137,17 @@ export interface PeripheralDevicePubSubTypes {
 		deviceId: PeripheralDeviceId,
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
-
 	[PeripheralDevicePubSub.externalEventSubscriptionsForDevice]: (
 		deviceId: PeripheralDeviceId,
+		type: PeripheralDeviceExternalEvent['type'],
 		token?: string
-	) => PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions
+	) => PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions
 }
 
-/** Subscriptions to external device events, as declared by a blueprint for one rundown */
-export interface RundownExternalEventSubscriptions {
-	_id: RundownId
-	externalEventSubscriptions: BlueprintExternalEventSubscription[]
+/** An individual external device event subscription, as published by the server for the playout gateway */
+export type ExternalEventSubscriptionId = ProtectedString<'ExternalEventSubscriptionId'>
+export type ExternalEventSubscriptionDocument = PeripheralDeviceExternalEventSubscription & {
+	_id: ExternalEventSubscriptionId
 }
 
 export enum PeripheralDevicePubSubCollectionsNames {
@@ -166,9 +170,7 @@ export enum PeripheralDevicePubSubCollectionsNames {
 	packageManagerExpectedPackages = 'packageManagerExpectedPackages',
 
 	ingestRundownStatus = 'ingestRundownStatus',
-
-	// Custom collections (playout gateway):
-	rundownExternalEventSubscriptions = 'rundownExternalEventSubscriptions',
+	externalEventSubscriptions = 'externalEventSubscriptions',
 }
 
 export type PeripheralDevicePubSubCollections = {
@@ -191,6 +193,5 @@ export type PeripheralDevicePubSubCollections = {
 	[PeripheralDevicePubSubCollectionsNames.packageManagerExpectedPackages]: PackageManagerExpectedPackage
 
 	[PeripheralDevicePubSubCollectionsNames.ingestRundownStatus]: IngestRundownStatus
-
-	[PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions]: RundownExternalEventSubscriptions
+	[PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions]: ExternalEventSubscriptionDocument
 }

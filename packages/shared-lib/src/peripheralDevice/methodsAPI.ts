@@ -31,8 +31,8 @@ import {
 	DiffTimeResult,
 	TimeDiff,
 	PlayoutChangedResults,
-	PeripheralDeviceExternalEvent,
 } from './peripheralDeviceAPI.js'
+import type { PeripheralDeviceExternalEvent } from './externalEvents.js'
 import { MediaObject } from '../core/model/MediaObjects.js'
 
 export type UpdateExpectedPackageWorkStatusesChanges =

@@ -73,36 +73,6 @@ export type PlayoutChangedResult = {
 
 // Note The actual type of a device is determined by the Category, Type and SubType
 
-/**
- * A TSR device state event as reported over the wire from a gateway.
- *
- * This is intentionally loose: `deviceType` is a plain `string` rather than `TSR.DeviceType` because
- * TSR plugins can define custom device types that are not in the built-in enum, and because
- * shared-lib deliberately avoids a hard dependency on TSR types here.
- */
-export interface PeripheralDeviceExternalTSREvent {
-	type: 'tsr'
-	/** The id of the playout device, e.g. `'atem0'` */
-	deviceId: string
-	/**
-	 * The type of the playout device, e.g. `'ATEM'`.
-	 * Typed as `string` rather than `TSR.DeviceType` to accommodate custom plugin device types.
-	 */
-	deviceType: string
-	/** The event key, e.g. `'me.0.programInput'` */
-	event: string
-	/** The event payload. Opaque on the wire; cast to the appropriate type in the job-worker. */
-	payload: unknown
-}
-
-/**
- * An external event received from a gateway over the DDP wire.
- *
- * This is a discriminated union so that additional event sources can be added in future
- * without breaking existing consumers.
- */
-export type PeripheralDeviceExternalEvent = PeripheralDeviceExternalTSREvent
-
 export interface PeripheralDeviceStatusObject {
 	statusCode: StatusCode
 	messages?: Array<string>

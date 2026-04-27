@@ -13,7 +13,6 @@ export type BlueprintExternalTSREvent = TSR.SomeTSRStateEvent & { type: 'tsr' }
  * other event sources
  */
 export type BlueprintExternalEvent = BlueprintExternalTSREvent
-// | { type: 'input'; ... }  // example future scope
 
 export type TSREventDeviceType = {
 	[K in keyof TSR.TSREventTypesMap]: TSR.TSREventTypesMap[K] extends never ? never : K

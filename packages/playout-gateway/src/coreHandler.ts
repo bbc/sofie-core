@@ -116,7 +116,11 @@ export class CoreHandler implements ICoreHandler {
 			this.core.autoSubscribe(PeripheralDevicePubSub.peripheralDeviceCommands, this.core.deviceId),
 			this.core.autoSubscribe(PeripheralDevicePubSub.rundownsForDevice, this.core.deviceId),
 			this.core.autoSubscribe(PeripheralDevicePubSub.expectedPlayoutItemsForDevice, this.core.deviceId),
-			this.core.autoSubscribe(PeripheralDevicePubSub.externalEventSubscriptionsForDevice, this.core.deviceId),
+			this.core.autoSubscribe(
+				PeripheralDevicePubSub.externalEventSubscriptionsForDevice,
+				this.core.deviceId,
+				'tsr'
+			),
 		])
 
 		this.logger.info('Core: Subscriptions are set up!')

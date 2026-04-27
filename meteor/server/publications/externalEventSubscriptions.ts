@@ -1,5 +1,6 @@
 import { PeripheralDeviceId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { literal } from '@sofie-automation/corelib/dist/lib'
+import { assertNever, getHash, literal } from '@sofie-automation/corelib/dist/lib'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
@@ -17,8 +18,10 @@ import { RundownPlaylists, Rundowns } from '../collections'
 import {
 	PeripheralDevicePubSub,
 	PeripheralDevicePubSubCollectionsNames,
-	RundownExternalEventSubscriptions,
+	ExternalEventSubscriptionDocument,
+	ExternalEventSubscriptionId,
 } from '@sofie-automation/shared-lib/dist/pubsub/peripheralDevice'
+import type { PeripheralDeviceExternalEvent } from '@sofie-automation/shared-lib/dist/peripheralDevice/externalEvents'
 import { checkAccessAndGetPeripheralDevice } from '../security/check'
 import { check } from '../lib/check'
 
@@ -39,6 +42,7 @@ const rundownFieldSpecifier = literal<MongoFieldSpecifierOnesStrict<Pick<DBRundo
 
 interface ExternalEventSubscriptionsArgs {
 	readonly studioId: StudioId
+	readonly type: PeripheralDeviceExternalEvent['type']
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -73,7 +77,7 @@ async function setupExternalEventSubscriptionsObservers(
 async function manipulateExternalEventSubscriptionsData(
 	args: ReadonlyDeep<ExternalEventSubscriptionsArgs>,
 	_state: Partial<ExternalEventSubscriptionsState>,
-	collection: CustomPublishCollection<RundownExternalEventSubscriptions>,
+	collection: CustomPublishCollection<ExternalEventSubscriptionDocument>,
 	_updateProps: Partial<ReadonlyDeep<ExternalEventSubscriptionsUpdateProps>> | undefined
 ): Promise<void> {
 	// Find all active playlists in the studio
@@ -89,34 +93,58 @@ async function manipulateExternalEventSubscriptionsData(
 		{ projection: rundownFieldSpecifier }
 	)) as Pick<DBRundown, RundownFields>[]
 
-	const activeRundownIds = new Set(activeRundowns.map((r) => r._id))
+	// Build the set of valid IDs and the docs to upsert (filtered by type)
+	const validIds = new Set<ExternalEventSubscriptionId>()
+	const subsToUpsert: ExternalEventSubscriptionDocument[] = []
 
-	// Remove docs for rundowns that are no longer active
-	collection.remove((doc) => !activeRundownIds.has(doc._id))
-
-	// Upsert docs for currently active rundowns that have subscriptions
 	for (const rundown of activeRundowns) {
-		const subscriptions = rundown.externalEventSubscriptions
-		if (subscriptions && subscriptions.length > 0) {
-			collection.replace({ _id: rundown._id, externalEventSubscriptions: subscriptions })
-		} else {
-			collection.remove(rundown._id)
+		for (const sub of rundown.externalEventSubscriptions ?? []) {
+			if (sub.type !== args.type) continue
+
+			switch (sub.type) {
+				case 'tsr': {
+					const id = protectString<ExternalEventSubscriptionId>(
+						getHash(`tsr_${sub.deviceId}_${sub.deviceType}_${String(sub.event)}`)
+					)
+					validIds.add(id)
+					subsToUpsert.push({
+						_id: id,
+						type: 'tsr',
+						deviceId: sub.deviceId,
+						deviceType: sub.deviceType,
+						event: sub.event as string,
+					})
+					break
+				}
+				default:
+					assertNever(sub.type)
+					break
+			}
 		}
+	}
+
+	// Remove docs for subscriptions that are no longer active
+	collection.remove((doc) => !validIds.has(doc._id))
+
+	// Upsert each individual subscription doc
+	for (const sub of subsToUpsert) {
+		collection.replace(sub)
 	}
 }
 
 async function startOrJoinExternalEventSubscriptionsPublication(
-	pub: CustomPublish<RundownExternalEventSubscriptions>,
-	studioId: StudioId
+	pub: CustomPublish<ExternalEventSubscriptionDocument>,
+	studioId: StudioId,
+	type: PeripheralDeviceExternalEvent['type']
 ) {
 	await setUpCollectionOptimizedObserver<
-		RundownExternalEventSubscriptions,
+		ExternalEventSubscriptionDocument,
 		ExternalEventSubscriptionsArgs,
 		ExternalEventSubscriptionsState,
 		ExternalEventSubscriptionsUpdateProps
 	>(
-		`pub_${PeripheralDevicePubSub.externalEventSubscriptionsForDevice}_${studioId}`,
-		{ studioId },
+		`pub_${PeripheralDevicePubSub.externalEventSubscriptionsForDevice}_${studioId}_${type}`,
+		{ studioId, type },
 		setupExternalEventSubscriptionsObservers,
 		manipulateExternalEventSubscriptionsData,
 		pub,
@@ -126,10 +154,11 @@ async function startOrJoinExternalEventSubscriptionsPublication(
 
 meteorCustomPublish(
 	PeripheralDevicePubSub.externalEventSubscriptionsForDevice,
-	PeripheralDevicePubSubCollectionsNames.rundownExternalEventSubscriptions,
+	PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions,
 	async function (
-		pub: CustomPublish<RundownExternalEventSubscriptions>,
+		pub: CustomPublish<ExternalEventSubscriptionDocument>,
 		deviceId: PeripheralDeviceId,
+		type: PeripheralDeviceExternalEvent['type'],
 		token: string | undefined
 	) {
 		check(deviceId, String)
@@ -144,6 +173,6 @@ meteorCustomPublish(
 			return
 		}
 
-		await startOrJoinExternalEventSubscriptionsPublication(pub, studioId)
+		await startOrJoinExternalEventSubscriptionsPublication(pub, studioId, type)
 	}
 )
