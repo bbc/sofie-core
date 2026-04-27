@@ -157,8 +157,8 @@ meteorCustomPublish(
 	PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions,
 	async function (
 		pub: CustomPublish<ExternalEventSubscriptionDocument>,
-		deviceId: PeripheralDeviceId,
 		type: PeripheralDeviceExternalEvent['type'],
+		deviceId: PeripheralDeviceId,
 		token: string | undefined
 	) {
 		check(deviceId, String)

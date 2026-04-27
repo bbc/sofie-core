@@ -118,8 +118,8 @@ export class CoreHandler implements ICoreHandler {
 			this.core.autoSubscribe(PeripheralDevicePubSub.expectedPlayoutItemsForDevice, this.core.deviceId),
 			this.core.autoSubscribe(
 				PeripheralDevicePubSub.externalEventSubscriptionsForDevice,
-				this.core.deviceId,
-				'tsr'
+				'tsr',
+				this.core.deviceId
 			),
 		])
 

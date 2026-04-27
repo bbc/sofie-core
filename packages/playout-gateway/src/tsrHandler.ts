@@ -880,6 +880,8 @@ export class TSRHandler {
 		// Aggregate subscriptions, group by deviceId
 		const subscriptionsByDeviceId = new Map<string, Set<string>>()
 		for (const sub of subscriptionDocs) {
+			if (sub.type !== 'tsr') continue
+
 			let events = subscriptionsByDeviceId.get(sub.deviceId)
 			if (!events) {
 				events = new Set()

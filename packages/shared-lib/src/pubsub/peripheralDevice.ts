@@ -67,7 +67,7 @@ export enum PeripheralDevicePubSub {
 
 	// Playout gateway (external event subscriptions):
 
-	/** Playout gateway: External event subscriptions from blueprints for active rundowns in the Studio */
+	/** External event subscriptions from blueprints for the Studio */
 	externalEventSubscriptionsForDevice = 'externalEventSubscriptionsForDevice',
 }
 
@@ -138,8 +138,8 @@ export interface PeripheralDevicePubSubTypes {
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
 	[PeripheralDevicePubSub.externalEventSubscriptionsForDevice]: (
-		deviceId: PeripheralDeviceId,
 		type: PeripheralDeviceExternalEvent['type'],
+		deviceId: PeripheralDeviceId,
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions
 }
