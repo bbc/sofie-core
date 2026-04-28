@@ -18,6 +18,9 @@ const THROTTLE_PERIOD_MS = 100
 
 const PLAYLIST_KEYS = [
 	'_id',
+	'studioId',
+	'created',
+	'modified',
 	'externalId',
 	'activationId',
 	'rehearsal',
@@ -26,6 +29,7 @@ const PLAYLIST_KEYS = [
 	'quickLoop',
 	'currentPartInfo',
 	'nextPartInfo',
+	'previousPartInfo',
 	'publicData',
 	'publicPlayoutPersistentState',
 	'timing',
@@ -62,8 +66,10 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 
 	/** Builds and publishes the current resolved playlist snapshot to all subscribers. */
 	sendStatus(subscribers: Iterable<WebSocket>): void {
+		if (!this._playlist || !this._showStyleBaseExt) return
+
 		const message = toResolvedPlaylistStatus({
-			playlistState: this._playlist as ToResolvedPlaylistStatusProps['playlistState'],
+			playlistState: this._playlist,
 			rundownsState: this._rundowns,
 			showStyleBaseExtState: this._showStyleBaseExt,
 			segmentsState: this._segments,

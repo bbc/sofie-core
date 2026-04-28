@@ -11,8 +11,29 @@ import type { StateCacheResolverDataAccess } from '@sofie-automation/corelib/dis
 import { RundownId, ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ShowStyleBaseExt } from '../../../../collections/showStyleBaseHandler.js'
 
+type PlaylistState = Pick<
+	DBRundownPlaylist,
+	| '_id'
+	| 'studioId'
+	| 'created'
+	| 'modified'
+	| 'externalId'
+	| 'activationId'
+	| 'rehearsal'
+	| 'name'
+	| 'rundownIdsInOrder'
+	| 'quickLoop'
+	| 'currentPartInfo'
+	| 'nextPartInfo'
+	| 'previousPartInfo'
+	| 'publicData'
+	| 'publicPlayoutPersistentState'
+	| 'timing'
+	| 'tTimers'
+>
+
 export type ToResolvedPlaylistStatusProps = {
-	playlistState: DBRundownPlaylist | undefined
+	playlistState: PlaylistState | undefined
 	rundownsState: DBRundown[]
 	showStyleBaseExtState: ShowStyleBaseExt | undefined
 	segmentsState: DBSegment[]
@@ -23,7 +44,7 @@ export type ToResolvedPlaylistStatusProps = {
 }
 
 export type ResolvedPlaylistConversionContext = Readonly<{
-	playlist: DBRundownPlaylist
+	playlist: PlaylistState
 	rundownsById: Map<string, DBRundown>
 	showStyleBaseExt: ShowStyleBaseExt
 
@@ -137,7 +158,7 @@ export function getOrderedPartsInRundown(ctx: ResolvedPlaylistConversionContext,
 
 /** Finds the current part instance referenced by playlist state. */
 export function findCurrentPartInstance(
-	playlist: DBRundownPlaylist,
+	playlist: PlaylistState,
 	partInstancesInPlaylistState: PartInstance[]
 ): PartInstance | undefined {
 	return partInstancesInPlaylistState.find((pi) => pi._id === playlist.currentPartInfo?.partInstanceId)
@@ -145,7 +166,7 @@ export function findCurrentPartInstance(
 
 /** Finds the next part instance referenced by playlist state. */
 export function findNextPartInstance(
-	playlist: DBRundownPlaylist,
+	playlist: PlaylistState,
 	partInstancesInPlaylistState: PartInstance[]
 ): PartInstance | undefined {
 	return partInstancesInPlaylistState.find((pi) => pi._id === playlist.nextPartInfo?.partInstanceId)
