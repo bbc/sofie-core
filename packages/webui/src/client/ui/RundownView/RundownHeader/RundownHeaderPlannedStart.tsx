@@ -26,9 +26,8 @@ export function RundownHeaderPlannedStart({
 			)}
 			{playlist.startedPlayback !== undefined && <Countdown label={t('Started')} time={playlist.startedPlayback} />}
 			{playlist.startedPlayback === undefined && expectedStart !== undefined && (
-				<Countdown label={t('Start In')}>
-					{startsIn >= 0 && '+'}
-					{RundownUtils.formatDiffToTimecode(Math.abs(startsIn), false, false, true, true, true)}
+				<Countdown label={t('Starts In')} className="rundown-header__show-timers-countdown" ms={startsIn}>
+					{RundownUtils.formatDiffToTimecode(startsIn, true, false, true, true, true, '', true, true)}
 				</Countdown>
 			)}
 		</div>

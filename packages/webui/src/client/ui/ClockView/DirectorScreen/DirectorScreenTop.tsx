@@ -1,8 +1,4 @@
-import {
-	PlannedEndComponent,
-	TimeToPlannedEndComponent,
-	TimeSincePlannedEndComponent,
-} from '../../../lib/Components/CounterComponents'
+import { PlannedEndComponent, TimeToFromPlannedEndComponent } from '../../../lib/Components/CounterComponents'
 import { useTiming } from '../../RundownView/RundownTiming/withTiming.js'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
@@ -45,36 +41,23 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 						<div>
 							<PlannedEndComponent value={estimatedEnd} />
 						</div>
-						{rehearsalInProgress ? t('Rehearsal end') : t('Expected end') }
+						{rehearsalInProgress ? t('Rehearsal end') : t('Expected end')}
 					</div>
 				) : null}
 
-				{/* Countdown to an end (planned or rehearsal) */}
-				{remainingDuration !== undefined && remainingDuration >= 0 ? (
-					<div className="director-screen__top__time-to director-screen__top__planned-container director-screen__top__center">
-						<div>
-							<TimeToPlannedEndComponent value={remainingDuration} />
-						</div>
-						<span className="director-screen__top__planned-to director-screen__top__center">
-							{rehearsalInProgress
-								? t('Time to rehearsal end')
-								: t('Time to end')}
-						</span>
-					</div>
-				) : null}
-
-				{/* Count up past an end (planned or rehearsal) */}
-				{remainingDuration !== undefined && remainingDuration < 0 ? (
+				{remainingDuration !== undefined ? (
 					<div className="director-screen__top__planned-container director-screen__top__center">
 						<div>
-							<TimeSincePlannedEndComponent value={remainingDuration} />
+							<TimeToFromPlannedEndComponent value={-remainingDuration} />
 						</div>
-						<span className="director-screen__top__planned-since director-screen__top__center">
+						<span className="director-screen__top__center">
 							{rehearsalInProgress
-								? t('Time since rehearsal end')
-								: 
-									 t('Time since end')
-									}
+								? remainingDuration >= 0
+									? t('Time to rehearsal end')
+									: t('Time since rehearsal end')
+								: remainingDuration >= 0
+									? t('Time to end')
+									: t('Time since end')}
 						</span>
 					</div>
 				) : null}
