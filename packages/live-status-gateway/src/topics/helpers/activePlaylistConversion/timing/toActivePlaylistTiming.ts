@@ -27,7 +27,10 @@ export function toActivePlaylistTiming({
 }: ToActivePlaylistTimingProps): ActivePlaylistEvent['timing'] {
 	const timingMode = translatePlaylistTimingType(timingState.type)
 	const expectedStart = timingState.type !== PlaylistTimingType.None ? timingState.expectedStart : undefined
-	const expectedEnd = timingState.type !== PlaylistTimingType.None && 'expectedEnd' in timingState ? timingState.expectedEnd : undefined
+	const expectedEnd =
+		timingState.type !== PlaylistTimingType.None && 'expectedEnd' in timingState
+			? timingState.expectedEnd
+			: undefined
 
 	return literal<ActivePlaylistEvent['timing']>({
 		timingMode,

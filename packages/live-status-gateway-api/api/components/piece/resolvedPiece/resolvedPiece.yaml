@@ -45,8 +45,7 @@ $defs:
         type: array
         items:
           $ref: '../pieceStatus/abSessionAssignment.yaml'
-    required:
-      [id, externalId, name, priority, sourceLayerId, outputLayerId, createdByAdLib, invalid, timing]
+    required: [id, externalId, name, priority, sourceLayerId, outputLayerId, createdByAdLib, invalid, timing]
     additionalProperties: false
     examples:
       - $ref: './resolvedPiece-example.yaml'
