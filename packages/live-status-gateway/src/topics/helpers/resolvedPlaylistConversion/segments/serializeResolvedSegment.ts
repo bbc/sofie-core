@@ -13,13 +13,13 @@ export function serializePiece(pieceExtended: unknown): any {
 
 /** Serializes `PartExtended` and nested pieces for deterministic debug logging/testing. */
 export function serializePart(partExtended: unknown): any {
-	const part = partExtended as any
+	const part = (partExtended as any) ?? {}
 	return {
-		partId: part.partId,
-		instance: part.instance,
-		renderedDuration: part.renderedDuration,
-		startsAt: part.startsAt,
-		willProbablyAutoNext: part.willProbablyAutoNext,
+		partId: part?.partId,
+		instance: part?.instance,
+		renderedDuration: part?.renderedDuration,
+		startsAt: part?.startsAt,
+		willProbablyAutoNext: part?.willProbablyAutoNext,
 		pieces: part.pieces?.map(serializePiece) ?? [],
 	}
 }
