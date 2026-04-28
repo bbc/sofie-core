@@ -34,18 +34,12 @@ export function RundownHeaderDurations({
 				</Countdown>
 			) : null}
 			{estDuration !== undefined ? (
-				<Countdown label={t('Rem. Dur')} className="rundown-header__show-timers-countdown" ms={Math.max(0, estDuration)}>
-					{RundownUtils.formatDiffToTimecode(
-						-Math.max(0, estDuration),
-						false,
-						true,
-						true,
-						true,
-						true,
-						'',
-						true,
-						true
-					)}
+				<Countdown
+					label={t('Rem. Dur')}
+					className="rundown-header__show-timers-countdown"
+					ms={Math.max(0, estDuration)}
+				>
+					{RundownUtils.formatDiffToTimecode(-Math.max(0, estDuration), false, true, true, true, true, '', true, true)}
 				</Countdown>
 			) : null}
 		</div>
