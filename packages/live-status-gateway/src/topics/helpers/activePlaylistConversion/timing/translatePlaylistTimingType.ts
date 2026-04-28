@@ -10,6 +10,8 @@ export function translatePlaylistTimingType(type: PlaylistTimingType): ActivePla
 			return ActivePlaylistTimingMode.BACK_MINUS_TIME
 		case PlaylistTimingType.ForwardTime:
 			return ActivePlaylistTimingMode.FORWARD_MINUS_TIME
+		case PlaylistTimingType.Duration:
+			return ActivePlaylistTimingMode.DURATION
 		default:
 			assertNever(type)
 			// Cast and return the value anyway, so that the application works
