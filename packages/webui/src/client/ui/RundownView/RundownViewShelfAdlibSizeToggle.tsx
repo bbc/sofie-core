@@ -18,7 +18,7 @@ export function RundownViewShelfAdlibSizeToggle({
 }: RundownViewShelfAdlibSizeToggleProps): JSX.Element {
 	return (
 		<div className="rundown-view-shelf__size-toggle" role="group" aria-label={ariaLabel}>
-			<Tooltip overlay={largeLabel} destroyTooltipOnHide placement="left">
+			<Tooltip overlay={largeLabel} destroyTooltipOnHide placement="left" mouseEnterDelay={0.5}>
 				<button
 					type="button"
 					className={value === 'large' ? 'active' : undefined}
@@ -29,7 +29,7 @@ export function RundownViewShelfAdlibSizeToggle({
 					<LargeViewIcon />
 				</button>
 			</Tooltip>
-			<Tooltip overlay={compactLabel} destroyTooltipOnHide placement="left">
+			<Tooltip overlay={compactLabel} destroyTooltipOnHide placement="left" mouseEnterDelay={0.5}>
 				<button
 					type="button"
 					className={value === 'compact' ? 'active' : undefined}

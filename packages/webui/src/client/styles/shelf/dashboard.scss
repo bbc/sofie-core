@@ -809,7 +809,7 @@ $dashboard-button-height: 3.625em;
 
 		&.dashboard-panel__panel__button--compact {
 			height: 2.85em;
-			width: calc(($dashboard-button-width * 2) + 30.8px);
+			width: calc(($dashboard-button-width * 2) + 28px);
 
 			> .dashboard-panel__panel__button__content {
 				flex-direction: row;

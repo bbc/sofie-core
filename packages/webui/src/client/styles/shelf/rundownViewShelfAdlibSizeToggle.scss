@@ -5,6 +5,7 @@
 		width: 33px;
 		z-index: 4;
 		pointer-events: auto;
+		flex-shrink: 0;
 	}
 
 	.rundown-view-shelf__size-toggle {
@@ -25,12 +26,15 @@
 				}
 			}
 
-			&:hover,
-			&.active:hover {
+			&:hover {
 				svg > rect {
 					fill: rgba(255, 255, 255, 1);
 				}
 				filter: drop-shadow(0px 0px 2px #ffffff);
+			}
+
+			&.active:hover {
+				filter: drop-shadow(0px 0px 2px #ffffff00);
 			}
 
 			&.active {
