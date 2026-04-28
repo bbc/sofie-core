@@ -894,13 +894,17 @@ export class TSRHandler {
 			this.logger.debug('_updateEventSubscriptions: no subscriptions — clearing all devices')
 		}
 
-		await Promise.all(
+		await Promise.allSettled(
 			_.map(this.tsr.connectionManager.getConnections(), async (container) => {
 				const events = subscriptionsByDeviceId.get(container.deviceId) ?? new Set<string>()
 				this.logger.debug(
 					`_updateEventSubscriptions: setting ${events.size} event subscription(s) on device "${container.deviceId}": [${Array.from(events).join(', ')}]`
 				)
-				await container.device.setEventSubscriptions(Array.from(events))
+				await container.device.setEventSubscriptions(Array.from(events)).catch((e) => {
+					this.logger.error(
+						`Error setting event subscriptions for device "${container.deviceId}": ${stringifyError(e)}`
+					)
+				})
 			})
 		)
 	}
