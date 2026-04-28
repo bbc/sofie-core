@@ -4,9 +4,14 @@ import type { ResolvedRundown } from '@sofie-automation/live-status-gateway-api'
 
 /** Converts a rundown id into a fully expanded `ResolvedRundown` payload. */
 export function toResolvedRundownStatus(ctx: ResolvedPlaylistConversionContext, rundownId: string): ResolvedRundown {
-	const rundown = ctx.rundownsById.get(String(rundownId))
+	const rundownRank = ctx.orderedRundownIds.indexOf(rundownId)
+	if (rundownRank === -1) {
+		throw new Error(`Rundown "${rundownId}" is not in orderedRundownIds`)
+	}
+
+	const rundown = ctx.rundownsById.get(rundownId)
 	const orderedSegments = getOrderedSegmentsInRundown(ctx, rundownId)
-	const rank = Math.max(0, ctx.orderedRundownIds.indexOf(String(rundownId)))
+	const rank = rundownRank
 
 	return {
 		id: rundownId,

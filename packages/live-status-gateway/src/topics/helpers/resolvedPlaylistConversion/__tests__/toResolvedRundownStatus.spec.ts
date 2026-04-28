@@ -39,7 +39,7 @@ describe('toResolvedRundownStatus', () => {
 
 	it('returns empty defaults when rundown is missing', () => {
 		const ctx = createResolvedPlaylistConversionContext({
-			playlistState: makePlaylist(),
+			playlistState: makePlaylist({ rundownIdsInOrder: ['rundown0'] }),
 			rundownsState: [],
 			showStyleBaseExtState: makeTestShowStyleBaseExt(),
 			segmentsState: [],
@@ -49,9 +49,24 @@ describe('toResolvedRundownStatus', () => {
 			pieceInstancesInPlaylistState: [],
 		})
 
-		const result = toResolvedRundownStatus(ctx, 'missing')
+		const result = toResolvedRundownStatus(ctx, 'rundown0')
 		expect(result.externalId).toBe('')
 		expect(result.segments).toEqual([])
 		expect(result.rank).toBe(0)
+	})
+
+	it('throws when rundownId is not in orderedRundownIds', () => {
+		const ctx = createResolvedPlaylistConversionContext({
+			playlistState: makePlaylist({ rundownIdsInOrder: ['rundown0'] }),
+			rundownsState: [makeRundown('rundown0')],
+			showStyleBaseExtState: makeTestShowStyleBaseExt(),
+			segmentsState: [],
+			partsState: [],
+			partInstancesInPlaylistState: [],
+			piecesInPlaylistState: [],
+			pieceInstancesInPlaylistState: [],
+		})
+
+		expect(() => toResolvedRundownStatus(ctx, 'missing')).toThrow(/orderedRundownIds/)
 	})
 })
