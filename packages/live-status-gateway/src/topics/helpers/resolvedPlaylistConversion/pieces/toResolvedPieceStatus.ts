@@ -14,7 +14,7 @@ export function toResolvedPieceStatus(pieceExtended: PieceExtended): ResolvedPie
 
 	return {
 		id: unprotectString(basePiece._id),
-		instanceId: unprotectString(instance?._id),
+		instanceId: instance?._id ? unprotectString(instance._id) : undefined,
 		createdByAdLib,
 		externalId: basePiece.externalId ?? '',
 		name: basePiece.name ?? '',

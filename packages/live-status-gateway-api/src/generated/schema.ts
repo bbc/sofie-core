@@ -992,7 +992,7 @@ interface ResolvedPiece {
 	/**
 	 * Unique id of the piece instance
 	 */
-	instanceId: string
+	instanceId?: string
 	/**
 	 * Id normally sourced from the ingest system
 	 */

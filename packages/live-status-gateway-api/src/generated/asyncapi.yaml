@@ -1461,7 +1461,6 @@ channels:
                                                       items: *a35
                                                   required:
                                                     - id
-                                                    - instanceId
                                                     - externalId
                                                     - name
                                                     - priority
