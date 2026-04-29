@@ -116,22 +116,24 @@ export function RundownHeader({
 								onClose={onMenuClose}
 							/>
 							<div className="rundown-header__left-context-menu-wrapper">
-								{playlist.currentPartInfo && (
-									<div className="rundown-header__onair">
-										<RundownHeaderSegmentBudget
-											currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-											label={t('Seg. Budg.')}
-										/>
-										<span className="rundown-header__timers-onair-remaining">
-											<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
-											<RundownHeaderPartRemaining
+								<div className="rundown-header__onair-wrapper">
+									{playlist.currentPartInfo && (
+										<div className="rundown-header__onair">
+											<RundownHeaderSegmentBudget
 												currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
-												heavyClassName="overtime"
+												label={t('Seg. Budg.')}
 											/>
-											<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
-										</span>
-									</div>
-								)}
+											<span className="rundown-header__timers-onair-remaining">
+												<span className="rundown-header__timers-onair-remaining__label">{t('On Air')}</span>
+												<RundownHeaderPartRemaining
+													currentPartInstanceId={playlist.currentPartInfo.partInstanceId}
+													heavyClassName="overtime"
+												/>
+												<HeaderFreezeFrameIcon partInstanceId={playlist.currentPartInfo.partInstanceId} />
+											</span>
+										</div>
+									)}
+								</div>
 								<RundownHeaderTimers tTimers={playlist.tTimers} />
 							</div>
 						</div>
