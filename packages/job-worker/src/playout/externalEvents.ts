@@ -1,5 +1,5 @@
 import { OnExternalEventsProps } from '@sofie-automation/corelib/dist/worker/studio'
-import { PeripheralDeviceExternalEvent } from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
+import { PeripheralDeviceExternalEvent } from '@sofie-automation/shared-lib/dist/peripheralDevice/externalEvents'
 import { logger } from '../logging.js'
 import { JobContext } from '../jobs/index.js'
 import { PlayoutModel } from './model/PlayoutModel.js'
