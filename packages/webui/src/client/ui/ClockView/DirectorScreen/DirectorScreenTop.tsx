@@ -41,7 +41,7 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 						<div>
 							<PlannedEndComponent value={estimatedEnd} />
 						</div>
-						{rehearsalInProgress ? t('Rehearsal end') : t('Expected end')}
+						{rehearsalInProgress ? t('Rehearsal end') : t('Estimated end')}
 					</div>
 				) : null}
 
@@ -55,9 +55,7 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 								? remainingDuration >= 0
 									? t('Time to rehearsal end')
 									: t('Time since rehearsal end')
-								: remainingDuration >= 0
-									? t('Time to end')
-									: t('Time since end')}
+								: t('Remaining duration')}
 						</span>
 					</div>
 				) : null}

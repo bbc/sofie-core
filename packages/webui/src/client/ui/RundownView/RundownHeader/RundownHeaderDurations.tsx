@@ -26,6 +26,8 @@ export function RundownHeaderDurations({
 
 	if (expectedDuration == undefined && estDuration == undefined) return null
 
+	const clampedEstDuration = estDuration !== undefined ? Math.max(0, estDuration) : undefined
+
 	return (
 		<div className="rundown-header__show-timers-endtimes">
 			{!simplified && expectedDuration ? (
@@ -33,13 +35,9 @@ export function RundownHeaderDurations({
 					{RundownUtils.formatDiffToTimecode(expectedDuration, false, true, true, true, true, undefined, true, true)}
 				</Countdown>
 			) : null}
-			{estDuration !== undefined ? (
-				<Countdown
-					label={t('Rem. Dur')}
-					className="rundown-header__show-timers-countdown"
-					ms={Math.max(0, estDuration)}
-				>
-					{RundownUtils.formatDiffToTimecode(-Math.max(0, estDuration), false, true, true, true, true, '', true, true)}
+			{clampedEstDuration !== undefined ? (
+				<Countdown label={t('Rem. Dur')} className="rundown-header__show-timers-countdown" ms={clampedEstDuration}>
+					{RundownUtils.formatDiffToTimecode(-clampedEstDuration, false, true, true, true, true, '', true, true)}
 				</Countdown>
 			) : null}
 		</div>

@@ -49,6 +49,7 @@ $hold-status-color: $liveline-timecode-color;
 		.director-screen__top__planned-end {
 			flex: 1 1 0;
 			text-align: left;
+			transform: translateY(0.35em);
 		}
 
 		.director-screen__top__planned-container {
