@@ -12,8 +12,10 @@ export function toResolvedSegmentStatus(
 	segment: DBSegment,
 	rundown: Rundown
 ): ResolvedSegment {
+	const segmentShowStyleBaseExt = ctx.rundownsToShowStyleBaseExt.get(segment.rundownId) ?? ctx.showStyleBaseExt
+
 	const resolvedSegment = getResolvedSegment({
-		showStyleBase: ctx.showStyleBaseExt,
+		showStyleBase: segmentShowStyleBaseExt,
 		studio: undefined,
 		playlist: ctx.playlist,
 		rundown,
@@ -35,8 +37,8 @@ export function toResolvedSegmentStatus(
 	})
 
 	const segmentExtended = resolvedSegment.segmentExtended
-	const sourceLayers = toSourceLayers(ctx, segmentExtended)
-	const outputLayers = toOutputLayers(ctx, segmentExtended)
+	const sourceLayers = toSourceLayers(segmentShowStyleBaseExt, segmentExtended)
+	const outputLayers = toOutputLayers(segmentShowStyleBaseExt, segmentExtended)
 
 	const budgetDurationMs = segment?.segmentTiming?.budgetDuration ?? 0
 
@@ -69,14 +71,17 @@ function getSegmentsToReceiveOnRundownEndFromSet(
 }
 
 /** Maps source layers from resolved segment output to API shape sorted by rank. */
-function toSourceLayers(ctx: ResolvedPlaylistConversionContext, segmentExtended: SegmentExtended): SourceLayer[] {
+function toSourceLayers(
+	showStyleBaseExt: ResolvedPlaylistConversionContext['showStyleBaseExt'],
+	segmentExtended: SegmentExtended
+): SourceLayer[] {
 	type SourceLayerExtended = NonNullable<SegmentExtended['sourceLayers']>[string]
 	if (!segmentExtended.sourceLayers) return []
 
 	return Object.entries<SourceLayerExtended>(segmentExtended.sourceLayers)
 		.map(([id, layer]) => ({
 			id,
-			name: layer?.name ?? ctx.showStyleBaseExt?.sourceLayerNamesById?.get?.(id) ?? '',
+			name: layer?.name ?? showStyleBaseExt?.sourceLayerNamesById?.get?.(id) ?? '',
 			abbreviation: layer?.abbreviation ?? '',
 			isHidden: layer?.isHidden ?? false,
 			type: layer?.type ?? 0,
@@ -86,7 +91,10 @@ function toSourceLayers(ctx: ResolvedPlaylistConversionContext, segmentExtended:
 }
 
 /** Maps output layers from resolved segment output to API shape sorted by name. */
-function toOutputLayers(ctx: ResolvedPlaylistConversionContext, segmentExtended: SegmentExtended): OutputLayer[] {
+function toOutputLayers(
+	showStyleBaseExt: ResolvedPlaylistConversionContext['showStyleBaseExt'],
+	segmentExtended: SegmentExtended
+): OutputLayer[] {
 	type OutputLayerExtended = NonNullable<SegmentExtended['outputLayers']>[string]
 	if (!segmentExtended.outputLayers) return []
 
@@ -94,7 +102,7 @@ function toOutputLayers(ctx: ResolvedPlaylistConversionContext, segmentExtended:
 		.map(([id, layer]) =>
 			literal<OutputLayer>({
 				id,
-				name: layer?.name ?? ctx.showStyleBaseExt?.outputLayerNamesById?.get?.(id) ?? '',
+				name: layer?.name ?? showStyleBaseExt?.outputLayerNamesById?.get?.(id) ?? '',
 				isFlattened: layer?.isFlattened ?? false,
 				isPGM: layer?.isPGM ?? false,
 				sourceLayerIds: (layer?.sourceLayers ?? [])

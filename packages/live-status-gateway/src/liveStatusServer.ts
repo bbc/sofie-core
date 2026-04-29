@@ -3,6 +3,7 @@ import { CoreHandler } from './coreHandler.js'
 import { WebSocket, WebSocketServer } from 'ws'
 import { StudioHandler } from './collections/studioHandler.js'
 import { ShowStyleBaseHandler } from './collections/showStyleBaseHandler.js'
+import { ShowStyleBasesHandler } from './collections/showStyleBasesHandler.js'
 import { PlaylistHandler, PlaylistsHandler } from './collections/playlistHandler.js'
 import { RundownHandler } from './collections/rundownHandler.js'
 import { RundownsHandler } from './collections/rundownsHandler.js'
@@ -43,6 +44,7 @@ import { PieceInstancesInPlaylistHandler } from './collections/pieceInstancesInP
 export interface CollectionHandlers {
 	studioHandler: StudioHandler
 	showStyleBaseHandler: ShowStyleBaseHandler
+	showStyleBasesHandler: ShowStyleBasesHandler
 	playlistHandler: PlaylistHandler
 	playlistsHandler: PlaylistsHandler
 	rundownHandler: RundownHandler
@@ -86,6 +88,7 @@ export class LiveStatusServer {
 
 		const studioHandler = new StudioHandler(this._logger, this._coreHandler)
 		const showStyleBaseHandler = new ShowStyleBaseHandler(this._logger, this._coreHandler)
+		const showStyleBasesHandler = new ShowStyleBasesHandler(this._logger, this._coreHandler)
 		const playlistHandler = new PlaylistHandler(this._logger, this._coreHandler)
 		const playlistsHandler = playlistHandler.playlistsHandler
 		const rundownsHandler = new RundownsHandler(this._logger, this._coreHandler)
@@ -114,6 +117,7 @@ export class LiveStatusServer {
 		const handlers: CollectionHandlers = {
 			studioHandler,
 			showStyleBaseHandler,
+			showStyleBasesHandler,
 			playlistHandler,
 			playlistsHandler,
 			rundownHandler,

@@ -13,6 +13,7 @@ import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/Rund
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import type { PartInstancesInPlaylist } from '../collections/partInstancesInPlaylistHandler.js'
 import { ShowStyleBaseExt } from '../collections/showStyleBaseHandler.js'
+import { ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 const THROTTLE_PERIOD_MS = 100
 
@@ -48,6 +49,7 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 	private _parts: DBPart[] = []
 	private _partInstancesInPlaylist: DBPartInstance[] = []
 	private _showStyleBaseExt: ShowStyleBaseExt | undefined
+	private _showStyleBaseExtsById: ReadonlyMap<ShowStyleBaseId, ShowStyleBaseExt> = new Map()
 	private _piecesInPlaylist: Piece[] = []
 	private _pieceInstancesInPlaylist: PieceInstance[] = []
 
@@ -57,6 +59,7 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 		handlers.playlistHandler.subscribe(this.onPlaylistUpdate, PLAYLIST_KEYS)
 		handlers.rundownsHandler.subscribe(this.onRundownsUpdate)
 		handlers.showStyleBaseHandler.subscribe(this.onShowStyleBaseUpdate)
+		handlers.showStyleBasesHandler.subscribe(this.onShowStyleBasesUpdate)
 		handlers.segmentsHandler.subscribe(this.onSegmentsUpdate)
 		handlers.partsHandler.subscribe(this.onPartsUpdate)
 		handlers.partInstancesInPlaylistHandler.subscribe(this.onPartInstancesInPlaylistUpdate, ['all'])
@@ -72,6 +75,7 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 			playlistState: this._playlist,
 			rundownsState: this._rundowns,
 			showStyleBaseExtState: this._showStyleBaseExt,
+			showStyleBaseExtsByIdState: this._showStyleBaseExtsById,
 			segmentsState: this._segments,
 			partsState: this._parts,
 			partInstancesInPlaylistState: this._partInstancesInPlaylist as PartInstance[],
@@ -98,6 +102,12 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 	private onShowStyleBaseUpdate = (showStyleBase: ToResolvedPlaylistStatusProps['showStyleBaseExtState']): void => {
 		this.logUpdateReceived('showStyleBase')
 		this._showStyleBaseExt = showStyleBase
+		this.throttledSendStatusToAll()
+	}
+
+	private onShowStyleBasesUpdate = (showStyleBases: ShowStyleBaseExt[] | undefined): void => {
+		this.logUpdateReceived('showStyleBases', `${showStyleBases?.length ?? 0} showStyleBases`)
+		this._showStyleBaseExtsById = new Map((showStyleBases ?? []).map((showStyle) => [showStyle._id, showStyle]))
 		this.throttledSendStatusToAll()
 	}
 

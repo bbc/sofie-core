@@ -65,4 +65,54 @@ describe('toResolvedSegmentStatus', () => {
 		expect(result.outputLayers.map((s) => s.id)).toEqual(['ol1', 'ol2'])
 		expect(result.parts).toHaveLength(1)
 	})
+
+	it('resolves per-rundown showStyleBaseExt in mixed-showstyle playlists', () => {
+		const showStyleBaseExtA = makeTestShowStyleBaseExt()
+		const showStyleBaseExtB = {
+			...makeTestShowStyleBaseExt(),
+			_id: protectString('showStyleBaseB'),
+			sourceLayerNamesById: new Map([['sourceLayerX', 'SourceLayerX_fromShowStyleB']]),
+			outputLayerNamesById: new Map([['outputLayerX', 'OutputLayerX_fromShowStyleB']]),
+		}
+
+		;(getResolvedSegment as jest.Mock).mockReturnValue({
+			segmentExtended: {
+				sourceLayers: {
+					sourceLayerX: { _rank: 1 },
+				},
+				outputLayers: {
+					outputLayerX: { sourceLayers: [{ _id: 'sourceLayerX' }] },
+				},
+			},
+			parts: [],
+		})
+
+		const rundown0 = makeRundown('rundown0')
+		const rundown1 = makeRundown('rundown1')
+		rundown0.showStyleBaseId = showStyleBaseExtA._id
+		rundown1.showStyleBaseId = showStyleBaseExtB._id
+
+		const segment = makeSegment('segment1', 'rundown1', 1)
+		const ctx = createResolvedPlaylistConversionContext({
+			playlistState: makePlaylist(),
+			rundownsState: [rundown0, rundown1],
+			// Fallback showstyle:
+			showStyleBaseExtState: showStyleBaseExtA,
+			showStyleBaseExtsByIdState: new Map([
+				[showStyleBaseExtA._id, showStyleBaseExtA],
+				[showStyleBaseExtB._id, showStyleBaseExtB],
+			]),
+			segmentsState: [segment],
+			partsState: [],
+			partInstancesInPlaylistState: [],
+			piecesInPlaylistState: [],
+			pieceInstancesInPlaylistState: [],
+		})
+
+		const result = toResolvedSegmentStatus(ctx, segment, rundown1)
+
+		expect(getResolvedSegment).toHaveBeenCalledWith(expect.objectContaining({ showStyleBase: showStyleBaseExtB }))
+		expect(result.sourceLayers).toMatchObject([{ id: 'sourceLayerX', name: 'SourceLayerX_fromShowStyleB' }])
+		expect(result.outputLayers).toMatchObject([{ id: 'outputLayerX', name: 'OutputLayerX_fromShowStyleB' }])
+	})
 })

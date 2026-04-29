@@ -36,6 +36,7 @@ export type ToResolvedPlaylistStatusProps = {
 	playlistState: PlaylistState | undefined
 	rundownsState: DBRundown[]
 	showStyleBaseExtState: ShowStyleBaseExt | undefined
+	showStyleBaseExtsByIdState?: ReadonlyMap<ShowStyleBaseId, ShowStyleBaseExt>
 	segmentsState: DBSegment[]
 	partsState: DBPart[]
 	partInstancesInPlaylistState: PartInstance[]
@@ -49,6 +50,7 @@ export type ResolvedPlaylistConversionContext = Readonly<{
 	showStyleBaseExt: ShowStyleBaseExt
 
 	rundownsToShowStyles: ReadonlyMap<RundownId, ShowStyleBaseId>
+	rundownsToShowStyleBaseExt: ReadonlyMap<RundownId, ShowStyleBaseExt>
 	orderedRundownIds: string[]
 
 	segmentsByRundownId: Map<string, DBSegment[]>
@@ -77,10 +79,13 @@ export function createResolvedPlaylistConversionContext(
 	const orderedRundownIds = (playlist.rundownIdsInOrder ?? []).map((r) => unprotectString(r))
 	const rundownsById = new Map<string, DBRundown>((props.rundownsState ?? []).map((r) => [unprotectString(r._id), r]))
 	const rundownsToShowStyles = new Map<RundownId, ShowStyleBaseId>()
+	const rundownsToShowStyleBaseExt = new Map<RundownId, ShowStyleBaseExt>()
 	for (const rundownId of playlist.rundownIdsInOrder ?? []) {
 		const rundown = rundownsById.get(unprotectString(rundownId))
 		if (!rundown) continue
 		rundownsToShowStyles.set(rundownId, rundown.showStyleBaseId)
+		const showStyle = props.showStyleBaseExtsByIdState?.get(rundown.showStyleBaseId)
+		if (showStyle) rundownsToShowStyleBaseExt.set(rundownId, showStyle)
 	}
 
 	const segmentsByRundownId = groupByRundownId(props.segmentsState)
@@ -102,6 +107,7 @@ export function createResolvedPlaylistConversionContext(
 		rundownsById,
 		showStyleBaseExt,
 		rundownsToShowStyles,
+		rundownsToShowStyleBaseExt,
 		orderedRundownIds,
 		segmentsByRundownId,
 		partsByRundownId,
