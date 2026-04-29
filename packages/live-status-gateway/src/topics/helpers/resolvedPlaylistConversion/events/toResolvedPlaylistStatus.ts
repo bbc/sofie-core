@@ -1,3 +1,4 @@
+import type { Logger } from 'winston'
 import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { literal } from '@sofie-automation/shared-lib/dist/lib/lib'
 import {
@@ -21,7 +22,8 @@ export function toResolvedPlaylistStatus({
 	partInstancesInPlaylistState,
 	piecesInPlaylistState,
 	pieceInstancesInPlaylistState,
-}: ToResolvedPlaylistStatusProps): ResolvedPlaylistEvent {
+	logger,
+}: ToResolvedPlaylistStatusProps & { logger?: Logger }): ResolvedPlaylistEvent {
 	// Keep payload shape stable before all dependencies are available.
 	if (!playlistState || !showStyleBaseExtState) {
 		return literal<ResolvedPlaylistEvent>({
@@ -110,6 +112,7 @@ export function toResolvedPlaylistStatus({
 			quickLoop: ctx.playlist.quickLoop,
 			segmentsById,
 			partsById,
+			logger,
 		}),
 		rundowns: ctx.orderedRundownIds.map((rundownId) => toResolvedRundownStatus(ctx, rundownId)),
 	})

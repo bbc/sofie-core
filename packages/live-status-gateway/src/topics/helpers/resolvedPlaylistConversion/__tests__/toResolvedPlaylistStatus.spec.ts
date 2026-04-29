@@ -82,4 +82,39 @@ describe('toResolvedPlaylistStatus', () => {
 		expect(result.quickLoop).toBeDefined()
 		expect(result.rundowns).toEqual([{ id: 'rundown0' }, { id: 'rundown1' }])
 	})
+
+	it('warns and omits quickLoop markers with unknown markerType', () => {
+		const unknownMarkerType = 'unknownMarkerType'
+		const mockLogger = { warn: jest.fn() } as any
+
+		const playlist = makePlaylist({
+			quickLoop: {
+				locked: false,
+				running: true,
+				start: { type: unknownMarkerType },
+				end: { type: 'rundown', id: protectString('rundown0') },
+			} as any,
+		})
+
+		const result = toResolvedPlaylistStatus({
+			playlistState: playlist,
+			rundownsState: [makeRundown('rundown0'), makeRundown('rundown1')],
+			showStyleBaseExtState: makeTestShowStyleBaseExt(),
+			segmentsState: [],
+			partsState: [],
+			partInstancesInPlaylistState: [],
+			piecesInPlaylistState: [],
+			pieceInstancesInPlaylistState: [],
+			logger: mockLogger,
+		})
+
+		expect(result.quickLoop?.start).toBeUndefined()
+		expect(result.quickLoop?.end).toMatchObject({ markerType: 'rundown', rundownId: 'rundown0' })
+
+		expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+		expect(mockLogger.warn).toHaveBeenCalledWith(
+			'Unknown QuickLoop markerType encountered; omitting marker',
+			expect.objectContaining({ markerType: unknownMarkerType })
+		)
+	})
 })

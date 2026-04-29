@@ -77,6 +77,7 @@ export class ResolvedPlaylistTopic extends WebSocketTopicBase implements WebSock
 			partInstancesInPlaylistState: this._partInstancesInPlaylist as PartInstance[],
 			piecesInPlaylistState: this._piecesInPlaylist,
 			pieceInstancesInPlaylistState: this._pieceInstancesInPlaylist,
+			logger: this._logger,
 		})
 
 		this.sendMessage(subscribers, message)
