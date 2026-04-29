@@ -858,7 +858,7 @@ export function getPlaylistTimingDiff(
 	} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
 		const backAnchorTimeWithoutBreaks =
 			timingContext.nextRundownAnchor ??
-			PlaylistTiming.getExpectedEnd(timing, playlist.startedPlayback) ??
+			PlaylistTiming.getExpectedEnd(timing) ??
 			currentTime + timing.expectedDuration
 		backAnchor = timingContext.nextRundownAnchor ?? backAnchorTimeWithoutBreaks
 		frontAnchor = Math.max(currentTime, playlist.startedPlayback || PlaylistTiming.getExpectedStart(timing) || 0)
