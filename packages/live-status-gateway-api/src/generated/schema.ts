@@ -638,7 +638,7 @@ interface ResolvedPlaylistEvent {
 	 */
 	publicData?: any
 	/**
-	 * Timing information about the playlist, expressed as relative offsets (not wall-clock time)
+	 * Timing information about the playlist using absolute Unix timestamps (ms) and expected duration.
 	 */
 	timing: ResolvedPlaylistTiming
 	/**
@@ -657,29 +657,29 @@ interface ResolvedPlaylistEvent {
 }
 
 /**
- * Timing information about the playlist, expressed as relative offsets (not wall-clock time)
+ * Timing information about the playlist using absolute Unix timestamps (ms) and expected duration.
  */
 interface ResolvedPlaylistTiming {
 	/**
-	 * Whether timing counts forward from a start time or back from an end time
+	 * Whether the playlist is forward-timed from a start time or back-timed from an end time
 	 */
 	type: ResolvedPlaylistTimingType
 	/**
-	 * Optional start offset of the playlist (ms). When present, this is typically 0.
+	 * Unix timestamp (ms) when the playlist actually started playback (first timed part confirmed started). Null until known.
 	 */
-	startMs: number | null
+	startedPlayback: number | null
 	/**
-	 * Expected duration of the playlist (ms)
+	 * Expected duration of the playlist (ms). Null when unknown/unavailable.
 	 */
-	durationMs: number | null
+	expectedDurationMs: number | null
 	/**
-	 * Optional end offset of the playlist (ms) from the beginning of the playlist
+	 * Unix timestamp (ms) when the playlist is expected/projected to end. Null when it cannot be resolved from timing configuration.
 	 */
-	endMs: number | null
+	expectedEnd: number | null
 }
 
 /**
- * Whether timing counts forward from a start time or back from an end time
+ * Whether the playlist is forward-timed from a start time or back-timed from an end time
  */
 enum ResolvedPlaylistTimingType {
 	FORWARD = 'forward',

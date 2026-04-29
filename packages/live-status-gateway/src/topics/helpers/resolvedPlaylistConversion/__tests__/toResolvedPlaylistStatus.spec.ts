@@ -39,9 +39,9 @@ describe('toResolvedPlaylistStatus', () => {
 			rundowns: [],
 			timing: {
 				type: ResolvedPlaylistTimingType.FORWARD,
-				startMs: null,
-				durationMs: null,
-				endMs: null,
+				startedPlayback: null,
+				expectedDurationMs: null,
+				expectedEnd: null,
 			},
 		})
 	})
@@ -53,7 +53,8 @@ describe('toResolvedPlaylistStatus', () => {
 			quickLoop: makeQuickLoop(),
 			currentPartInfo: { partInstanceId: protectString('current_pi') },
 			nextPartInfo: { partInstanceId: protectString('next_pi') },
-			timing: { type: PlaylistTimingType.BackTime, expectedDuration: 15000 },
+			startedPlayback: 1706371806000,
+			timing: { type: PlaylistTimingType.BackTime, expectedDuration: 15000, expectedEnd: 1706371821000 },
 		})
 
 		const result = toResolvedPlaylistStatus({
@@ -75,9 +76,9 @@ describe('toResolvedPlaylistStatus', () => {
 		expect(result.nextPartInstanceId).toBe('next_pi')
 		expect(result.timing).toMatchObject({
 			type: ResolvedPlaylistTimingType.BACK,
-			startMs: 0,
-			durationMs: 15000,
-			endMs: 15000,
+			startedPlayback: 1706371806000,
+			expectedDurationMs: 15000,
+			expectedEnd: 1706371821000,
 		})
 		expect(result.quickLoop).toBeDefined()
 		expect(result.rundowns).toEqual([{ id: 'rundown0' }, { id: 'rundown1' }])

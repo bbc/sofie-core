@@ -29,6 +29,7 @@ type PlaylistState = Pick<
 	| 'publicData'
 	| 'publicPlayoutPersistentState'
 	| 'timing'
+	| 'startedPlayback'
 	| 'tTimers'
 >
 

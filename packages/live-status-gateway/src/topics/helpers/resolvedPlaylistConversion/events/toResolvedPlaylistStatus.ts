@@ -11,6 +11,7 @@ import { toResolvedRundownStatus } from '../rundowns/toResolvedRundownStatus.js'
 import { toTTimers } from '../../activePlaylistConversion/timers/toTTimers.js'
 import { toQuickLoopStatus } from '../../activePlaylistConversion/quickLoop/toQuickLoopStatus.js'
 import { PlaylistTimingType } from '@sofie-automation/blueprints-integration'
+import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 
 /** Converts playlist-scoped collection snapshots into the `resolvedPlaylist` websocket event shape. */
 export function toResolvedPlaylistStatus({
@@ -36,9 +37,9 @@ export function toResolvedPlaylistStatus({
 			nextPartInstanceId: null,
 			timing: {
 				type: ResolvedPlaylistTimingType.FORWARD,
-				startMs: null,
-				durationMs: null,
-				endMs: null,
+				startedPlayback: null,
+				expectedDurationMs: null,
+				expectedEnd: null,
 			},
 			tTimers: toTTimers(null),
 			quickLoop: null,
@@ -82,11 +83,14 @@ export function toResolvedPlaylistStatus({
 	>
 
 	const timingState = ctx.playlist.timing
-	const durationMs: number | null = timingState?.expectedDuration ?? null
+	const expectedDurationMs: number | null = timingState?.expectedDuration ?? null
 	const timingType =
 		timingState?.type === PlaylistTimingType.BackTime
 			? ResolvedPlaylistTimingType.BACK
 			: ResolvedPlaylistTimingType.FORWARD
+	const expectedEnd: number | null = timingState
+		? (PlaylistTiming.getExpectedEnd(timingState, ctx.playlist.startedPlayback) ?? null)
+		: null
 
 	const playoutState = ctx.playlist.publicPlayoutPersistentState
 	const publicData = ctx.playlist.publicData
@@ -103,9 +107,9 @@ export function toResolvedPlaylistStatus({
 		...(publicData !== undefined ? { publicData } : {}),
 		timing: {
 			type: timingType,
-			startMs: 0,
-			durationMs,
-			endMs: durationMs,
+			startedPlayback: ctx.playlist.startedPlayback ?? null,
+			expectedDurationMs,
+			expectedEnd,
 		},
 		tTimers: toTTimers(ctx.playlist.tTimers ?? null),
 		quickLoop: toQuickLoopStatus({
