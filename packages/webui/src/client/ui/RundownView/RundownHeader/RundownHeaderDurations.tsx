@@ -17,11 +17,13 @@ export function RundownHeaderDurations({
 
 	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
 
+	const startedPlayback = playlist.activationId ? playlist.startedPlayback : undefined
+
 	const estDuration = PlaylistTiming.getRemainingDuration(
 		playlist.timing,
 		timingDurations.currentTime ?? Date.now(),
 		timingDurations.remainingPlaylistDuration,
-		playlist.startedPlayback
+		startedPlayback
 	)
 
 	if (expectedDuration == undefined && estDuration == undefined) return null

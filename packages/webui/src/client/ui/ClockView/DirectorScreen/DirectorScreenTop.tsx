@@ -1,10 +1,10 @@
 import { PlannedEndComponent, TimeToFromPlannedEndComponent } from '../../../lib/Components/CounterComponents'
 import { useTiming } from '../../RundownView/RundownTiming/withTiming.js'
 import { getPlaylistTimingDiff } from '../../../lib/rundownTiming.js'
+import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { getCurrentTime } from '../../../lib/systemTime.js'
 import { useTranslation } from 'react-i18next'
-import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { OverUnderChip } from '../../../lib/Components/OverUnderChip.js'
 
 export interface DirectorScreenTopProps {
@@ -19,18 +19,20 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 	const rehearsalInProgress = Boolean(playlist.rehearsal && playlist.startedPlayback)
 
+	const startedPlayback = playlist.activationId ? playlist.startedPlayback : undefined
+
 	const estimatedEnd = PlaylistTiming.getEstimatedEnd(
 		playlist.timing,
 		now,
 		timingDurations.remainingPlaylistDuration,
-		playlist.startedPlayback
+		startedPlayback
 	)
 
 	const remainingDuration = PlaylistTiming.getRemainingDuration(
 		playlist.timing,
 		now,
 		timingDurations.remainingPlaylistDuration,
-		playlist.startedPlayback
+		startedPlayback
 	)
 
 	return (
