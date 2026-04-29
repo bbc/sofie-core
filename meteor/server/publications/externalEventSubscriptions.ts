@@ -3,7 +3,7 @@ import { assertNever, getHash, literal } from '@sofie-automation/corelib/dist/li
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { ReadonlyDeep } from 'type-fest'
 import {
 	CustomPublish,
