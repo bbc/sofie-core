@@ -55,12 +55,7 @@ export function RundownHeader({
 
 	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
-
-	// const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
-	// @todo: this _should_ use PlaylistTiming.getExpectedDuration as show above,
-	// but I don't dare changing its behaviour to return for PlaylistTimingType.None within the scope of this task
-	// same issue in RundownHeaderDuration.tsx
-	const expectedDuration = playlist.timing.expectedDuration
+	const expectedDuration = PlaylistTiming.getExpectedDuration(playlist.timing)
 
 	const hasSimple = !!(expectedStart || expectedDuration || expectedEnd)
 
