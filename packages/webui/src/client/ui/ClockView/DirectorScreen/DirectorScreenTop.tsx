@@ -19,18 +19,20 @@ export function DirectorScreenTop({ playlist }: Readonly<DirectorScreenTopProps>
 	const overUnderClock = getPlaylistTimingDiff(playlist, timingDurations) ?? 0
 	const rehearsalInProgress = Boolean(playlist.rehearsal && playlist.startedPlayback)
 
+	const startedPlayback = playlist.activationId ? playlist.startedPlayback : undefined
+
 	const estimatedEnd = PlaylistTiming.getEstimatedEnd(
 		playlist.timing,
 		now,
 		timingDurations.remainingPlaylistDuration,
-		playlist.startedPlayback
+		startedPlayback
 	)
 
 	const remainingDuration = PlaylistTiming.getRemainingDuration(
 		playlist.timing,
 		now,
 		timingDurations.remainingPlaylistDuration,
-		playlist.startedPlayback
+		startedPlayback
 	)
 
 	return (
