@@ -1,5 +1,8 @@
 import type { TTimerStatus, TTimerIndex } from '@sofie-automation/live-status-gateway-api'
-import type { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
+import {
+	type RundownTTimer,
+	isRundownTTimerIndex,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 
 function emptyTimer(index: number): TTimerStatus {
@@ -35,6 +38,7 @@ export function toTTimers(tTimers: RundownTTimer[] | null | undefined): [TTimerS
 	const filled = new Set<number>()
 
 	for (const timer of tTimers) {
+		if (!isRundownTTimerIndex(timer.index)) continue
 		const slotIndex = timer.index - 1
 		if (slotIndex < 0 || slotIndex > 2) continue
 		if (filled.has(slotIndex)) continue
