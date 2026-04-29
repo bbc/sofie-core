@@ -55,7 +55,7 @@ export class PieceInstancesInPlaylistHandler extends PublicationCollection<
 
 	private onPartInstancesInPlaylistUpdate = (data: PartInstancesInPlaylist | undefined): void => {
 		const prevPartInstanceIds = this._partInstanceIds
-		this._partInstanceIds = _.compact((data?.all ?? []).map((pi: any) => pi._id)).sort()
+		this._partInstanceIds = data?.all?.flatMap((pi: any) => (pi._id ? [pi._id] : [])).sort() ?? []
 		this.resubscribe(this._currentRundownIds, prevPartInstanceIds)
 	}
 
