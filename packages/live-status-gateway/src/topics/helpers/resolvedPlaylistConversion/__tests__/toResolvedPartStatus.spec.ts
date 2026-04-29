@@ -68,7 +68,7 @@ describe('toResolvedPartStatus', () => {
 			durationMs: 2000,
 			plannedStartedPlayback: 10,
 			reportedStartedPlayback: 11,
-			playOffset: 12,
+			playOffsetMs: 12,
 			setAsNext: 13,
 			take: 14,
 		})

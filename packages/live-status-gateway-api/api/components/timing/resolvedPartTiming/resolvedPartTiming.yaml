@@ -14,10 +14,10 @@ $defs:
         description: Unix timestamp (ms) when the part was planned to start playback
         type: number
       reportedStartedPlayback:
-        description: Unix timestamp (ms) when the part was reported as started playback
+        description: Unix timestamp (ms) when the part was reported when it actually started playback
         type: number
-      playOffset:
-        description: Playback offset relative to planned start (ms)
+      playOffsetMs:
+        description: Milliseconds into the part where playback started when taken (eg via “Play/Set Next from Here”; 0 = from the beginning)
         type: number
       setAsNext:
         description: Unix timestamp (ms) when the part was set as next

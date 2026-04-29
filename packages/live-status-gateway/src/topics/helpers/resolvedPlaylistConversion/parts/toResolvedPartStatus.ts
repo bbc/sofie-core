@@ -46,7 +46,7 @@ export function toResolvedPartStatus(ctx: ResolvedPlaylistConversionContext, par
 			durationMs: part.renderedDuration ?? 0,
 			plannedStartedPlayback: timings.plannedStartedPlayback ?? 0,
 			reportedStartedPlayback: timings.reportedStartedPlayback ?? 0,
-			playOffset: timings.playOffset ?? 0,
+			playOffsetMs: timings.playOffset ?? undefined,
 			setAsNext: timings.setAsNext ?? 0,
 			take: timings.take ?? 0,
 		},

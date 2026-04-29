@@ -964,13 +964,13 @@ interface ResolvedPartTiming {
 	 */
 	plannedStartedPlayback?: number
 	/**
-	 * Unix timestamp (ms) when the part was reported as started playback
+	 * Unix timestamp (ms) when the part was reported when it actually started playback
 	 */
 	reportedStartedPlayback?: number
 	/**
-	 * Playback offset relative to planned start (ms)
+	 * Milliseconds into the part where playback started when taken (eg via “Play/Set Next from Here”; 0 = from the beginning)
 	 */
-	playOffset?: number
+	playOffsetMs?: number
 	/**
 	 * Unix timestamp (ms) when the part was set as next
 	 */
