@@ -50,8 +50,8 @@ export function RundownHeader({
 	const timingDurations = useTiming()
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
 	const [isContextMenuOpen, setIsContextMenuOpen] = useState(false)
-	// User's explicit toggle preference; defaults to true (show simplified)
-	const [userPrefersSimplified, setUserPrefersSimplified] = useState(true)
+	// User's explicit toggle preference; defaults to false (show advanced)
+	const [userPrefersSimplified, setUserPrefersSimplified] = useState(false)
 
 	const expectedStart = PlaylistTiming.getExpectedStart(playlist.timing)
 	const expectedEnd = PlaylistTiming.getExpectedEnd(playlist.timing)
