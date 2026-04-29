@@ -1,4 +1,4 @@
-import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { StyledTimecode } from '../../../../lib/StyledTimecode'
 
 export function DashboardButtonSubLabel(props: {

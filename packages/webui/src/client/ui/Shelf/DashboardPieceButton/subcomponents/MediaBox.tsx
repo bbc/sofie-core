@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PieceDisplayStyle } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
-import { SourceLayerType, VTContent } from '@sofie-automation/blueprints-integration'
+import { SourceLayerType, type VTContent } from '@sofie-automation/blueprints-integration'
 import type { ReadonlyDeep } from 'type-fest'
 import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'

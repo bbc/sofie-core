@@ -34,18 +34,6 @@ import { ContextType, setShelfContextMenuContext } from '../Shelf/ShelfContextMe
 import type { PartInstanceId, PieceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import { DashboardPieceButton } from '../Shelf/DashboardPieceButton/DashboardPieceButton.js'
-import {
-	faBoxes,
-	faCircle,
-	faGripLines,
-	faListAlt,
-	faListSquares,
-	faRectangleList,
-	faServer,
-	faTableCellsLarge,
-	faTableList,
-	faThList,
-} from '@fortawesome/free-solid-svg-icons'
 import { RundownViewShelfAdlibSizeToggle } from './RundownViewShelfAdlibSizeToggle'
 
 function resolveMiniShelfCompact(segment: SegmentUi, studio: UIStudio): boolean {

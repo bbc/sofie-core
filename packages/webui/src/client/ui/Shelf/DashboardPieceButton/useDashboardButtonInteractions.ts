@@ -7,7 +7,7 @@ import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataM
 import type { IDashboardButtonProps } from './types'
 import { usePreviewPopUpSession } from './usePreviewPopUpSession'
 import { isTouchDevice } from '../../../lib/lib.js'
-import { VTContent } from '@sofie-automation/blueprints-integration'
+import type { VTContent } from '@sofie-automation/blueprints-integration'
 
 export function useDashboardButtonInteractions(args: {
 	piece: IDashboardButtonProps['piece']
