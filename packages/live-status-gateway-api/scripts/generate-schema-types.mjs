@@ -120,9 +120,8 @@ const allModelsString =
 	'};'
 
 const fileName = path.resolve('src/generated/schema.ts')
-await fs.writeFile(fileName, allModelsString)
 
-// Prettier format the output file:
+// Format with Prettier before writing:
 const prettierConfig = await prettier.resolveConfig(fileName)
 const formatted = await prettier.format(allModelsString, { ...prettierConfig, filepath: fileName })
 await fs.writeFile(fileName, formatted)
