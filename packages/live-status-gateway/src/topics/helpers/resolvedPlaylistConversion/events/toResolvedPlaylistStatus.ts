@@ -88,9 +88,7 @@ export function toResolvedPlaylistStatus({
 		timingState?.type === PlaylistTimingType.BackTime
 			? ResolvedPlaylistTimingType.BACK
 			: ResolvedPlaylistTimingType.FORWARD
-	const expectedEnd: number | null = timingState
-		? (PlaylistTiming.getExpectedEnd(timingState, ctx.playlist.startedPlayback) ?? null)
-		: null
+	const expectedEnd: number | null = timingState ? (PlaylistTiming.getExpectedEnd(timingState) ?? null) : null
 
 	const playoutState = ctx.playlist.publicPlayoutPersistentState
 	const publicData = ctx.playlist.publicData
