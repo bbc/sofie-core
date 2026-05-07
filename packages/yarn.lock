@@ -7080,6 +7080,7 @@ __metadata:
     "@asyncapi/modelina": "npm:^5.10.1"
     "@asyncapi/nodejs-ws-template": "npm:^0.10.0"
     "@asyncapi/parser": "npm:^3.6.0"
+    prettier: "npm:^3.8.3"
     tslib: "npm:^2.8.1"
     yaml: "npm:^2.8.3"
   languageName: unknown
