@@ -12,6 +12,7 @@
 		"composite": true,
 		"module": "node20",
 		"skipLibCheck": true,
+		"esModuleInterop": true,
 		"verbatimModuleSyntax": true
 	}
 }
