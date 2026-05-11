@@ -9,7 +9,7 @@ function makeTestPart(id: string, expectedDuration: number): Partial<DBPart> {
 		segmentId: protectString('segment_1'),
 		rundownId: protectString('rundown_1'),
 		untimed: false,
-		expectedDuration2: { duration: expectedDuration, transitionOverlap: undefined },
+		expectedDuration2: { expectedDuration: expectedDuration, transitionOverlap: undefined },
 	}
 }
 

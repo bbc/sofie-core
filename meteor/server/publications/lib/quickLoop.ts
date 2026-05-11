@@ -68,10 +68,12 @@ export function modifyPartForQuickLoop(
 
 	const fallbackPartDuration = studioSettings.fallbackPartDuration ?? DEFAULT_FALLBACK_PART_DURATION
 
-	if (isLoopingOverriden && (part.expectedDuration ?? 0) < fallbackPartDuration) {
+	if (isLoopingOverriden && (part.expectedDuration2.expectedDuration ?? 0) < fallbackPartDuration) {
 		if (playlist.quickLoop?.forceAutoNext === ForceQuickLoopAutoNext.ENABLED_FORCING_MIN_DURATION) {
-			part.expectedDuration = fallbackPartDuration
-			part.expectedDurationWithTransition = fallbackPartDuration
+			part.expectedDuration2 = {
+				...part.expectedDuration2,
+				expectedDuration: fallbackPartDuration,
+			}
 		} else if (playlist.quickLoop?.forceAutoNext === ForceQuickLoopAutoNext.ENABLED_WHEN_VALID_DURATION) {
 			part.invalid = true
 			part.invalidReason = {
@@ -80,7 +82,7 @@ export function modifyPartForQuickLoop(
 		}
 	}
 	if (!canSetAutoNext()) return
-	part.autoNext = part.autoNext || (isLoopingOverriden && (part.expectedDuration ?? 0) > 0)
+	part.autoNext = part.autoNext || (isLoopingOverriden && (part.expectedDuration2.expectedDuration ?? 0) > 0)
 }
 
 export function modifyPartInstanceForQuickLoop(
@@ -95,12 +97,12 @@ export function modifyPartInstanceForQuickLoop(
 	// note that the logic for when a part does not do autonext in quickloop should reflect the logic in the QuickLoopService in job worker
 	const canAutoNext = () => {
 		const start = partInstance.timings?.plannedStartedPlayback
-		if (start !== undefined && partInstance.part.expectedDuration) {
+		if (start !== undefined && partInstance.part.expectedDuration2.expectedDuration) {
 			// date.now - start = playback duration, duration + offset gives position in part
 			const playbackDuration = getCurrentTime() - start
 
 			// If there is an auto next planned soon or was in the past
-			if (partInstance.part.expectedDuration - playbackDuration < 0) {
+			if (partInstance.part.expectedDuration2.expectedDuration - playbackDuration < 0) {
 				return false
 			}
 		}

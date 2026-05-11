@@ -72,7 +72,7 @@ export function SegmentContextMenu({
 		const offset = getTimePosition() ?? 0
 		const partInstance = part?.instance
 		const isSelectedTimeWithinBounds =
-			(partInstance?.part.expectedDuration2.duration ?? partInstance?.part.displayDuration ?? 0) < offset
+			(partInstance?.part.expectedDuration2.expectedDuration ?? partInstance?.part.displayDuration ?? 0) < offset
 
 		if (playlist && playlist?.activationId && (!take || !!partInstance?.orphaned)) {
 			if (!partInstance) return true

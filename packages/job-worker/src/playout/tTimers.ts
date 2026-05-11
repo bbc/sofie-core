@@ -360,7 +360,7 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 		// Accumulate this part's duration (skip untimed parts)
 		if (!part.untimed) {
 			const partDuration =
-				(part.expectedDuration2.duration ?? 0) - (part.expectedDuration2.transitionOverlap ?? 0)
+				(part.expectedDuration2.expectedDuration ?? 0) - (part.expectedDuration2.transitionOverlap ?? 0)
 			segmentAccumulator += partDuration
 		}
 	}

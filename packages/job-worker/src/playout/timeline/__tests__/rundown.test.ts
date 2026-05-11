@@ -318,7 +318,7 @@ describe('buildTimelineObjsForRundown', () => {
 				partTimes: createPartCurrentTimes(currentTime, 5678),
 				partInstance: createMockPartInstance('part0', {
 					autoNext: true,
-					expectedDuration2: { duration: 5000, transitionOverlap: undefined },
+					expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined },
 				}),
 				pieceInstances: [createMockPieceInstance('piece0')],
 				calculatedTimings: DEFAULT_PART_TIMINGS,
@@ -354,7 +354,7 @@ describe('buildTimelineObjsForRundown', () => {
 				partTimes: createPartCurrentTimes(currentTime, 1234),
 				partInstance: createMockPartInstance(
 					'part9',
-					{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+					{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 					{
 						timings: {
 							plannedStartedPlayback: 1235,
@@ -396,7 +396,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 1234),
 					partInstance: createMockPartInstance(
 						'part9',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -444,7 +444,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 1234),
 					partInstance: createMockPartInstance(
 						'part9',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -497,7 +497,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance('part0', {
 						autoNext: true,
-						expectedDuration2: { duration: 5000, transitionOverlap: undefined },
+						expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined },
 					}),
 					pieceInstances: [createMockPieceInstance('piece0')],
 					calculatedTimings: DEFAULT_PART_TIMINGS,
@@ -542,7 +542,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -601,7 +601,7 @@ describe('buildTimelineObjsForRundown', () => {
 			partTimes: createPartCurrentTimes(currentTime, 1234),
 			partInstance: createMockPartInstance(
 				'part9',
-				{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+				{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 				{
 					timings: {
 						plannedStartedPlayback: 1235,
@@ -731,7 +731,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -775,7 +775,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -822,7 +822,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
+						{ autoNext: true, expectedDuration2: { expectedDuration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,

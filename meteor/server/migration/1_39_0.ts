@@ -32,6 +32,7 @@ export const addSteps = addMigrationSteps('1.39.0', [
 			for (const obj of objects) {
 				await Parts.mutableCollection.updateAsync(obj._id, {
 					$set: {
+						// @ts-expect-error Older version of documents
 						expectedDurationWithTransition: obj.expectedDuration,
 					},
 				})

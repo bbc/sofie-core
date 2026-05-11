@@ -441,7 +441,7 @@ export class PartAndPieceInstanceActionService {
 			floated: false,
 			userEditOperations: [], // Adlibbed parts can't be edited by ingest
 			userEditProperties: undefined,
-			expectedDuration2: { duration: rawPart.expectedDuration, transitionOverlap: undefined }, // Overlap in later
+			expectedDuration2: { expectedDuration: rawPart.expectedDuration, transitionOverlap: undefined }, // Overlap in later
 		}
 
 		const pieces = postProcessPieces(

@@ -482,10 +482,10 @@ export class RundownTimingCalculator {
 
 				if (!rundownExpectedDurations[unprotectString(partInstance.part.rundownId)]) {
 					rundownExpectedDurations[unprotectString(partInstance.part.rundownId)] =
-						partInstance.part.expectedDuration2.duration ?? 0
+						partInstance.part.expectedDuration2.expectedDuration ?? 0
 				} else {
 					rundownExpectedDurations[unprotectString(partInstance.part.rundownId)] +=
-						partInstance.part.expectedDuration2.duration ?? 0
+						partInstance.part.expectedDuration2.expectedDuration ?? 0
 				}
 			})
 
@@ -628,8 +628,8 @@ export class RundownTimingCalculator {
 				calculatePartInstanceExpectedDurations(currentLivePartInstance).expectedDurationWithTransition
 			if (
 				currentLivePart.displayDurationGroup &&
-				(currentLivePart.expectedDuration2.duration === undefined ||
-					currentLivePart.expectedDuration2.duration === 0)
+				(currentLivePart.expectedDuration2.expectedDuration === undefined ||
+					currentLivePart.expectedDuration2.expectedDuration === 0)
 			) {
 				onAirPartDuration =
 					getPartInstanceTimingValue(this.partDisplayDurationsNoPlayback, currentLivePartInstance) ??
@@ -641,7 +641,7 @@ export class RundownTimingCalculator {
 					? Math.min(lastStartedPlayback, now) + onAirPartDuration - now
 					: onAirPartDuration
 
-			currentPartWillAutoNext = !!(currentLivePart.autoNext && currentLivePart.expectedDuration2.duration)
+			currentPartWillAutoNext = !!(currentLivePart.autoNext && currentLivePart.expectedDuration2.expectedDuration)
 
 			currentSegmentId = currentLivePart.segmentId
 		}

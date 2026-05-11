@@ -188,8 +188,8 @@ export function calculatePartInstanceExpectedDurations(
 		: (partInstance.part.expectedDuration2.transitionOverlap ?? 0)
 
 	return {
-		expectedDuration: partInstance.part.expectedDuration2.duration,
-		expectedDurationWithTransition: (partInstance.part.expectedDuration2.duration ?? 0) - transitionOverlap,
+		expectedDuration: partInstance.part.expectedDuration2.expectedDuration,
+		expectedDurationWithTransition: (partInstance.part.expectedDuration2.expectedDuration ?? 0) - transitionOverlap,
 		transitionOverlap,
 	}
 }

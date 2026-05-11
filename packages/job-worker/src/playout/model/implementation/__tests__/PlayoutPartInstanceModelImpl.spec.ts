@@ -25,7 +25,7 @@ describe('PlayoutPartInstanceModelImpl', () => {
 				externalId: '',
 				title: '',
 
-				expectedDuration2: { duration: undefined, transitionOverlap: undefined },
+				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 			},
 		}
 	}

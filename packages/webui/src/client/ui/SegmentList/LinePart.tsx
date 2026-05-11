@@ -111,11 +111,11 @@ export function LinePart({
 
 		return (
 			<>
-				{part.instance.part.expectedDuration2.duration !== undefined &&
-					part.instance.part.expectedDuration2.duration > 0 && (
+				{part.instance.part.expectedDuration2.expectedDuration !== undefined &&
+					part.instance.part.expectedDuration2.expectedDuration > 0 && (
 						<span role="timer">
 							{RundownUtils.formatDiffToTimecode(
-								part.instance.part.expectedDuration2.duration,
+								part.instance.part.expectedDuration2.expectedDuration,
 								false,
 								false,
 								true,
@@ -125,8 +125,8 @@ export function LinePart({
 							)}
 						</span>
 					)}
-				{(part.instance.part.expectedDuration2.duration === 0 ||
-					part.instance.part.expectedDuration2.duration === undefined) && <span>––:––</span>}
+				{(part.instance.part.expectedDuration2.expectedDuration === 0 ||
+					part.instance.part.expectedDuration2.expectedDuration === undefined) && <span>––:––</span>}
 			</>
 		)
 	}

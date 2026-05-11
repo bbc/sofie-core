@@ -382,7 +382,7 @@ function updateModelWithGeneratedPart(
 			blueprintId,
 		]),
 		expectedDuration2: {
-			duration: blueprintPart.part.expectedDuration, // Blueprints use the simplified form
+			expectedDuration: blueprintPart.part.expectedDuration, // Blueprints use the simplified form
 			transitionOverlap: undefined, // Filled in later
 		},
 	})

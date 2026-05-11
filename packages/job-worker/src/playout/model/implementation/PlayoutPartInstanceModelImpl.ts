@@ -574,12 +574,12 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 		const debounce = isTake ? AUTOTAKE_TAKE_DEBOUNCE : AUTOTAKE_UPDATE_DEBOUNCE
 
 		const start = partInstance.timings?.plannedStartedPlayback
-		if (start !== undefined && partInstance.part.expectedDuration2.duration) {
+		if (start !== undefined && partInstance.part.expectedDuration2.expectedDuration) {
 			// date.now - start = playback duration, duration + offset gives position in part
 			const playbackDuration = getCurrentTime() - start
 
 			// If there is an auto next planned
-			if (Math.abs(partInstance.part.expectedDuration2.duration - playbackDuration) < debounce) {
+			if (Math.abs(partInstance.part.expectedDuration2.expectedDuration - playbackDuration) < debounce) {
 				return true
 			}
 		}

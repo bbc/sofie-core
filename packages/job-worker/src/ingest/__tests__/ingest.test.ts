@@ -1738,7 +1738,7 @@ describe('Test ingest actions for rundowns and segments', () => {
 							_id: protectString(`after_${currentPartInstance.partInstance._id}_part`),
 							externalId: `after_${currentPartInstance.partInstance._id}_externalId`,
 							title: 'New part',
-							expectedDuration2: { duration: undefined, transitionOverlap: undefined },
+							expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 						},
 						[],
 						undefined

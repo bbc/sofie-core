@@ -577,7 +577,7 @@ describe('Playout API', () => {
 			expect(nextPartInstance).toBeTruthy()
 			expect(currentPartInstance?.part._id).toBe(parts[0]._id)
 			expect(currentPartInstance?.part.autoNext).toBe(true) // the current part should autonext
-			expect(currentPartInstance?.part.expectedDuration2.duration).toBeGreaterThan(0)
+			expect(currentPartInstance?.part.expectedDuration2.expectedDuration).toBeGreaterThan(0)
 			expect(nextPartInstance?.part._id).toBe(parts[1]._id)
 
 			// simulate TSR starting playing part and pieces:
@@ -642,8 +642,8 @@ describe('Playout API', () => {
 		{
 			const nowBuf = getCurrentTime()
 			const { currentPartInstance } = await getSelectedPartInstances(context, await getPlaylist0())
-			expect(currentPartInstance?.part.expectedDuration2.duration).toBeTruthy()
-			adjustFakeTime((currentPartInstance?.part.expectedDuration2.duration ?? 0) - 500)
+			expect(currentPartInstance?.part.expectedDuration2.expectedDuration).toBeTruthy()
+			adjustFakeTime((currentPartInstance?.part.expectedDuration2.expectedDuration ?? 0) - 500)
 			// try to take just before an autonext
 			await expect(
 				handleTakeNextPart(context, {
@@ -664,10 +664,10 @@ describe('Playout API', () => {
 			if (!currentPartInstanceBeforeTakeId) throw new Error('currentPartInstanceBeforeTakeId is falsy')
 			if (!nextPartInstanceBeforeTakeId) throw new Error('nextPartInstanceBeforeTakeId is falsy')
 
-			expect(currentPartInstanceBeforeTake?.part.expectedDuration2.duration).toBeTruthy()
+			expect(currentPartInstanceBeforeTake?.part.expectedDuration2.expectedDuration).toBeTruthy()
 			const pieceInstances = await getAllPieceInstancesForPartInstance(currentPartInstanceBeforeTakeId)
 			expect(pieceInstances).toHaveLength(2)
-			const now = adjustFakeTime(currentPartInstanceBeforeTake?.part.expectedDuration2.duration ?? 0)
+			const now = adjustFakeTime(currentPartInstanceBeforeTake?.part.expectedDuration2.expectedDuration ?? 0)
 			await handleOnPlayoutPlaybackChanged(context, {
 				playlistId: playlistId0,
 
@@ -1049,7 +1049,7 @@ async function setupRundownWithAutoplayPart0(
 		externalId: 'MOCK_PART_0_0',
 		title: 'Part 0 0',
 
-		expectedDuration2: { duration: 20000, transitionOverlap: undefined },
+		expectedDuration2: { expectedDuration: 20000, transitionOverlap: undefined },
 		autoNext: true,
 	}
 	await context.mockCollections.Parts.insertOne(part00)

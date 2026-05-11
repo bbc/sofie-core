@@ -197,7 +197,7 @@ export const BUDGET_GAP_PART = {
 		gap: true,
 		title: 'gap',
 		invalid: true,
-		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
+		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 	}),
 	pieces: [],
 	renderedDuration: 0,

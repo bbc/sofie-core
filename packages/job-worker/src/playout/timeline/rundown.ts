@@ -237,11 +237,11 @@ function createCurrentPartGroupEnable(
 	if (
 		hasNextPart &&
 		currentPartInfo.partInstance.part.autoNext &&
-		currentPartInfo.partInstance.part.expectedDuration2.duration !== undefined
+		currentPartInfo.partInstance.part.expectedDuration2.expectedDuration !== undefined
 	) {
 		// If there is a valid autonext out of the current part, then calculate the duration
 		currentPartEnable.duration =
-			currentPartInfo.partInstance.part.expectedDuration2.duration +
+			currentPartInfo.partInstance.part.expectedDuration2.expectedDuration +
 			currentPartInfo.calculatedTimings.toPartDelay +
 			currentPartInfo.calculatedTimings.toPartPostroll // autonext should have the postroll added to it to not confuse the timeline
 

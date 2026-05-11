@@ -367,7 +367,7 @@ describe('Resolved Pieces', () => {
 					externalId: '',
 					title: '',
 
-					expectedDuration2: { duration: undefined, transitionOverlap: undefined },
+					expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 
 					...partProps,
 				},
@@ -796,7 +796,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { duration: currentPartLength, transitionOverlap: undefined },
+					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001]
 			)
@@ -850,7 +850,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { duration: currentPartLength, transitionOverlap: undefined },
+					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001, cappedInfinitePiece]
 			)
@@ -928,7 +928,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { duration: currentPartLength, transitionOverlap: undefined },
+					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001, startingInfinitePiece]
 			)

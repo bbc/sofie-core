@@ -52,23 +52,23 @@ export class QuickLoopService {
 
 		let { autoNext, expectedDuration2 } = partInstanceModel.partInstance.part
 
-		if (isLoopingOverriden && (expectedDuration2.duration ?? 0) < fallbackPartDuration) {
+		if (isLoopingOverriden && (expectedDuration2.expectedDuration ?? 0) < fallbackPartDuration) {
 			if (quickLoopProps?.forceAutoNext === ForceQuickLoopAutoNext.ENABLED_FORCING_MIN_DURATION) {
 				expectedDuration2 = {
 					...expectedDuration2,
-					duration: fallbackPartDuration,
+					expectedDuration: fallbackPartDuration,
 				}
 			}
 		}
 
 		const tooCloseToAutonext = () => {
 			const start = partInstanceModel.partInstance.timings?.plannedStartedPlayback
-			if (start !== undefined && partInstanceModel.partInstance.part.expectedDuration2.duration) {
+			if (start !== undefined && partInstanceModel.partInstance.part.expectedDuration2.expectedDuration) {
 				// date.now - start = playback duration, duration + offset gives position in part
 				const playbackDuration = getCurrentTime() - start
 
 				// If there is an auto next planned
-				if (partInstanceModel.partInstance.part.expectedDuration2.duration - playbackDuration < 0) {
+				if (partInstanceModel.partInstance.part.expectedDuration2.expectedDuration - playbackDuration < 0) {
 					return true
 				}
 			}
@@ -76,7 +76,8 @@ export class QuickLoopService {
 			return false
 		}
 
-		autoNext = autoNext || (isLoopingOverriden && (expectedDuration2.duration ?? 0) > 0 && !tooCloseToAutonext())
+		autoNext =
+			autoNext || (isLoopingOverriden && (expectedDuration2.expectedDuration ?? 0) > 0 && !tooCloseToAutonext())
 		return { autoNext, expectedDuration2 }
 	}
 

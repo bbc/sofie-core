@@ -122,7 +122,7 @@ describe('test peripheralDevice general API methods', () => {
 			segmentId: segmentID,
 			rundownId: rundownID,
 			title: 'Part 000',
-			expectedDurationWithTransition: undefined,
+			expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 		})
 		await Pieces.mutableCollection.insertAsync({
 			_id: protectString('piece0001'),
@@ -149,7 +149,7 @@ describe('test peripheralDevice general API methods', () => {
 			segmentId: segmentID,
 			rundownId: rundownID,
 			title: 'Part 001',
-			expectedDurationWithTransition: undefined,
+			expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
 		})
 		await Segments.mutableCollection.insertAsync({
 			_id: protectString('segment1'),
