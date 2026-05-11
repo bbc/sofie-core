@@ -40,7 +40,7 @@ export function Part({ playlist, part, piece, isLive, isNext }: IProps): JSX.Ele
 				: null
 	}
 
-	if (!part.instance.part.expectedDuration2.expectedDuration && !part.instance.part.displayDurationGroup) {
+	if (!part.instance.part.durations.expectedDuration && !part.instance.part.displayDurationGroup) {
 		width = null
 	}
 

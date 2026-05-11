@@ -165,7 +165,7 @@ function calculatePartExpectedDurationTransitionOverlap2(timings: PartCalculated
 	return timings.fromPartRemaining - timings.toPartDelay - timings.fromPartPostroll
 }
 
-export type CalculateExpectedDurationPart = Pick<DBPart, 'inTransition' | 'expectedDuration2'>
+export type CalculateExpectedDurationPart = Pick<DBPart, 'inTransition' | 'durations'>
 
 export function calculatePartExpectedDurationTransitionOverlap(
 	part: CalculateExpectedDurationPart,
@@ -185,11 +185,11 @@ export function calculatePartInstanceExpectedDurations(
 } {
 	const transitionOverlap = partInstance.partPlayoutTimings
 		? calculatePartExpectedDurationTransitionOverlap2(partInstance.partPlayoutTimings)
-		: (partInstance.part.expectedDuration2.transitionOverlap ?? 0)
+		: (partInstance.part.durations.transitionOverlap ?? 0)
 
 	return {
-		expectedDuration: partInstance.part.expectedDuration2.expectedDuration,
-		expectedDurationWithTransition: (partInstance.part.expectedDuration2.expectedDuration ?? 0) - transitionOverlap,
+		expectedDuration: partInstance.part.durations.expectedDuration,
+		expectedDurationWithTransition: (partInstance.part.durations.expectedDuration ?? 0) - transitionOverlap,
 		transitionOverlap,
 	}
 }

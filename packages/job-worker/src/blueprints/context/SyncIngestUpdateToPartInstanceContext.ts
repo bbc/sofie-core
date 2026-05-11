@@ -208,7 +208,7 @@ export class SyncIngestUpdateToPartInstanceContext
 
 		// for autoNext, the new expectedDuration cannot be shorter than the time a part has been on-air for
 		const expectedDuration =
-			updatePart.expectedDuration ?? this.#partInstance.partInstance.part.expectedDuration2.expectedDuration
+			updatePart.expectedDuration ?? this.#partInstance.partInstance.part.durations.expectedDuration
 		const autoNext = updatePart.autoNext ?? this.#partInstance.partInstance.part.autoNext
 		if (expectedDuration && autoNext) {
 			const onAir = this.#partInstance.partInstance.timings?.reportedStartedPlayback

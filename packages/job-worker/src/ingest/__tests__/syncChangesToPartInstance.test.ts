@@ -47,7 +47,7 @@ function createMockPart(id: string): DBPart {
 		segmentId: protectString('mockSegmentId'),
 		rundownId: protectString('mockRundownId'),
 		title: 'mockPartTitle',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 		userEditOperations: undefined,
 	}
 }
@@ -300,7 +300,7 @@ describe('SyncChangesToPartInstancesWorker', () => {
 				rundownId: rundown._id,
 				title: 'mockPartTitle0',
 				_rank: 0,
-				expectedDuration2: { expectedDuration: 0, transitionOverlap: 0 },
+				durations: { expectedDuration: 0, transitionOverlap: 0 },
 				externalId: 'mockPartExternalId0',
 			}
 

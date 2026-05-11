@@ -222,8 +222,8 @@ export class IngestSegmentModelImpl implements IngestSegmentModel {
 			_id: this.getPartIdFromExternalId(rawPart.externalId),
 			rundownId: this.segment.rundownId,
 			segmentId: this.segment._id,
-			expectedDuration2: {
-				...rawPart.expectedDuration2,
+			durations: {
+				...rawPart.durations,
 				transitionOverlap: calculatePartExpectedDurationTransitionOverlap(rawPart, pieces),
 			},
 		}

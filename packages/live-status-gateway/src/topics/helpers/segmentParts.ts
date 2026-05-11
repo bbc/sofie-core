@@ -30,7 +30,7 @@ export function getCurrentSegmentParts(
 				name: partInstance.part.title,
 				autoNext: partInstance.part.autoNext,
 				timing: {
-					expectedDurationMs: partInstance.part.expectedDuration2?.expectedDuration,
+					expectedDurationMs: partInstance.part.durations?.expectedDuration,
 				},
 			})
 		)

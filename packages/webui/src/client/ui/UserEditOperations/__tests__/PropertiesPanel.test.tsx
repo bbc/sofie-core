@@ -240,7 +240,7 @@ describe('PropertiesPanel', () => {
 	const createMockPart = (id: string, segmentId: string): DBPart => ({
 		_id: protectString(id),
 		_rank: 1,
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: 0 },
+		durations: { expectedDuration: undefined, transitionOverlap: 0 },
 		title: `Part ${id}`,
 		rundownId: protectString('rundown1'),
 		segmentId: protectString(segmentId),

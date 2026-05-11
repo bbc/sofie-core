@@ -186,7 +186,7 @@ class IngestServerAPI implements IngestRestAPI {
 			rank: rawPart._rank,
 			rundownId: unprotectString(rawPart.rundownId),
 			autoNext: rawPart.autoNext,
-			expectedDuration: rawPart.expectedDuration2.expectedDuration,
+			expectedDuration: rawPart.durations.expectedDuration,
 			segmentId: unprotectString(rawPart.segmentId),
 		}
 	}

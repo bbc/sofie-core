@@ -115,7 +115,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment1'),
 				externalId: 'p1',
 				title: 'Part 1',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		literal<DBPartInstance>({
@@ -133,7 +133,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment1'),
 				externalId: 'p2',
 				title: 'Part 2',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		literal<DBPartInstance>({
@@ -151,7 +151,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment1'),
 				externalId: 'p3',
 				title: 'Part 3',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		// Segment 2
@@ -170,7 +170,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment2'),
 				externalId: 'p4',
 				title: 'Part 4',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		literal<DBPartInstance>({
@@ -188,7 +188,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment2'),
 				externalId: 'p5',
 				title: 'Part 5',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		// Segment 3
@@ -207,7 +207,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment3'),
 				externalId: 'p6',
 				title: 'Part 6',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		// Segment 4
@@ -226,7 +226,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment4'),
 				externalId: 'p7',
 				title: 'Part 7',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		literal<DBPartInstance>({
@@ -245,7 +245,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				externalId: 'p8',
 				title: 'Part 8',
 				floated: true,
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 		literal<DBPartInstance>({
@@ -263,7 +263,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment4'),
 				externalId: 'p9',
 				title: 'Part 9',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 		}),
 
@@ -282,7 +282,7 @@ async function createMockRO(context: MockJobContext): Promise<RundownId> {
 				segmentId: protectString('mock_segment4'),
 				externalId: 'o1',
 				title: 'Orphan 1',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}),
 			orphaned: 'adlib-part',
 		}),
@@ -483,7 +483,7 @@ describe('ensureNextPartIsValid', () => {
 					segmentId: protectString('mock_segment1'),
 					externalId: 'o1',
 					title: 'Orphan 1',
-					expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+					durations: { expectedDuration: undefined, transitionOverlap: undefined },
 				}),
 				orphaned: 'deleted',
 			})
@@ -520,7 +520,7 @@ describe('ensureNextPartIsValid', () => {
 					segmentId: protectString('mock_segment1'),
 					externalId: 'o1',
 					title: 'Orphan 1',
-					expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+					durations: { expectedDuration: undefined, transitionOverlap: undefined },
 				}),
 				orphaned: 'deleted',
 			})
@@ -548,7 +548,7 @@ describe('ensureNextPartIsValid', () => {
 			segmentId: protectString('mock_segment1'),
 			externalId: 'o1',
 			title: 'Orphan 1',
-			expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+			durations: { expectedDuration: undefined, transitionOverlap: undefined },
 		})
 		await context.mockCollections.PartInstances.insertOne(
 			literal<DBPartInstance>({
@@ -583,7 +583,7 @@ describe('ensureNextPartIsValid', () => {
 			segmentId: protectString('mock_segment4'),
 			externalId: 'tmp1',
 			title: 'Tmp Part 1',
-			expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+			durations: { expectedDuration: undefined, transitionOverlap: undefined },
 		})
 		await context.mockCollections.PartInstances.insertOne(
 			literal<DBPartInstance>({

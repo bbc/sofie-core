@@ -103,7 +103,7 @@ describe('ActivePlaylistTopic', () => {
 			_id: protectString('PART_1'),
 			title: 'Test Part',
 			segmentId: segment1id,
-			expectedDuration2: { expectedDuration: 10000, transitionOverlap: 0 },
+			durations: { expectedDuration: 10000, transitionOverlap: 0 },
 			publicData: { b: 'c' },
 		}
 		const testPartInstances: PartialDeep<SelectedPartInstances> = {
@@ -205,7 +205,7 @@ describe('ActivePlaylistTopic', () => {
 			_id: protectString('PART_1'),
 			title: 'Test Part',
 			segmentId: protectString('SEGMENT_1'),
-			expectedDuration2: { expectedDuration: 10000, transitionOverlap: undefined },
+			durations: { expectedDuration: 10000, transitionOverlap: undefined },
 			publicData: { b: 'c' },
 		}
 		const currentPartInstance = {

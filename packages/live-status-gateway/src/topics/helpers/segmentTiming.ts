@@ -53,7 +53,7 @@ export function calculateSegmentTiming(
 		expectedDurationMs: segmentParts.reduce<number>((sum, part): number => {
 			part = partInstancesByPartId[unprotectString(part._id)]?.part ?? part
 			return !part.untimed
-				? sum + (part.expectedDuration2.expectedDuration ?? 0) - (part.expectedDuration2.transitionOverlap ?? 0)
+				? sum + (part.durations.expectedDuration ?? 0) - (part.durations.transitionOverlap ?? 0)
 				: sum
 		}, 0),
 		countdownType: translateSegmentCountdownType(segmentTimingInfo?.countdownType),

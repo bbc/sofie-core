@@ -346,9 +346,7 @@ describe('Resolved Pieces', () => {
 	})
 
 	describe('getResolvedPiecesForPartInstancesOnTimeline', () => {
-		function createPartInstance(
-			partProps?: Partial<Pick<DBPart, 'autoNext' | 'expectedDuration2'>>
-		): DBPartInstance {
+		function createPartInstance(partProps?: Partial<Pick<DBPart, 'autoNext' | 'durations'>>): DBPartInstance {
 			return {
 				_id: getRandomId(),
 				rundownId: protectString(''),
@@ -367,7 +365,7 @@ describe('Resolved Pieces', () => {
 					externalId: '',
 					title: '',
 
-					expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+					durations: { expectedDuration: undefined, transitionOverlap: undefined },
 
 					...partProps,
 				},
@@ -796,7 +794,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
+					durations: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001]
 			)
@@ -850,7 +848,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
+					durations: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001, cappedInfinitePiece]
 			)
@@ -928,7 +926,7 @@ describe('Resolved Pieces', () => {
 				currentPartTimes,
 				createPartInstance({
 					autoNext: true,
-					expectedDuration2: { expectedDuration: currentPartLength, transitionOverlap: undefined },
+					durations: { expectedDuration: currentPartLength, transitionOverlap: undefined },
 				}),
 				[piece001, startingInfinitePiece]
 			)

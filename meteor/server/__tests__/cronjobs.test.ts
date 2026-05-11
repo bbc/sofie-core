@@ -305,7 +305,7 @@ describe('cronjobs', () => {
 				segmentId: segment0._id,
 				externalId: '',
 				title: '',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}
 			await Parts.mutableCollection.insertAsync(part0)
 			const part1: DBPart = {
@@ -315,7 +315,7 @@ describe('cronjobs', () => {
 				segmentId: getRandomId<SegmentId>(), // non-existent
 				externalId: '',
 				title: '',
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}
 			await Parts.mutableCollection.insertAsync(part1)
 

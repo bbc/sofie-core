@@ -114,7 +114,7 @@ describe('getOrderedPartsAfterPlayhead', () => {
 				_rank: index,
 				externalId: 'MOCK_PART_' + index,
 				title: 'Part ' + index,
-				expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+				durations: { expectedDuration: undefined, transitionOverlap: undefined },
 			}
 		}
 

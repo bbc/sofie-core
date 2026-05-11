@@ -231,7 +231,7 @@ export async function setupDefaultRundown(
 		_rank: 0,
 		externalId: 'MOCK_PART_0_0',
 		title: 'Part 0 0',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 	}
 	await context.mockCollections.Parts.insertOne(part00)
 
@@ -299,7 +299,7 @@ export async function setupDefaultRundown(
 		_rank: 1,
 		externalId: 'MOCK_PART_0_1',
 		title: 'Part 0 1',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 	}
 	await context.mockCollections.Parts.insertOne(part01)
 
@@ -338,7 +338,7 @@ export async function setupDefaultRundown(
 		_rank: 0,
 		externalId: 'MOCK_PART_1_0',
 		title: 'Part 1 0',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 	}
 	await context.mockCollections.Parts.insertOne(part10)
 
@@ -349,7 +349,7 @@ export async function setupDefaultRundown(
 		_rank: 1,
 		externalId: 'MOCK_PART_1_1',
 		title: 'Part 1 1',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 	}
 	await context.mockCollections.Parts.insertOne(part11)
 
@@ -360,7 +360,7 @@ export async function setupDefaultRundown(
 		_rank: 2,
 		externalId: 'MOCK_PART_1_2',
 		title: 'Part 1 2',
-		expectedDuration2: { expectedDuration: undefined, transitionOverlap: undefined },
+		durations: { expectedDuration: undefined, transitionOverlap: undefined },
 	}
 	await context.mockCollections.Parts.insertOne(part12)
 

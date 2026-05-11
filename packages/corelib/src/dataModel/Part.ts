@@ -36,7 +36,7 @@ export interface DBPart extends Omit<IBlueprintPart, 'userEditOperations' | 'exp
 	/** Human readable unqiue identifier of the part */
 	identifier?: string
 
-	expectedDuration2: {
+	durations: {
 		/** The expected duration of the part */
 		expectedDuration: number | undefined
 		/** The amount of time the transition overlaps with the previous part */

@@ -130,7 +130,7 @@ describe('Test blueprint api context', () => {
 						rundownId: protectString<RundownId>('rundown1'),
 						externalId: 'ext1',
 						segmentId: protectString<SegmentId>('seg1'),
-						expectedDuration2: { expectedDuration: 1000, transitionOverlap: 0 },
+						durations: { expectedDuration: 1000, transitionOverlap: 0 },
 						userEditOperations: [],
 					} as DBPart,
 					{

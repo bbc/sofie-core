@@ -6,9 +6,9 @@ export function calculateCurrentPartTiming(
 	segmentPartInstances: DBPartInstance[]
 ): CurrentPartTiming {
 	const isMemberOfDisplayDurationGroup = currentPartInstance.part.displayDurationGroup !== undefined
-	let expectedDuration = currentPartInstance.part.expectedDuration2.expectedDuration ?? 0
+	let expectedDuration = currentPartInstance.part.durations.expectedDuration ?? 0
 
-	if (isMemberOfDisplayDurationGroup && currentPartInstance.part.expectedDuration2.expectedDuration === 0) {
+	if (isMemberOfDisplayDurationGroup && currentPartInstance.part.durations.expectedDuration === 0) {
 		// TODO: This implementation currently only handles the simplest use case of Display Duration Groups,
 		// where all members of a group are within a single Segment, and one or more Parts with expectedDuration===0
 		// follow (not necessarily immediately) a Part with expectedDuration!==0.
@@ -18,8 +18,8 @@ export function calculateCurrentPartTiming(
 		const groupDuration = displayDurationGroup.reduce((sum, partInstance) => {
 			return (
 				sum +
-				(partInstance.part.expectedDuration2.expectedDuration ?? 0) -
-				(partInstance.part.expectedDuration2.transitionOverlap ?? 0)
+				(partInstance.part.durations.expectedDuration ?? 0) -
+				(partInstance.part.durations.transitionOverlap ?? 0)
 			)
 		}, 0)
 		const groupPlayed = displayDurationGroup.reduce((sum, partInstance) => {
@@ -35,7 +35,7 @@ export function calculateCurrentPartTiming(
 
 	return {
 		startTime,
-		expectedDurationMs: currentPartInstance.part.expectedDuration2.expectedDuration ?? 0,
+		expectedDurationMs: currentPartInstance.part.durations.expectedDuration ?? 0,
 		projectedEndTime: startTime + expectedDuration,
 	}
 }
