@@ -165,11 +165,6 @@ function calculatePartExpectedDurationTransitionOverlap2(timings: PartCalculated
 	return timings.fromPartRemaining - timings.toPartDelay - timings.fromPartPostroll
 }
 
-function calculateExpectedDurationWithTransition(rawDuration: number, timings: PartCalculatedTimings): number {
-	// nocommit - is this needed anymore?
-	return Math.max(0, rawDuration - calculatePartExpectedDurationTransitionOverlap2(timings))
-}
-
 export type CalculateExpectedDurationPart = Pick<DBPart, 'inTransition' | 'expectedDuration2'>
 
 export function calculatePartExpectedDurationTransitionOverlap(
@@ -181,22 +176,20 @@ export function calculatePartExpectedDurationTransitionOverlap(
 	return calculatePartExpectedDurationTransitionOverlap2(timings)
 }
 
-export function calculatePartInstanceExpectedDurationWithTransition(
+export function calculatePartInstanceExpectedDurations(
 	partInstance: Pick<ReadonlyDeep<DBPartInstance>, 'part' | 'partPlayoutTimings'>
-	// pieces: CalculateTimingsPiece[]
-): number | undefined {
-	// nocommit - this function is wrong!
-	if (partInstance.part.expectedDuration2.duration === undefined) return undefined
+): {
+	expectedDuration: number | undefined
+	expectedDurationWithTransition: number
+	transitionOverlap: number
+} {
+	const transitionOverlap = partInstance.partPlayoutTimings
+		? calculatePartExpectedDurationTransitionOverlap2(partInstance.partPlayoutTimings)
+		: (partInstance.part.expectedDuration2.transitionOverlap ?? 0)
 
-	if (partInstance.partPlayoutTimings) {
-		// The timings needed are known, we can ensure that live data is used
-		return calculateExpectedDurationWithTransition(
-			partInstance.part.expectedDuration2.duration,
-			partInstance.partPlayoutTimings
-		)
-	} else {
-		return (
-			partInstance.part.expectedDuration2.duration - (partInstance.part.expectedDuration2.transitionOverlap ?? 0)
-		)
+	return {
+		expectedDuration: partInstance.part.expectedDuration2.duration,
+		expectedDurationWithTransition: (partInstance.part.expectedDuration2.duration ?? 0) - transitionOverlap,
+		transitionOverlap,
 	}
 }

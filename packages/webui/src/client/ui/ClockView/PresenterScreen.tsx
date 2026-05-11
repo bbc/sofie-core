@@ -34,7 +34,7 @@ import type { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataMode
 import { RundownLayoutsAPI } from '../../lib/rundownLayouts.js'
 import { ShelfDashboardLayout } from '../Shelf/ShelfDashboardLayout.js'
 import { parse as queryStringParse } from 'query-string'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import type { RundownTimingContext } from '../../lib/rundownTiming.js'
 import { UIShowStyleBases, UIStudios } from '../Collections.js'
 import {
@@ -557,9 +557,10 @@ function PresenterScreenContentDefaultLayout({
 										showStyleBaseId={currentShowStyleBaseId}
 										rundownIds={rundownIds}
 										partAutoNext={currentPartInstance.instance.part.autoNext || false}
-										partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
-											currentPartInstance.instance
-										)}
+										partExpectedDuration={
+											calculatePartInstanceExpectedDurations(currentPartInstance.instance)
+												.expectedDurationWithTransition
+										}
 										partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
 										playlistActivationId={playlist?.activationId}
 									/>

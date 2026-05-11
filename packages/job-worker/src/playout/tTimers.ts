@@ -11,7 +11,7 @@ import { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { JobContext } from '../jobs/index.js'
 import { PlayoutModel } from './model/PlayoutModel.js'
 import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings.js'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings.js'
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
 	if (![1, 2, 3].includes(index)) throw new Error(`T-timer index out of range: ${index}`)
@@ -251,17 +251,17 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 		const currentSegment = playoutModel.findSegment(currentPartInstance.segmentId)
 		const currentSegmentBudget = currentSegment?.segment.segmentTiming?.budgetDuration
 
-		const currentPartDuration = calculatePartInstanceExpectedDurationWithTransition(currentPartInstance)
+		const currentPartDurations = calculatePartInstanceExpectedDurations(currentPartInstance)
 
 		if (currentSegmentBudget === undefined) {
 			// Normal part duration timing
-			if (currentPartDuration) {
+			if (currentPartDurations.expectedDuration !== undefined) {
 				const currentPartStartedPlayback = currentPartInstance.timings?.plannedStartedPlayback
 				const startedPlayback =
 					currentPartStartedPlayback && currentPartStartedPlayback <= now ? currentPartStartedPlayback : now
 				const playOffset = currentPartInstance.timings?.playOffset || 0
 				const elapsed = now - startedPlayback - playOffset
-				const remaining = currentPartDuration - elapsed
+				const remaining = currentPartDurations.expectedDurationWithTransition - elapsed
 
 				isPushing = remaining < 0
 				totalAccumulator = Math.max(0, remaining)
@@ -276,13 +276,13 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 				playlist.segmentsStartedPlayback?.[currentPartInstance.segmentId as unknown as string]
 
 			// Calculate remaining time in current part
-			if (currentPartDuration) {
+			if (currentPartDurations.expectedDuration !== undefined) {
 				const currentPartStartedPlayback = currentPartInstance.timings?.plannedStartedPlayback
 				const startedPlayback =
 					currentPartStartedPlayback && currentPartStartedPlayback <= now ? currentPartStartedPlayback : now
 				const playOffset = currentPartInstance.timings?.playOffset || 0
 				const elapsed = now - startedPlayback - playOffset
-				const partRemaining = currentPartDuration - elapsed
+				const partRemaining = currentPartDurations.expectedDurationWithTransition - elapsed
 				currentPartRemainingTime = Math.max(0, partRemaining)
 				// Set totalAccumulator to current part remaining for correct anchor calculations
 				// within the same segment

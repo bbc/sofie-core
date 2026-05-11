@@ -21,7 +21,7 @@ import type { BucketAdLibItem, BucketAdLibUi } from '../ui/Shelf/RundownViewBuck
 import type { FindOptions } from '../collections/lib.js'
 import { getShowHiddenSourceLayers } from './localStorage.js'
 import type { IStudioSettings } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import type { AdLibPieceUi } from './shelf.js'
 import type { PieceId, PieceInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { PieceInstances, Pieces, Segments } from '../collections/index.js'
@@ -130,13 +130,17 @@ export namespace RundownUtils {
 		display?: boolean
 	): number {
 		return parts.reduce((memo, part) => {
-			return (
-				memo +
-				(part.instance.timings?.duration ||
-					calculatePartInstanceExpectedDurationWithTransition(part.instance) ||
-					part.renderedDuration ||
-					(display ? Settings.defaultDisplayDuration : 0))
-			)
+			let duration = part.instance.timings?.duration
+			if (!duration) {
+				const partDurations = calculatePartInstanceExpectedDurations(part.instance)
+				if (partDurations.expectedDuration) {
+					duration = partDurations.expectedDurationWithTransition
+				} else {
+					duration = (display ? Settings.defaultDisplayDuration : 0) - partDurations.transitionOverlap
+				}
+			}
+
+			return memo + duration
 		}, 0)
 	}
 
@@ -273,26 +277,38 @@ export namespace RundownUtils {
 		partDuration: number | undefined,
 		piece?: PieceUi
 	): boolean {
+		const partStartsAtOrDefault = partStartsAt ?? part.startsAt ?? 0
+
+		// Check if the part/piece is completely to the right of the viewport
+		if (scrollLeft + scrollWidth < partStartsAtOrDefault + (piece?.renderedInPoint || 0)) {
+			return false
+		}
+
+		// If there is no piece, check if the part is completely to the left of the viewport.
 		if (
-			scrollLeft + scrollWidth <
-			(partStartsAt || part.startsAt || 0) + (piece !== undefined ? piece.renderedInPoint || 0 : 0)
+			!piece &&
+			scrollLeft >
+				partStartsAtOrDefault +
+					(part.instance.timings?.duration !== undefined
+						? part.instance.timings.duration + (part.instance.timings?.playOffset || 0)
+						: partDuration || part.renderedDuration || 0)
 		) {
 			return false
-		} else if (
+		}
+
+		// If there is a piece, check if the piece is completely to the left of the viewport.
+		if (
+			piece &&
 			scrollLeft >
-			(partStartsAt || part.startsAt || 0) +
-				(piece !== undefined
-					? (piece.renderedInPoint || 0) +
+				partStartsAtOrDefault +
+					((piece.renderedInPoint || 0) +
 						(piece.renderedDuration ||
 							(part.instance.timings?.duration !== undefined
 								? part.instance.timings.duration + (part.instance.timings?.playOffset || 0)
 								: (partDuration ||
 										part.renderedDuration ||
-										calculatePartInstanceExpectedDurationWithTransition(part.instance) ||
-										0) - (piece.renderedInPoint || 0)))
-					: part.instance.timings?.duration !== undefined
-						? part.instance.timings.duration + (part.instance.timings?.playOffset || 0)
-						: partDuration || part.renderedDuration || 0)
+										calculatePartInstanceExpectedDurations(part.instance).expectedDuration ||
+										0) - (piece.renderedInPoint || 0))))
 		) {
 			return false
 		}

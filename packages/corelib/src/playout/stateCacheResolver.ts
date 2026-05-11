@@ -21,7 +21,7 @@ import {
 	processAndPrunePieceInstanceTimings,
 	resolvePrunedPieceInstance,
 } from './processAndPrune.js'
-import { calculatePartInstanceExpectedDurationWithTransition } from './timings.js'
+import { calculatePartInstanceExpectedDurations } from './timings.js'
 import {
 	buildPastInfinitePiecesForThisPartQuery,
 	buildPiecesStartingInThisPartQuery,
@@ -186,14 +186,15 @@ export function getResolvedSegment({
 		}
 
 		partsE = deduplicatedPartInstances.map((partInstance, itIndex) => {
-			const partExpectedDuration = calculatePartInstanceExpectedDurationWithTransition(partInstance)
+			const partDurations = calculatePartInstanceExpectedDurations(partInstance)
 
 			// extend objects to match the Extended interface
 			const partE = literal<PartExtended>({
 				partId: partInstance.part._id,
 				instance: partInstance,
 				pieces: [],
-				renderedDuration: partExpectedDuration ?? 0,
+				renderedDuration:
+					partDurations.expectedDuration !== undefined ? partDurations.expectedDurationWithTransition : 0,
 				startsAt: 0,
 				willProbablyAutoNext: !!(
 					previousPart &&
@@ -353,11 +354,11 @@ export function getResolvedSegment({
 				displayDurationGroups.set(
 					partE.instance.part.displayDurationGroup,
 					(displayDurationGroups.get(partE.instance.part.displayDurationGroup) || 0) +
-						(partExpectedDuration || 0)
+						partDurations.expectedDurationWithTransition
 				)
 				partE.renderedDuration =
 					partE.instance.timings?.duration ||
-					Math.min(partE.instance.part.displayDuration || 0, partExpectedDuration || 0) ||
+					Math.min(partE.instance.part.displayDuration || 0, partDurations.expectedDurationWithTransition) ||
 					displayDurationGroups.get(partE.instance.part.displayDurationGroup) ||
 					0
 				displayDurationGroups.set(

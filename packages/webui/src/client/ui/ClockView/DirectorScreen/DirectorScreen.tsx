@@ -30,7 +30,7 @@ import type {
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import { UIShowStyleBases, UIStudios } from '../../Collections.js'
 import { PieceInstances, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../../collections/index.js'
 import { RundownPlaylistCollectionUtil } from '../../../collections/rundownPlaylistUtil.js'
@@ -642,9 +642,10 @@ function DirectorScreenRender({
 														showStyleBaseId={currentShowStyleBaseId}
 														rundownIds={rundownIds}
 														partAutoNext={currentPartInstance.instance.part.autoNext || false}
-														partExpectedDuration={calculatePartInstanceExpectedDurationWithTransition(
-															currentPartInstance.instance
-														)}
+														partExpectedDuration={
+															calculatePartInstanceExpectedDurations(currentPartInstance.instance)
+																.expectedDurationWithTransition
+														}
 														partStartedPlayback={currentPartInstance.instance.timings?.plannedStartedPlayback}
 														playlistActivationId={playlist?.activationId}
 													/>

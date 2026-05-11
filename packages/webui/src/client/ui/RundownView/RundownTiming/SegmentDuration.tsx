@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useTiming } from './withTiming.js'
 import { RundownUtils } from '../../../lib/rundown.js'
 import type { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer.js'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import { getPartInstanceTimingId } from '../../../lib/rundownTiming.js'
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
@@ -54,7 +54,7 @@ export function SegmentDuration(props: ISegmentDurationProps): JSX.Element | nul
 					budget +=
 						part.instance.orphaned || part.instance.part.untimed
 							? 0
-							: calculatePartInstanceExpectedDurationWithTransition(part.instance) || 0
+							: calculatePartInstanceExpectedDurations(part.instance).expectedDurationWithTransition || 0
 				}
 			}
 		}

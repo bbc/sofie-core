@@ -5,7 +5,7 @@ import { withTranslation, type WithTranslation } from 'react-i18next'
 import _ from 'underscore'
 
 import { getElementWidth } from '../../../utils/dimensions.js'
-import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import { unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { logger } from '../../../lib/logging.js'
 
@@ -133,14 +133,14 @@ export const MicSourceRenderer: React.ComponentType<IProps> = withTranslation()(
 				_forceSizingRecheck = true
 			}
 
-			const expectedDuration = calculatePartInstanceExpectedDurationWithTransition(this.props.part.instance)
-			const prevExpectedDuration = calculatePartInstanceExpectedDurationWithTransition(prevProps.part.instance)
+			const expectedDuration = calculatePartInstanceExpectedDurations(this.props.part.instance)
+			const prevExpectedDuration = calculatePartInstanceExpectedDurations(prevProps.part.instance)
 
 			if (
 				!_forceSizingRecheck &&
 				this._lineAtEnd === true &&
-				(expectedDuration || this.props.partDuration) * this.props.timeScale !==
-					(prevExpectedDuration || prevProps.partDuration) * prevProps.timeScale
+				(expectedDuration.expectedDuration || this.props.partDuration) * this.props.timeScale !==
+					(prevExpectedDuration.expectedDuration || prevProps.partDuration) * prevProps.timeScale
 			) {
 				_forceSizingRecheck = true
 			}
