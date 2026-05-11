@@ -1,6 +1,6 @@
 import { addMigrationSteps } from './databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from './currentSystemVersion'
-import { RundownPlaylists } from '../collections'
+import { PartInstances, Parts, RundownPlaylists } from '../collections'
 import { ContainerIdsToObjectWithOverridesMigrationStep } from './steps/X_X_X/ContainerIdsToObjectWithOverridesMigrationStep'
 
 /*
@@ -81,6 +81,105 @@ export const addSteps = addMigrationSteps(CURRENT_SYSTEM_VERSION, [
 				},
 				{ multi: true }
 			)
+		},
+	},
+	{
+		id: 'Adjust part expectedDuration',
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const partCount = await Parts.countDocuments({
+				durations: { $exists: false },
+			})
+			if (partCount > 0) return `There are ${partCount} Parts without new durations property`
+			return false
+		},
+		migrate: async () => {
+			const parts = await Parts.findFetchAsync(
+				{
+					durations: { $exists: false },
+				},
+				{
+					projection: {
+						_id: 1,
+						// @ts-expect-error Old property name
+						expectedDuration: 1,
+						expectedDurationWithTransition: 1,
+					},
+				}
+			)
+
+			for (const part of parts) {
+				// @ts-expect-error Old property name
+				const oldDuration = part.expectedDuration
+				// @ts-expect-error Old property name
+				const oldDurationWithTransition = part.expectedDurationWithTransition
+
+				await Parts.mutableCollection.updateAsync(part._id, {
+					$set: {
+						durations: {
+							expectedDuration: oldDuration,
+							transitionOverlap:
+								oldDurationWithTransition !== undefined
+									? oldDuration - oldDurationWithTransition
+									: undefined,
+						},
+					},
+					$unset: {
+						expectedDuration: 1,
+						expectedDurationWithTransition: 1,
+					},
+				})
+			}
+		},
+	},
+	{
+		id: 'Adjust partInstance part expectedDuration',
+		canBeRunAutomatically: true,
+		validate: async () => {
+			const partInstanceCount = await PartInstances.countDocuments({
+				'part.durations': { $exists: false },
+			})
+			if (partInstanceCount > 0)
+				return `There are ${partInstanceCount} PartInstances without new part.durations property`
+			return false
+		},
+		migrate: async () => {
+			const partInstances = await PartInstances.findFetchAsync(
+				{
+					'part.durations': { $exists: false },
+				},
+				{
+					projection: {
+						_id: 1,
+						// @ts-expect-error Old property name
+						'part.expectedDuration': 1,
+						'part.expectedDurationWithTransition': 1,
+					},
+				}
+			)
+
+			for (const partInstance of partInstances) {
+				// @ts-expect-error Old property name
+				const oldDuration = partInstance.part.expectedDuration
+				// @ts-expect-error Old property name
+				const oldDurationWithTransition = partInstance.part.expectedDurationWithTransition
+
+				await PartInstances.mutableCollection.updateAsync(partInstance._id, {
+					$set: {
+						'part.durations': {
+							expectedDuration: oldDuration,
+							transitionOverlap:
+								oldDurationWithTransition !== undefined
+									? oldDuration - oldDurationWithTransition
+									: undefined,
+						},
+					},
+					$unset: {
+						'part.expectedDuration': 1,
+						'part.expectedDurationWithTransition': 1,
+					},
+				})
+			}
 		},
 	},
 	// Add your migration here
