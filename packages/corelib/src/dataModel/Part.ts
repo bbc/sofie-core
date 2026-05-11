@@ -14,7 +14,7 @@ export interface PartInvalidReason {
 }
 
 /** A "Line" in NRK Lingo. */
-export interface DBPart extends Omit<IBlueprintPart, 'userEditOperations'> {
+export interface DBPart extends Omit<IBlueprintPart, 'userEditOperations' | 'expectedDuration'> {
 	_id: PartId
 	/**
 	 * Position inside the segment
@@ -36,8 +36,12 @@ export interface DBPart extends Omit<IBlueprintPart, 'userEditOperations'> {
 	/** Human readable unqiue identifier of the part */
 	identifier?: string
 
-	/** A modified expectedDuration with the piece/transition derived timings factored in */
-	expectedDurationWithTransition: number | undefined
+	expectedDuration2: {
+		/** The expected duration of the part */
+		duration: number | undefined
+		/** The amount of time the transition overlaps with the previous part */
+		transitionOverlap: number | undefined
+	}
 
 	/**
 	 * User editing definitions for this part

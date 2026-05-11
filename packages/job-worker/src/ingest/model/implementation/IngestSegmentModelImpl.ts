@@ -9,7 +9,7 @@ import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibActio
 import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { Piece } from '@sofie-automation/corelib/dist/dataModel/Piece'
-import { calculatePartExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
+import { calculatePartExpectedDurationTransitionOverlap } from '@sofie-automation/corelib/dist/playout/timings'
 import { clone } from '@sofie-automation/corelib/dist/lib'
 import { getPartId } from '../../lib.js'
 import {
@@ -222,7 +222,10 @@ export class IngestSegmentModelImpl implements IngestSegmentModel {
 			_id: this.getPartIdFromExternalId(rawPart.externalId),
 			rundownId: this.segment.rundownId,
 			segmentId: this.segment._id,
-			expectedDurationWithTransition: calculatePartExpectedDurationWithTransition(rawPart, pieces),
+			expectedDuration2: {
+				...rawPart.expectedDuration2,
+				transitionOverlap: calculatePartExpectedDurationTransitionOverlap(rawPart, pieces),
+			},
 		}
 
 		// We don't need to worry about this being present on other Segments. The caller must make sure it gets removed if needed,

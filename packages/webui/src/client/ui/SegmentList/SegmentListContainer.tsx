@@ -139,7 +139,7 @@ export const SegmentListContainer = withResolvedSegment<IProps>(function Segment
 				return false
 			}
 
-			return !!(currentPartInstance.part.autoNext && currentPartInstance.part.expectedDuration)
+			return !!(currentPartInstance.part.autoNext && currentPartInstance.part.expectedDuration2.duration)
 		},
 		[segmentId, props.playlist.activationId, props.playlist.currentPartInfo?.partInstanceId],
 		false

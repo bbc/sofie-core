@@ -160,37 +160,43 @@ export function getPartTimingsOrDefaults(
 	}
 }
 
-function calculateExpectedDurationWithTransition(rawDuration: number, timings: PartCalculatedTimings): number {
+function calculatePartExpectedDurationTransitionOverlap2(timings: PartCalculatedTimings): number {
 	// toPartDelay and fromPartPostroll needs to be subtracted, because it is added to `fromPartRemaining` when the `fromPartRemaining` value is calculated.
-	return Math.max(0, rawDuration - (timings.fromPartRemaining - timings.toPartDelay - timings.fromPartPostroll))
+	return timings.fromPartRemaining - timings.toPartDelay - timings.fromPartPostroll
 }
 
-export type CalculateExpectedDurationPart = Pick<DBPart, 'inTransition' | 'expectedDuration'>
+function calculateExpectedDurationWithTransition(rawDuration: number, timings: PartCalculatedTimings): number {
+	// nocommit - is this needed anymore?
+	return Math.max(0, rawDuration - calculatePartExpectedDurationTransitionOverlap2(timings))
+}
 
-export function calculatePartExpectedDurationWithTransition(
+export type CalculateExpectedDurationPart = Pick<DBPart, 'inTransition' | 'expectedDuration2'>
+
+export function calculatePartExpectedDurationTransitionOverlap(
 	part: CalculateExpectedDurationPart,
 	pieces: ReadonlyDeep<PieceInstancePiece[]>
-): number | undefined {
-	if (part.expectedDuration === undefined) return undefined
-
+): number {
 	const timings = calculatePartTimings(undefined, {}, [], part, pieces)
 
-	return calculateExpectedDurationWithTransition(part.expectedDuration, timings)
+	return calculatePartExpectedDurationTransitionOverlap2(timings)
 }
 
 export function calculatePartInstanceExpectedDurationWithTransition(
-	partInstance: Pick<DBPartInstance, 'part' | 'partPlayoutTimings'>
+	partInstance: Pick<ReadonlyDeep<DBPartInstance>, 'part' | 'partPlayoutTimings'>
 	// pieces: CalculateTimingsPiece[]
 ): number | undefined {
-	if (partInstance.part.expectedDuration === undefined) return undefined
+	// nocommit - this function is wrong!
+	if (partInstance.part.expectedDuration2.duration === undefined) return undefined
 
 	if (partInstance.partPlayoutTimings) {
 		// The timings needed are known, we can ensure that live data is used
 		return calculateExpectedDurationWithTransition(
-			partInstance.part.expectedDuration,
+			partInstance.part.expectedDuration2.duration,
 			partInstance.partPlayoutTimings
 		)
 	} else {
-		return partInstance.part.expectedDurationWithTransition
+		return (
+			partInstance.part.expectedDuration2.duration - (partInstance.part.expectedDuration2.transitionOverlap ?? 0)
+		)
 	}
 }

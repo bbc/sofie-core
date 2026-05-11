@@ -109,7 +109,8 @@ export const LinePartTimeline: React.FC<IProps> = function LinePartTimeline({
 		: null
 
 	const isPartZeroBudget =
-		(part.instance.part.expectedDuration === 0 || part.instance.part.expectedDuration === undefined) &&
+		(part.instance.part.expectedDuration2.duration === 0 ||
+			part.instance.part.expectedDuration2.duration === undefined) &&
 		!part.instance.part.displayDurationGroup
 
 	return (

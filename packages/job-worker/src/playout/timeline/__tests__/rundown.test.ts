@@ -316,7 +316,10 @@ describe('buildTimelineObjsForRundown', () => {
 		const selectedPartInfos: SelectedPartInstancesTimelineInfo = {
 			current: {
 				partTimes: createPartCurrentTimes(currentTime, 5678),
-				partInstance: createMockPartInstance('part0', { autoNext: true, expectedDuration: 5000 }),
+				partInstance: createMockPartInstance('part0', {
+					autoNext: true,
+					expectedDuration2: { duration: 5000, transitionOverlap: undefined },
+				}),
 				pieceInstances: [createMockPieceInstance('piece0')],
 				calculatedTimings: DEFAULT_PART_TIMINGS,
 				regenerateTimelineAt: undefined,
@@ -351,7 +354,7 @@ describe('buildTimelineObjsForRundown', () => {
 				partTimes: createPartCurrentTimes(currentTime, 1234),
 				partInstance: createMockPartInstance(
 					'part9',
-					{ autoNext: true, expectedDuration: 5000 },
+					{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 					{
 						timings: {
 							plannedStartedPlayback: 1235,
@@ -393,7 +396,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 1234),
 					partInstance: createMockPartInstance(
 						'part9',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -441,7 +444,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 1234),
 					partInstance: createMockPartInstance(
 						'part9',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -492,7 +495,10 @@ describe('buildTimelineObjsForRundown', () => {
 			const selectedPartInfos: SelectedPartInstancesTimelineInfo = {
 				current: {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
-					partInstance: createMockPartInstance('part0', { autoNext: true, expectedDuration: 5000 }),
+					partInstance: createMockPartInstance('part0', {
+						autoNext: true,
+						expectedDuration2: { duration: 5000, transitionOverlap: undefined },
+					}),
 					pieceInstances: [createMockPieceInstance('piece0')],
 					calculatedTimings: DEFAULT_PART_TIMINGS,
 					regenerateTimelineAt: undefined,
@@ -536,7 +542,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -595,7 +601,7 @@ describe('buildTimelineObjsForRundown', () => {
 			partTimes: createPartCurrentTimes(currentTime, 1234),
 			partInstance: createMockPartInstance(
 				'part9',
-				{ autoNext: true, expectedDuration: 5000 },
+				{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 				{
 					timings: {
 						plannedStartedPlayback: 1235,
@@ -725,7 +731,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -769,7 +775,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,
@@ -816,7 +822,7 @@ describe('buildTimelineObjsForRundown', () => {
 					partTimes: createPartCurrentTimes(currentTime, 5678),
 					partInstance: createMockPartInstance(
 						'part0',
-						{ autoNext: true, expectedDuration: 5000 },
+						{ autoNext: true, expectedDuration2: { duration: 5000, transitionOverlap: undefined } },
 						{
 							timings: {
 								plannedStartedPlayback: 1235,

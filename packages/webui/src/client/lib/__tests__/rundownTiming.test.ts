@@ -46,7 +46,7 @@ function makeMockPart(
 	rank: number,
 	rundownId: string,
 	segmentId: string,
-	durations: Pick<DBPart, 'displayDuration' | 'displayDurationGroup' | 'expectedDuration'>
+	durations: Pick<DBPart, 'displayDuration' | 'displayDurationGroup' | 'expectedDuration2'>
 ): DBPart {
 	return literal<DBPart>({
 		_id: protectString(id),
@@ -56,7 +56,6 @@ function makeMockPart(
 		_rank: rank,
 		rundownId: protectString(rundownId),
 		...durations,
-		expectedDurationWithTransition: durations.expectedDuration,
 	})
 }
 
@@ -107,11 +106,31 @@ function makeMockPartsForQuickLoopTest() {
 	segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
 	segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
 	const parts: DBPart[] = []
-	parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-	parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-	parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-	parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-	parts.push(makeMockPart('part5', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+	parts.push(
+		makeMockPart('part1', 0, rundownId, segmentId1, {
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+		})
+	)
+	parts.push(
+		makeMockPart('part2', 0, rundownId, segmentId1, {
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+		})
+	)
+	parts.push(
+		makeMockPart('part3', 0, rundownId, segmentId2, {
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+		})
+	)
+	parts.push(
+		makeMockPart('part4', 0, rundownId, segmentId2, {
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+		})
+	)
+	parts.push(
+		makeMockPart('part5', 0, rundownId, segmentId2, {
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+		})
+	)
 	const partInstances = convertPartsToPartInstances(parts)
 	return { parts, partInstances }
 }
@@ -177,10 +196,26 @@ describe('rundown Timing Calculator', () => {
 		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
 		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
 		const parts: DBPart[] = []
-		parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part1', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part2', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part3', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part4', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstances = convertPartsToPartInstances(parts)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
 		const rundown = makeMockRundown(rundownId, playlist)
@@ -278,10 +313,26 @@ describe('rundown Timing Calculator', () => {
 		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
 		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
 		const parts: DBPart[] = []
-		parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part1', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part2', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part3', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part4', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstances = convertPartsToPartInstances(parts)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
 		const rundown = makeMockRundown(rundownId, playlist)
@@ -380,10 +431,26 @@ describe('rundown Timing Calculator', () => {
 		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId1))
 		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId2))
 		const parts: DBPart[] = []
-		parts.push(makeMockPart('part1', 0, rundownId1, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part2', 0, rundownId1, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part3', 0, rundownId2, segmentId2, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part4', 0, rundownId2, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part1', 0, rundownId1, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part2', 0, rundownId1, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part3', 0, rundownId2, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part4', 0, rundownId2, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstances = convertPartsToPartInstances(parts)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
 		const rundown1 = makeMockRundown(rundownId1, playlist)
@@ -487,28 +554,28 @@ describe('rundown Timing Calculator', () => {
 			const parts: DBPart[] = []
 			parts.push(
 				makeMockPart('part1', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 2000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part2', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 3000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part3', 0, rundownId1, segmentId2, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 4000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part4', 0, rundownId1, segmentId2, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 5000,
 					displayDurationGroup: 'test',
 				})
@@ -610,24 +677,25 @@ describe('rundown Timing Calculator', () => {
 			const parts: DBPart[] = []
 			parts.push(
 				makeMockPart('part1', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 				})
 			)
 			parts.push(
 				makeMockPart('part2', 0, rundownId1, segmentId1, {
-					expectedDuration: 5000,
+					expectedDuration2: { duration: 5000, transitionOverlap: undefined },
 					displayDuration: 1000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part3', 0, rundownId1, segmentId1, {
+					expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part4', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 				})
 			)
 			const partInstancesMap: Map<PartId, PartInstance> = new Map(
@@ -766,24 +834,25 @@ describe('rundown Timing Calculator', () => {
 			const parts: DBPart[] = []
 			parts.push(
 				makeMockPart('part1', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 				})
 			)
 			parts.push(
 				makeMockPart('part2', 0, rundownId1, segmentId1, {
-					expectedDuration: 5000,
+					expectedDuration2: { duration: 5000, transitionOverlap: undefined },
 					displayDuration: 1000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part3', 0, rundownId1, segmentId1, {
+					expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part4', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 				})
 			)
 			const partInstancesMap: Map<PartId, PartInstance> = new Map(
@@ -924,10 +993,26 @@ describe('rundown Timing Calculator', () => {
 			segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
 			segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
 			const parts: DBPart[] = []
-			parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-			parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-			parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-			parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId1, {
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId1, {
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('part3', 0, rundownId, segmentId2, {
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('part4', 0, rundownId, segmentId2, {
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+				})
+			)
 			const partInstances = convertPartsToPartInstances(parts)
 			const partInstancesMap: Map<PartId, PartInstance> = new Map()
 			const rundown = makeMockRundown(rundownId, playlist)
@@ -1027,35 +1112,35 @@ describe('rundown Timing Calculator', () => {
 			const parts: DBPart[] = []
 			parts.push(
 				makeMockPart('part1', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 2000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part2', 0, rundownId1, segmentId1, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 3000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part3', 0, rundownId1, segmentId2, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 4000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part4', 0, rundownId1, segmentId2, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 					displayDuration: 5000,
 					displayDurationGroup: 'test',
 				})
 			)
 			parts.push(
 				makeMockPart('part5', 0, rundownId1, segmentId2, {
-					expectedDuration: 1000,
+					expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 				})
 			)
 			const partInstances = convertPartsToPartInstances(parts)
@@ -1171,20 +1256,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstances = convertPartsToPartInstances(parts)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
 		const rundown = makeMockRundown(rundownId1, playlist)
@@ -1294,20 +1383,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		// set autonext and create partInstances
 		parts[0].autoNext = true
 		const partInstance1 = wrapPartToTemporaryInstance(protectString(''), parts[0])
@@ -1430,20 +1523,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 2000,
+				expectedDuration2: { duration: 2000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 2000,
+				expectedDuration2: { duration: 2000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		// set autonext and create partInstances
 		parts[0].autoNext = true
 		const partInstance1 = wrapPartToTemporaryInstance(protectString(''), parts[0])
@@ -1581,20 +1678,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -1730,20 +1831,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -1879,20 +1984,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -2034,20 +2143,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -2183,20 +2296,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -2332,20 +2449,24 @@ describe('rundown Timing Calculator', () => {
 		const parts: DBPart[] = []
 		parts.push(
 			makeMockPart('part1', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part2', 0, rundownId1, segmentId1, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
 		parts.push(
 			makeMockPart('part3', 0, rundownId1, segmentId2, {
-				expectedDuration: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			})
 		)
-		parts.push(makeMockPart('part4', 0, rundownId1, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part4', 0, rundownId1, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map(
 			parts.map((part) => {
 				return [part._id, wrapPartToTemporaryInstance(protectString('active'), part)]
@@ -2474,10 +2595,26 @@ describe('rundown Timing Calculator', () => {
 		segmentsMap.set(protectString<SegmentId>(segmentId1), makeMockSegment(segmentId1, 0, rundownId))
 		segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
 		const parts: DBPart[] = []
-		parts.push(makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part2', 0, rundownId, segmentId1, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
-		parts.push(makeMockPart('part4', 0, rundownId, segmentId2, { expectedDuration: 1000 }))
+		parts.push(
+			makeMockPart('part1', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part2', 0, rundownId, segmentId1, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part3', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
+		parts.push(
+			makeMockPart('part4', 0, rundownId, segmentId2, {
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
+			})
+		)
 		const partInstances = convertPartsToPartInstances(parts)
 		const partInstancesMap: Map<PartId, PartInstance> = new Map()
 		const rundown = makeMockRundown(rundownId, playlist)

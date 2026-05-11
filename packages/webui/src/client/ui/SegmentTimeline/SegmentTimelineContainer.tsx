@@ -229,12 +229,12 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			autoNextPart = !!(
 				currentLivePart &&
 				currentLivePart.instance.part.autoNext &&
-				currentLivePart.instance.part.expectedDuration
+				currentLivePart.instance.part.expectedDuration2.duration
 			)
 			if (isNextSegment && !isLiveSegment && !autoNextPart && this.props.ownCurrentPartInstance) {
 				if (
 					this.props.ownCurrentPartInstance &&
-					this.props.ownCurrentPartInstance.part.expectedDuration &&
+					this.props.ownCurrentPartInstance.part.expectedDuration2.duration &&
 					this.props.ownCurrentPartInstance.part.autoNext
 				) {
 					autoNextPart = true

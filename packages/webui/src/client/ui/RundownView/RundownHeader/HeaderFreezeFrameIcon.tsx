@@ -18,7 +18,7 @@ export function HeaderFreezeFrameIcon({ partInstanceId }: { partInstanceId: Part
 			const partDisplayDuration =
 				(timingDurations.partDisplayDurations && timingDurations.partDisplayDurations[partInstanceId as any]) ??
 				partInstance.part.displayDuration ??
-				partInstance.part.expectedDuration ??
+				partInstance.part.expectedDuration2?.duration ??
 				0
 
 			const partDuration = timingDurations.partDurations

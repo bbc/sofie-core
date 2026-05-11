@@ -11,6 +11,7 @@ import { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { JobContext } from '../jobs/index.js'
 import { PlayoutModel } from './model/PlayoutModel.js'
 import { getOrderedPartsAfterPlayhead } from './lookahead/util.js'
+import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings.js'
 
 export function validateTTimerIndex(index: number): asserts index is RundownTTimerIndex {
 	if (![1, 2, 3].includes(index)) throw new Error(`T-timer index out of range: ${index}`)
@@ -250,10 +251,10 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 		const currentSegment = playoutModel.findSegment(currentPartInstance.segmentId)
 		const currentSegmentBudget = currentSegment?.segment.segmentTiming?.budgetDuration
 
+		const currentPartDuration = calculatePartInstanceExpectedDurationWithTransition(currentPartInstance)
+
 		if (currentSegmentBudget === undefined) {
 			// Normal part duration timing
-			const currentPartDuration =
-				currentPartInstance.part.expectedDurationWithTransition ?? currentPartInstance.part.expectedDuration
 			if (currentPartDuration) {
 				const currentPartStartedPlayback = currentPartInstance.timings?.plannedStartedPlayback
 				const startedPlayback =
@@ -275,8 +276,6 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 				playlist.segmentsStartedPlayback?.[currentPartInstance.segmentId as unknown as string]
 
 			// Calculate remaining time in current part
-			const currentPartDuration =
-				currentPartInstance.part.expectedDurationWithTransition ?? currentPartInstance.part.expectedDuration
 			if (currentPartDuration) {
 				const currentPartStartedPlayback = currentPartInstance.timings?.plannedStartedPlayback
 				const startedPlayback =
@@ -360,7 +359,8 @@ export function recalculateTTimerProjections(context: JobContext, playoutModel: 
 
 		// Accumulate this part's duration (skip untimed parts)
 		if (!part.untimed) {
-			const partDuration = part.expectedDurationWithTransition ?? part.expectedDuration ?? 0
+			const partDuration =
+				(part.expectedDuration2.duration ?? 0) - (part.expectedDuration2.transitionOverlap ?? 0)
 			segmentAccumulator += partDuration
 		}
 	}

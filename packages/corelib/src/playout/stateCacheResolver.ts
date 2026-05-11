@@ -198,7 +198,7 @@ export function getResolvedSegment({
 				willProbablyAutoNext: !!(
 					previousPart &&
 					previousPart.instance.part.autoNext &&
-					previousPart.instance.part.expectedDuration
+					previousPart.instance.part.expectedDuration2.duration
 				),
 			})
 
@@ -214,7 +214,7 @@ export function getResolvedSegment({
 			autoNextPart = !!(
 				currentLivePart &&
 				currentLivePart.instance.part.autoNext &&
-				currentLivePart.instance.part.expectedDuration
+				currentLivePart.instance.part.expectedDuration2.duration
 			)
 			if (partE.instance.timings?.plannedStartedPlayback !== undefined) {
 				hasAlreadyPlayed = true
@@ -477,7 +477,7 @@ export function getResolvedSegment({
 		segmentExtended.sourceLayers = sourceLayers
 
 		if (isNextSegment && !isLiveSegment && !autoNextPart && currentPartInstance) {
-			if (currentPartInstance.part.expectedDuration && currentPartInstance.part.autoNext) {
+			if (currentPartInstance.part.expectedDuration2.duration && currentPartInstance.part.autoNext) {
 				autoNextPart = true
 			}
 		}

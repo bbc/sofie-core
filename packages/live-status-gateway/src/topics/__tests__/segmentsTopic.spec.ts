@@ -34,7 +34,7 @@ function makeTestPart(
 		_rank: rank,
 		rundownId: protectString(rundownId),
 		segmentId: protectString(segmentId),
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 		...partProps,
 	}
 }
@@ -318,25 +318,25 @@ describe('SegmentsTopic', () => {
 		mockSubscriber.send.mockClear()
 		handlers.partsHandler.notify([
 			makeTestPart('1_2_1', 1, RUNDOWN_1_ID, segment_1_2_id, {
-				expectedDurationWithTransition: 10000,
+				expectedDuration2: { duration: 10000, transitionOverlap: undefined },
 			}),
 			makeTestPart('2_2_1', 1, RUNDOWN_1_ID, segment_2_2_id, {
-				expectedDurationWithTransition: 40000,
+				expectedDuration2: { duration: 40000, transitionOverlap: undefined },
 			}),
 			makeTestPart('1_2_2', 2, RUNDOWN_1_ID, segment_1_2_id, {
-				expectedDurationWithTransition: 5000,
+				expectedDuration2: { duration: 5000, transitionOverlap: undefined },
 			}),
 			makeTestPart('1_1_2', 2, RUNDOWN_1_ID, segment_1_1_id, {
-				expectedDurationWithTransition: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			}),
 			makeTestPart('1_1_1', 1, RUNDOWN_1_ID, segment_1_1_id, {
-				expectedDurationWithTransition: 3000,
+				expectedDuration2: { duration: 3000, transitionOverlap: undefined },
 			}),
 			makeTestPart('2_2_2', 2, RUNDOWN_1_ID, segment_2_2_id, {
-				expectedDurationWithTransition: 11000,
+				expectedDuration2: { duration: 11000, transitionOverlap: undefined },
 			}),
 			makeTestPart('1_1_2', 2, RUNDOWN_1_ID, segment_1_1_id, {
-				expectedDurationWithTransition: 1000,
+				expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			}),
 		])
 		jest.advanceTimersByTime(THROTTLE_PERIOD_MS)

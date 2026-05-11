@@ -362,7 +362,7 @@ async function setupRundownWithAutoplayPart0(
 		externalId: 'MOCK_PART_0_0',
 		title: 'Part 0 0',
 
-		expectedDuration: 20000,
+		expectedDuration2: { duration: 20000, transitionOverlap: undefined },
 		autoNext: true,
 	}
 	await context.mockCollections.Parts.insertOne(part00)

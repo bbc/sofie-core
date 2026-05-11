@@ -206,5 +206,5 @@ export function selectNextPart(
 }
 
 function isPartPlayableInQuickLoop(part: ReadonlyDeep<DBPart>): boolean {
-	return (part.expectedDuration ?? 0) > 0
+	return (part.expectedDuration2.duration ?? 0) > 0
 }

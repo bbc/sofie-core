@@ -381,6 +381,10 @@ function updateModelWithGeneratedPart(
 		userEditProperties: translateUserEditPropertiesFromBlueprint(blueprintPart.part.userEditProperties, [
 			blueprintId,
 		]),
+		expectedDuration2: {
+			duration: blueprintPart.part.expectedDuration, // Blueprints use the simplified form
+			transitionOverlap: undefined, // Filled in later
+		},
 	})
 
 	// Update pieces

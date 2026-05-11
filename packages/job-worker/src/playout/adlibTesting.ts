@@ -38,8 +38,7 @@ export async function handleActivateAdlibTesting(context: JobContext, data: Acti
 				_rank: 0,
 				externalId: '',
 				title: 'Adlib Testing',
-				expectedDuration: 0,
-				expectedDurationWithTransition: 0, // Filled in later
+				expectedDuration2: { duration: 0, transitionOverlap: undefined }, // Filled in later
 				untimed: true,
 			})
 

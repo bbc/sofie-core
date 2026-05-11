@@ -367,7 +367,7 @@ export async function setupDefaultRundown(
 		_rank: 0,
 		externalId: 'MOCK_PART_0_0',
 		title: 'Part 0 0',
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 	}
 	MongoMock.getInnerMockCollection(Parts).insert(part00)
 
@@ -435,7 +435,7 @@ export async function setupDefaultRundown(
 		_rank: 1,
 		externalId: 'MOCK_PART_0_1',
 		title: 'Part 0 1',
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 	}
 	MongoMock.getInnerMockCollection(Parts).insert(part01)
 
@@ -475,7 +475,7 @@ export async function setupDefaultRundown(
 		_rank: 0,
 		externalId: 'MOCK_PART_1_0',
 		title: 'Part 1 0',
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 	}
 	MongoMock.getInnerMockCollection(Parts).insert(part10)
 
@@ -486,7 +486,7 @@ export async function setupDefaultRundown(
 		_rank: 1,
 		externalId: 'MOCK_PART_1_1',
 		title: 'Part 1 1',
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 	}
 	MongoMock.getInnerMockCollection(Parts).insert(part11)
 
@@ -497,7 +497,7 @@ export async function setupDefaultRundown(
 		_rank: 2,
 		externalId: 'MOCK_PART_1_2',
 		title: 'Part 1 2',
-		expectedDurationWithTransition: undefined,
+		expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 	}
 	MongoMock.getInnerMockCollection(Parts).insert(part12)
 

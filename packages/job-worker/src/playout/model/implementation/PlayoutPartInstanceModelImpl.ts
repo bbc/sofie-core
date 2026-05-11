@@ -11,7 +11,7 @@ import { clone, getRandomId } from '@sofie-automation/corelib/dist/lib'
 import { getCurrentTime } from '../../../lib/index.js'
 import { setupPieceInstanceInfiniteProperties } from '../../pieces.js'
 import {
-	calculatePartExpectedDurationWithTransition,
+	calculatePartExpectedDurationTransitionOverlap,
 	PartCalculatedTimings,
 } from '@sofie-automation/corelib/dist/playout/timings'
 import { IBlueprintPieceType, PieceLifespan, Time } from '@sofie-automation/blueprints-integration'
@@ -367,12 +367,15 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 	}
 
 	recalculateExpectedDurationWithTransition(): void {
-		const newDuration = calculatePartExpectedDurationWithTransition(
+		const newOverlap = calculatePartExpectedDurationTransitionOverlap(
 			this.partInstanceImpl.part,
 			this.pieceInstances.map((p) => p.pieceInstance.piece)
 		)
 
-		this.#compareAndSetPartValue('expectedDurationWithTransition', newDuration)
+		this.#compareAndSetPartValue('expectedDuration2', {
+			...this.partInstanceImpl.part.expectedDuration2,
+			transitionOverlap: newOverlap,
+		})
 	}
 
 	removePieceInstance(id: PieceInstanceId): boolean {
@@ -571,12 +574,12 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 		const debounce = isTake ? AUTOTAKE_TAKE_DEBOUNCE : AUTOTAKE_UPDATE_DEBOUNCE
 
 		const start = partInstance.timings?.plannedStartedPlayback
-		if (start !== undefined && partInstance.part.expectedDuration) {
+		if (start !== undefined && partInstance.part.expectedDuration2.duration) {
 			// date.now - start = playback duration, duration + offset gives position in part
 			const playbackDuration = getCurrentTime() - start
 
 			// If there is an auto next planned
-			if (Math.abs(partInstance.part.expectedDuration - playbackDuration) < debounce) {
+			if (Math.abs(partInstance.part.expectedDuration2.duration - playbackDuration) < debounce) {
 				return true
 			}
 		}

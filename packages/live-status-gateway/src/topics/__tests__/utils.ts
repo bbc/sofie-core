@@ -54,7 +54,7 @@ export function makeTestParts(): DBPart[] {
 			segmentId: protectString('segment0'),
 			notes: [],
 			externalId: 'NCS_PART_0',
-			expectedDurationWithTransition: 1000,
+			expectedDuration2: { duration: 1000, transitionOverlap: undefined },
 			title: 'Part 0',
 		},
 	]

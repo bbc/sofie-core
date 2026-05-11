@@ -318,7 +318,7 @@ export function convertPartToBlueprints(part: ReadonlyDeep<DBPart>): IBlueprintP
 		inTransition: clone(part.inTransition),
 		disableNextInTransition: part.disableNextInTransition,
 		outTransition: clone(part.outTransition),
-		expectedDuration: part.expectedDuration,
+		expectedDuration: part.expectedDuration2.duration, // Blueprints use the simplified form
 		holdMode: part.holdMode,
 		shouldNotifyCurrentPlayingPart: part.shouldNotifyCurrentPlayingPart,
 		ingestNotifyPartExternalId: part.ingestNotifyPartExternalId,

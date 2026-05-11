@@ -129,7 +129,7 @@ describe('updatePartInstanceRanks', () => {
 			segmentId: customSegmentId ?? segmentId,
 			externalId: id,
 			title: id,
-			expectedDurationWithTransition: undefined,
+			expectedDuration2: { duration: undefined, transitionOverlap: undefined },
 		}
 	}
 
