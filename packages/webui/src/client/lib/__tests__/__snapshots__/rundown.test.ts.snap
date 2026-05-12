@@ -18,6 +18,7 @@ exports[`client/lib/rundown RundownUtils.getResolvedSegment Basic Segment resolu
         "part": {
           "_id": "randomId9002_part0_0",
           "_rank": 0,
+          "durations": {},
           "externalId": "MOCK_PART_0_0",
           "rundownId": "randomId9002",
           "segmentId": "randomId9002_segment0",
@@ -147,6 +148,7 @@ exports[`client/lib/rundown RundownUtils.getResolvedSegment Basic Segment resolu
         "part": {
           "_id": "randomId9002_part0_1",
           "_rank": 1,
+          "durations": {},
           "externalId": "MOCK_PART_0_1",
           "rundownId": "randomId9002",
           "segmentId": "randomId9002_segment0",

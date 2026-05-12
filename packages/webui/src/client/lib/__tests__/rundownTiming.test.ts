@@ -2643,6 +2643,606 @@ describe('rundown Timing Calculator', () => {
 			})
 		)
 	})
+
+	describe('transitionOverlap', () => {
+		it('Calculates correctly with defined expectedDuration and positive transitionOverlap, unplayed', () => {
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId, {
+					// expectedDurationWithTransition = 1000 - 200 = 800
+					durations: { expectedDuration: 1000, transitionOverlap: 200 },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 2000, transitionOverlap: 1000 },
+				})
+			)
+			const partInstances = convertPartsToPartInstances(parts)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map()
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				0,
+				false,
+				playlist,
+				[rundown],
+				undefined,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId: null,
+					isLowResolution: false,
+					asDisplayedPlaylistDuration: 1800,
+					asPlayedPlaylistDuration: 1800,
+					currentPartWillAutoNext: false,
+					currentTime: 0,
+					// rundownExpectedDurations accounts for transitionOverlap: (1000-200) + (2000-1000) = 1800
+					rundownExpectedDurations: { [rundownId]: 1800 },
+					rundownAsPlayedDurations: { [rundownId]: 1800 },
+					partCountdown: { part1: 0, part2: 800 },
+					partDisplayDurations: { part1: 800, part2: 1000 },
+					partDisplayStartsAt: { part1: 0, part2: 800 },
+					partDurations: { part1: 800, part2: 1000 },
+					partExpectedDurations: { part1: 800, part2: 1000 },
+					partPlayed: { part1: 0, part2: 0 },
+					partStartsAt: { part1: 0, part2: 800 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 1800,
+					totalPlaylistDuration: 1800,
+					breakIsLastRundown: undefined,
+					remainingTimeOnCurrentPart: undefined,
+					rundownsBeforeNextBreak: undefined,
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Does not produce negative durations with undefined expectedDuration and positive transitionOverlap, unplayed', () => {
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId, {
+					// undefined expectedDuration: the transitionOverlap should not cause negative durations
+					durations: { expectedDuration: undefined, transitionOverlap: 200 },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 2000, transitionOverlap: 0 },
+				})
+			)
+			const partInstances = convertPartsToPartInstances(parts)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map()
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				0,
+				false,
+				playlist,
+				[rundown],
+				undefined,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId: null,
+					isLowResolution: false,
+					// part1 has no expectedDuration so contributes 0 to all totals
+					asDisplayedPlaylistDuration: 2000,
+					asPlayedPlaylistDuration: 2000,
+					currentPartWillAutoNext: false,
+					currentTime: 0,
+					rundownExpectedDurations: { [rundownId]: 2000 },
+					rundownAsPlayedDurations: { [rundownId]: 2000 },
+					partCountdown: { part1: 0, part2: 0 },
+					partDisplayDurations: { part1: 0, part2: 2000 },
+					partDisplayStartsAt: { part1: 0, part2: 0 },
+					partDurations: { part1: 0, part2: 2000 },
+					partExpectedDurations: { part1: 0, part2: 2000 },
+					partPlayed: { part1: 0, part2: 0 },
+					partStartsAt: { part1: 0, part2: 0 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 2000,
+					totalPlaylistDuration: 2000,
+					breakIsLastRundown: undefined,
+					remainingTimeOnCurrentPart: undefined,
+					rundownsBeforeNextBreak: undefined,
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Uses expectedDurationWithTransition not actual played duration when expectedDuration is defined, playing', () => {
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId, {
+					// expectedDurationWithTransition = 800, but will overrun to 1200ms
+					durations: { expectedDuration: 1000, transitionOverlap: 200 },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 2000, transitionOverlap: 0 },
+				})
+			)
+			parts.push(
+				makeMockPart('part3', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 1000, transitionOverlap: 0 },
+				})
+			)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map(
+				parts.map((part) => [part._id, wrapPartToTemporaryInstance(protectString('active'), part)])
+			)
+			const partInstances = Array.from(partInstancesMap.values())
+			partInstancesMap.get(parts[0]._id)!.timings = {
+				// part1: actually played for 1200ms despite expectedDurationWithTransition=800
+				duration: 1200,
+				take: 0,
+				plannedStartedPlayback: 0,
+				plannedStoppedPlayback: 1200,
+			}
+			partInstancesMap.get(parts[1]._id)!.timings = {
+				// part2: currently on air, 500ms elapsed
+				take: 1200,
+				plannedStartedPlayback: 1200,
+			}
+			const currentPartInstanceId = partInstancesMap.get(parts[1]._id)!._id
+			const nextPartInstanceId = partInstancesMap.get(parts[2]._id)!._id
+			playlist.currentPartInfo = {
+				partInstanceId: currentPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			playlist.nextPartInfo = {
+				partInstanceId: nextPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				1700,
+				false,
+				playlist,
+				[rundown],
+				rundown,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId,
+					currentSegmentId: protectString(segmentId),
+					isLowResolution: false,
+					asDisplayedPlaylistDuration: 4200,
+					asPlayedPlaylistDuration: 4200,
+					currentPartWillAutoNext: false,
+					currentTime: 1700,
+					rundownExpectedDurations: { [rundownId]: 3800 },
+					rundownAsPlayedDurations: { [rundownId]: 4200 },
+					partCountdown: { part1: null, part2: null, part3: 1500 },
+					partDisplayDurations: { part1: 1200, part2: 2000, part3: 1000 },
+					partDisplayStartsAt: { part1: 0, part2: 1200, part3: 3200 },
+					partDurations: { part1: 1200, part2: 2000, part3: 1000 },
+					// partExpectedDurations reflects expectedDurationWithTransition, not the actual 1200ms played
+					partExpectedDurations: { part1: 800, part2: 2000, part3: 1000 },
+					partPlayed: { part1: 1200, part2: 500, part3: 0 },
+					partStartsAt: { part1: 0, part2: 1200, part3: 3200 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 2500,
+					totalPlaylistDuration: 3800,
+					breakIsLastRundown: false,
+					remainingTimeOnCurrentPart: 1500,
+					rundownsBeforeNextBreak: [],
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Does not produce negative durations with undefined expectedDuration and positive transitionOverlap, playing', () => {
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId, {
+					// undefined expectedDuration: transitionOverlap should not cause negative durations
+					durations: { expectedDuration: undefined, transitionOverlap: 200 },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId, {
+					// undefined expectedDuration, currently on air
+					durations: { expectedDuration: undefined, transitionOverlap: 0 },
+				})
+			)
+			parts.push(
+				makeMockPart('part3', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 1000, transitionOverlap: 0 },
+				})
+			)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map(
+				parts.map((part) => [part._id, wrapPartToTemporaryInstance(protectString('active'), part)])
+			)
+			const partInstances = Array.from(partInstancesMap.values())
+			partInstancesMap.get(parts[0]._id)!.timings = {
+				// part1: played 800ms, no expectedDuration
+				duration: 800,
+				take: 0,
+				plannedStartedPlayback: 0,
+				plannedStoppedPlayback: 800,
+			}
+			partInstancesMap.get(parts[1]._id)!.timings = {
+				// part2: currently on air, 200ms elapsed, no expectedDuration
+				take: 800,
+				plannedStartedPlayback: 800,
+			}
+			const currentPartInstanceId = partInstancesMap.get(parts[1]._id)!._id
+			const nextPartInstanceId = partInstancesMap.get(parts[2]._id)!._id
+			playlist.currentPartInfo = {
+				partInstanceId: currentPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			playlist.nextPartInfo = {
+				partInstanceId: nextPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				1000,
+				false,
+				playlist,
+				[rundown],
+				rundown,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId,
+					currentSegmentId: protectString(segmentId),
+					isLowResolution: false,
+					// part1 and part2 have no expectedDuration, only part3 contributes to totalPlaylistDuration
+					asDisplayedPlaylistDuration: 2000,
+					asPlayedPlaylistDuration: 2000,
+					currentPartWillAutoNext: false,
+					currentTime: 1000,
+					rundownExpectedDurations: { [rundownId]: 1000 },
+					rundownAsPlayedDurations: { [rundownId]: 2000 },
+					partCountdown: { part1: null, part2: null, part3: 0 },
+					partDisplayDurations: { part1: 800, part2: 200, part3: 1000 },
+					partDisplayStartsAt: { part1: 0, part2: 800, part3: 1000 },
+					partDurations: { part1: 800, part2: 200, part3: 1000 },
+					// partExpectedDurations falls back to as-played when no expectedDuration
+					partExpectedDurations: { part1: 800, part2: 0, part3: 1000 },
+					partPlayed: { part1: 800, part2: 200, part3: 0 },
+					partStartsAt: { part1: 0, part2: 800, part3: 1000 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 1000,
+					totalPlaylistDuration: 1000,
+					breakIsLastRundown: false,
+					// negative: part2 has no expected duration so it's already past its "end"
+					remainingTimeOnCurrentPart: -200,
+					rundownsBeforeNextBreak: [],
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Accounts for transitionOverlap in over/under timing when transitioning from a known-duration part to an unknown-duration part', () => {
+			// Scenario: A (5s known) → B (unknown dur, 2s overlap)
+			// B's transition starts 2000ms before A ends, at t=3000ms.
+			// The total expected wall-clock duration is therefore 3000ms — NOT 5000ms.
+			// rundownExpectedDurations, totalPlaylistDuration, remainingPlaylistDuration, and
+			// partStartsAt/partCountdown for B must all reflect the 2000ms reduction.
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('partA', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 5000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('partB', 0, rundownId, segmentId, {
+					// B has no expectedDuration but its transition starts 2000ms before A ends
+					durations: { expectedDuration: undefined, transitionOverlap: 2000 },
+				})
+			)
+			const partInstances = convertPartsToPartInstances(parts)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map()
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				0,
+				false,
+				playlist,
+				[rundown],
+				undefined,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId: null,
+					isLowResolution: false,
+					// Total = A.expectedDuration (5000) - B.transitionOverlap (2000) = 3000ms
+					asDisplayedPlaylistDuration: 3000,
+					asPlayedPlaylistDuration: 3000,
+					currentPartWillAutoNext: false,
+					currentTime: 0,
+					rundownExpectedDurations: { [rundownId]: 3000 },
+					rundownAsPlayedDurations: { [rundownId]: 3000 },
+					// B's transition starts at 5000 - 2000 = 3000ms: countdown to B = 3000
+					partCountdown: { partA: 0, partB: 3000 },
+					// B has no expectedDuration so its own slot is 0ms wide
+					partDisplayDurations: { partA: 5000, partB: 0 },
+					// B physically starts at 3000ms (overlapping the last 2000ms of A)
+					partDisplayStartsAt: { partA: 0, partB: 3000 },
+					partDurations: { partA: 5000, partB: 0 },
+					// B falls back to 0 since expectedDuration is undefined
+					partExpectedDurations: { partA: 5000, partB: 0 },
+					partPlayed: { partA: 0, partB: 0 },
+					partStartsAt: { partA: 0, partB: 3000 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 3000,
+					totalPlaylistDuration: 3000,
+					breakIsLastRundown: undefined,
+					remainingTimeOnCurrentPart: undefined,
+					rundownsBeforeNextBreak: undefined,
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Does not let a second unknown-duration+transitionOverlap part propagate beyond the previous part start', () => {
+			// Scenario: A (5s) → B (unknown, 2s overlap) → C (unknown, 2s overlap)
+			// B's -2000ms reduces A's effective schedule from 5000→3000.
+			// C's -2000ms can only eat into B's contribution (which is 0), so C cannot
+			// push the schedule position below B's own position (3000ms).
+			// Total must stay at 3000ms, and C must not appear before B.
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('partA', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 5000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('partB', 0, rundownId, segmentId, {
+					durations: { expectedDuration: undefined, transitionOverlap: 2000 },
+				})
+			)
+			parts.push(
+				makeMockPart('partC', 0, rundownId, segmentId, {
+					// C's 2000ms overlap cannot propagate past B's start (3000ms)
+					durations: { expectedDuration: undefined, transitionOverlap: 2000 },
+				})
+			)
+			const partInstances = convertPartsToPartInstances(parts)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map()
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				0,
+				false,
+				playlist,
+				[rundown],
+				undefined,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId: null,
+					isLowResolution: false,
+					// C's overlap cannot go past B's position — total stays at 3000ms
+					asDisplayedPlaylistDuration: 3000,
+					asPlayedPlaylistDuration: 3000,
+					currentPartWillAutoNext: false,
+					currentTime: 0,
+					rundownExpectedDurations: { [rundownId]: 3000 },
+					rundownAsPlayedDurations: { [rundownId]: 3000 },
+					// B and C both start at 3000ms (B has 0 expected duration so C is co-located)
+					partCountdown: { partA: 0, partB: 3000, partC: 3000 },
+					partDisplayDurations: { partA: 5000, partB: 0, partC: 0 },
+					partDisplayStartsAt: { partA: 0, partB: 3000, partC: 3000 },
+					partDurations: { partA: 5000, partB: 0, partC: 0 },
+					partExpectedDurations: { partA: 5000, partB: 0, partC: 0 },
+					partPlayed: { partA: 0, partB: 0, partC: 0 },
+					partStartsAt: { partA: 0, partB: 3000, partC: 3000 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 3000,
+					totalPlaylistDuration: 3000,
+					breakIsLastRundown: undefined,
+					remainingTimeOnCurrentPart: undefined,
+					rundownsBeforeNextBreak: undefined,
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Does not produce negative durations with budgetDuration segment containing parts with undefined expectedDuration and positive transitionOverlap', () => {
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = {
+				type: 'forward-time' as any,
+				expectedStart: 0,
+				expectedDuration: 40000,
+			}
+			const rundownId = 'rundown1'
+			const segmentId1 = 'segment1'
+			const segmentId2 = 'segment2'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			// segment1 uses budgetDuration
+			segmentsMap.set(
+				protectString<SegmentId>(segmentId1),
+				makeMockSegment(segmentId1, 0, rundownId, { budgetDuration: 5000 })
+			)
+			// segment2 has normal parts with transitionOverlap
+			segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('part1', 0, rundownId, segmentId1, {
+					durations: { expectedDuration: 1000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('part2', 0, rundownId, segmentId1, {
+					durations: { expectedDuration: 1000, transitionOverlap: undefined },
+				})
+			)
+			// parts in segment2: undefined expectedDuration but WITH transitionOverlap
+			parts.push(
+				makeMockPart('part3', 0, rundownId, segmentId2, {
+					durations: { expectedDuration: undefined, transitionOverlap: 300 },
+				})
+			)
+			parts.push(
+				makeMockPart('part4', 0, rundownId, segmentId2, {
+					durations: { expectedDuration: 2000, transitionOverlap: 500 },
+				})
+			)
+			const partInstances = convertPartsToPartInstances(parts)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map()
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				0,
+				false,
+				playlist,
+				[rundown],
+				undefined,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId: null,
+					isLowResolution: false,
+					currentSegmentId: undefined,
+					// segment1: budgetDuration=5000, segment2: part3 has transitionOverlap=300 (ewt=-300)
+					// so asDisplayed = part1(1000)+part2(1000)+part3(ewt=-300→-300)→total=1700+part4(ewt=1500)=3200
+					asDisplayedPlaylistDuration: 3200,
+					asPlayedPlaylistDuration: 6500,
+					currentPartWillAutoNext: false,
+					currentTime: 0,
+					// rundownExpectedDurations: non-budget parts only (schedule-advance based)
+					// part3: scheduleAdvance=-300 → rundownExpectedDurations = max(0, prev+(-300)) = max(0, 0-300) = 0
+					// part4: scheduleAdvance=1500 → rundownExpectedDurations = max(0, 0+1500) = 1500
+					// BUT budget parts also contribute: prev accumulates to 2000 first, then part3 subtracts 300→1700,
+					// part4 adds 1500→3200
+					rundownExpectedDurations: { [rundownId]: 3200 },
+					rundownAsPlayedDurations: { [rundownId]: 6500 },
+					partCountdown: {
+						part1: 0,
+						part2: 1000,
+						part3: 5000,
+						part4: 5000,
+					},
+					partDisplayDurations: { part1: 1000, part2: 1000, part3: 0, part4: 1500 },
+					// part3 starts 300ms before the nominal segment2 start (2000): 2000-300=1700
+					partDisplayStartsAt: { part1: 0, part2: 1000, part3: 1700, part4: 1700 },
+					partDurations: { part1: 1000, part2: 1000, part3: 0, part4: 1500 },
+					partExpectedDurations: { part1: 1000, part2: 1000, part3: 0, part4: 1500 },
+					partPlayed: { part1: 0, part2: 0, part3: 0, part4: 0 },
+					// part3 overlaps 300ms into part2's slot; part4 starts where part3's 0-duration ends (=1700)
+					partStartsAt: { part1: 0, part2: 1000, part3: 1700, part4: 1700 },
+					partsInQuickLoop: {},
+					remainingPlaylistDuration: 6500,
+					totalPlaylistDuration: 6500,
+					breakIsLastRundown: undefined,
+					remainingTimeOnCurrentPart: undefined,
+					rundownsBeforeNextBreak: undefined,
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+	})
 })
 
 describe('findPartInstancesInQuickLoop', () => {

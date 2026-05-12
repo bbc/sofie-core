@@ -121,6 +121,16 @@ export class RundownTimingCalculator {
 		let currentRemaining = 0
 		let startsAtAccumulator = 0
 		let displayStartsAtAccumulator = 0
+		// Track accumulator values at the start of each part so that transitionOverlap on a subsequent
+		// unknown-duration part cannot push the schedule position *before* the previous part started.
+		let prevWaitAccumulator = 0
+		// The schedule advance contributed by the previous part (max(0, ewt)) so that the current
+		// part's transitionOverlap cannot reduce totals/positions by more than the previous part added.
+		let prevPartScheduleContribution = 0
+		// Track each part's recorded start position so the *next* part can use it as a floor.
+		let lastPartStartsAt = 0
+		let lastPartDisplayStartsAt = 0
+		let lastPartWaitStart = 0
 		let segmentDisplayDuration = 0
 		let segmentBudgetDurationLeft = 0
 		let remainingBudgetOnCurrentSegment: undefined | number
@@ -192,6 +202,9 @@ export class RundownTimingCalculator {
 					segmentDisplayDuration = 0
 					if (segmentBudgetDurationLeft > 0) {
 						waitAccumulator += segmentBudgetDurationLeft
+						// After the remaining budget is added, update lastPartWaitStart so that the first
+						// non-budget part in this new segment cannot retreat the countdown below the budget floor.
+						lastPartWaitStart = waitAccumulator
 					}
 					segmentBudgetDurationLeft = segmentBudget ?? 0
 					lastSegmentIds = {
@@ -201,6 +214,30 @@ export class RundownTimingCalculator {
 				}
 
 				// add piece to accumulator
+				const partDurations = calculatePartInstanceExpectedDurations(partInstance)
+
+				// scheduleAdvance is how much wall-clock time this part advances the schedule position.
+				// A part with no expectedDuration and a transitionOverlap reduces the previous part's
+				// effective schedule contribution, but cannot eat back more than the previous part added.
+				// E.g. A(5s) → B(unknown, 2s overlap) → C(unknown, 2s overlap):
+				//   B.scheduleAdvance = max(-2000, -5000) = -2000  → position: 3000
+				//   C.scheduleAdvance = max(-2000, -0)   =  0      → position: 3000 (can't go before B)
+				const scheduleAdvance = Math.max(
+					partDurations.expectedDurationWithTransition,
+					-prevPartScheduleContribution
+				)
+				// Update the previous-part contribution AFTER using it for the clamp above, so the
+				// next part can use *this* part's contribution.
+				prevPartScheduleContribution = Math.max(0, partDurations.expectedDurationWithTransition)
+
+				// If this part has a negative scheduleAdvance (overlap that exceeds its own duration),
+				// the schedule position recedes *before* being recorded in linearParts so that the
+				// countdown correctly reflects where in the timeline this part begins.
+				// Do NOT apply for budget-duration segments — their timing is driven by the segment budget.
+				if (scheduleAdvance < 0 && !segmentUsesBudget) {
+					waitAccumulator = Math.max(lastPartWaitStart, waitAccumulator + scheduleAdvance)
+				}
+
 				const aIndex = this.linearParts.push([partId, waitAccumulator]) - 1
 
 				// if this is next Part, clear previous countdowns and clear accumulator
@@ -227,13 +264,16 @@ export class RundownTimingCalculator {
 					this.untimedSegments.delete(partInstance.segmentId)
 				}
 
-				const partDurations = calculatePartInstanceExpectedDurations(partInstance)
+				// Snapshot accumulator values before processing this part so that transitionOverlap
+				// on a part with undefined expectedDuration cannot push schedule positions back past
+				// this part's own start position.
+				prevWaitAccumulator = waitAccumulator
 
 				// expected is just a sum of expectedDurations if not using budgetDuration
 				// if the Part is using budgetDuration, this budget is calculated when going through all the segments
 				// in the Rundown (see further down)
 				if (!segmentUsesBudget && !partIsUntimed) {
-					totalRundownDuration += partDurations.expectedDurationWithTransition
+					totalRundownDuration = Math.max(0, totalRundownDuration + scheduleAdvance)
 				}
 
 				const playOffset = partInstance.timings?.playOffset || 0
@@ -245,7 +285,11 @@ export class RundownTimingCalculator {
 
 				let displayDurationFromGroup = 0
 
-				partExpectedDuration = partInstance.timings?.duration || partDurations.expectedDurationWithTransition
+				// When a part has no expectedDuration, fall back to as-played to avoid negatives from transitionOverlap
+				partExpectedDuration =
+					partDurations.expectedDuration !== undefined
+						? partDurations.expectedDurationWithTransition
+						: partInstance.timings?.duration || 0
 
 				// Display Duration groups are groups of two or more Parts, where some of them have an
 				// expectedDuration and some have 0.
@@ -326,17 +370,12 @@ export class RundownTimingCalculator {
 						)
 					}
 				} else {
-					partDuration =
-						(partInstance.timings?.duration || partDurations.expectedDurationWithTransition) - playOffset
+					partDuration = (partInstance.timings?.duration || Math.max(0, scheduleAdvance)) - playOffset
 					partDisplayDurationNoPlayback = Math.max(
 						0,
 						(partInstance.timings?.duration && partInstance.timings?.duration + playOffset) ||
 							displayDurationFromGroup ||
-							ensureMinimumDefaultDurationIfNotAuto(
-								partInstance,
-								partDurations.expectedDurationWithTransition,
-								defaultDuration
-							)
+							ensureMinimumDefaultDurationIfNotAuto(partInstance, scheduleAdvance, defaultDuration)
 					)
 					partDisplayDuration = partDisplayDurationNoPlayback
 					this.partPlayed[partInstanceOrPartId] = (partInstance.timings?.duration || 0) - playOffset
@@ -356,16 +395,18 @@ export class RundownTimingCalculator {
 						} else if (partInstance.timings?.duration) {
 							valToAddToAsPlayedDuration = partInstance.timings.duration
 						} else if (partCounts) {
-							valToAddToAsPlayedDuration = partDurations.expectedDurationWithTransition
+							valToAddToAsPlayedDuration = scheduleAdvance
 						}
 
-						asPlayedRundownDuration += valToAddToAsPlayedDuration
-						if (!rundownAsPlayedDurations[unprotectString(partInstance.part.rundownId)]) {
-							rundownAsPlayedDurations[unprotectString(partInstance.part.rundownId)] =
-								valToAddToAsPlayedDuration
+						asPlayedRundownDuration = Math.max(0, asPlayedRundownDuration + valToAddToAsPlayedDuration)
+						const rdKey = unprotectString(partInstance.part.rundownId)
+						if (!rundownAsPlayedDurations[rdKey]) {
+							rundownAsPlayedDurations[rdKey] = Math.max(0, valToAddToAsPlayedDuration)
 						} else {
-							rundownAsPlayedDurations[unprotectString(partInstance.part.rundownId)] +=
-								valToAddToAsPlayedDuration
+							rundownAsPlayedDurations[rdKey] = Math.max(
+								0,
+								rundownAsPlayedDurations[rdKey] + valToAddToAsPlayedDuration
+							)
 						}
 					} else {
 						let valToAddToAsPlayedDuration = 0
@@ -391,13 +432,15 @@ export class RundownTimingCalculator {
 				if (lastStartedPlayback && !partInstance.timings?.duration) {
 					asDisplayedRundownDuration += Math.max(
 						memberOfDisplayDurationGroup
-							? Math.max(partExpectedDuration, partDurations.expectedDurationWithTransition)
-							: partDurations.expectedDurationWithTransition,
+							? Math.max(partExpectedDuration, scheduleAdvance)
+							: scheduleAdvance,
 						now - lastStartedPlayback
 					)
 				} else {
-					asDisplayedRundownDuration +=
-						partInstance.timings?.duration || partDurations.expectedDurationWithTransition
+					asDisplayedRundownDuration = Math.max(
+						0,
+						asDisplayedRundownDuration + (partInstance.timings?.duration ?? scheduleAdvance)
+					)
 				}
 
 				// the part is the current part but has not yet started playback
@@ -424,13 +467,39 @@ export class RundownTimingCalculator {
 				}
 
 				this.partExpectedDurations[partInstanceOrPartId] = partExpectedDuration
-				this.partStartsAt[partInstanceOrPartId] = startsAtAccumulator
-				this.partDisplayStartsAt[partInstanceOrPartId] = displayStartsAtAccumulator
+				// partStartsAt is where this part's content begins on the timeline.
+				// For parts with transitionOverlap > expectedDuration, the transition fires inside the
+				// previous part's slot: the position retreats by |scheduleAdvance| but not past the
+				// previous part's own start position.
+				// For normal parts, min(0, scheduleAdvance) = 0 so position stays at current accumulator.
+				this.partStartsAt[partInstanceOrPartId] = Math.max(
+					lastPartStartsAt,
+					startsAtAccumulator + Math.min(0, scheduleAdvance)
+				)
+				this.partDisplayStartsAt[partInstanceOrPartId] = Math.max(
+					lastPartDisplayStartsAt,
+					displayStartsAtAccumulator + Math.min(0, scheduleAdvance)
+				)
+				lastPartStartsAt = this.partStartsAt[partInstanceOrPartId]
+				lastPartDisplayStartsAt = this.partDisplayStartsAt[partInstanceOrPartId]
 				this.partDurations[partInstanceOrPartId] = partDuration
 				this.partDisplayDurations[partInstanceOrPartId] = partDisplayDuration
 				this.partDisplayDurationsNoPlayback[partInstanceOrPartId] = partDisplayDurationNoPlayback
-				startsAtAccumulator += this.partDurations[partInstanceOrPartId]
-				displayStartsAtAccumulator += this.partDisplayDurations[partInstanceOrPartId]
+				// After recording this part's position, advance the accumulators for the next part.
+				// Use actual part durations (not scheduleAdvance) so display groups advance by their
+				// group budget, not by the individual part's ewt. For parts with transitionOverlap that
+				// causes a schedule retreat (negative scheduleAdvance), we additionally apply the retreat
+				// so that subsequent parts are positioned correctly.
+				startsAtAccumulator = Math.max(
+					lastPartStartsAt,
+					startsAtAccumulator + this.partDurations[partInstanceOrPartId] + Math.min(0, scheduleAdvance)
+				)
+				displayStartsAtAccumulator = Math.max(
+					lastPartDisplayStartsAt,
+					displayStartsAtAccumulator +
+						this.partDisplayDurations[partInstanceOrPartId] +
+						Math.min(0, scheduleAdvance)
+				)
 
 				// waitAccumulator is used to calculate the countdowns for Parts relative to the current Part
 				// always add the full duration, in case by some manual intervention this segment should play twice
@@ -441,15 +510,24 @@ export class RundownTimingCalculator {
 						partDisplayDuration ||
 						partDurations.expectedDurationWithTransition
 				} else {
-					waitDuration = partInstance.timings?.duration || partDurations.expectedDurationWithTransition
+					waitDuration = partInstance.timings?.duration || Math.max(0, scheduleAdvance)
 				}
 				if (segmentUsesBudget) {
 					const wait = Math.min(waitDuration, Math.max(segmentBudgetDurationLeft, 0))
 					waitAccumulator += wait
 					segmentBudgetDurationLeft -= waitDuration
 					waitPerPart[unprotectString(partId)] = wait + Math.max(0, segmentBudgetDurationLeft)
+					// Update lastPartWaitStart so that the first non-budget part after this budget segment
+					// cannot retreat the schedule position behind where this budget part was pushed.
+					lastPartWaitStart = prevWaitAccumulator
 				} else {
-					waitAccumulator += waitDuration
+					// For non-budget parts, waitAccumulator drives countdowns and must not retreat past the
+					// previous part's start position (i.e. the position recorded for the last part).
+					// If scheduleAdvance was already applied pre-push (negative case), waitDuration is 0 here.
+					waitAccumulator = Math.max(lastPartWaitStart, waitAccumulator + waitDuration)
+					// lastPartWaitStart for the *next* part is the wait position at the start of this part's
+					// processing (after any pre-push negative advance was applied), recorded in prevWaitAccumulator.
+					lastPartWaitStart = prevWaitAccumulator
 					waitPerPart[unprotectString(partId)] = waitDuration
 				}
 
@@ -467,7 +545,7 @@ export class RundownTimingCalculator {
 						// this needs to use partInstance.part.expectedDuration as opposed to partExpectedDuration, because
 						// partExpectedDuration is affected by displayGroups, and if it hasn't played yet then it shouldn't
 						// add any duration to the "remaining" time pool
-						remainingRundownDuration += partDurations.expectedDurationWithTransition
+						remainingRundownDuration = Math.max(0, remainingRundownDuration + scheduleAdvance)
 						// item is onAir right now, and it's is currently shorter than expectedDuration
 					} else if (
 						lastStartedPlayback &&
@@ -480,12 +558,14 @@ export class RundownTimingCalculator {
 					}
 				}
 
-				if (!rundownExpectedDurations[unprotectString(partInstance.part.rundownId)]) {
-					rundownExpectedDurations[unprotectString(partInstance.part.rundownId)] =
-						partInstance.part.durations.expectedDuration ?? 0
+				const rundownKey = unprotectString(partInstance.part.rundownId)
+				if (!rundownExpectedDurations[rundownKey]) {
+					rundownExpectedDurations[rundownKey] = Math.max(0, scheduleAdvance)
 				} else {
-					rundownExpectedDurations[unprotectString(partInstance.part.rundownId)] +=
-						partInstance.part.durations.expectedDuration ?? 0
+					rundownExpectedDurations[rundownKey] = Math.max(
+						0,
+						rundownExpectedDurations[rundownKey] + scheduleAdvance
+					)
 				}
 			})
 
@@ -664,7 +744,7 @@ export class RundownTimingCalculator {
 			partDisplayDurations: this.partDisplayDurations,
 			currentTime: now,
 			remainingTimeOnCurrentPart,
-			remainingBudgetOnCurrentSegment,
+			...(remainingBudgetOnCurrentSegment !== undefined ? { remainingBudgetOnCurrentSegment } : undefined),
 			currentPartWillAutoNext,
 			rundownsBeforeNextBreak,
 			breakIsLastRundown,
