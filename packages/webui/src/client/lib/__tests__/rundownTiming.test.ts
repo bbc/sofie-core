@@ -3242,6 +3242,199 @@ describe('rundown Timing Calculator', () => {
 				})
 			)
 		})
+
+		it('Countdown to B is reduced by B.transitionOverlap while A is playing', () => {
+			// Scenario: A (5s known) → B (unknown, 2s overlap). A is currently live, 1s elapsed.
+			// B's take fires at 3000ms from A's start. At elapsed=1000ms, countdown to B = 2000ms.
+			// remainingTimeOnCurrentPart should also be 2000ms (time until next take, not A's own ewt).
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = { type: 'forward-time' as any, expectedStart: 0, expectedDuration: 40000 }
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('partA', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 5000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('partB', 0, rundownId, segmentId, {
+					durations: { expectedDuration: undefined, transitionOverlap: 2000 },
+				})
+			)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map(
+				parts.map((part) => [part._id, wrapPartToTemporaryInstance(protectString('active'), part)])
+			)
+			const partInstances = Array.from(partInstancesMap.values())
+			partInstancesMap.get(parts[0]._id)!.timings = {
+				// A started at t=1000, has been playing for 1000ms (now=2000)
+				take: 1000,
+				plannedStartedPlayback: 1000,
+			}
+			const currentPartInstanceId = partInstancesMap.get(parts[0]._id)!._id
+			const nextPartInstanceId = partInstancesMap.get(parts[1]._id)!._id
+			playlist.currentPartInfo = {
+				partInstanceId: currentPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			playlist.nextPartInfo = {
+				partInstanceId: nextPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				2000, // now = 2000ms, elapsed since A started = 1000ms
+				false,
+				playlist,
+				[rundown],
+				rundown,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId,
+					currentSegmentId: protectString(segmentId),
+					isLowResolution: false,
+					currentPartWillAutoNext: false,
+					currentTime: 2000,
+					// A has been playing 1000ms. Next take fires at 3000ms from A's start (5000 - 2000 overlap).
+					// Elapsed = 1000ms so 2000ms remain until B fires.
+					remainingTimeOnCurrentPart: 2000,
+					// B's countdown = time until take = 2000ms
+					partCountdown: { partA: null, partB: 2000 },
+					// Total expected = 3000ms (A's 5s minus B's 2s overlap).
+					// Remaining = 3000 - 1000 elapsed = 2000ms.
+					remainingPlaylistDuration: 2000,
+					totalPlaylistDuration: 3000,
+					// asPlayed = max(ewt_A=5000, 1000ms elapsed) then reduced by B's overlap contribution
+					// = max(0, 5000 + scheduleAdvance_B=-2000) = 3000ms
+					asDisplayedPlaylistDuration: 3000,
+					asPlayedPlaylistDuration: 3000,
+					rundownExpectedDurations: { [rundownId]: 3000 },
+					rundownAsPlayedDurations: { [rundownId]: 3000 },
+					partDisplayDurations: { partA: 5000, partB: 0 },
+					partDisplayStartsAt: { partA: 0, partB: 3000 },
+					partDurations: { partA: 5000, partB: 0 },
+					partExpectedDurations: { partA: 5000, partB: 0 },
+					partPlayed: { partA: 1000, partB: 0 },
+					partStartsAt: { partA: 0, partB: 3000 },
+					partsInQuickLoop: {},
+					breakIsLastRundown: false,
+					rundownsBeforeNextBreak: [],
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
+
+		it('Shows correct remaining time and no over-run when B (unknown duration, transitionOverlap) is playing', () => {
+			// Scenario: A (5s) → B (unknown, 2s overlap). A played for 3000ms, B is now live, 500ms elapsed.
+			// totalPlaylistDuration = 3000ms (A's 5s minus B's 2s overlap).
+			// B's content starts at 1000ms in the timeline (3000ms take - 2000ms overlap = 1000ms).
+			// remainingTimeOnCurrentPart: uses original formula with ewt_B=-2000, shows overrun.
+			const timing = new RundownTimingCalculator()
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			playlist.timing = { type: 'forward-time' as any, expectedStart: 0, expectedDuration: 40000 }
+			const rundownId = 'rundown1'
+			const segmentId = 'segment1'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(protectString<SegmentId>(segmentId), makeMockSegment(segmentId, 0, rundownId))
+			const parts: DBPart[] = []
+			parts.push(
+				makeMockPart('partA', 0, rundownId, segmentId, {
+					durations: { expectedDuration: 5000, transitionOverlap: undefined },
+				})
+			)
+			parts.push(
+				makeMockPart('partB', 0, rundownId, segmentId, {
+					durations: { expectedDuration: undefined, transitionOverlap: 2000 },
+				})
+			)
+			const partInstancesMap: Map<PartId, PartInstance> = new Map(
+				parts.map((part) => [part._id, wrapPartToTemporaryInstance(protectString('active'), part)])
+			)
+			const partInstances = Array.from(partInstancesMap.values())
+			// A played its full 5000ms including the 2000ms overlap with B.
+			// The server sets timings.duration = plannedStoppedPlayback - plannedStartedPlayback
+			// where plannedStoppedPlayback = B_start + overlap = 3100 + 2000 = 5100.
+			partInstancesMap.get(parts[0]._id)!.timings = {
+				duration: 5000,
+				take: 0,
+				plannedStartedPlayback: 100,
+				plannedStoppedPlayback: 5100,
+			}
+			// B is on air, 500ms elapsed
+			partInstancesMap.get(parts[1]._id)!.timings = {
+				take: 3100,
+				plannedStartedPlayback: 3100,
+			}
+			const currentPartInstanceId = partInstancesMap.get(parts[1]._id)!._id
+			playlist.currentPartInfo = {
+				partInstanceId: currentPartInstanceId,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			const rundown = makeMockRundown(rundownId, playlist)
+			const result = timing.updateDurations(
+				3600, // now = 3600ms (500ms after B started at 3100ms)
+				false,
+				playlist,
+				[rundown],
+				rundown,
+				partInstances,
+				partInstancesMap,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+			expect(result).toEqual(
+				literal<RundownTimingContext>({
+					currentPartInstanceId,
+					currentSegmentId: protectString(segmentId),
+					isLowResolution: false,
+					currentPartWillAutoNext: false,
+					currentTime: 3600,
+					// No next part: falls back to original formula.
+					// onAirPartDuration = ewt_B = -2000; remaining = min(3100,3600) + (-2000) - 3600 = -2500
+					remainingTimeOnCurrentPart: -2500,
+					// No next part: A countdown = 0 (past), B countdown = push position based on A's full 5000ms
+					// waitDuration_A = 5000; waitAccumulator after A = 5000; scheduleAdvance_B = -2000 (negative
+					// pre-push): B's push position = max(lastPartWaitStart=0, 5000 + (-2000)) = 3000
+					partCountdown: { partA: 0, partB: 3000 },
+					// B has no expected duration: remaining = 0
+					remainingPlaylistDuration: 0,
+					totalPlaylistDuration: 3000,
+					// A played its full 5000ms (including overlap); B adds 500ms played so far
+					asDisplayedPlaylistDuration: 5500,
+					asPlayedPlaylistDuration: 5500,
+					rundownExpectedDurations: { [rundownId]: 3000 },
+					rundownAsPlayedDurations: { [rundownId]: 5500 },
+					// A's display duration = timings.duration = 5000; B growing from 0
+					partDisplayDurations: { partA: 5000, partB: 500 },
+					// B's display start = displayAccum_after_A(5000) + min(0,-2000) = 3000
+					partDisplayStartsAt: { partA: 0, partB: 3000 },
+					partDurations: { partA: 5000, partB: 500 },
+					partExpectedDurations: { partA: 5000, partB: 0 },
+					partPlayed: { partA: 5000, partB: 500 },
+					partStartsAt: { partA: 0, partB: 3000 },
+					partsInQuickLoop: {},
+					breakIsLastRundown: false,
+					rundownsBeforeNextBreak: [],
+					nextRundownAnchor: undefined,
+				})
+			)
+		})
 	})
 })
 

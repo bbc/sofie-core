@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { useTiming } from './withTiming.js'
 import { RundownUtils } from '../../../lib/rundown.js'
 import type { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer.js'
-import { calculatePartInstanceExpectedDurations } from '@sofie-automation/corelib/dist/playout/timings'
 import { getPartInstanceTimingId } from '../../../lib/rundownTiming.js'
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
@@ -47,14 +46,39 @@ export function SegmentDuration(props: ISegmentDurationProps): JSX.Element | nul
 		if (props.parts && timingDurations.partPlayed) {
 			const { partPlayed } = timingDurations
 
-			for (const part of props.parts) {
-				playedOut += (!part.instance.part.untimed ? partPlayed[getPartInstanceTimingId(part.instance)] : 0) || 0
+			if (segmentBudgetDuration === undefined) {
+				// Compute the segment budget using the blueprint's static transitionOverlap values
+				// (part.durations.transitionOverlap), NOT partPlayoutTimings. This keeps the budget
+				// stable across the take event — partPlayoutTimings is only computed at take time
+				// and would otherwise cause a visible jump in the displayed duration.
+				let position = 0
+				let prevContrib = 0
+				for (const part of props.parts) {
+					if (part.instance.orphaned || part.instance.part.untimed) continue
+					const d = part.instance.part.durations
+					const ewt = (d.expectedDuration ?? 0) - (d.transitionOverlap ?? 0)
+					const advance = Math.max(ewt, -prevContrib)
+					prevContrib = Math.max(0, ewt)
+					position = Math.max(0, position + advance)
+				}
+				budget = position
+			}
 
-				if (segmentBudgetDuration === undefined) {
-					budget +=
-						part.instance.orphaned || part.instance.part.untimed
-							? 0
-							: calculatePartInstanceExpectedDurations(part.instance).expectedDurationWithTransition || 0
+			// Compute playedOut, adjusting completed parts for shared overlap time.
+			// timings.duration for a completed part A includes the overlap period:
+			//   A.timings.duration = B_start + B.partPlayoutTimings.fromPartRemaining - A_start
+			// Subtracting fromPartRemaining gives A's actual schedule advance (B_start - A_start).
+			for (let i = 0; i < props.parts.length; i++) {
+				const part = props.parts[i]
+				if (part.instance.part.untimed) continue
+				const played = partPlayed[getPartInstanceTimingId(part.instance)] ?? 0
+				if (part.instance.timings?.duration) {
+					// Part has completed — subtract the next part's overlap to undo the inflation
+					const nextPart = props.parts[i + 1]
+					const nextOverlap = nextPart ? (nextPart.instance.part.durations.transitionOverlap ?? 0) : 0
+					playedOut += Math.max(0, played - nextOverlap)
+				} else {
+					playedOut += played
 				}
 			}
 		}

@@ -119,6 +119,7 @@ export class RundownTimingCalculator {
 		const waitPerPart: Record<string, number> = {}
 		let waitAccumulator = 0
 		let currentRemaining = 0
+		let remainingToNextTake: number | undefined = undefined
 		let startsAtAccumulator = 0
 		let displayStartsAtAccumulator = 0
 		// Track accumulator values at the start of each part so that transitionOverlap on a subsequent
@@ -569,6 +570,32 @@ export class RundownTimingCalculator {
 				}
 			})
 
+			// Fix currentRemaining to reflect actual time until the next part fires.
+			// When the next part has a transitionOverlap, it is pushed to an earlier linearParts position
+			// than the current part's own ewt would suggest. Using ewt of the current part would make
+			// B's countdown jump from 3000 (unplayed) to 5000 (when A starts playing with ewt=5000).
+			//
+			// Also save the unclamped value for remainingTimeOnCurrentPart (must be computed here because
+			// the linearParts pass below overwrites linearParts[nextAIndex][1]).
+			if (currentAIndex >= 0 && nextAIndex >= 0) {
+				const liveInstance = partInstances[currentAIndex]
+				const livePlayback = liveInstance?.timings?.plannedStartedPlayback
+				if (typeof livePlayback === 'number') {
+					const liveSegment = segmentsMap.get(liveInstance.segmentId)
+					const liveSegmentUsesBudget = liveSegment?.segmentTiming?.budgetDuration !== undefined
+					if (!liveSegmentUsesBudget) {
+						// Derive the countdown from the actual distance between this part's and the next
+						// part's wait-accumulator positions, so transitionOverlap on the next part is
+						// correctly reflected in the remaining time.
+						const elapsed = now - livePlayback
+						const nextPos = this.linearParts[nextAIndex][1] ?? 0
+						const currentPos = this.linearParts[currentAIndex][1] ?? 0
+						remainingToNextTake = nextPos - currentPos - elapsed
+						currentRemaining = Math.max(0, remainingToNextTake)
+					}
+				}
+			}
+
 			// This is where the waitAccumulator-generated data in the linearSegLines is used to calculate the countdowns.
 			// at this point the "waitAccumulator" should be the total sum of all the "waits" in the rundown
 			let localAccum = 0
@@ -716,10 +743,28 @@ export class RundownTimingCalculator {
 					onAirPartDuration
 			}
 
-			remainingTimeOnCurrentPart =
-				typeof lastStartedPlayback === 'number'
-					? Math.min(lastStartedPlayback, now) + onAirPartDuration - now
-					: onAirPartDuration
+			if (typeof lastStartedPlayback === 'number') {
+				// When the next part has a transitionOverlap, the take fires before the current part's
+				// own ewt expires. Use the saved remainingToNextTake (computed before linearParts pass
+				// modified positions) to get the unclamped remaining time-to-next-take that correctly
+				// reflects the overlap (can be negative = overrun). For all other cases, fall back to
+				// the original onAirPartDuration formula.
+				if (remainingToNextTake !== undefined) {
+					// Check that the next part actually has a transitionOverlap; otherwise use original formula
+					// so that displayDurationGroup overruns still show as negative values.
+					const nextPartInst = partInstances[nextAIndex]
+					const nextOverlap = calculatePartInstanceExpectedDurations(nextPartInst).transitionOverlap
+					if (nextOverlap > 0) {
+						remainingTimeOnCurrentPart = remainingToNextTake
+					} else {
+						remainingTimeOnCurrentPart = Math.min(lastStartedPlayback, now) + onAirPartDuration - now
+					}
+				} else {
+					remainingTimeOnCurrentPart = Math.min(lastStartedPlayback, now) + onAirPartDuration - now
+				}
+			} else {
+				remainingTimeOnCurrentPart = onAirPartDuration
+			}
 
 			currentPartWillAutoNext = !!(currentLivePart.autoNext && currentLivePart.durations.expectedDuration)
 
