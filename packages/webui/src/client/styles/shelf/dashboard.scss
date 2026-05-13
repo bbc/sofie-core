@@ -642,7 +642,8 @@ $dashboard-button-height: 3.625em;
 						text-align: right;
 						vertical-align: middle;
 
-						margin: 2px 1px 0;
+						padding: 0 1px;
+						margin: 0 0 0;
 						-webkit-text-stroke: 1px #000000;
 						paint-order: stroke fill;
 						// Fallback for non-stroke browsers
@@ -667,6 +668,7 @@ $dashboard-button-height: 3.625em;
 							'YTUC' 712,
 							'slnt' 0,
 							'wdth' 25;
+						background: rgba(0, 0, 0, 0.3);
 					}
 				}
 
