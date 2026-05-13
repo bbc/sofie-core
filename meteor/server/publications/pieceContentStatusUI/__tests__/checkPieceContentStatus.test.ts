@@ -16,7 +16,6 @@ import {
 	PieceLifespan,
 	VTContent,
 } from '@sofie-automation/blueprints-integration'
-import { ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import { Complete, literal } from '@sofie-automation/corelib/dist/lib'
 import { MongoMock } from '../../../../__mocks__/mongo'
 import {
@@ -36,7 +35,6 @@ import {
 import { defaultStudio } from '../../../../__mocks__/defaultCollectionObjects'
 import { MediaObjects } from '../../../collections'
 import { PieceDependencies } from '../common'
-import { DEFAULT_MINIMUM_TAKE_SPAN } from '@sofie-automation/shared-lib/dist/core/constants'
 import { PieceContentStatusMessageFactory } from '../messageFactory'
 import { RundownId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
@@ -246,20 +244,13 @@ describe('lib/mediaObjects', () => {
 	})
 
 	test('checkPieceContentStatus', async () => {
-		const mockStudioSettings: IStudioSettings = {
-			supportedMediaFormats: '1920x1080i5000, 1280x720, i5000, i5000tff',
-			mediaPreviewsUrl: '',
-			supportedAudioStreams: '4',
-			frameRate: 25,
-			minimumTakeSpan: DEFAULT_MINIMUM_TAKE_SPAN,
-			allowHold: false,
-			allowPieceDirectPlay: false,
-			enableBuckets: false,
-			enableEvaluationForm: false,
-			shelfAdlibButtonSize: ShelfButtonSize.LARGE,
-		}
-
 		const mockDefaultStudio = defaultStudio(protectString('studio0'))
+		const mockStudioSettings: IStudioSettings = {
+			...applyAndValidateOverrides(mockDefaultStudio.settingsWithOverrides).obj,
+			supportedMediaFormats: '1920x1080i5000, 1280x720, i5000, i5000tff',
+			supportedAudioStreams: '4',
+			enableEvaluationForm: false,
+		}
 		const mockStudio: Complete<PieceContentStatusStudio> = {
 			_id: mockDefaultStudio._id,
 			settings: mockStudioSettings,
