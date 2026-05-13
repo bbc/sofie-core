@@ -260,6 +260,7 @@ describe('lib/mediaObjects', () => {
 			allowPieceDirectPlay: false,
 			enableBuckets: false,
 			enableEvaluationForm: false,
+			shelfAdlibButtonSize: ShelfButtonSize.LARGE,
 		}
 
 		const mockDefaultStudio = defaultStudio(protectString('studio0'))
@@ -494,6 +495,7 @@ describe('lib/mediaObjects', () => {
 			allowPieceDirectPlay: false,
 			enableBuckets: false,
 			enableEvaluationForm: false,
+			shelfAdlibButtonSize: ShelfButtonSize.LARGE,
 		}
 
 		const mockDefaultStudio = defaultStudio(protectString('studio0'))
