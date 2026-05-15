@@ -1,7 +1,7 @@
 import type { DeviceConfigManifest } from '../core/deviceConfigManifest.js'
 import type { PeripheralDeviceId, RundownPlaylistId, PartInstanceId, PieceInstanceId } from '../core/model/Ids.js'
 import type { StatusCode } from '../lib/status.js'
-import { DeviceStatusDetail } from 'timeline-state-resolver-types'
+import type { DeviceStatusDetail } from 'timeline-state-resolver-types'
 
 // Re-export for use in UI components
 export type { DeviceStatusDetail } from 'timeline-state-resolver-types'
