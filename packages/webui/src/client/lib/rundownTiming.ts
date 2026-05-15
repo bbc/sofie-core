@@ -859,11 +859,15 @@ export function getPlaylistTimingDiff(
 
 	let diff = 0
 	if (PlaylistTiming.isPlaylistTimingNone(timing)) {
-		 diff = (timingContext.asPlayedPlaylistDuration || 0) - (timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
+		diff =
+			(timingContext.asPlayedPlaylistDuration || 0) -
+			(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
 	} else if (PlaylistTiming.isPlaylistDurationTimed(timing)) {
-		diff = (timingContext.asPlayedPlaylistDuration || 0) - (timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
+		diff =
+			(timingContext.asPlayedPlaylistDuration || 0) -
+			(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
 	} else {
-			 diff = frontAnchor + (timingContext.remainingPlaylistDuration || 0) - backAnchor
+		diff = frontAnchor + (timingContext.remainingPlaylistDuration || 0) - backAnchor
 	}
 
 	// handle special cases
