@@ -48,6 +48,7 @@ export type SystemErrorMessages = Partial<Record<SystemErrorCode | string, strin
  *
  * // Create resolver for device statuses
  * const resolver = new StatusMessageResolver(
+ *   studioBlueprintId,
  *   studioManifest.deviceStatusMessages
  * )
  *
@@ -92,7 +93,16 @@ export class StatusMessageResolver {
 			const blueprintMessage = this.#deviceStatusMessages[errorCode]
 
 			// Evaluate if function or use as string template
-			const result = typeof blueprintMessage === 'function' ? blueprintMessage(context) : blueprintMessage
+			let result: string | undefined
+			if (typeof blueprintMessage === 'function') {
+				try {
+					result = blueprintMessage(context)
+				} catch {
+					// Blueprint function threw - fall through to default message
+				}
+			} else {
+				result = blueprintMessage
+			}
 
 			if (result === '') {
 				// Empty string means suppress the message
