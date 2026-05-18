@@ -336,9 +336,9 @@ export namespace ServerPeripheralDeviceAPI {
 		}
 
 		logger.info(
-			`Device ${deviceId} setStatus: statusDetails=${status.statusDetails.length}, messages=${status.messages?.length ?? 'undefined'}, studioId=${studioId ?? 'none'}`
+			`Device ${deviceId} setStatus: statusDetails=${status.statusDetails?.length ?? 'undefined'}, messages=${status.messages?.length ?? 'undefined'}, studioId=${studioId ?? 'none'}`
 		)
-		if (status.statusDetails.length > 0) {
+		if (status.statusDetails && status.statusDetails.length > 0) {
 			if (studioId) {
 				const resolvedMessages = await resolveDeviceStatusDetails(
 					studioId,
