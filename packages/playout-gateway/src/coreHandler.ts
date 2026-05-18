@@ -444,7 +444,7 @@ export class CoreTSRDeviceHandler {
 			} else {
 				this._deviceStatus = {
 					statusCode: rawStatus.statusCode,
-					statusDetails: rawStatus.messages.map((m) => ({ message: m })),
+					statusDetails: (rawStatus.messages ?? []).map((m) => ({ message: m })),
 				}
 			}
 		}
@@ -487,7 +487,7 @@ export class CoreTSRDeviceHandler {
 		this._deviceStatus = {
 			...this._deviceStatus,
 			statusCode: deviceStatus.statusCode,
-			statusDetails: deviceStatus.statusDetails ?? deviceStatus.messages.map((m) => ({ message: m })),
+			statusDetails: deviceStatus.statusDetails ?? (deviceStatus.messages ?? []).map((m) => ({ message: m })),
 		}
 		this.sendStatus()
 	}
