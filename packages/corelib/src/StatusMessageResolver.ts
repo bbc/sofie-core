@@ -109,7 +109,7 @@ export class StatusMessageResolver {
 				return null
 			}
 
-			if (result) {
+			if (typeof result === 'string') {
 				// Custom message from blueprint - wrap with blueprint namespace if ID provided
 				return this.#blueprintId
 					? wrapTranslatableMessageFromBlueprints({ key: result, args: context }, [this.#blueprintId])
@@ -143,7 +143,7 @@ export class StatusMessageResolver {
 				return null
 			}
 
-			if (blueprintMessage) {
+			if (typeof blueprintMessage === 'string') {
 				return this.#blueprintId
 					? wrapTranslatableMessageFromBlueprints({ key: blueprintMessage, args }, [this.#blueprintId])
 					: { key: blueprintMessage, args }
