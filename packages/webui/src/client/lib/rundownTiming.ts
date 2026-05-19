@@ -24,7 +24,7 @@ import {
 import { objectFromEntries } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { getCurrentTime } from './systemTime.js'
 import { Settings } from '../lib/Settings.js'
-import type { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
 import { RundownUtils } from './rundown.js'
@@ -82,10 +82,8 @@ export class RundownTimingCalculator {
 	 * @param {number} now
 	 * @param {boolean} isLowResolution
 	 * @param {(DBRundownPlaylist | undefined)} playlist
-	 * @param {Rundown[]} rundowns
-	 * @param {(Rundown | undefined)} currentRundown
 	 * @param {CalculateTimingsPartInstance[]} partInstances
-	 * @param {Map<PartId, CalculateTimingsPartInstance>} partInstancesMap
+	 * @param {Map<SegmentId, DBSegment>} segmentsMap
 	 * @param {number} [defaultDuration]
 	 * @return {*}  {RundownTimingContext}
 	 * @memberof RundownTimingCalculator
@@ -94,8 +92,6 @@ export class RundownTimingCalculator {
 		now: number,
 		isLowResolution: boolean,
 		playlist: DBRundownPlaylist | undefined,
-		_rundowns: Rundown[],
-		_currentRundown: Rundown | undefined,
 		partInstances: CalculateTimingsPartInstance[],
 		segmentsMap: Map<SegmentId, DBSegment>,
 		/** Fallback duration for Parts that have no as-played duration of their own. */
