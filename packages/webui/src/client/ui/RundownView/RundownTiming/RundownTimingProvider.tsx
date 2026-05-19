@@ -277,7 +277,7 @@ export const RundownTimingProvider = withTracker<
 		}
 
 		private updateDurations(now: number, isSynced: boolean) {
-			const { playlist, rundowns, currentRundown, partInstances, partInstancesMap, segmentsMap } = this.props
+			const { playlist, rundowns, currentRundown, partInstances, segmentsMap } = this.props
 
 			const updatedDurations = this.timingCalculator.updateDurations(
 				now,
@@ -286,7 +286,6 @@ export const RundownTimingProvider = withTracker<
 				rundowns,
 				currentRundown,
 				partInstances,
-				partInstancesMap,
 				segmentsMap,
 				this.props.defaultDuration,
 				this.props.partsInQuickLoop
