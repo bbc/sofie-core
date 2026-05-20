@@ -9,6 +9,8 @@ import type {
 	IStudioBaselineContext,
 	IStudioUserContext,
 	IProcessIngestDataContext,
+	ISystemSnapshotCreatedContext,
+	IBlueprintSystemSnapshotInfo,
 } from '../context/index.js'
 import type { IBlueprintShowStyleBase } from '../showStyle.js'
 import type {
@@ -139,6 +141,15 @@ export interface StudioBlueprintManifest<
 		nrcsIngestRundown: IngestRundown,
 		previousNrcsIngestRundown: IngestRundown | undefined,
 		changes: NrcsIngestChangeDetails | UserOperationChange | PlayoutOperationChange
+	) => Promise<void>
+
+	/**
+	 * Called after a system snapshot has been stored.
+	 * Invoked once per studio: for studio-scoped snapshots, only that studio; for full-system snapshots, each studio in the snapshot.
+	 */
+	onSystemSnapshotCreated?: (
+		context: ISystemSnapshotCreatedContext,
+		info: IBlueprintSystemSnapshotInfo
 	) => Promise<void>
 }
 

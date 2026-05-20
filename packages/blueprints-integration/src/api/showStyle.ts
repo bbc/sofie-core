@@ -18,6 +18,8 @@ import type {
 	IFixUpConfigContext,
 	IOnTakeContext,
 	IOnSetAsNextContext,
+	IPlaylistSnapshotCreatedContext,
+	IBlueprintPlaylistSnapshotInfo,
 } from '../context/index.js'
 import type { IngestAdlib, ExtendedIngestRundown, IngestRundown } from '../ingest.js'
 import type { IBlueprintExternalMessageQueueObj } from '../message.js'
@@ -200,6 +202,14 @@ export interface ShowStyleBlueprintManifest<
 	blueprintConfigToAPI?: (context: ICommonContext, config: TRawConfig) => object
 
 	// Events
+
+	/**
+	 * Called after a rundown playlist snapshot has been generated (before it is stored to disk).
+	 */
+	onPlaylistSnapshotCreated?: (
+		context: IPlaylistSnapshotCreatedContext,
+		info: IBlueprintPlaylistSnapshotInfo
+	) => Promise<void>
 
 	/**
 	 * Called at the final stage of RundownPlaylist activation, before the updated timeline is submitted to the Playout Gateway,

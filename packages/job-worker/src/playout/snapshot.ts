@@ -32,6 +32,7 @@ import { saveIntoDb } from '../db/changes.js'
 import { getPartId, getSegmentId } from '../ingest/lib.js'
 import { assertNever, getHash, getRandomId, literal, omit } from '@sofie-automation/corelib/dist/lib'
 import { logger } from '../logging.js'
+import { invokeOnPlaylistSnapshotCreated } from './snapshotHooks.js'
 import { JSONBlobParse, JSONBlobStringify } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { RundownOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Rundown'
@@ -63,7 +64,7 @@ export async function handleGeneratePlaylistSnapshot(
 	props: GeneratePlaylistSnapshotProps
 ): Promise<GeneratePlaylistSnapshotResult> {
 	const snapshot = await runWithPlaylistLock(context, props.playlistId, async () => {
-		const snapshotId: SnapshotId = getRandomId()
+		const snapshotId: SnapshotId = props.snapshotId ?? getRandomId()
 		logger.info(`Generating RundownPlaylist snapshot "${snapshotId}" for RundownPlaylist "${props.playlistId}"`)
 
 		const playlist = await context.directCollections.RundownPlaylists.findOne(props.playlistId)
@@ -142,7 +143,7 @@ export async function handleGeneratePlaylistSnapshot(
 				: undefined
 
 		logger.info(`Snapshot generation done`)
-		return literal<CoreRundownPlaylistSnapshot>({
+		const coreSnapshot = literal<CoreRundownPlaylistSnapshot>({
 			version: getSystemVersion(),
 			playlistId: playlist._id,
 			playlist,
@@ -163,6 +164,10 @@ export async function handleGeneratePlaylistSnapshot(
 			expectedPackages,
 			timeline,
 		})
+
+		await invokeOnPlaylistSnapshotCreated(context, props, coreSnapshot, snapshotId)
+
+		return coreSnapshot
 	})
 
 	return {

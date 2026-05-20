@@ -13,6 +13,7 @@ import {
 	RundownId,
 	RundownPlaylistId,
 	SegmentId,
+	SnapshotId,
 	StudioId,
 } from '../dataModel/Ids.js'
 import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
@@ -173,6 +174,11 @@ export enum StudioJobs {
 	 * Restore the Playlist owned portions of a Playlist snapshot
 	 */
 	RestorePlaylistSnapshot = 'restorePlaylistSnapshot',
+
+	/**
+	 * Invoke the studio blueprint onSystemSnapshotCreated hook
+	 */
+	OnSystemSnapshotCreated = 'onSystemSnapshotCreated',
 
 	/**
 	 * Run the Blueprint applyConfig for the studio
@@ -361,6 +367,22 @@ export interface GeneratePlaylistSnapshotProps extends RundownPlayoutPropsBase {
 	full: boolean
 	// Include the Timeline
 	withTimeline: boolean
+	/** Id of the snapshot being generated (assigned before the worker job is queued) */
+	snapshotId?: SnapshotId
+	/** Human-readable reason for creating the snapshot */
+	reason?: string
+}
+
+export interface OnSystemSnapshotCreatedProps {
+	snapshotId: SnapshotId
+	reason: string
+	type: 'system' | 'debug'
+	options: {
+		studioId?: StudioId
+		withDeviceSnapshots?: boolean
+		/** True when the stored snapshot is a full-system snapshot (not filtered to a single studio) */
+		fullSystem?: boolean
+	}
 }
 export interface GeneratePlaylistSnapshotResult {
 	/**
@@ -499,6 +521,7 @@ export type StudioJobFunc = {
 
 	[StudioJobs.GeneratePlaylistSnapshot]: (data: GeneratePlaylistSnapshotProps) => GeneratePlaylistSnapshotResult
 	[StudioJobs.RestorePlaylistSnapshot]: (data: RestorePlaylistSnapshotProps) => RestorePlaylistSnapshotResult
+	[StudioJobs.OnSystemSnapshotCreated]: (data: OnSystemSnapshotCreatedProps) => void
 	[StudioJobs.DebugCrash]: (data: DebugRegenerateNextPartInstanceProps) => void
 
 	[StudioJobs.BlueprintUpgradeForStudio]: () => void
