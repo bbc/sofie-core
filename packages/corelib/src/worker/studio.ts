@@ -176,7 +176,8 @@ export enum StudioJobs {
 	RestorePlaylistSnapshot = 'restorePlaylistSnapshot',
 
 	/**
-	 * Invoke the studio blueprint onSystemSnapshotCreated hook
+	 * Invoke {@link StudioBlueprintManifest.onSystemSnapshotCreated} for a studio after a snapshot is stored.
+	 * Queued from Meteor (`internalStoreSystemSnapshot`, `storeDebugSnapshot`).
 	 */
 	OnSystemSnapshotCreated = 'onSystemSnapshotCreated',
 
@@ -363,24 +364,29 @@ export type DebugRegenerateNextPartInstanceProps = RundownPlayoutPropsBase
 export type DebugSyncInfinitesForNextPartInstanceProps = RundownPlayoutPropsBase
 
 export interface GeneratePlaylistSnapshotProps extends RundownPlayoutPropsBase {
-	// Include all Instances, or just recent ones
+	/** Include all part/piece instances, or only recent/non-reset instances. */
 	full: boolean
-	// Include the Timeline
+	/** Include the timeline if the playlist is activated. */
 	withTimeline: boolean
-	/** Id of the snapshot being generated (assigned before the worker job is queued) */
+	/** Id of the snapshot (assigned in Meteor before the worker job is queued). Passed to the playlist snapshot blueprint hook. */
 	snapshotId?: SnapshotId
-	/** Human-readable reason for creating the snapshot */
+	/** Human-readable reason for creating the snapshot. Passed to the playlist snapshot blueprint hook. */
 	reason?: string
 }
 
+/** Props for {@link StudioJobs.OnSystemSnapshotCreated}. */
 export interface OnSystemSnapshotCreatedProps {
+	/** Id of the stored snapshot file. */
 	snapshotId: SnapshotId
+	/** Human-readable reason from the snapshot request. */
 	reason: string
+	/** `'system'` for system snapshots; `'debug'` for debug snapshot capture. */
 	type: 'system' | 'debug'
+	/** Snapshot options; `studioId` is the studio this worker job runs for. */
 	options: {
 		studioId?: StudioId
 		withDeviceSnapshots?: boolean
-		/** True when the stored snapshot is a full-system snapshot (not filtered to a single studio) */
+		/** True when the stored snapshot is a full-system snapshot (not filtered to a single studio). */
 		fullSystem?: boolean
 	}
 }

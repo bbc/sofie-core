@@ -165,6 +165,7 @@ export async function handleGeneratePlaylistSnapshot(
 			timeline,
 		})
 
+		// Blueprint hook: errors are logged inside invokeOnPlaylistSnapshotCreated
 		await invokeOnPlaylistSnapshotCreated(context, props, coreSnapshot, snapshotId)
 
 		return coreSnapshot

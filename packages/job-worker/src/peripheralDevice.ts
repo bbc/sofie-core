@@ -188,6 +188,11 @@ async function executePeripheralDeviceGenericFunction(
 	return result.promise
 }
 
+/**
+ * Lists TSR subdevices for blueprint use when no {@link PlayoutModel} is loaded.
+ *
+ * Used by snapshot hooks and other studio-scoped blueprint callbacks outside active playout.
+ */
 export async function listPlayoutDevicesForStudio(context: JobContext): Promise<IBlueprintPlayoutDevice[]> {
 	const parentDevices = await context.directCollections.PeripheralDevices.findFetch({
 		'studioAndConfigId.studioId': context.studioId,
@@ -206,6 +211,7 @@ export async function listPlayoutDevices(
 	return listPlayoutDevicesFromParentDevices(context, parentDevices)
 }
 
+/** Resolves playout gateway subdevices for the given parent playout peripheral devices. */
 async function listPlayoutDevicesFromParentDevices(
 	context: JobContext,
 	parentDevices: ReadonlyDeep<PeripheralDevice[]>

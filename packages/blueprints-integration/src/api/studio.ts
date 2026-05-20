@@ -144,8 +144,20 @@ export interface StudioBlueprintManifest<
 	) => Promise<void>
 
 	/**
-	 * Called after a system snapshot has been stored.
-	 * Invoked once per studio: for studio-scoped snapshots, only that studio; for full-system snapshots, each studio in the snapshot.
+	 * Called after a system snapshot has been stored to disk.
+	 *
+	 * Use this to run studio-level side effects (e.g. TSR actions on playout devices) at snapshot time.
+	 * The callback receives {@link ISystemSnapshotCreatedContext} with `listPlayoutDevices` and `executeTSRAction`.
+	 *
+	 * Invoked once per studio:
+	 * - Studio-scoped snapshots (`studioId` in snapshot options): once for that studio.
+	 * - Full-system snapshots (no `studioId`): once per studio included in the snapshot.
+	 * - Debug snapshots: once for the target studio (`info.type` is `'debug'`).
+	 *
+	 * Errors are logged by Core and do not fail snapshot storage.
+	 *
+	 * @param context Studio context and TSR actions for the studio worker job.
+	 * @param info Metadata about the snapshot (not the snapshot JSON).
 	 */
 	onSystemSnapshotCreated?: (
 		context: ISystemSnapshotCreatedContext,

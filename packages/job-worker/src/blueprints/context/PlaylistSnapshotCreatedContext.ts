@@ -7,6 +7,11 @@ import { ProcessedShowStyleConfig, ProcessedStudioConfig } from '../config.js'
 import { ContextInfo } from './CommonContext.js'
 import { ShowStyleContext } from './ShowStyleContext.js'
 
+/**
+ * Blueprint context for {@link ShowStyleBlueprintManifest.onPlaylistSnapshotCreated}.
+ *
+ * Extends {@link ShowStyleContext} with TSR playout device listing and actions scoped to the studio worker job.
+ */
 export class PlaylistSnapshotCreatedContext extends ShowStyleContext implements IPlaylistSnapshotCreatedContext {
 	private readonly _context: JobContext
 
@@ -22,10 +27,12 @@ export class PlaylistSnapshotCreatedContext extends ShowStyleContext implements 
 		this._context = context
 	}
 
+	/** @inheritdoc */
 	async listPlayoutDevices(): Promise<IBlueprintPlayoutDevice[]> {
 		return listPlayoutDevicesForStudio(this._context)
 	}
 
+	/** @inheritdoc */
 	async executeTSRAction(
 		deviceId: PeripheralDeviceId,
 		actionId: string,

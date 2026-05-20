@@ -16,6 +16,12 @@ import { logger } from '../logging.js'
 import { PeripheralDeviceType } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 
+/**
+ * Invokes {@link ShowStyleBlueprintManifest.onPlaylistSnapshotCreated} if defined.
+ *
+ * Called from {@link handleGeneratePlaylistSnapshot} while the playlist lock is held.
+ * Blueprint errors are caught and logged; they do not abort snapshot generation.
+ */
 export async function invokeOnPlaylistSnapshotCreated(
 	context: JobContext,
 	props: GeneratePlaylistSnapshotProps,
@@ -66,6 +72,11 @@ export async function invokeOnPlaylistSnapshotCreated(
 	}
 }
 
+/**
+ * Chooses which rundown (and thus show-style blueprint) to use for a playlist snapshot hook.
+ *
+ * Priority: next part instance → current part instance → first rundown sorted by name.
+ */
 function pickRundownForPlaylistSnapshot(
 	playlist: ReadonlyDeep<DBRundownPlaylist>,
 	snapshot: CoreRundownPlaylistSnapshot
@@ -96,6 +107,12 @@ function pickRundownForPlaylistSnapshot(
 	return rundowns[0]
 }
 
+/**
+ * Worker job handler for {@link StudioJobs.OnSystemSnapshotCreated}.
+ *
+ * Invokes {@link StudioBlueprintManifest.onSystemSnapshotCreated} for the studio of the worker job.
+ * Queued from Meteor after a system or debug snapshot has been stored.
+ */
 export async function handleOnSystemSnapshotCreated(
 	context: JobContext,
 	props: OnSystemSnapshotCreatedProps

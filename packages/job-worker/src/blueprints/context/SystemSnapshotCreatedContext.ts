@@ -7,6 +7,11 @@ import { ProcessedStudioConfig } from '../config.js'
 import { ContextInfo } from './CommonContext.js'
 import { StudioContext } from './StudioContext.js'
 
+/**
+ * Blueprint context for {@link StudioBlueprintManifest.onSystemSnapshotCreated}.
+ *
+ * Extends {@link StudioContext} with TSR playout device listing and actions scoped to the studio worker job.
+ */
 export class SystemSnapshotCreatedContext extends StudioContext implements ISystemSnapshotCreatedContext {
 	private readonly _context: JobContext
 
@@ -20,10 +25,12 @@ export class SystemSnapshotCreatedContext extends StudioContext implements ISyst
 		this._context = context
 	}
 
+	/** @inheritdoc */
 	async listPlayoutDevices(): Promise<IBlueprintPlayoutDevice[]> {
 		return listPlayoutDevicesForStudio(this._context)
 	}
 
+	/** @inheritdoc */
 	async executeTSRAction(
 		deviceId: PeripheralDeviceId,
 		actionId: string,

@@ -204,7 +204,18 @@ export interface ShowStyleBlueprintManifest<
 	// Events
 
 	/**
-	 * Called after a rundown playlist snapshot has been generated (before it is stored to disk).
+	 * Called after a rundown playlist snapshot has been generated, before Meteor persists the snapshot file.
+	 *
+	 * Use this to run show-specific side effects (e.g. TSR actions) when a playlist snapshot is taken.
+	 * The callback receives {@link IPlaylistSnapshotCreatedContext} with `listPlayoutDevices` and `executeTSRAction`.
+	 *
+	 * For playlists containing multiple rundowns, only one show-style blueprint is invoked per snapshot
+	 * (the show style of the next/current part instance, or otherwise the first rundown by name).
+	 *
+	 * Errors are logged by Core and do not fail snapshot generation or storage.
+	 *
+	 * @param context Show-style and studio context with TSR actions for the studio worker job.
+	 * @param info Metadata about the snapshot (not the snapshot JSON).
 	 */
 	onPlaylistSnapshotCreated?: (
 		context: IPlaylistSnapshotCreatedContext,

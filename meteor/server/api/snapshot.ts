@@ -696,6 +696,11 @@ export async function storeSystemSnapshot(
 
 	return internalStoreSystemSnapshot(options, reason)
 }
+/**
+ * Queues {@link StudioJobs.OnSystemSnapshotCreated} for each studio after a snapshot is stored.
+ *
+ * Studio-scoped system snapshots queue one job; full-system snapshots queue one job per studio in the snapshot.
+ */
 async function queueOnSystemSnapshotCreatedJobs(
 	storedId: SnapshotId,
 	reason: string,
@@ -727,6 +732,7 @@ export async function internalStoreSystemSnapshot(options: SystemSnapshotOptions
 	const s = await createSystemSnapshot(options)
 	const storedId = await storeSnaphot(s, reason)
 
+	// Full-system snapshots: one blueprint hook job per studio in the snapshot
 	const studioIds = options.studioId ? [options.studioId] : s.studios.map((studio) => studio._id)
 	if (studioIds.length > 0) {
 		await queueOnSystemSnapshotCreatedJobs(storedId, reason, 'system', options, studioIds)
