@@ -711,19 +711,25 @@ async function queueOnSystemSnapshotCreatedJobs(
 	const fullSystem = !options.studioId
 
 	for (const studioId of studioIds) {
-		const job = await QueueStudioJob(StudioJobs.OnSystemSnapshotCreated, studioId, {
-			snapshotId: storedId,
-			reason,
-			type,
-			options: {
-				studioId,
-				withDeviceSnapshots: options.withDeviceSnapshots,
-				fullSystem,
-			},
-		})
-		void job.complete.catch((err) => {
-			logger.error(`OnSystemSnapshotCreated job failed: ${stringifyError(err)}`)
-		})
+		try {
+			const job = await QueueStudioJob(StudioJobs.OnSystemSnapshotCreated, studioId, {
+				snapshotId: storedId,
+				reason,
+				type,
+				options: {
+					studioId,
+					withDeviceSnapshots: options.withDeviceSnapshots,
+					fullSystem,
+				},
+			})
+			void job.complete.catch((err) => {
+				logger.error(`OnSystemSnapshotCreated job failed: ${stringifyError(err)}`)
+			})
+		} catch (err) {
+			logger.error(
+				`Failed to queue OnSystemSnapshotCreated for snapshot ${storedId} (studio ${studioId}, withDeviceSnapshots=${options.withDeviceSnapshots}): ${stringifyError(err)}`
+			)
+		}
 	}
 }
 
