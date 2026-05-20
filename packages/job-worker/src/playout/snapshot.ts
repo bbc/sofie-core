@@ -63,7 +63,7 @@ export async function handleGeneratePlaylistSnapshot(
 	context: JobContext,
 	props: GeneratePlaylistSnapshotProps
 ): Promise<GeneratePlaylistSnapshotResult> {
-	const snapshot = await runWithPlaylistLock(context, props.playlistId, async () => {
+	const lockedResult = await runWithPlaylistLock(context, props.playlistId, async () => {
 		const snapshotId: SnapshotId = props.snapshotId ?? getRandomId()
 		logger.info(`Generating RundownPlaylist snapshot "${snapshotId}" for RundownPlaylist "${props.playlistId}"`)
 
@@ -165,14 +165,13 @@ export async function handleGeneratePlaylistSnapshot(
 			timeline,
 		})
 
-		// Blueprint hook: errors are logged inside invokeOnPlaylistSnapshotCreated
-		await invokeOnPlaylistSnapshotCreated(context, props, coreSnapshot, snapshotId)
-
-		return coreSnapshot
+		return { coreSnapshot, snapshotId }
 	})
 
+	await invokeOnPlaylistSnapshotCreated(context, props, lockedResult.coreSnapshot, lockedResult.snapshotId)
+
 	return {
-		snapshotJson: JSONBlobStringify(snapshot),
+		snapshotJson: JSONBlobStringify(lockedResult.coreSnapshot),
 	}
 }
 

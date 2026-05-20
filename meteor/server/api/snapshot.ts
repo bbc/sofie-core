@@ -721,7 +721,9 @@ async function queueOnSystemSnapshotCreatedJobs(
 				fullSystem,
 			},
 		})
-		await job.complete
+		void job.complete.catch((err) => {
+			logger.error(`OnSystemSnapshotCreated job failed: ${stringifyError(err)}`)
+		})
 	}
 }
 

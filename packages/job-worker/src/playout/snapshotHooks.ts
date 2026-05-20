@@ -19,8 +19,8 @@ import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyE
 /**
  * Invokes {@link ShowStyleBlueprintManifest.onPlaylistSnapshotCreated} if defined.
  *
- * Called from {@link handleGeneratePlaylistSnapshot} while the playlist lock is held.
- * Blueprint errors are caught and logged; they do not abort snapshot generation.
+ * Called from {@link handleGeneratePlaylistSnapshot} after the playlist lock is released.
+ * Blueprint resolution and hook errors are caught and logged; they do not abort snapshot generation.
  */
 export async function invokeOnPlaylistSnapshotCreated(
 	context: JobContext,
@@ -35,26 +35,26 @@ export async function invokeOnPlaylistSnapshotCreated(
 		return
 	}
 
-	const showStyle = await context.getShowStyleCompound(rundown.showStyleVariantId, rundown.showStyleBaseId)
-	const blueprint = await context.getShowStyleBlueprint(showStyle._id)
-	if (!blueprint.blueprint.onPlaylistSnapshotCreated) return
-
-	const info: IBlueprintPlaylistSnapshotInfo = {
-		snapshotId: unprotectString(snapshotId),
-		playlistId: unprotectString(playlist._id),
-		reason: props.reason ?? '',
-		options: {
-			full: props.full,
-			withTimeline: props.withTimeline,
-		},
-		playlist: {
-			name: playlist.name,
-			active: !!playlist.activationId,
-			rehearsal: !!playlist.rehearsal,
-		},
-	}
-
 	try {
+		const showStyle = await context.getShowStyleCompound(rundown.showStyleVariantId, rundown.showStyleBaseId)
+		const blueprint = await context.getShowStyleBlueprint(showStyle._id)
+		if (!blueprint.blueprint.onPlaylistSnapshotCreated) return
+
+		const info: IBlueprintPlaylistSnapshotInfo = {
+			snapshotId: unprotectString(snapshotId),
+			playlistId: unprotectString(playlist._id),
+			reason: props.reason ?? '',
+			options: {
+				full: props.full,
+				withTimeline: props.withTimeline,
+			},
+			playlist: {
+				name: playlist.name,
+				active: !!playlist.activationId,
+				rehearsal: !!playlist.rehearsal,
+			},
+		}
+
 		const blueprintContext = new PlaylistSnapshotCreatedContext(
 			context,
 			{
@@ -68,7 +68,9 @@ export async function invokeOnPlaylistSnapshotCreated(
 		)
 		await blueprint.blueprint.onPlaylistSnapshotCreated(blueprintContext, info)
 	} catch (err) {
-		logger.error(`Error in showStyleBlueprint.onPlaylistSnapshotCreated: ${stringifyError(err)}`)
+		logger.error(
+			`Error in showStyleBlueprint.onPlaylistSnapshotCreated (rundownId=${rundown._id}, showStyleBaseId=${rundown.showStyleBaseId}, showStyleVariantId=${rundown.showStyleVariantId}): ${stringifyError(err)}`
+		)
 	}
 }
 
