@@ -7,7 +7,7 @@ export type BlueprintSnapshotType = 'system' | 'debug'
 
 /** Options that were used when the system snapshot was created. */
 export interface IBlueprintSystemSnapshotOptions {
-	/** Studio this hook invocation is scoped to (always set when the hook runs). */
+	/** Studio this hook invocation runs for (same as context; use `fullSystem` for snapshot scope). */
 	studioId?: string
 	/** Whether peripheral device state snapshots were included in the stored snapshot file. */
 	withDeviceSnapshots?: boolean
