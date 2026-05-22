@@ -1,4 +1,4 @@
-import type { StatusCode } from '@sofie-automation/shared-lib/dist/lib/status.js'
+import type { PeripheralDeviceStatusObject } from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
 
 export interface IConnector {
 	initialized: boolean
@@ -6,6 +6,6 @@ export interface IConnector {
 }
 
 export interface ICoreHandler {
-	getCoreStatus: () => { statusCode: StatusCode; messages: string[] }
+	getCoreStatus: () => PeripheralDeviceStatusObject
 	connectedToCore: boolean
 }
