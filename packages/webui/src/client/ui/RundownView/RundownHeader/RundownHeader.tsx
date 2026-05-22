@@ -161,10 +161,7 @@ export function RundownHeader({
 								<RundownHeaderExpectedEnd playlist={playlist} simplified={simplified} />
 							</button>
 							{lockView ? (
-								<span
-									className="rundown-header__close-btn rundown-header__close-btn--placeholder"
-									aria-hidden="true"
-								>
+								<span className="rundown-header__close-btn rundown-header__close-btn--placeholder" aria-hidden="true">
 									<FontAwesomeIcon icon="close" size="xl" />
 								</span>
 							) : (
