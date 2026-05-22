@@ -7,7 +7,7 @@
  * Brought into this project for maintenance reasons, including conversion to Typescript.
  */
 import WebSocket from 'ws'
-import * as EJSON from 'ejson'
+import EJSON from 'ejson'
 import { EventEmitter } from 'events'
 import type { ProtectedString } from '@sofie-automation/shared-lib/dist/lib/protectedString.js'
 
