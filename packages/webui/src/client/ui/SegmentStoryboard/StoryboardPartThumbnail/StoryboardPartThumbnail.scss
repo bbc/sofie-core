@@ -1,6 +1,7 @@
 @use 'sass:color';
 
 @import '../../../styles/variables';
+@import '../../../styles/checkerboard';
 
 .segment-storyboard__part__thumbnail {
 	position: relative;
@@ -45,6 +46,57 @@
 
 		> .segment-storyboard__thumbnail__item {
 			flex: 1 1;
+			position: relative;
+			overflow: hidden;
+			min-height: 0;
+			@include item-type-colors();
+
+			> img,
+			.segment-storyboard__thumbnail__item__image {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+			}
+		}
+	}
+
+	> .segment-storyboard__thumbnail__split-layout {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		overflow: hidden;
+		@include checkerboard-background;
+
+		> .box,
+		> .background {
+			position: absolute;
+			transform: translate(-50%, -50%);
+			overflow: hidden;
+		}
+
+		> .video-preview {
+			position: absolute;
+			transform: translate(-50%, -50%);
+			overflow: hidden;
+
+			.video-preview__image {
+				position: absolute;
+				inset: 0;
+				display: block;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+				z-index: 1;
+			}
+		}
+
+		& > * {
 			@include item-type-colors();
 		}
 	}
@@ -77,6 +129,8 @@
 			left: 0;
 			right: 0;
 			margin: 0;
+			z-index: 2;
+			pointer-events: none;
 		}
 
 		&.segment-storyboard__thumbnail__label--sm {

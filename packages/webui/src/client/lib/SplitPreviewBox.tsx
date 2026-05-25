@@ -57,5 +57,5 @@ export const RenderSplitPreview = React.memo(function RenderSplitPreview({
 		return <>{boxes}</>
 	}
 
-	return <div className="video-preview">{boxes}</div>
+	return <div className="video-preview checkerboard-bg">{boxes}</div>
 })

@@ -1,4 +1,5 @@
 @import '../colorScheme';
+@import '../checkerboard';
 
 $dashboard-button-width: 6.40625em;
 $dashboard-button-height: 3.625em;
@@ -632,7 +633,7 @@ $dashboard-button-height: 3.625em;
 						height: 100%;
 						aspect-ratio: 16 / 9;
 						flex: none;
-						background: #000;
+						@include checkerboard-background;
 
 						@supports not (aspect-ratio: 1 / 1) {
 							height: 100%;
@@ -828,7 +829,7 @@ $dashboard-button-height: 3.625em;
 				> .dashboard-panel__panel__button__tag-container > .video-preview {
 					position: absolute;
 					overflow: hidden;
-					background: #000;
+					@include checkerboard-background;
 					height: 100%;
 					width: 67px;
 					margin-left: 4px;

@@ -1,4 +1,5 @@
 @use '../../styles/itemTypeColors';
+@import '../../styles/checkerboard';
 
 .preview-popUp {
 	border: 1px solid var(--sofie-segment-layer-hover-popup-border);
@@ -380,7 +381,7 @@
 
 		position: relative;
 		overflow: hidden;
-		background-color: #000;
+		@include checkerboard-background;
 
 		> .background {
 			position: absolute;
@@ -400,16 +401,14 @@
 			}
 		}
 
-		> .box {
+		> .box,
+		> .video-preview {
 			position: absolute;
 			transform: translate(-50%, -50%);
 			overflow: hidden;
-		}
 
-		> .video-preview {
-			overflow: hidden;
-
-			> .video-preview__image {
+			> .video-preview__image,
+			.video-preview__image {
 				position: absolute;
 				inset: 0;
 				display: block;

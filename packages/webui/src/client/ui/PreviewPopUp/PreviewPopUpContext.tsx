@@ -299,13 +299,14 @@ export function convertSourceLayerItemToPreview(
 		}
 	} else if (sourceLayerType === SourceLayerType.SPLITS) {
 		const content = item.content as SplitsContent
+		const splitScrub = getSplitsBoxLayoutScrubSettings(content, contentStatus)
 		return {
 			contents: [
 				{
 					type: 'boxLayout',
 					boxSourceConfiguration: content.boxSourceConfiguration,
 					boxPreviews: contentStatus?.boxPreviews,
-					scrub: getSplitsBoxLayoutScrubSettings(content, contentStatus),
+					scrub: splitScrub,
 				},
 			],
 			options: {},
