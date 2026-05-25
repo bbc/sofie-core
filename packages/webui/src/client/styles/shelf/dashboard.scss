@@ -1125,7 +1125,6 @@ $dashboard-button-height: 3.625em;
 			.dashboard-panel__panel__button__tag-container {
 				@include item-type-colors;
 				> .dashboard-panel__panel__button__tag-container--inner > .dashboard-panel__panel__button__label-container {
-					top: 50%;
 					background-color: rgba(0, 0, 0, 0.8);
 					display: flex;
 					padding: unset;
