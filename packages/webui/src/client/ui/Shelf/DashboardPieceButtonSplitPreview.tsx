@@ -8,9 +8,15 @@ import { RenderSplitPreview } from '../../lib/SplitPreviewBox.js'
 interface IProps {
 	piece: Omit<PieceGeneric, 'timelineObjectsString'>
 	contentStatus?: ReadonlyDeep<PieceContentStatusObj> | undefined
+	/** Button thumbnails use flat layout (boxes fill the aspect container). List view uses wrapped. */
+	flatLayout?: boolean
 }
 
-export function DashboardPieceButtonSplitPreview({ piece, contentStatus }: Readonly<IProps>): JSX.Element {
+export function DashboardPieceButtonSplitPreview({
+	piece,
+	contentStatus,
+	flatLayout = false,
+}: Readonly<IProps>): JSX.Element {
 	const subItems = getSplitPreview((piece.content as SplitsContent).boxSourceConfiguration, contentStatus?.boxPreviews)
-	return <RenderSplitPreview subItems={subItems} showLabels={false} />
+	return <RenderSplitPreview subItems={subItems} showLabels={false} flatLayout={flatLayout} />
 }
