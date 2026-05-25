@@ -77,7 +77,7 @@ export function MediaBox(props: Props): JSX.Element | null {
 
 		return (
 			<div className="dashboard-panel__panel__button__thumbnail">
-				<div className="dashboard-panel__panel__button__thumbnail__aspect dashboard-panel__panel__button__thumbnail__aspect--splits">
+				<div className="dashboard-panel__panel__button__thumbnail__aspect dashboard-panel__panel__button__thumbnail__aspect--splits checkerboard-bg">
 					<DashboardPieceButtonSplitPreview piece={piece} contentStatus={contentStatus} flatLayout />
 				</div>
 			</div>

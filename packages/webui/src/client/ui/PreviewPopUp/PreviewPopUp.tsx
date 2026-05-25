@@ -21,11 +21,20 @@ export const PreviewPopUp = React.forwardRef<
 	ref
 ): React.JSX.Element {
 	const [popperEl, setPopperEl] = useState<HTMLDivElement | null>(null)
+	const popperWidthPx = size === 'large' ? 482 : 322
+
 	const popperOptions = useMemo(
 		() => ({
 			placement: placement ?? 'top',
 			strategy: 'fixed' as const,
 			modifiers: [
+				{
+					name: 'computeStyles',
+					options: {
+						// Do not shrink the popup to the (zero-width) virtual mouse anchor when trackMouse is on.
+						adaptive: false,
+					},
+				},
 				{
 					name: 'flip',
 					options: {
@@ -56,6 +65,7 @@ export const PreviewPopUp = React.forwardRef<
 		}),
 		[padding]
 	)
+
 	const getAnchorY = () => {
 		if (anchor && 'getBoundingClientRect' in anchor) {
 			return anchor.getBoundingClientRect().y
@@ -78,6 +88,14 @@ export const PreviewPopUp = React.forwardRef<
 		trackMouse ? virtualElement.current : anchor,
 		popperEl,
 		popperOptions
+	)
+
+	const popperStyle = useMemo(
+		() => ({
+			...styles.popper,
+			width: popperWidthPx,
+		}),
+		[styles.popper, popperWidthPx]
 	)
 
 	const updateRef = useRef(update)
@@ -128,7 +146,7 @@ export const PreviewPopUp = React.forwardRef<
 				'preview-popUp--large': size === 'large',
 				'preview-popUp--small': size === 'small',
 			})}
-			style={styles.popper}
+			style={popperStyle}
 			{...attributes.popper}
 		>
 			{children && <div className="preview-popUp__preview">{children}</div>}

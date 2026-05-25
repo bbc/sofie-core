@@ -68,7 +68,7 @@ export function BoxLayoutPreview({ content, time }: BoxLayoutPreviewProps): Reac
 	)
 
 	return (
-		<div className="preview-popUp__box-layout">
+		<div className="preview-popUp__box-layout checkerboard-bg">
 			{content.backgroundArtSrc && (
 				<div className="video-preview background">
 					<img src={content.backgroundArtSrc} alt="" />

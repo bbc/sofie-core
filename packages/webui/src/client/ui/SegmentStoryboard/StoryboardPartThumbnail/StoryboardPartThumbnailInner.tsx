@@ -120,7 +120,11 @@ export function StoryboardPartThumbnailInner({
 		if (e.pointerType !== 'mouse') {
 			return
 		}
-		const newMousePosition = Math.max(0, Math.min(1, (e.pageX - origin.left - 5) / (width - 10)))
+		const offset = thumbnailEl.current && getElementDocumentOffset(thumbnailEl.current)
+		const thumbWidth = thumbnailEl.current && getElementWidth(thumbnailEl.current)
+		const left = offset?.left ?? origin.left
+		const w = thumbWidth ?? width
+		const newMousePosition = w > 10 ? Math.max(0, Math.min(1, (e.pageX - left - 5) / (w - 10))) : 0
 		setMousePosition(newMousePosition)
 		previewSession.current?.setPointerTime(newMousePosition * scrubDurationMs)
 	}
