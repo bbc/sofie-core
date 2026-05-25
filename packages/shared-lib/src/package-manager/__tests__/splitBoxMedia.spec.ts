@@ -31,9 +31,12 @@ describe('splitBoxMedia', () => {
 		const pkg: ExpectedPackage.ExpectedPackageMediaFile = {
 			_id: 'p1',
 			type: ExpectedPackage.PackageType.MEDIA_FILE,
+			layers: [],
 			content: { filePath: 'CLIPS/FOO.MP4' },
 			version: {},
+			contentVersionHash: 'hash_p1',
 			sources: [],
+			sideEffect: {},
 		}
 		expect(findExpectedPackageForMediaId([pkg], 'clips/foo.mp4')).toBe(pkg)
 	})
