@@ -1,4 +1,5 @@
 import type { SplitsContentBoxContent, SplitsContentBoxProperties } from '@sofie-automation/blueprints-integration'
+import type { SplitBoxPreviewUrls } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import classNames from 'classnames'
 import { useMemo } from 'react'
 import { getSplitPreview, SplitRole } from '../../../lib/ui/splitPreview.js'
@@ -9,6 +10,7 @@ interface BoxLayoutPreviewProps {
 	content: {
 		type: 'boxLayout'
 		boxSourceConfiguration: ReadonlyDeep<(SplitsContentBoxContent & SplitsContentBoxProperties)[]>
+		boxPreviews?: ReadonlyDeep<SplitBoxPreviewUrls[]>
 		showLabels?: boolean
 		backgroundArtSrc?: string
 	}
@@ -16,8 +18,11 @@ interface BoxLayoutPreviewProps {
 
 export function BoxLayoutPreview({ content }: BoxLayoutPreviewProps): React.ReactElement {
 	const reversedItems = useMemo(
-		() => (content.boxSourceConfiguration ? getSplitPreview(content.boxSourceConfiguration).slice().reverse() : []),
-		[content.boxSourceConfiguration]
+		() =>
+			content.boxSourceConfiguration
+				? getSplitPreview(content.boxSourceConfiguration, content.boxPreviews).slice().reverse()
+				: [],
+		[content.boxSourceConfiguration, content.boxPreviews]
 	)
 
 	return (
@@ -55,6 +60,9 @@ export function BoxLayoutPreview({ content }: BoxLayoutPreviewProps): React.Reac
 							: undefined,
 					}}
 				>
+					{(item.thumbnailUrl || item.previewUrl) && (
+						<img src={item.thumbnailUrl || item.previewUrl} alt="" className="video-preview__image" />
+					)}
 					{content.showLabels && item.role === SplitRole.BOX && (
 						<div className="video-preview__label">{item.label}</div>
 					)}

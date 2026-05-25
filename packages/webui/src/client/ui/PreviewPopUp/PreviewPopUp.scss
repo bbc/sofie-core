@@ -388,11 +388,36 @@
 			bottom: 0;
 			left: 0;
 			right: 0;
+			overflow: hidden;
+
+			> img {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			}
 		}
 
 		> .box {
 			position: absolute;
 			transform: translate(-50%, -50%);
+			overflow: hidden;
+		}
+
+		> .video-preview {
+			overflow: hidden;
+
+			> .video-preview__image {
+				position: absolute;
+				inset: 0;
+				display: block;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			}
 		}
 
 		& > * {
@@ -405,6 +430,7 @@
 			left: 0;
 			right: 0;
 			bottom: 0;
+			z-index: 2;
 			font-weight: 400;
 			text-shadow: 0 0 2px rgba(0, 0, 0, 0.75);
 			text-align: center;

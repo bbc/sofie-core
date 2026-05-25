@@ -82,6 +82,7 @@ export function convertSourceLayerItemToPreview(
 					contents.push({
 						type: 'boxLayout',
 						boxSourceConfiguration: popupPreview.preview.boxes,
+						boxPreviews: contentStatus?.boxPreviews,
 						backgroundArtSrc: createPrivateApiPath('/blueprints/assets/' + popupPreview.preview.background),
 					})
 					break
@@ -283,7 +284,16 @@ export function convertSourceLayerItemToPreview(
 		}
 	} else if (sourceLayerType === SourceLayerType.SPLITS) {
 		const content = item.content as SplitsContent
-		return { contents: [{ type: 'boxLayout', boxSourceConfiguration: content.boxSourceConfiguration }], options: {} }
+		return {
+			contents: [
+				{
+					type: 'boxLayout',
+					boxSourceConfiguration: content.boxSourceConfiguration,
+					boxPreviews: contentStatus?.boxPreviews,
+				},
+			],
+			options: {},
+		}
 	} else if (sourceLayerType === SourceLayerType.TRANSITION) {
 		const content = item.content as TransitionContent
 		if (content.preview)
@@ -303,6 +313,7 @@ export type PreviewContentUI =
 	| {
 			type: 'boxLayout'
 			boxSourceConfiguration: ReadonlyDeep<(SplitsContentBoxContent & SplitsContentBoxProperties)[]>
+			boxPreviews?: ReadonlyDeep<PieceContentStatusObj['boxPreviews']>
 			showLabels?: boolean
 			backgroundArtSrc?: string
 	  }

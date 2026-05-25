@@ -44,6 +44,9 @@ export const RenderSplitPreview = React.memo(function RenderSplitPreview({
 								: undefined,
 						}}
 					>
+						{(item.thumbnailUrl || item.previewUrl) && (
+							<img src={item.thumbnailUrl || item.previewUrl} alt="" className="video-preview__image" />
+						)}
 						{showLabels && item.role === SplitRole.BOX && <div className="video-preview__label">{item.label}</div>}
 					</div>
 				)
