@@ -1,7 +1,8 @@
-import type {
+import {
 	SourceLayerType,
-	SplitsContentBoxContent,
-	SplitsContentBoxProperties,
+	type SplitsContentBoxContent,
+	type SplitsContentBoxProperties,
+	type VTContent,
 } from '@sofie-automation/blueprints-integration'
 import type { SplitBoxPreviewUrls } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import { literal } from '@sofie-automation/corelib/dist/lib'
@@ -33,6 +34,8 @@ export interface SplitSubItem {
 	content?: SplitsContentBoxProperties['geometry']
 	thumbnailUrl?: string
 	previewUrl?: string
+	/** VT/LIVE_SPEAK editorial seek (ms), used for in-box hover scrub */
+	seek?: number
 }
 
 export function getSplitPreview(
@@ -43,6 +46,11 @@ export function getSplitPreview(
 ): ReadonlyArray<Readonly<SplitSubItem>> {
 	return boxSourceConfiguration.map((item, index) => {
 		const boxPreview = boxPreviews?.[index]
+		const seek =
+			item.type === SourceLayerType.VT || item.type === SourceLayerType.LIVE_SPEAK
+				? (item as VTContent).seek
+				: undefined
+
 		return literal<Readonly<SplitSubItem>>({
 			_id: item.studioLabel + '_' + index,
 			type: item.type,
@@ -51,6 +59,7 @@ export function getSplitPreview(
 			content: item.geometry || DEFAULT_POSITIONS[index],
 			thumbnailUrl: boxPreview?.thumbnailUrl,
 			previewUrl: boxPreview?.previewUrl,
+			seek,
 		})
 	})
 }

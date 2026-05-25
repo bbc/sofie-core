@@ -23,6 +23,12 @@ import _ from 'underscore'
 import type { IAdLibListItem } from '../Shelf/AdLibListItem.js'
 import type { PieceInstancePiece } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 import { createPrivateApiPath } from '../../url.js'
+import {
+	getPieceScrubDurationMs,
+	getSplitsBoxLayoutScrubSettings,
+	type PreviewVideoContentUI,
+	type SplitsBoxLayoutScrubSettings,
+} from '../../lib/ui/splitsPreviewVideo.js'
 
 type VirtualElement = {
 	getBoundingClientRect: () => DOMRect
@@ -78,14 +84,20 @@ export function convertSourceLayerItemToPreview(
 						lastModified: popupPreview.preview.lastModified,
 					})
 					break
-				case PreviewType.Split:
+				case PreviewType.Split: {
+					const splitScrub = getSplitsBoxLayoutScrubSettings(
+						{ boxSourceConfiguration: popupPreview.preview.boxes },
+						contentStatus
+					)
 					contents.push({
 						type: 'boxLayout',
 						boxSourceConfiguration: popupPreview.preview.boxes,
 						boxPreviews: contentStatus?.boxPreviews,
+						scrub: splitScrub,
 						backgroundArtSrc: createPrivateApiPath('/blueprints/assets/' + popupPreview.preview.background),
 					})
 					break
+				}
 				case PreviewType.Table:
 					contents.push({
 						type: 'data',
@@ -160,6 +172,9 @@ export function convertSourceLayerItemToPreview(
 					? {
 							type: 'video',
 							src: contentStatus.previewUrl,
+							itemDuration: getPieceScrubDurationMs(content, contentStatus),
+							seek: content.seek,
+							loop: content.loop,
 						}
 					: contentStatus?.thumbnailUrl
 						? {
@@ -290,6 +305,7 @@ export function convertSourceLayerItemToPreview(
 					type: 'boxLayout',
 					boxSourceConfiguration: content.boxSourceConfiguration,
 					boxPreviews: contentStatus?.boxPreviews,
+					scrub: getSplitsBoxLayoutScrubSettings(content, contentStatus),
 				},
 			],
 			options: {},
@@ -308,12 +324,16 @@ export function convertSourceLayerItemToPreview(
 /* PreviewContentUI is an extension of PreviewContent with some additional types used in the UI
  * These additional types are added to support some extra UI features that are not relevant for blueprints
  */
+export type { PreviewVideoContentUI } from '../../lib/ui/splitsPreviewVideo.js'
+
 export type PreviewContentUI =
-	| PreviewContent
+	| Exclude<PreviewContent, { type: 'video' }>
+	| PreviewVideoContentUI
 	| {
 			type: 'boxLayout'
 			boxSourceConfiguration: ReadonlyDeep<(SplitsContentBoxContent & SplitsContentBoxProperties)[]>
 			boxPreviews?: ReadonlyDeep<PieceContentStatusObj['boxPreviews']>
+			scrub?: SplitsBoxLayoutScrubSettings
 			showLabels?: boolean
 			backgroundArtSrc?: string
 	  }
@@ -407,7 +427,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 
 	const context: IPreviewPopUpContext = {
 		requestPreview: (anchor, content, opts) => {
-			if (opts?.time) {
+			if (typeof opts?.time === 'number') {
 				setTime(opts.time)
 			} else {
 				setTime(null)
