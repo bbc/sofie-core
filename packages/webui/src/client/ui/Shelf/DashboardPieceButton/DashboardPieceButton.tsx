@@ -13,6 +13,10 @@ import { DashboardButtonTagStrip } from './subcomponents/DashboardButtonTagStrip
 import { HotkeyBadge } from './subcomponents/HotkeyBadge.js'
 import { EditableLabel } from './subcomponents/EditableLabel.js'
 import { MediaBox } from './subcomponents/MediaBox.js'
+import {
+	getSplitsTopBoxLayerClassName,
+	SplitButtonLayerBackground,
+} from './subcomponents/SplitButtonLayerBackground.js'
 import { useDashboardButtonInteractions } from './useDashboardButtonInteractions.js'
 
 export type DashboardPieceButtonProps = React.PropsWithChildren<IDashboardButtonProps> & {
@@ -60,6 +64,16 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 			() => (layer ? RundownUtils.getSourceLayerClassName(layer.type) : undefined),
 			[layer]
 		)
+
+		const isSplitsLayer = layer?.type === SourceLayerType.SPLITS
+
+		const splitsTopBoxLayerClassName = useMemo(
+			() => (isSplitsLayer && !compact ? getSplitsTopBoxLayerClassName(piece) : undefined),
+			[isSplitsLayer, compact, piece]
+		)
+
+		const splitsStripesOnOuter = isSplitsLayer && Boolean(compact)
+		const splitsStripesOnInner = isSplitsLayer && !compact
 
 		const interactions = useDashboardButtonInteractions({
 			piece,
@@ -220,7 +234,8 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 				>
 					<div className="dashboard-panel__panel__button__content">
 						{showHotkey ? <HotkeyBadge hotkey={piece.hotkey} /> : null}
-						<DashboardButtonTagStrip className={layerTypeClassName}>
+						<DashboardButtonTagStrip className={ClassNames(layerTypeClassName, splitsTopBoxLayerClassName)}>
+							{splitsStripesOnOuter ? <SplitButtonLayerBackground piece={piece} /> : null}
 							<MediaBox
 								piece={piece}
 								layer={layer}
@@ -233,6 +248,7 @@ export const DashboardPieceButton = React.forwardRef<HTMLDivElement, DashboardPi
 							<DashboardButtonTagStrip
 								className={ClassNames(layerTypeClassName, 'dashboard-panel__panel__button__tag-container--inner')}
 							>
+								{splitsStripesOnInner ? <SplitButtonLayerBackground piece={piece} /> : null}
 								<div className="dashboard-panel__panel__button__label-container">
 									<EditableLabel
 										editable={editableName}
