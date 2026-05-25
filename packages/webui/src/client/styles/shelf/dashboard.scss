@@ -610,6 +610,7 @@ $dashboard-button-height: 3.625em;
 				justify-content: center;
 				width: 100%;
 				background: #4b4b4b;
+				position: relative;
 
 				.dashboard-panel__panel__button__thumbnail__aspect {
 					width: 100%;
@@ -622,6 +623,49 @@ $dashboard-button-height: 3.625em;
 					@supports not (aspect-ratio: 1 / 1) {
 						height: 0;
 						padding-top: 56.25%;
+					}
+
+					&--splits {
+						position: absolute;
+						inset: 0;
+						width: 100%;
+						height: 100%;
+						aspect-ratio: 16 / 9;
+						flex: none;
+						background: #000;
+
+						@supports not (aspect-ratio: 1 / 1) {
+							height: 100%;
+							padding-top: 0;
+						}
+
+						> .box,
+						> .background {
+							position: absolute;
+							transform: translate(-50%, -50%);
+							overflow: hidden;
+						}
+
+						> .video-preview {
+							position: absolute;
+							transform: translate(-50%, -50%);
+							overflow: hidden;
+
+							.video-preview__image {
+								position: absolute;
+								inset: 0;
+								display: block;
+								width: 100%;
+								height: 100%;
+								object-fit: cover;
+								object-position: center;
+								z-index: 1;
+							}
+						}
+
+						& > * {
+							@include item-type-colors;
+						}
 					}
 				}
 
@@ -672,7 +716,10 @@ $dashboard-button-height: 3.625em;
 					}
 				}
 
-				img {
+				.dashboard-panel__panel__button__thumbnail__aspect:not(
+						.dashboard-panel__panel__button__thumbnail__aspect--splits
+					)
+					> img {
 					position: absolute;
 					inset: 0;
 					width: 100%;
@@ -888,6 +935,19 @@ $dashboard-button-height: 3.625em;
 				height: 100%;
 				width: auto;
 				aspect-ratio: 16 / 9;
+			}
+
+			// Split preview must stay in-flow (like VT); absolute inset collapses width in the row layout.
+			> .dashboard-panel__panel__button__content
+				> .dashboard-panel__panel__button__tag-container
+				> .dashboard-panel__panel__button__thumbnail
+				.dashboard-panel__panel__button__thumbnail__aspect--splits {
+				position: relative;
+				inset: unset;
+				flex: 0 0 auto;
+				height: 100%;
+				width: auto;
+				max-width: none;
 			}
 		}
 	}
