@@ -68,7 +68,7 @@ export function MediaBox(props: Props): JSX.Element | null {
 
 	if (layer.type === SourceLayerType.SPLITS) {
 		if (isList && showThumbnailsInList) {
-			return <DashboardPieceButtonSplitPreview piece={piece} />
+			return <DashboardPieceButtonSplitPreview piece={piece} contentStatus={contentStatus} />
 		}
 
 		return <SplitInputIcon abbreviation={layer?.abbreviation} piece={piece} hideLabel={true} />
