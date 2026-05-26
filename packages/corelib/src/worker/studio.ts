@@ -176,8 +176,7 @@ export enum StudioJobs {
 	RestorePlaylistSnapshot = 'restorePlaylistSnapshot',
 
 	/**
-	 * Invoke {@link StudioBlueprintManifest.onSystemSnapshotCreated} for a studio after a snapshot is stored.
-	 * Queued from Meteor (`internalStoreSystemSnapshot`, `storeDebugSnapshot`).
+	 * Invoke {@link StudioBlueprintManifest.onSystemSnapshotCreated} for the studio after a system or debug snapshot is stored.
 	 */
 	OnSystemSnapshotCreated = 'onSystemSnapshotCreated',
 
