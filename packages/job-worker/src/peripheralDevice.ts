@@ -211,7 +211,10 @@ export async function listPlayoutDevices(
 	return listPlayoutDevicesFromParentDevices(context, parentDevices)
 }
 
-/** Resolves playout gateway subdevices for the given parent playout peripheral devices. */
+/**
+ * Resolves playout-gateway subdevices for the given parent playout peripheral devices.
+ * Returns an empty list when there are no parent devices.
+ */
 async function listPlayoutDevicesFromParentDevices(
 	context: JobContext,
 	parentDevices: ReadonlyDeep<PeripheralDevice[]>
@@ -219,7 +222,7 @@ async function listPlayoutDevicesFromParentDevices(
 	const parentDevicesMap = normalizeArrayToMap(parentDevices, '_id')
 	const parentDeviceIds = Array.from(parentDevicesMap.keys())
 	if (parentDeviceIds.length === 0) {
-		throw new Error('No parent devices are configured')
+		return []
 	}
 
 	const devices = await context.directCollections.PeripheralDevices.findFetch({

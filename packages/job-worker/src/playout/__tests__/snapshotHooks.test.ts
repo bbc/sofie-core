@@ -1,6 +1,7 @@
 import { getRandomId } from '@sofie-automation/corelib/dist/lib'
 import { MockJobContext, setupDefaultJobEnvironment } from '../../__mocks__/context.js'
 import { setupDefaultRundownPlaylist, setupMockShowStyleCompound } from '../../__mocks__/presetCollections.js'
+import { listPlayoutDevicesForStudio } from '../../peripheralDevice.js'
 import { handleGeneratePlaylistSnapshot } from '../snapshot.js'
 import { handleOnSystemSnapshotCreated } from '../snapshotHooks.js'
 
@@ -81,7 +82,6 @@ describe('Snapshot blueprint hooks', () => {
 				snapshotId: expect.any(String),
 				reason: 'system test',
 				type: 'system',
-				deviceCount: expect.any(Number),
 				options: {
 					studioId: expect.any(String),
 					withDeviceSnapshots: true,
@@ -135,6 +135,10 @@ describe('Snapshot blueprint hooks', () => {
 					},
 				})
 			).resolves.toBeUndefined()
+		})
+
+		test('listPlayoutDevices returns an empty array when no playout gateway is configured', async () => {
+			await expect(listPlayoutDevicesForStudio(context)).resolves.toEqual([])
 		})
 	})
 })

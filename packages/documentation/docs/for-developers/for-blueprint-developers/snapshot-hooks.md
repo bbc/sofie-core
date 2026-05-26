@@ -53,7 +53,6 @@ If no studio is in scope (empty studio list), the hook is not called.
 | `options.studioId`            | Studio this invocation is for                                |
 | `options.withDeviceSnapshots` | Whether device state was included in the file                |
 | `options.fullSystem`          | `true` if the stored snapshot is a full-system snapshot      |
-| `deviceCount`                 | Number of playout peripheral devices in the studio           |
 
 ### Example
 

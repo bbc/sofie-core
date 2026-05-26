@@ -13,7 +13,6 @@ import { PlaylistSnapshotCreatedContext } from '../blueprints/context/PlaylistSn
 import { SystemSnapshotCreatedContext } from '../blueprints/context/SystemSnapshotCreatedContext.js'
 import { JobContext } from '../jobs/index.js'
 import { logger } from '../logging.js'
-import { PeripheralDeviceType } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
 
 /**
@@ -136,11 +135,6 @@ export async function handleOnSystemSnapshotCreated(
 ): Promise<void> {
 	if (!context.studioBlueprint.blueprint.onSystemSnapshotCreated) return
 
-	const deviceCount = await context.directCollections.PeripheralDevices.count({
-		'studioAndConfigId.studioId': context.studioId,
-		type: PeripheralDeviceType.PLAYOUT,
-	})
-
 	const info: IBlueprintSystemSnapshotInfo = {
 		snapshotId: unprotectString(props.snapshotId),
 		reason: props.reason,
@@ -150,7 +144,6 @@ export async function handleOnSystemSnapshotCreated(
 			withDeviceSnapshots: props.options.withDeviceSnapshots,
 			fullSystem: props.options.fullSystem,
 		},
-		deviceCount,
 	}
 
 	try {

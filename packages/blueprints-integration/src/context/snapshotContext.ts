@@ -31,8 +31,6 @@ export interface IBlueprintSystemSnapshotInfo {
 	type: BlueprintSnapshotType
 	/** Snapshot creation options relevant to this hook invocation. */
 	options: IBlueprintSystemSnapshotOptions
-	/** Number of playout peripheral devices in the studio at snapshot time. */
-	deviceCount: number
 }
 
 /**
