@@ -49,7 +49,7 @@ If no studio is in scope (empty studio list), the hook is not called.
 | ----------------------------- | ------------------------------------------------------------ |
 | `snapshotId`                  | Id of the stored snapshot                                    |
 | `reason`                      | Human-readable reason from the request (UI, API, cron, etc.) |
-| `type`                        | `'system'` or `'debug'`                                      |
+| `type`                        | [`BlueprintSnapshotType`](https://sofie-automation.github.io/sofie-core/typedoc/types/_sofie_automation_blueprints_integration.BlueprintSnapshotType.html) (`system` or `debug`) |
 | `options.studioId`            | Studio this invocation is for                                |
 | `options.withDeviceSnapshots` | Whether device state was included in the file                |
 | `options.fullSystem`          | `true` if the stored snapshot is a full-system snapshot      |

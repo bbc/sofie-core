@@ -40,7 +40,7 @@ import { CURRENT_SYSTEM_VERSION } from '../migration/currentSystemVersion'
 import { isVersionSupported } from '../migration/databaseMigration'
 import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
 import { Blueprint } from '@sofie-automation/corelib/dist/dataModel/Blueprint'
-import { IngestRundown, VTContent } from '@sofie-automation/blueprints-integration'
+import { BlueprintSnapshotType, IngestRundown, VTContent } from '@sofie-automation/blueprints-integration'
 import { MongoQuery } from '@sofie-automation/corelib/dist/mongo'
 import { importIngestRundown } from './ingest/http'
 import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
@@ -704,7 +704,7 @@ export async function storeSystemSnapshot(
 async function queueOnSystemSnapshotCreatedJobs(
 	storedId: SnapshotId,
 	reason: string,
-	type: 'system' | 'debug',
+	type: BlueprintSnapshotType,
 	options: SystemSnapshotOptions,
 	studioIds: StudioId[]
 ): Promise<void> {

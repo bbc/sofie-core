@@ -2,7 +2,11 @@ import type { IExecuteTSRActionsContext } from './executeTsrActionContext.js'
 import type { IShowStyleContext } from './showStyleContext.js'
 import type { IStudioContext } from './studioContext.js'
 
-/** How the system snapshot was triggered when {@link IBlueprintSystemSnapshotInfo.type} is set. */
+/**
+ * How the system snapshot hook was triggered.
+ * - `system` — system snapshot (settings, REST, pre-migration backup)
+ * - `debug` — debug snapshot capture from the rundown UI
+ */
 export type BlueprintSnapshotType = 'system' | 'debug'
 
 /** Options that were used when the system snapshot was created. */
@@ -27,7 +31,6 @@ export interface IBlueprintSystemSnapshotInfo {
 	snapshotId: string
 	/** Human-readable reason provided when the snapshot was requested (e.g. UI label, cron message). */
 	reason: string
-	/** `'system'` for system snapshots; `'debug'` when triggered from a debug snapshot capture. */
 	type: BlueprintSnapshotType
 	/** Snapshot creation options relevant to this hook invocation. */
 	options: IBlueprintSystemSnapshotOptions

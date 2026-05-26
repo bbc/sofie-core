@@ -18,7 +18,7 @@ import {
 } from '../dataModel/Ids.js'
 import { JSONBlob } from '@sofie-automation/shared-lib/dist/lib/JSONBlob'
 import { CoreRundownPlaylistSnapshot } from '../snapshots.js'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import { BlueprintSnapshotType, NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { ITranslatableMessage } from '../TranslatableMessage.js'
 import { QuickLoopMarker } from '../dataModel/RundownPlaylist/RundownPlaylist.js'
 import { RundownTTimerIndex } from '../dataModel/RundownPlaylist/TTimers.js'
@@ -380,8 +380,7 @@ export interface OnSystemSnapshotCreatedProps {
 	snapshotId: SnapshotId
 	/** Human-readable reason from the snapshot request. */
 	reason: string
-	/** `'system'` for system snapshots; `'debug'` for debug snapshot capture. */
-	type: 'system' | 'debug'
+	type: BlueprintSnapshotType
 	/** Snapshot options; `studioId` is the studio this worker job runs for. */
 	options: {
 		studioId?: StudioId
