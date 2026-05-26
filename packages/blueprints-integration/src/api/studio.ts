@@ -11,7 +11,7 @@ import type {
 	IProcessIngestDataContext,
 	ISystemSnapshotCreatedContext,
 	IBlueprintSystemSnapshotInfo,
-	BlueprintSnapshotType,
+	BlueprintSnapshotType as _BlueprintSnapshotType,
 } from '../context/index.js'
 import type { IBlueprintShowStyleBase } from '../showStyle.js'
 import type {
@@ -153,7 +153,7 @@ export interface StudioBlueprintManifest<
 	 * Invoked once per studio:
 	 * - Studio-scoped snapshots (`studioId` in snapshot options): once for that studio.
 	 * - Full-system snapshots (no `studioId`): once per studio included in the snapshot.
-	 * - Debug snapshots: once for the target studio when `info.type` is `'debug'` ({@link BlueprintSnapshotType}).
+	 * - Debug snapshots: once for the target studio when `info.type` is `'debug'` ({@link _BlueprintSnapshotType}).
 	 *
 	 * Errors are logged by Core and do not fail snapshot storage.
 	 *

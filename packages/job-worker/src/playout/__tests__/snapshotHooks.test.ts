@@ -1,6 +1,5 @@
 import { CoreRundownPlaylistSnapshot } from '@sofie-automation/corelib/dist/snapshots'
 import { getRandomId, literal } from '@sofie-automation/corelib/dist/lib'
-import { PartInstanceId, ShowStyleBaseId, ShowStyleVariantId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { MockJobContext, setupDefaultJobEnvironment } from '../../__mocks__/context.js'
 import { defaultRundown, defaultRundownPlaylist } from '../../__mocks__/defaultCollectionObjects.js'
@@ -67,10 +66,10 @@ describe('Snapshot blueprint hooks', () => {
 
 	describe('pickRundownForPlaylistSnapshot', () => {
 		test('prefers current part rundown over next when both are set', () => {
-			const studioId = protectString('studio0') as StudioId
+			const studioId = protectString('studio0')
 			const playlistId = getRandomId()
-			const showStyleBaseId = getRandomId() as ShowStyleBaseId
-			const showStyleVariantId = getRandomId() as ShowStyleVariantId
+			const showStyleBaseId = getRandomId()
+			const showStyleVariantId = getRandomId()
 
 			const rundownCurrent = defaultRundown(
 				'rundown_current',
@@ -93,13 +92,13 @@ describe('Snapshot blueprint hooks', () => {
 
 			const playlist = defaultRundownPlaylist(playlistId, studioId)
 			playlist.currentPartInfo = {
-				partInstanceId: getRandomId() as PartInstanceId,
+				partInstanceId: getRandomId(),
 				rundownId: rundownCurrent._id,
 				manuallySelected: false,
 				consumesQueuedSegmentId: false,
 			}
 			playlist.nextPartInfo = {
-				partInstanceId: getRandomId() as PartInstanceId,
+				partInstanceId: getRandomId(),
 				rundownId: rundownNext._id,
 				manuallySelected: false,
 				consumesQueuedSegmentId: false,

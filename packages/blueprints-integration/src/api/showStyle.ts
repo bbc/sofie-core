@@ -209,8 +209,8 @@ export interface ShowStyleBlueprintManifest<
 	 * Use this to run show-specific side effects (e.g. TSR actions) when a playlist snapshot is taken.
 	 * The callback receives {@link IPlaylistSnapshotCreatedContext} with `listPlayoutDevices` and `executeTSRAction`.
 	 *
-	 * For playlists containing multiple rundowns, only one show-style blueprint is invoked per snapshot
-	 * (the show style of the current/next part instance, or otherwise the first rundown by name).
+	 * For playlists containing multiple rundowns, only one show-style blueprint is invoked per snapshot:
+	 * current part, then next part, then first rundown by name.
 	 *
 	 * Errors are logged by Core and do not fail snapshot generation or storage.
 	 *
