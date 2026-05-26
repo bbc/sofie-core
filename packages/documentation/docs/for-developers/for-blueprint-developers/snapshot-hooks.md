@@ -84,8 +84,8 @@ Called **after** playlist snapshot data has been generated in the job-worker, **
 
 Playlists may contain multiple rundowns (and show styles). Only **one** show style blueprint is invoked per snapshot:
 
-1. Show style of the rundown for the **next** part instance, if set
-2. Otherwise show style of the **current** part instance
+1. Show style of the rundown for the **current** part instance, if set
+2. Otherwise show style of the **next** part instance
 3. Otherwise show style of the **first** rundown in the playlist (sorted by name)
 
 If the playlist has no rundowns, the hook is skipped.

@@ -210,7 +210,7 @@ export interface ShowStyleBlueprintManifest<
 	 * The callback receives {@link IPlaylistSnapshotCreatedContext} with `listPlayoutDevices` and `executeTSRAction`.
 	 *
 	 * For playlists containing multiple rundowns, only one show-style blueprint is invoked per snapshot
-	 * (the show style of the next/current part instance, or otherwise the first rundown by name).
+	 * (the show style of the current/next part instance, or otherwise the first rundown by name).
 	 *
 	 * Errors are logged by Core and do not fail snapshot generation or storage.
 	 *

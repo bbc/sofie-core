@@ -82,6 +82,6 @@ export interface IBlueprintPlaylistSnapshotInfo {
  * Provides show-style and studio config, and TSR device actions.
  *
  * For playlists with multiple rundowns/show styles, only one show-style blueprint is invoked per snapshot
- * (see show-style selection in the job-worker snapshot hook implementation).
+ * (current part, then next part, then first rundown by name — see job-worker snapshot hook implementation).
  */
 export interface IPlaylistSnapshotCreatedContext extends IShowStyleContext, IExecuteTSRActionsContext {}

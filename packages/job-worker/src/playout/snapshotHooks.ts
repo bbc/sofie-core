@@ -76,10 +76,10 @@ export async function invokeOnPlaylistSnapshotCreated(
 /**
  * Chooses which rundown (and thus show-style blueprint) to use for a playlist snapshot hook.
  *
- * Prefer the next or current part’s rundown (from the playlist, then from part instances),
- * otherwise use the first rundown sorted by name.
+ * Priority: current part → next part (from playlist part info, then part instances in the snapshot),
+ * otherwise the first rundown sorted by name. Matches presenter-style resolution (`current` before `next`).
  */
-function pickRundownForPlaylistSnapshot(
+export function pickRundownForPlaylistSnapshot(
 	playlist: ReadonlyDeep<DBRundownPlaylist>,
 	snapshot: CoreRundownPlaylistSnapshot
 ): ReadonlyDeep<DBRundown> | undefined {
@@ -87,22 +87,6 @@ function pickRundownForPlaylistSnapshot(
 	if (rundowns.length === 0) return undefined
 
 	const partInstanceById = new Map(snapshot.partInstances.map((p) => [p._id, p]))
-
-	const nextPartInfo = playlist.nextPartInfo
-	if (nextPartInfo) {
-		if (nextPartInfo.rundownId) {
-			const rundown = rundowns.find((r) => r._id === nextPartInfo.rundownId)
-			if (rundown) return rundown
-		}
-		const nextPartInstanceId = nextPartInfo.partInstanceId
-		if (nextPartInstanceId) {
-			const nextPartInstance = partInstanceById.get(nextPartInstanceId)
-			if (nextPartInstance) {
-				const rundown = rundowns.find((r) => r._id === nextPartInstance.rundownId)
-				if (rundown) return rundown
-			}
-		}
-	}
 
 	const currentPartInfo = playlist.currentPartInfo
 	if (currentPartInfo) {
@@ -115,6 +99,22 @@ function pickRundownForPlaylistSnapshot(
 			const currentPartInstance = partInstanceById.get(currentPartInstanceId)
 			if (currentPartInstance) {
 				const rundown = rundowns.find((r) => r._id === currentPartInstance.rundownId)
+				if (rundown) return rundown
+			}
+		}
+	}
+
+	const nextPartInfo = playlist.nextPartInfo
+	if (nextPartInfo) {
+		if (nextPartInfo.rundownId) {
+			const rundown = rundowns.find((r) => r._id === nextPartInfo.rundownId)
+			if (rundown) return rundown
+		}
+		const nextPartInstanceId = nextPartInfo.partInstanceId
+		if (nextPartInstanceId) {
+			const nextPartInstance = partInstanceById.get(nextPartInstanceId)
+			if (nextPartInstance) {
+				const rundown = rundowns.find((r) => r._id === nextPartInstance.rundownId)
 				if (rundown) return rundown
 			}
 		}

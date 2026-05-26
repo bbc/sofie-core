@@ -1,9 +1,13 @@
-import { getRandomId } from '@sofie-automation/corelib/dist/lib'
+import { CoreRundownPlaylistSnapshot } from '@sofie-automation/corelib/dist/snapshots'
+import { getRandomId, literal } from '@sofie-automation/corelib/dist/lib'
+import { PartInstanceId, ShowStyleBaseId, ShowStyleVariantId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { MockJobContext, setupDefaultJobEnvironment } from '../../__mocks__/context.js'
+import { defaultRundown, defaultRundownPlaylist } from '../../__mocks__/defaultCollectionObjects.js'
 import { setupDefaultRundownPlaylist, setupMockShowStyleCompound } from '../../__mocks__/presetCollections.js'
 import { listPlayoutDevicesForStudio } from '../../peripheralDevice.js'
 import { handleGeneratePlaylistSnapshot } from '../snapshot.js'
-import { handleOnSystemSnapshotCreated } from '../snapshotHooks.js'
+import { handleOnSystemSnapshotCreated, pickRundownForPlaylistSnapshot } from '../snapshotHooks.js'
 
 describe('Snapshot blueprint hooks', () => {
 	let context: MockJobContext
@@ -58,6 +62,71 @@ describe('Snapshot blueprint hooks', () => {
 					withTimeline: false,
 				})
 			).resolves.toBeDefined()
+		})
+	})
+
+	describe('pickRundownForPlaylistSnapshot', () => {
+		test('prefers current part rundown over next when both are set', () => {
+			const studioId = protectString('studio0') as StudioId
+			const playlistId = getRandomId()
+			const showStyleBaseId = getRandomId() as ShowStyleBaseId
+			const showStyleVariantId = getRandomId() as ShowStyleVariantId
+
+			const rundownCurrent = defaultRundown(
+				'rundown_current',
+				studioId,
+				null,
+				playlistId,
+				showStyleBaseId,
+				showStyleVariantId
+			)
+			rundownCurrent.name = 'ZZZ Current'
+			const rundownNext = defaultRundown(
+				'rundown_next',
+				studioId,
+				null,
+				playlistId,
+				showStyleBaseId,
+				showStyleVariantId
+			)
+			rundownNext.name = 'AAA Next'
+
+			const playlist = defaultRundownPlaylist(playlistId, studioId)
+			playlist.currentPartInfo = {
+				partInstanceId: getRandomId() as PartInstanceId,
+				rundownId: rundownCurrent._id,
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			playlist.nextPartInfo = {
+				partInstanceId: getRandomId() as PartInstanceId,
+				rundownId: rundownNext._id,
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+
+			const snapshot = literal<CoreRundownPlaylistSnapshot>({
+				version: '1',
+				playlistId,
+				playlist,
+				rundowns: [rundownCurrent, rundownNext],
+				ingestData: [],
+				sofieIngestData: [],
+				baselineObjs: [],
+				baselineAdlibs: [],
+				segments: [],
+				parts: [],
+				partInstances: [],
+				pieces: [],
+				pieceInstances: [],
+				adLibPieces: [],
+				adLibActions: [],
+				baselineAdLibActions: [],
+				expectedPlayoutItems: [],
+				expectedPackages: [],
+			})
+
+			expect(pickRundownForPlaylistSnapshot(playlist, snapshot)?._id).toEqual(rundownCurrent._id)
 		})
 	})
 
