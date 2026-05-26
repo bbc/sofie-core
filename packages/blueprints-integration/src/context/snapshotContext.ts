@@ -4,7 +4,7 @@ import type { IStudioContext } from './studioContext.js'
 
 /**
  * How the system snapshot hook was triggered.
- * - `system` — system snapshot (settings, REST, pre-migration backup)
+ * - `system` — system snapshot (settings, REST, automatic snapshot before migration)
  * - `debug` — debug snapshot capture from the rundown UI
  */
 export type BlueprintSnapshotType = 'system' | 'debug'

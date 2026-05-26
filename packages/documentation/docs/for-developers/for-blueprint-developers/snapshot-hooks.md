@@ -4,7 +4,7 @@ title: Snapshot hooks
 
 # Snapshot hooks
 
-Sofie can store **snapshots** of system configuration and rundown playlist state. Blueprints can run optional callbacks when those snapshots are **created**, which is useful for driving external systems—for example executing [TSR actions](https://sofie-automation.github.io/sofie-core/typedoc/interfaces/_sofie_automation_blueprints_integration.IExecuteTSRActionsContext.html) on playout devices at backup time.
+Sofie can store **snapshots** of system configuration and rundown playlist state. Blueprints can run optional callbacks when those snapshots are **created**, which is useful for driving external systems—for example executing [TSR actions](https://sofie-automation.github.io/sofie-core/typedoc/interfaces/_sofie_automation_blueprints_integration.IExecuteTSRActionsContext.html) on playout devices when a snapshot is stored.
 
 What actually triggers each hook depends on the snapshot type (see below). In short: **cron** only stores **playlist** snapshots (when enabled in system settings), not system snapshots. **Debug capture** is a separate user-triggered flow that runs both hooks.
 
@@ -29,10 +29,10 @@ Called **after** the system snapshot file has been stored.
 
 ### It runs when:
 
-Typical triggers: **Settings → Snapshots** (system snapshot), **REST/API** (`POST /snapshots` with type `system`), and **debug capture** (see below). Pre-migration backups call the same path for full-system snapshots.
+Typical triggers: **Settings → Snapshots** (system snapshot), **REST/API** (`POST /snapshots` with type `system`), and **debug capture** (see below). Automatic system snapshots taken before migration use the same path for full-system snapshots.
 
 - **Studio-scoped system snapshot** (`studioId` set in snapshot options): one invocation for that studio.
-- **Full-system snapshot** (no `studioId`, e.g. backup of all studios): one invocation **per studio** included in the snapshot.
+- **Full-system snapshot** (no `studioId`, all studios in the file): one invocation **per studio** included in the snapshot.
 - **Debug snapshot** ([`storeDebugSnapshot`](https://github.com/Sofie-Automation/sofie-core/blob/main/meteor/server/api/snapshot.ts)): one invocation for the target studio (`info.type` is `'debug'`). This is available from the rundown UI / triggered actions (“create snapshot for debug”), not from cron. The embedded system data inside the debug file does not fire additional system hooks.
 
 If no studio is in scope (empty studio list), the hook is not called.
@@ -61,7 +61,7 @@ async onSystemSnapshotCreated(context, info) {
 	const devices = await context.listPlayoutDevices()
 	if (devices.length === 0) return
 
-	await context.executeTSRAction(devices[0].deviceId, 'myBackupAction', {
+	await context.executeTSRAction(devices[0].deviceId, 'mySnapshotAction', {
 		snapshotId: info.snapshotId,
 		reason: info.reason,
 		fullSystem: info.options.fullSystem ?? false,
