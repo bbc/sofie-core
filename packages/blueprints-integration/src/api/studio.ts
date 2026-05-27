@@ -9,6 +9,9 @@ import type {
 	IStudioBaselineContext,
 	IStudioUserContext,
 	IProcessIngestDataContext,
+	ISystemSnapshotCreatedContext,
+	IBlueprintSystemSnapshotInfo,
+	BlueprintSnapshotType as _BlueprintSnapshotType,
 } from '../context/index.js'
 import type { IBlueprintShowStyleBase } from '../showStyle.js'
 import type {
@@ -192,6 +195,27 @@ export interface StudioBlueprintManifest<
 		nrcsIngestRundown: IngestRundown,
 		previousNrcsIngestRundown: IngestRundown | undefined,
 		changes: NrcsIngestChangeDetails | UserOperationChange | PlayoutOperationChange
+	) => Promise<void>
+
+	/**
+	 * Called after a system snapshot has been stored to disk.
+	 *
+	 * Use this to run studio-level side effects (e.g. TSR actions on playout devices) at snapshot time.
+	 * The callback receives {@link ISystemSnapshotCreatedContext} with `listPlayoutDevices` and `executeTSRAction`.
+	 *
+	 * Invoked once per studio:
+	 * - Studio-scoped snapshots (`studioId` in snapshot options): once for that studio.
+	 * - Full-system snapshots (no `studioId`): once per studio included in the snapshot.
+	 * - Debug snapshots: once for the target studio when `info.type` is `'debug'` ({@link _BlueprintSnapshotType}).
+	 *
+	 * Errors are logged by Core and do not fail snapshot storage.
+	 *
+	 * @param context Studio context and TSR actions for the studio worker job.
+	 * @param info Metadata about the snapshot (not the snapshot JSON).
+	 */
+	onSystemSnapshotCreated?: (
+		context: ISystemSnapshotCreatedContext,
+		info: IBlueprintSystemSnapshotInfo
 	) => Promise<void>
 }
 
