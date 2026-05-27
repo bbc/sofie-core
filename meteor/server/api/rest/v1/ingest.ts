@@ -181,7 +181,7 @@ class IngestServerAPI implements IngestRestAPI {
 				? {
 						budgetDuration: rawSegment.segmentTiming.budgetDuration,
 						countdownType: rawSegment.segmentTiming.countdownType,
-				  }
+					}
 				: undefined,
 		}
 	}

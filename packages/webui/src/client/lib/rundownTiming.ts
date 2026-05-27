@@ -148,9 +148,9 @@ export class RundownTimingCalculator {
 						: undefined
 
 				if (!lastSegmentIds || partInstance.segmentId !== lastSegmentIds.segmentId) {
-					// untimed segment: pattern is to add all segments as candidates to untimed here, then remove them once we see any timed part within it, later 
+					// untimed segment: pattern is to add all segments as candidates to untimed here, then remove them once we see any timed part within it, later
 					this.untimedSegments.add(partInstance.segmentId)
-					
+
 					if (liveSegmentIds && lastSegmentIds && lastSegmentIds.segmentId === liveSegmentIds.segmentId) {
 						const liveSegment = segmentsMap.get(liveSegmentIds.segmentId)
 
@@ -743,7 +743,8 @@ export function getPlaylistTimingDiff(
 	let frontAnchor: number = currentTime
 	let backAnchor: number = currentTime
 	if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
-		backAnchor = timing.expectedEnd ??
+		backAnchor =
+			timing.expectedEnd ??
 			(startedPlayback ?? Math.max(timing.expectedStart, currentTime)) +
 				(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
 		frontAnchor = Math.max(currentTime, playlist.startedPlayback ?? Math.max(timing.expectedStart, currentTime))
