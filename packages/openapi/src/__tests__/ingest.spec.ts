@@ -198,6 +198,8 @@ describe('Ingest API', () => {
 			expect(typeof segment.name).toBe('string')
 			expect(typeof segment.rank).toBe('number')
 			expect(typeof segment.timing).toBe('object')
+			expect(['number', 'undefined']).toContain(typeof segment.timing?.budgetDuration)
+			expect(['string', 'undefined']).toContain(typeof segment.timing?.countdownType)
 			segmentIds.push(segment.externalId)
 		})
 	})
@@ -222,6 +224,8 @@ describe('Ingest API', () => {
 		expect(typeof segment.name).toBe('string')
 		expect(typeof segment.rank).toBe('number')
 		expect(typeof segment.timing).toBe('object')
+		expect(['number', 'undefined']).toContain(typeof segment.timing?.budgetDuration)
+		expect(['string', 'undefined']).toContain(typeof segment.timing?.countdownType)
 	})
 
 	const segment = {

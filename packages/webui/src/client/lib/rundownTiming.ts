@@ -148,7 +148,9 @@ export class RundownTimingCalculator {
 						: undefined
 
 				if (!lastSegmentIds || partInstance.segmentId !== lastSegmentIds.segmentId) {
+					// untimed segment: pattern is to add all segments as candidates to untimed here, then remove them once we see any timed part within it, later 
 					this.untimedSegments.add(partInstance.segmentId)
+					
 					if (liveSegmentIds && lastSegmentIds && lastSegmentIds.segmentId === liveSegmentIds.segmentId) {
 						const liveSegment = segmentsMap.get(liveSegmentIds.segmentId)
 
@@ -200,6 +202,7 @@ export class RundownTimingCalculator {
 
 				const partIsUntimed = partInstance.part.untimed || false
 
+				// untimed segment algorithm: we have considered all segments as candidates to untimed segments, and now we remove the ones that aren't (the ones that contain a timed part)
 				if (!partIsUntimed) {
 					this.untimedSegments.delete(partInstance.segmentId)
 				}
@@ -740,11 +743,9 @@ export function getPlaylistTimingDiff(
 	let frontAnchor: number = currentTime
 	let backAnchor: number = currentTime
 	if (PlaylistTiming.isPlaylistTimingForwardTime(timing)) {
-		const backAnchorTimeWithoutBreaks =
-			timing.expectedEnd ??
+		backAnchor = timing.expectedEnd ??
 			(startedPlayback ?? Math.max(timing.expectedStart, currentTime)) +
 				(timing.expectedDuration ?? timingContext.totalPlaylistDuration ?? 0)
-		backAnchor = backAnchorTimeWithoutBreaks
 		frontAnchor = Math.max(currentTime, playlist.startedPlayback ?? Math.max(timing.expectedStart, currentTime))
 	} else if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
 		backAnchor = timing.expectedEnd
