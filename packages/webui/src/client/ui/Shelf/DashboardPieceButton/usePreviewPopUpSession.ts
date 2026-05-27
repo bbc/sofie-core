@@ -44,8 +44,13 @@ export function usePreviewPopUpSession(args: {
 	}, [args.layerType, args.piece, args.contentStatus])
 
 	useEffect(() => {
-		if (previewSessionRef.current && previewRequest.contents.length > 0) {
-			previewSessionRef.current.update(previewRequest.contents)
+		if (previewSessionRef.current) {
+			if (previewRequest.contents.length === 0) {
+				previewSessionRef.current.close()
+				previewSessionRef.current = null
+			} else {
+				previewSessionRef.current.update(previewRequest.contents)
+			}
 		}
 	}, [previewRequest])
 
