@@ -697,9 +697,10 @@ export async function storeSystemSnapshot(
 	return internalStoreSystemSnapshot(options, reason)
 }
 /**
- * Queues {@link StudioJobs.OnSystemSnapshotCreated} for each studio after a snapshot is stored.
+ * Runs {@link StudioJobs.OnSystemSnapshotCreated} for each studio after a snapshot is stored.
  *
- * Studio-scoped system snapshots queue one job; full-system snapshots queue one job per studio in the snapshot.
+ * Studio-scoped system snapshots run one job; full-system snapshots run one job per studio in the snapshot.
+ * Waits for each blueprint hook to finish; hook failures are logged and do not fail snapshot storage.
  */
 async function queueOnSystemSnapshotCreatedJobs(
 	storedId: SnapshotId,
@@ -722,12 +723,10 @@ async function queueOnSystemSnapshotCreatedJobs(
 					fullSystem,
 				},
 			})
-			void job.complete.catch((err) => {
-				logger.error(`OnSystemSnapshotCreated job failed: ${stringifyError(err)}`)
-			})
+			await job.complete
 		} catch (err) {
 			logger.error(
-				`Failed to queue OnSystemSnapshotCreated for snapshot ${storedId} (studio ${studioId}, withDeviceSnapshots=${options.withDeviceSnapshots}): ${stringifyError(err)}`
+				`OnSystemSnapshotCreated failed for snapshot ${storedId} (studio ${studioId}, withDeviceSnapshots=${options.withDeviceSnapshots}): ${stringifyError(err)}`
 			)
 		}
 	}
