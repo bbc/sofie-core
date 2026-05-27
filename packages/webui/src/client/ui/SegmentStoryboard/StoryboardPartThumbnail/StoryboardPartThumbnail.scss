@@ -11,7 +11,7 @@
 	overflow: hidden;
 	cursor: default;
 
-	@include item-type-colors();
+	@include item-type-colors;
 	@include missing-overlay();
 
 	// LiveSpeak needs a bit of special set up, because the thumbnail may make the dual-color setup invisible
@@ -61,7 +61,7 @@
 			position: relative;
 			overflow: hidden;
 			min-height: 0;
-			@include item-type-colors();
+			@include item-type-colors;
 
 			> img,
 			.segment-storyboard__thumbnail__item__image {
@@ -109,7 +109,7 @@
 		}
 
 		& > * {
-			@include item-type-colors();
+			@include item-type-colors;
 		}
 	}
 
