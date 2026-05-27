@@ -1,4 +1,4 @@
-import { SourceLayerType, type SplitsContent, type VTContent } from '@sofie-automation/blueprints-integration'
+import { SourceLayerType, type SplitsContent } from '@sofie-automation/blueprints-integration'
 import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
 import type { ReadonlyDeep } from 'type-fest'
 

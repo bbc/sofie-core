@@ -1,11 +1,15 @@
 import classNames from 'classnames'
+import './SplitButtonLayerBackground.scss'
 import type { SplitsContent } from '@sofie-automation/blueprints-integration'
 import type { PieceGeneric } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { getSplitPreview, SplitRole } from '../../../../lib/ui/splitPreview.js'
 import { RundownUtils } from '../../../../lib/rundown.js'
+import type { ReadonlyDeep } from 'type-fest'
 
 /** Layer class for the top DVE box (upper stripe), used as the large-button outer tag-container background. */
-export function getSplitsTopBoxLayerClassName(piece: Omit<PieceGeneric, 'timelineObjectsString'>): string | undefined {
+export function getSplitsTopBoxLayerClassName(
+	piece: ReadonlyDeep<Omit<PieceGeneric, 'timelineObjectsString'>>
+): string | undefined {
 	const boxSourceConfiguration = (piece.content as SplitsContent | undefined)?.boxSourceConfiguration
 	if (!boxSourceConfiguration?.length) return undefined
 
@@ -21,7 +25,7 @@ export function getSplitsTopBoxLayerClassName(piece: Omit<PieceGeneric, 'timelin
 export function SplitButtonLayerBackground({
 	piece,
 }: {
-	piece: Omit<PieceGeneric, 'timelineObjectsString'>
+	piece: ReadonlyDeep<Omit<PieceGeneric, 'timelineObjectsString'>>
 }): JSX.Element | null {
 	const boxSourceConfiguration = (piece.content as SplitsContent | undefined)?.boxSourceConfiguration
 	if (!boxSourceConfiguration?.length) return null

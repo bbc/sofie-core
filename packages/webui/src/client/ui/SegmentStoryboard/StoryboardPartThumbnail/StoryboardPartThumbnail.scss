@@ -24,6 +24,18 @@
 		background-repeat: repeat-x;
 	}
 
+	&.splits {
+		> .dashboard-panel__panel__button__layer-background {
+			z-index: 0;
+		}
+
+		> .segment-storyboard__thumbnail__split-layout,
+		> .segment-storyboard__thumbnail__label {
+			position: relative;
+			z-index: 1;
+		}
+	}
+
 	&.segment-storyboard__part__thumbnail--placeholder {
 		background: color.scale($segment-background-color, $lightness: 10%);
 	}

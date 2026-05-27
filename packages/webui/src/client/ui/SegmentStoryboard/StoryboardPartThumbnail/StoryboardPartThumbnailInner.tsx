@@ -14,6 +14,7 @@ import {
 } from '../../PreviewPopUp/PreviewPopUpContext.js'
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import type { PieceExtended } from '@sofie-automation/corelib/src/dataModel/Piece.js'
+import { SplitButtonLayerBackground } from '../../Shelf/DashboardPieceButton/subcomponents/SplitButtonLayerBackground.js'
 
 interface IProps {
 	partId: PartId
@@ -141,6 +142,7 @@ export function StoryboardPartThumbnailInner({
 			onPointerMove={onPointerMove}
 			ref={thumbnailEl}
 		>
+			<SplitButtonLayerBackground piece={piece.instance.piece} />
 			<ThumbnailRenderer
 				partId={partId}
 				partInstanceId={partInstanceId}
