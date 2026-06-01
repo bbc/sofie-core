@@ -43,6 +43,7 @@ import {
 	handleBlueprintValidateConfigForStudio,
 } from '../../playout/upgrade.js'
 import { handleTimelineTriggerTime, handleOnPlayoutPlaybackChanged } from '../../playout/timings/index.js'
+import { handleOnExternalEvents } from '../../playout/externalEvents.js'
 import { handleExecuteAdlibAction } from '../../playout/adlibAction.js'
 import { handleTakeNextPart } from '../../playout/take.js'
 import { handleClearQuickLoopMarkers, handleSetQuickLoopMarker } from '../../playout/quickLoopMarkers.js'
@@ -99,6 +100,7 @@ export const studioJobHandlers: StudioJobHandlers = {
 
 	[StudioJobs.OnPlayoutPlaybackChanged]: handleOnPlayoutPlaybackChanged,
 	[StudioJobs.OnTimelineTriggerTime]: handleTimelineTriggerTime,
+	[StudioJobs.OnExternalEvents]: handleOnExternalEvents,
 
 	[StudioJobs.RecalculateTTimerProjections]: handleRecalculateTTimerProjections,
 

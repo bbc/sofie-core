@@ -11,6 +11,11 @@ import type { PeripheralDeviceCommand } from '../core/model/PeripheralDeviceComm
 import type { ExpectedPlayoutItemPeripheralDevice } from '../expectedPlayoutItem.js'
 import type { DeviceTriggerMountedAction, PreviewWrappedAdLib } from '../input-gateway/deviceTriggerPreviews.js'
 import type { IngestRundownStatus } from '../ingest/rundownStatus.js'
+import type {
+	PeripheralDeviceExternalEvent,
+	PeripheralDeviceExternalEventSubscription,
+} from '../peripheralDevice/externalEvents.js'
+import type { ProtectedString } from '../lib/protectedString.js'
 
 /**
  * Ids of possible DDP subscriptions for any PeripheralDevice.
@@ -59,6 +64,11 @@ export enum PeripheralDevicePubSub {
 	 * Ingest status of rundowns for a PeripheralDevice
 	 */
 	ingestDeviceRundownStatus = 'ingestDeviceRundownStatus',
+
+	// Playout gateway (external event subscriptions):
+
+	/** External event subscriptions from blueprints for the Studio */
+	externalEventSubscriptionsForDevice = 'externalEventSubscriptionsForDevice',
 }
 
 /**
@@ -127,6 +137,17 @@ export interface PeripheralDevicePubSubTypes {
 		deviceId: PeripheralDeviceId,
 		token?: string
 	) => PeripheralDevicePubSubCollectionsNames.ingestRundownStatus
+	[PeripheralDevicePubSub.externalEventSubscriptionsForDevice]: (
+		type: PeripheralDeviceExternalEvent['type'],
+		deviceId: PeripheralDeviceId,
+		token?: string
+	) => PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions
+}
+
+/** An individual external device event subscription, as published by the server for the playout gateway */
+export type ExternalEventSubscriptionId = ProtectedString<'ExternalEventSubscriptionId'>
+export type ExternalEventSubscriptionDocument = PeripheralDeviceExternalEventSubscription & {
+	_id: ExternalEventSubscriptionId
 }
 
 export enum PeripheralDevicePubSubCollectionsNames {
@@ -149,6 +170,7 @@ export enum PeripheralDevicePubSubCollectionsNames {
 	packageManagerExpectedPackages = 'packageManagerExpectedPackages',
 
 	ingestRundownStatus = 'ingestRundownStatus',
+	externalEventSubscriptions = 'externalEventSubscriptions',
 }
 
 export type PeripheralDevicePubSubCollections = {
@@ -171,4 +193,5 @@ export type PeripheralDevicePubSubCollections = {
 	[PeripheralDevicePubSubCollectionsNames.packageManagerExpectedPackages]: PackageManagerExpectedPackage
 
 	[PeripheralDevicePubSubCollectionsNames.ingestRundownStatus]: IngestRundownStatus
+	[PeripheralDevicePubSubCollectionsNames.externalEventSubscriptions]: ExternalEventSubscriptionDocument
 }

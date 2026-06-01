@@ -1,4 +1,5 @@
 import { PlayoutChangedResults } from '@sofie-automation/shared-lib/dist/peripheralDevice/peripheralDeviceAPI'
+import type { PeripheralDeviceExternalEvent } from '@sofie-automation/shared-lib/dist/peripheralDevice/externalEvents'
 import {
 	AdLibActionId,
 	BucketAdLibActionId,
@@ -127,6 +128,11 @@ export enum StudioJobs {
 	 * ( typically when using the "now"-feature )
 	 */
 	OnTimelineTriggerTime = 'onTimelineTriggerTime',
+	/**
+	 * Called by a gateway when a playout device emits an external event.
+	 * Events from multiple gateways or rapid bursts are merged into a single job.
+	 */
+	OnExternalEvents = 'onExternalEvents',
 
 	/**
 	 * Recalculate T-Timer projections based on current playlist state
@@ -348,6 +354,9 @@ export interface OnPlayoutPlaybackChangedProps extends RundownPlayoutPropsBase {
 export interface OnTimelineTriggerTimeProps {
 	results: Array<{ id: string; time: number }>
 }
+export interface OnExternalEventsProps {
+	events: PeripheralDeviceExternalEvent[]
+}
 
 export type OrderRestoreToDefaultProps = RundownPlayoutPropsBase
 export interface OrderMoveRundownToPlaylistProps {
@@ -511,6 +520,7 @@ export type StudioJobFunc = {
 
 	[StudioJobs.OnPlayoutPlaybackChanged]: (data: OnPlayoutPlaybackChangedProps) => void
 	[StudioJobs.OnTimelineTriggerTime]: (data: OnTimelineTriggerTimeProps) => void
+	[StudioJobs.OnExternalEvents]: (data: OnExternalEventsProps) => void
 
 	[StudioJobs.RecalculateTTimerProjections]: () => void
 
