@@ -30,6 +30,9 @@ export type PackageManagerExpectedPackageId = ProtectedString<'PackageManagerExp
 
 export type PackageManagerExpectedPackageBase = ReadonlyDeep<Omit<ExpectedPackage.Base, '_id'>> & {
 	_id: ExpectedPackageId
+
+	/** The ID of the rundown this package is associated with, if any */
+	rundownId: RundownId | undefined
 }
 
 export interface PackageManagerExpectedPackage {
