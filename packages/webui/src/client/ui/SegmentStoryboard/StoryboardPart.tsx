@@ -246,7 +246,7 @@ export function StoryboardPart({
 					</div>
 				</>
 			)}
-			{!isLastSegment && isLastPartInSegment && !isEndOfLoopingShow && !part.instance.part.invalid && (
+			{!isLastSegment && isLastPartInSegment && !isEndOfLoopingShow && !isInvalid && (
 				<div
 					className={classNames('segment-storyboard__part__segment-end', {
 						'segment-storyboard__part__segment-end--next': isLivePart && (!isLastSegment || doesPlaylistHaveNextPart),

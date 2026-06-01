@@ -235,8 +235,12 @@ export class SyncIngestUpdateToPartInstanceContext
 		let instancePropsUpdated = false
 
 		if (playoutUpdatePartInstance) {
-			this.#partInstance.setInvalidReason(playoutUpdatePartInstance.invalidReason)
 			instancePropsUpdated = true
+
+			if (this.playStatus === 'next') {
+				// Only allow changing the invalidReason for the 'next' PartInstance
+				this.#partInstance.setInvalidReason(playoutUpdatePartInstance.invalidReason)
+			}
 		}
 
 		if (!partPropsUpdated && !instancePropsUpdated) {

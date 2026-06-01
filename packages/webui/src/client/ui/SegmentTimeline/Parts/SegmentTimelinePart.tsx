@@ -573,13 +573,14 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 	private renderEndOfSegment = (
 		t: TFunction,
 		innerPart: DBPart,
+		isInvalid: boolean,
 		isEndOfShow: boolean,
-		isEndOfLoopingShow?: boolean
+		isEndOfLoopingShow: boolean
 	) => {
 		const isNext =
 			this.state.isLive &&
 			((!this.props.isLastSegment && !this.props.isLastInSegment) || !!this.props.playlist.nextPartInfo) &&
-			!innerPart.invalid
+			!isInvalid
 		let timeOffset = SegmentTimelinePartClass.getPartDisplayDuration(this.props.part, this.props.timingDurations)
 
 		if (this.state.isLive) {
@@ -610,7 +611,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						</div>
 					</div>
 				)}
-				{!isEndOfShow && !isEndOfLoopingShow && this.props.isLastInSegment && !innerPart.invalid && (
+				{!isEndOfShow && !isEndOfLoopingShow && this.props.isLastInSegment && !isInvalid && (
 					<div
 						className={ClassNames('segment-timeline__part__segment-end', {
 							'is-next': isNext,
@@ -721,7 +722,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						'segment-timeline__part',
 						{
 							live: this.state.isLive,
-							next: (this.state.isNext || this.props.isAfterLastValidInSegmentAndItsLive) && !innerPart.invalid,
+							next: (this.state.isNext || this.props.isAfterLastValidInSegmentAndItsLive) && !isInvalid,
 							invalid: isInvalid && !innerPart.gap,
 							floated: innerPart.floated,
 							gap: innerPart.gap,
@@ -778,7 +779,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 										!innerPart.gap &&
 										((this.state.isNext && this.props.autoNextPart) ||
 											(!this.state.isNext && this.props.part.willProbablyAutoNext)),
-									invalid: innerPart.invalid && !innerPart.gap,
+									invalid: isInvalid && !innerPart.gap,
 									floated: innerPart.floated,
 								})}
 								style={{
@@ -791,7 +792,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 											(this.props.autoNextPart || this.props.part.willProbablyAutoNext) && !this.state.isNext,
 									})}
 								>
-									{innerPart.invalid && !innerPart.gap ? null : (
+									{isInvalid && !innerPart.gap ? null : (
 										<React.Fragment>
 											{this.props.autoNextPart || this.props.part.willProbablyAutoNext
 												? t('Auto')
@@ -813,7 +814,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 								'auto-next':
 									(this.state.isNext && this.props.autoNextPart) ||
 									(!this.state.isNext && this.props.part.willProbablyAutoNext),
-								invalid: innerPart.invalid && !innerPart.gap,
+								invalid: isInvalid && !innerPart.gap,
 								floated: innerPart.floated,
 								offset: !!this.props.playlist.nextTimeOffset,
 								'quickloop-start': isQuickLoopStart,
@@ -825,7 +826,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 										(this.props.autoNextPart || this.props.part.willProbablyAutoNext) && !this.state.isNext,
 								})}
 							>
-								{innerPart.invalid && !innerPart.gap ? null : (
+								{isInvalid && !innerPart.gap ? null : (
 									<React.Fragment>
 										{(this.state.isNext && this.props.autoNextPart) ||
 										(!this.state.isNext && this.props.part.willProbablyAutoNext)
@@ -858,7 +859,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 						</div>
 					)}
 					{isQuickLoopEnd && <div className="segment-timeline__part__nextline__quickloop-end" />}
-					{this.renderEndOfSegment(t, innerPart, isEndOfShow, isPartEndOfLoopingShow)}
+					{this.renderEndOfSegment(t, innerPart, isInvalid, isEndOfShow, isPartEndOfLoopingShow)}
 				</div>
 			)
 		} else {
@@ -879,7 +880,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 				>
 					{/* render it empty, just to take up space */}
 					{this.state.isInsideViewport
-						? this.renderEndOfSegment(t, innerPart, isEndOfShow, isPartEndOfLoopingShow)
+						? this.renderEndOfSegment(t, innerPart, isInvalid, isEndOfShow, isPartEndOfLoopingShow)
 						: null}
 				</div>
 			)
