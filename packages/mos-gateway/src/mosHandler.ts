@@ -130,6 +130,8 @@ export class MosHandler {
 
 		this.mosTypes = getMosTypes(this.strict)
 
+		await this._initMosConnection()
+
 		coreHandler.onConnected(() => {
 			// This is called whenever a connection to Core has been (re-)established
 			this.setupObservers()
