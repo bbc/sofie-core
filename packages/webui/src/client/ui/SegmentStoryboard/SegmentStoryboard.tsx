@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import {
 	type DBRundownPlaylist,
 	RundownHoldState,
