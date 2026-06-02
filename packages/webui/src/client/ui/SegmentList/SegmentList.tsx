@@ -5,7 +5,7 @@ import {
 	RundownHoldState,
 } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { UIStateStorage } from '../../lib/UIStateStorage.js'
-import type { PartUi, SegmentNoteCounts, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import type { IContextMenuContext } from '../RundownView.js'
 import { useCombinedRefs } from '../../lib/lib.js'
 import { literal } from '@sofie-automation/corelib/dist/lib'
@@ -40,7 +40,6 @@ interface IProps {
 	segment: SegmentUi
 	playlist: DBRundownPlaylist
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 
 	fixedSegmentDuration: boolean
 	showCountdownToSegment: boolean
@@ -240,7 +239,6 @@ const SegmentListInner = React.forwardRef<HTMLDivElement, IProps>(function Segme
 				parts={props.parts}
 				segment={props.segment}
 				playlist={props.playlist}
-				segmentNoteCounts={props.segmentNoteCounts}
 				highlight={highlight}
 				isLiveSegment={props.isLiveSegment}
 				isNextSegment={props.isNextSegment}

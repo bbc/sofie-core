@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import type { IContextMenuContext } from '../RundownView.js'
-import type { IOutputLayerUi, PartUi, SegmentNoteCounts, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
-import { CriticalIconSmall, WarningIconSmall } from '../../lib/ui/icons/notifications.js'
 import { contextMenuHoldToDisplayTime, useCombinedRefs, useRundownViewEventBusListener } from '../../lib/lib.js'
 import { useTranslation } from 'react-i18next'
 import { literal } from '@sofie-automation/corelib/dist/lib'
@@ -31,6 +30,7 @@ import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js
 import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isLoopRunning } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 import { HOVER_TIMEOUT } from '../Shelf/DashboardPieceButton/types.js'
+import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
 
 interface IProps {
 	id: string
@@ -39,7 +39,6 @@ interface IProps {
 	playlist: DBRundownPlaylist
 	studio: UIStudio
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 	hasAlreadyPlayed: boolean
 	hasGuestItems: boolean
 	hasRemoteItems: boolean
@@ -81,9 +80,6 @@ export const SegmentAdlibTesting = React.memo(
 		const { t } = useTranslation()
 		const [squishedHover, setSquishedHover] = useState<null | number>(null)
 		const squishedHoverTimeout = useRef<number | null>(null)
-
-		const criticalNotes = props.segmentNoteCounts.criticial
-		const warningNotes = props.segmentNoteCounts.warning
 
 		const getSegmentContext = () => {
 			const ctx = literal<IContextMenuContext>({
@@ -463,30 +459,7 @@ export const SegmentAdlibTesting = React.memo(
 					>
 						{t('Adlib Testing')}
 					</h2>
-					{(criticalNotes > 0 || warningNotes > 0) && (
-						<div className="segment-timeline__title__notes">
-							{criticalNotes > 0 && (
-								<div
-									className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
-									onClick={() => props.onHeaderNoteClick?.(props.segment._id, NoteSeverity.ERROR)}
-									aria-label={t('Critical problems')}
-								>
-									<CriticalIconSmall />
-									<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
-								</div>
-							)}
-							{warningNotes > 0 && (
-								<div
-									className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
-									onClick={() => props.onHeaderNoteClick?.(props.segment._id, NoteSeverity.WARNING)}
-									aria-label={t('Warnings')}
-								>
-									<WarningIconSmall />
-									<div className="segment-timeline__title__notes__count">{warningNotes}</div>
-								</div>
-							)}
-						</div>
-					)}
+					<SegmentHeaderNotes segmentId={props.segment._id} onHeaderNoteClick={props.onHeaderNoteClick} />
 				</ContextMenuTrigger>
 				<div className="segment-timeline__source-layers" role="tree" aria-label={t('Sources')}>
 					{Object.values<IOutputLayerUi>(props.segment.outputLayers)

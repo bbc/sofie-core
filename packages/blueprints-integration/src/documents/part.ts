@@ -91,6 +91,9 @@ export interface IBlueprintMutatablePart<TPrivateData = unknown, TPublicData = u
 	/** User-facing identifier that can be used by the User to identify the contents of a segment in the Rundown source system */
 	identifier?: string
 
+	/** User-facing notes shown in the segment header */
+	segmentHeaderNotes?: ITranslatableMessage[]
+
 	/** MediaObjects that when created/updated, should cause the blueprint to be rerun for the Segment of this Part */
 	hackListenToMediaObjectUpdates?: HackPartMediaObjectSubscription[]
 
