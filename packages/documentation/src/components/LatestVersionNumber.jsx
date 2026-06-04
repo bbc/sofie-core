@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 
 import versions from '../../versions.json';
 
-const FALLBACK_VERSION = "2?.03"
+const FALLBACK_VERSION = "26.03.0"; // Fallback version if versions.json cannot be loaded
 
 export default function LatestVersionNumber() {
 	try {
