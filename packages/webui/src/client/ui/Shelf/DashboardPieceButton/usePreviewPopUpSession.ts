@@ -18,7 +18,7 @@ export function usePreviewPopUpSession(args: {
 	contentStatus: ReadonlyDeep<PieceContentStatusObj> | undefined
 	enableHoverPreview?: boolean
 }): {
-	openPreview: (e: EventTarget, time: number) => void
+	openPreview: (anchor: HTMLElement, time: number) => void
 	closePreview: () => void
 	setPointerTime: (time: number) => void
 	hasPreview: boolean
@@ -57,11 +57,12 @@ export function usePreviewPopUpSession(args: {
 	}, [])
 
 	const openPreview = useCallback(
-		(e: EventTarget, time: number) => {
+		(anchor: HTMLElement, time: number) => {
 			if (!enableHoverPreview) return
 			if (!previewRequest.contents.length) return
+			if (!anchor.isConnected) return
 			previewSessionRef.current?.close()
-			previewSessionRef.current = args.previewContext.requestPreview(e as any, previewRequest.contents, {
+			previewSessionRef.current = args.previewContext.requestPreview(anchor, previewRequest.contents, {
 				...previewRequest.options,
 				time,
 			})

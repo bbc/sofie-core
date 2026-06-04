@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { PreviewPopUp, type PreviewPopUpHandle } from './PreviewPopUp.js'
 import type { Padding, Placement } from '@popperjs/core'
 import { PreviewPopUpContent } from './PreviewPopUpContent.js'
@@ -389,14 +389,78 @@ interface PreviewSession {
 export function PreviewPopUpContextProvider({ children }: React.PropsWithChildren<{}>): React.ReactNode {
 	const currentHandle = useRef<IPreviewPopUpSession>()
 	const previewRef = useRef<PreviewPopUpHandle>(null)
+	const closeSessionRef = useRef<() => void>(() => undefined)
 
 	const [previewSession, setPreviewSession] = useState<PreviewSession | null>(null)
 	const [previewContent, setPreviewContent] = useState<PreviewContentUI[] | null>(null)
 	const [t, setTime] = useState<number | null>(null)
+	const [previewSessionKey, setPreviewSessionKey] = useState(0)
+
+	const isDetachedHTMLElement = (anchor: HTMLElement | VirtualElement): boolean => {
+		return anchor instanceof HTMLElement && !anchor.isConnected
+	}
+
+	const closeSession = useCallback(() => {
+		const previousHandle = currentHandle.current
+		if (previousHandle) {
+			currentHandle.current = undefined
+			previousHandle.onClosed?.()
+		}
+
+		setPreviewSession(null)
+		setPreviewContent(null)
+		setTime(null)
+	}, [])
+
+	useEffect(() => {
+		closeSessionRef.current = closeSession
+	}, [closeSession])
+
+	useEffect(() => {
+		return () => {
+			closeSession()
+		}
+	}, [closeSession])
+
+	useEffect(() => {
+		if (!previewSession) return
+		const anchor = previewSession.anchor
+		if (!(anchor instanceof HTMLElement)) return
+
+		let rafHandle: number | undefined
+		const checkAnchorConnection = () => {
+			if (!anchor.isConnected) {
+				closeSessionRef.current()
+				return
+			}
+			rafHandle = window.requestAnimationFrame(checkAnchorConnection)
+		}
+
+		rafHandle = window.requestAnimationFrame(checkAnchorConnection)
+
+		return () => {
+			if (rafHandle !== undefined) {
+				window.cancelAnimationFrame(rafHandle)
+			}
+		}
+	}, [previewSession])
 
 	const context: IPreviewPopUpContext = {
 		requestPreview: (anchor, content, opts) => {
-			if (opts?.time) {
+			if (isDetachedHTMLElement(anchor)) {
+				closeSession()
+				const closedHandle: IPreviewPopUpSession = {
+					close: () => undefined,
+					update: () => undefined,
+					setPointerTime: () => undefined,
+				}
+				return closedHandle
+			}
+
+			closeSession()
+			setPreviewSessionKey((prev) => prev + 1)
+
+			if (opts?.time !== undefined) {
 				setTime(opts.time)
 			} else {
 				setTime(null)
@@ -413,15 +477,26 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 
 			const handle: IPreviewPopUpSession = {
 				close: () => {
-					setPreviewSession(null)
+					if (currentHandle.current !== handle) return
+					closeSession()
 				},
 				update: (contents) => {
+					if (currentHandle.current !== handle) return
+					if (isDetachedHTMLElement(anchor)) {
+						closeSession()
+						return
+					}
 					if (contents) {
 						setPreviewContent(contents)
 					}
 					previewRef.current?.update()
 				},
 				setPointerTime: (t) => {
+					if (currentHandle.current !== handle) return
+					if (isDetachedHTMLElement(anchor)) {
+						closeSession()
+						return
+					}
 					setTime(t)
 				},
 			}
@@ -436,6 +511,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 			{children}
 			{previewSession && (
 				<PreviewPopUp
+					key={previewSessionKey}
 					ref={previewRef}
 					anchor={previewSession.anchor}
 					padding={previewSession.padding}

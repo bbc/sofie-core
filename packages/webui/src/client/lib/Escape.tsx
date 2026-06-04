@@ -40,6 +40,7 @@ function usePortal(id: string, style?: Partial<Record<keyof React.CSSProperties,
 			const existingParent = document.querySelector<HTMLElement>(`#${id}`)
 			// Parent is either a new root or the existing dom element
 			const parentElem = existingParent || createRootElement(id)
+			const parentCreatedByThisHook = !existingParent
 
 			// If there is no existing DOM element, add a new one.
 			if (!existingParent) {
@@ -53,7 +54,8 @@ function usePortal(id: string, style?: Partial<Record<keyof React.CSSProperties,
 
 			return function removeElement() {
 				rootElemRef.current?.remove()
-				if (!parentElem.childElementCount) {
+				rootElemRef.current = null
+				if (parentCreatedByThisHook && !parentElem.childElementCount) {
 					parentElem.remove()
 				}
 			}

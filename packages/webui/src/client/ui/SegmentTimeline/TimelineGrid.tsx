@@ -442,6 +442,10 @@ export class TimelineGrid extends React.Component<ITimelineGridProps> {
 	}
 
 	componentWillUnmount(): void {
+		if (typeof this.scheduledRepaint === 'number') {
+			window.cancelAnimationFrame(this.scheduledRepaint)
+			this.scheduledRepaint = null
+		}
 		if (this._resizeObserver) this._resizeObserver.disconnect()
 		window.removeEventListener(RundownTiming.Events.timeupdateLowResolution, this.onTimeupdate)
 		window.removeEventListener(RundownTiming.Events.timeupdateHighResolution, this.onTimeupdate)

@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react'
+import React, { useContext, useEffect, useRef } from 'react'
 import type { PartInvalidReason } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { type IPreviewPopUpSession, PreviewPopUpContext } from '../../PreviewPopUp/PreviewPopUpContext.js'
 
@@ -22,8 +22,13 @@ export function InvalidPartCover({ className, invalidReason }: Readonly<IProps>)
 			return
 		}
 
+		if (previewSession.current) {
+			previewSession.current.close()
+			previewSession.current = null
+		}
+
 		if (invalidReason?.message && !previewSession.current) {
-			previewSession.current = previewContext.requestPreview(e.target as HTMLDivElement, [
+			previewSession.current = previewContext.requestPreview(e.currentTarget, [
 				{
 					type: 'warning',
 					content: invalidReason.message,
@@ -38,6 +43,15 @@ export function InvalidPartCover({ className, invalidReason }: Readonly<IProps>)
 			previewSession.current = null
 		}
 	}
+
+	useEffect(() => {
+		return () => {
+			if (previewSession.current) {
+				previewSession.current.close()
+				previewSession.current = null
+			}
+		}
+	}, [])
 
 	return (
 		<div className={className} ref={element} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>

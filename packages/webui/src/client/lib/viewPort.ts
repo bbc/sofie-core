@@ -22,6 +22,20 @@ const viewPortScrollingState = {
 	lastProgrammaticScrollTime: 0,
 }
 
+function clearPendingScrollState(): void {
+	if (pendingFirstStageTimeout) {
+		clearTimeout(pendingFirstStageTimeout)
+		pendingFirstStageTimeout = undefined
+	}
+
+	if (pendingSecondStageScroll) {
+		window.cancelIdleCallback(pendingSecondStageScroll)
+		pendingSecondStageScroll = undefined
+	}
+
+	currentScrollingElement = undefined
+}
+
 export function getViewPortScrollingState(): {
 	isProgrammaticScrollInProgress: boolean
 	lastProgrammaticScrollTime: number
@@ -36,11 +50,14 @@ export function maintainFocusOnPartInstance(
 	noAnimation?: boolean
 ): void {
 	focusState.startTime = Date.now()
+	viewPortScrollingState.isProgrammaticScrollInProgress = true
+	viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 
 	const focus = async () => {
 		// Only proceed if we're not already scrolling and within the time window
 		if (!focusState.isScrolling && Date.now() - focusState.startTime < timeWindow) {
 			focusState.isScrolling = true
+			viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 
 			try {
 				await scrollToPartInstance(partInstanceId, forceScroll, noAnimation)
@@ -48,6 +65,7 @@ export function maintainFocusOnPartInstance(
 				// Handle error if needed
 			} finally {
 				focusState.isScrolling = false
+				viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 			}
 		} else if (Date.now() - focusState.startTime >= timeWindow) {
 			quitFocusOnPart()
@@ -91,6 +109,24 @@ function quitFocusOnPart() {
 		clearInterval(focusState.interval)
 		focusState.interval = undefined
 	}
+
+	if (!focusState.isScrolling) {
+		viewPortScrollingState.isProgrammaticScrollInProgress = false
+		viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
+	}
+}
+
+export function resetViewportScrollState(): void {
+	quitFocusOnPart()
+	clearPendingScrollState()
+	viewPortScrollingState.isProgrammaticScrollInProgress = false
+}
+
+export function clearViewportLifecycleState(): void {
+	resetViewportScrollState()
+	viewPortScrollingState.lastProgrammaticScrollTime = 0
+	focusState.isScrolling = false
+	focusState.startTime = 0
 }
 
 export async function scrollToPartInstance(
@@ -156,6 +192,8 @@ export async function scrollToSegment(
 	forceScroll?: boolean,
 	noAnimation?: boolean
 ): Promise<boolean> {
+	clearPendingScrollState()
+
 	const elementToScrollTo: HTMLElement | null = getElementToScrollTo(elementToScrollToOrSegmentId, false)
 	const historyTarget: HTMLElement | null = getElementToScrollTo(elementToScrollToOrSegmentId, true)
 
@@ -268,6 +306,7 @@ async function innerScrollToSegment(
 			},
 			(error) => {
 				if (!error.toString().match(/another scroll/)) logger.error(error)
+				currentScrollingElement = undefined
 				return false
 			}
 		)
@@ -315,7 +354,9 @@ export async function scrollToPosition(scrollPosition: number, noAnimation?: boo
 			behavior: 'smooth',
 		})
 		await new Promise((resolve) => setTimeout(resolve, 300))
+
 		viewPortScrollingState.isProgrammaticScrollInProgress = false
+		viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 	}
 }
 

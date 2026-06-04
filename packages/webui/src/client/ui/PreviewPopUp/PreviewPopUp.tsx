@@ -5,6 +5,10 @@ import type { Padding, Placement, VirtualElement } from '@popperjs/core'
 
 import './PreviewPopUp.scss'
 
+function isDetachedHTMLElementAnchor(anchor: HTMLElement | VirtualElement | null): anchor is HTMLElement {
+	return anchor instanceof HTMLElement && !anchor.isConnected
+}
+
 export const PreviewPopUp = React.forwardRef<
 	PreviewPopUpHandle,
 	React.PropsWithChildren<{
@@ -62,6 +66,8 @@ export const PreviewPopUp = React.forwardRef<
 			anchor?.getBoundingClientRect().y ?? 0
 		),
 	})
+	const anchorRef = useRef(anchor)
+	const anchorYRef = useRef(anchor?.getBoundingClientRect().y ?? 0)
 	const { styles, attributes, update } = usePopper(
 		trackMouse ? virtualElement.current : anchor,
 		popperEl,
@@ -75,12 +81,15 @@ export const PreviewPopUp = React.forwardRef<
 	}, [update])
 
 	useEffect(() => {
+		anchorRef.current = anchor
+		anchorYRef.current = anchor?.getBoundingClientRect().y ?? 0
+	}, [anchor])
+
+	useEffect(() => {
 		if (trackMouse) {
 			const listener = ({ clientX: x }: MouseEvent) => {
-				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(
-					x,
-					anchor?.getBoundingClientRect().y ?? 0
-				)
+				if (isDetachedHTMLElementAnchor(anchorRef.current)) return
+				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(x, anchorYRef.current)
 				// If update is available, call it to reposition the popper:
 				if (updateRef.current) {
 					updateRef.current().catch((e) => console.error(e))
@@ -92,11 +101,21 @@ export const PreviewPopUp = React.forwardRef<
 				document.removeEventListener('mousemove', listener)
 			}
 		}
-	}, [trackMouse, anchor])
+	}, [trackMouse])
+
+	useEffect(() => {
+		return () => {
+			anchorRef.current = null
+			anchorYRef.current = 0
+			virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(0, 0)
+			updateRef.current = null
+		}
+	}, [])
 
 	useImperativeHandle(ref, () => {
 		return {
 			update: () => {
+				if (isDetachedHTMLElementAnchor(anchorRef.current)) return
 				if (!updateRef.current) return
 				updateRef.current().catch(console.error)
 			},
