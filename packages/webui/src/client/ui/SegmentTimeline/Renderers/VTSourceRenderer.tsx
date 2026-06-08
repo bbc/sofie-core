@@ -210,9 +210,19 @@ class VTSourceRendererBase extends CustomLayerItemRenderer<IProps & WithTranslat
 		newState = this.mountRightLabelContainer(this.props, null, newState, itemElement)
 		newState = this.mountSourceEndedCountdownContainer(this.props, newState, itemElement)
 
-		if (Object.keys(newState).length > 0) {
+		if (this.hasStateChanges(newState)) {
 			this.setState(newState as IState)
 		}
+	}
+
+	private hasStateChanges = (newState: Partial<IState>): boolean => {
+		for (const [key, value] of Object.entries(newState)) {
+			if (this.state[key as keyof IState] !== value) {
+				return true
+			}
+		}
+
+		return false
 	}
 
 	private updateAnchoredElsWidths = () => {
@@ -248,7 +258,7 @@ class VTSourceRendererBase extends CustomLayerItemRenderer<IProps & WithTranslat
 		newState = this.mountRightLabelContainer(this.props, prevProps, newState, itemElement)
 		newState = this.mountSourceEndedCountdownContainer(this.props, newState, itemElement)
 
-		if (Object.keys(newState).length > 0) {
+		if (this.hasStateChanges(newState)) {
 			this.setState(newState as IState, () => {
 				if (newState.noticeLevel && newState.noticeLevel !== prevState.noticeLevel) {
 					this.updateAnchoredElsWidths()
