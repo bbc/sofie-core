@@ -25,9 +25,11 @@ export function usePreviewPopUpSession(args: {
 } {
 	const previewSessionRef = useRef<IPreviewPopUpSession | null>(null)
 	const hoverTimeoutRef = useRef<number | null>(null)
+	const isMountedRef = useRef(true)
 
 	useEffect(() => {
 		return () => {
+			isMountedRef.current = false
 			if (hoverTimeoutRef.current) {
 				Meteor.clearTimeout(hoverTimeoutRef.current)
 				hoverTimeoutRef.current = null
@@ -48,6 +50,7 @@ export function usePreviewPopUpSession(args: {
 	const startHoverTimeout = useCallback(() => {
 		if (hoverTimeoutRef.current) Meteor.clearTimeout(hoverTimeoutRef.current)
 		hoverTimeoutRef.current = Meteor.setTimeout(() => {
+			if (!isMountedRef.current) return
 			if (previewSessionRef.current) {
 				previewSessionRef.current.close()
 				previewSessionRef.current = null

@@ -379,6 +379,7 @@ export const PreviewPopUpContext = React.createContext<IPreviewPopUpContext>({
 })
 
 interface PreviewSession {
+	token: number
 	anchor: HTMLElement | VirtualElement
 	padding: Padding
 	placement: Placement
@@ -391,6 +392,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 	const currentHandle = useRef<IPreviewPopUpSession>()
 	const previewRef = useRef<PreviewPopUpHandle>(null)
 	const closeSessionRef = useRef<() => void>(() => undefined)
+	const sessionTokenRef = useRef(0)
 
 	const [previewSession, setPreviewSession] = useState<PreviewSession | null>(null)
 	const [previewContent, setPreviewContent] = useState<PreviewContentUI[] | null>(null)
@@ -402,6 +404,8 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 	}
 
 	const closeSession = useCallback(() => {
+		sessionTokenRef.current += 1
+
 		const previousHandle = currentHandle.current
 		if (previousHandle) {
 			currentHandle.current = undefined
@@ -425,11 +429,15 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 
 	useEffect(() => {
 		if (!previewSession) return
+		const token = previewSession.token
 		const anchor = previewSession.anchor
 		if (!(anchor instanceof HTMLElement)) return
 
 		let rafHandle: number | undefined
+		let disposed = false
 		const checkAnchorConnection = () => {
+			if (disposed) return
+			if (sessionTokenRef.current !== token) return
 			if (!anchor.isConnected) {
 				closeSessionRef.current()
 				return
@@ -440,6 +448,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 		rafHandle = window.requestAnimationFrame(checkAnchorConnection)
 
 		return () => {
+			disposed = true
 			if (rafHandle !== undefined) {
 				window.cancelAnimationFrame(rafHandle)
 			}
@@ -460,6 +469,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 
 			closeSession()
 			setPreviewSessionKey((prev) => prev + 1)
+			const token = ++sessionTokenRef.current
 
 			if (opts?.time !== undefined) {
 				setTime(opts.time)
@@ -467,6 +477,7 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 				setTime(null)
 			}
 			setPreviewSession({
+				token,
 				anchor,
 				padding: opts?.padding ?? 0,
 				placement: opts?.placement ?? 'top',

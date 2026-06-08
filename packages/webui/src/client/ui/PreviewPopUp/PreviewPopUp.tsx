@@ -60,11 +60,13 @@ export const PreviewPopUp = React.forwardRef<
 		}),
 		[padding]
 	)
+	const virtualPositionRef = useRef({
+		x: initialOffsetX ?? anchor?.getBoundingClientRect().x ?? 0,
+		y: anchor?.getBoundingClientRect().y ?? 0,
+	})
 	const virtualElement = useRef<VirtualElement>({
-		getBoundingClientRect: generateGetBoundingClientRect(
-			initialOffsetX ?? anchor?.getBoundingClientRect().x ?? 0,
-			anchor?.getBoundingClientRect().y ?? 0
-		),
+		getBoundingClientRect: () =>
+			generateVirtualBoundingClientRect(virtualPositionRef.current.x, virtualPositionRef.current.y),
 	})
 	const anchorRef = useRef(anchor)
 	const anchorYRef = useRef(anchor?.getBoundingClientRect().y ?? 0)
@@ -83,13 +85,17 @@ export const PreviewPopUp = React.forwardRef<
 	useEffect(() => {
 		anchorRef.current = anchor
 		anchorYRef.current = anchor?.getBoundingClientRect().y ?? 0
-	}, [anchor])
+		virtualPositionRef.current = {
+			x: initialOffsetX ?? anchor?.getBoundingClientRect().x ?? 0,
+			y: anchor?.getBoundingClientRect().y ?? 0,
+		}
+	}, [anchor, initialOffsetX])
 
 	useEffect(() => {
 		if (trackMouse) {
 			const listener = ({ clientX: x }: MouseEvent) => {
 				if (isDetachedHTMLElementAnchor(anchorRef.current)) return
-				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(x, anchorYRef.current)
+				virtualPositionRef.current = { x, y: anchorYRef.current }
 				// If update is available, call it to reposition the popper:
 				if (updateRef.current) {
 					updateRef.current().catch((e) => console.error(e))
@@ -107,11 +113,7 @@ export const PreviewPopUp = React.forwardRef<
 		return () => {
 			anchorRef.current = null
 			anchorYRef.current = 0
-			// Clear the virtualElement completely to break closure references
-			if (virtualElement.current) {
-				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(0, 0)
-				virtualElement.current = null as any
-			}
+			virtualPositionRef.current = { x: 0, y: 0 }
 			updateRef.current = null
 		}
 	}, [])
@@ -145,8 +147,8 @@ export type PreviewPopUpHandle = {
 	readonly update: () => void
 }
 
-function generateGetBoundingClientRect(x = 0, y = 0) {
-	return () => ({
+function generateVirtualBoundingClientRect(x = 0, y = 0) {
+	return {
 		width: 0,
 		height: 0,
 		x: x,
@@ -156,5 +158,5 @@ function generateGetBoundingClientRect(x = 0, y = 0) {
 		bottom: y,
 		left: x,
 		toJSON: () => '',
-	})
+	}
 }
