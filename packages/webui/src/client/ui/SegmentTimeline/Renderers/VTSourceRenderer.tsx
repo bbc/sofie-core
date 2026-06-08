@@ -216,8 +216,16 @@ class VTSourceRendererBase extends CustomLayerItemRenderer<IProps & WithTranslat
 	}
 
 	private hasStateChanges = (newState: Partial<IState>): boolean => {
-		for (const [key, value] of Object.entries(newState)) {
-			if (this.state[key as keyof IState] !== value) {
+		const keys: Array<keyof IState> = [
+			'rightLabelIsAppendage',
+			'noticeLevel',
+			'begin',
+			'end',
+			'sourceEndCountdownAppendage',
+		]
+
+		for (const key of keys) {
+			if (Object.prototype.hasOwnProperty.call(newState, key) && this.state[key] !== newState[key]) {
 				return true
 			}
 		}

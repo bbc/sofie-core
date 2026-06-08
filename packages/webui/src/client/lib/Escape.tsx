@@ -54,7 +54,6 @@ function usePortal(id: string, style?: Partial<Record<keyof React.CSSProperties,
 
 			return function removeElement() {
 				rootElemRef.current?.remove()
-				rootElemRef.current = null
 				if (parentCreatedByThisHook && !parentElem.childElementCount) {
 					parentElem.remove()
 				}
@@ -62,6 +61,13 @@ function usePortal(id: string, style?: Partial<Record<keyof React.CSSProperties,
 		},
 		[id]
 	)
+
+	useEffect(function cleanupOnUnmount() {
+		return function removeOnUnmount() {
+			rootElemRef.current?.remove()
+			rootElemRef.current = null
+		}
+	}, [])
 
 	/**
 	 * It's important we evaluate this lazily:

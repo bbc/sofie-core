@@ -50,14 +50,11 @@ export function maintainFocusOnPartInstance(
 	noAnimation?: boolean
 ): void {
 	focusState.startTime = Date.now()
-	viewPortScrollingState.isProgrammaticScrollInProgress = true
-	viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 
 	const focus = async () => {
 		// Only proceed if we're not already scrolling and within the time window
 		if (!focusState.isScrolling && Date.now() - focusState.startTime < timeWindow) {
 			focusState.isScrolling = true
-			viewPortScrollingState.lastProgrammaticScrollTime = Date.now()
 
 			try {
 				await scrollToPartInstance(partInstanceId, forceScroll, noAnimation)
