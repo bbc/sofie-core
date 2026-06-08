@@ -257,7 +257,7 @@ async function innerScrollToSegment(
 			clearTimeout(pendingFirstStageTimeout)
 			pendingFirstStageTimeout = undefined
 		}
-		currentScrollingElement = elementToScrollTo
+		currentScrollingElement = undefined
 	} else if (secondStage && elementToScrollTo !== currentScrollingElement) {
 		throw new Error('Scroll overriden by another scroll')
 	}
@@ -292,6 +292,7 @@ async function innerScrollToSegment(
 								// If not in place atempt to scroll again
 								innerScrollToSegment(elementToScrollTo, forceScroll, true, true).then(resolve, reject)
 							} else {
+								currentScrollingElement = undefined
 								resolve(true)
 							}
 						}, 1000) // When UI is getting optimized further we could lower this value
@@ -309,6 +310,7 @@ async function innerScrollToSegment(
 		)
 	}
 
+	currentScrollingElement = undefined
 	return Promise.resolve(false)
 }
 

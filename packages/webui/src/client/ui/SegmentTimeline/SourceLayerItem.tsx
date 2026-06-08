@@ -250,14 +250,6 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 
 	const previewContext = useContext(PreviewPopUpContext)
 	const previewSession = useRef<IPreviewPopUpSession | null>(null)
-	const toggleMiniInspectorOn = useCallback(
-		(e: React.MouseEvent) => togglePreviewPopUp(e, true),
-		[piece, cursorTimePosition, contentStatus, timeScale]
-	)
-	const toggleMiniInspectorOff = useCallback(
-		(e: React.MouseEvent) => togglePreviewPopUp(e, false),
-		[piece, cursorTimePosition, contentStatus, timeScale]
-	)
 	const updatePos = useCallback(() => {
 		const elementPos = getElementDocumentOffset(itemElementRef.current) || {
 			top: 0,
@@ -340,6 +332,14 @@ export const SourceLayerItem = (props: Readonly<ISourceLayerItemProps>): JSX.Ele
 			props.piece.renderedDuration,
 			props.piece.renderedInPoint,
 		]
+	)
+	const toggleMiniInspectorOn = useCallback(
+		(e: React.MouseEvent) => togglePreviewPopUp(e, true),
+		[piece, cursorTimePosition, contentStatus, timeScale, togglePreviewPopUp]
+	)
+	const toggleMiniInspectorOff = useCallback(
+		(e: React.MouseEvent) => togglePreviewPopUp(e, false),
+		[piece, cursorTimePosition, contentStatus, timeScale, togglePreviewPopUp]
 	)
 	const moveMiniInspector = useCallback((e: MouseEvent | any) => {
 		cursorRawPosition.current = {
