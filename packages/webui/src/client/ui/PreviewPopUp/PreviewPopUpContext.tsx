@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { PreviewPopUp, type PreviewPopUpHandle } from './PreviewPopUp.js'
+import Escape from '../../lib/Escape.js'
 import type { Padding, Placement } from '@popperjs/core'
 import { PreviewPopUpContent } from './PreviewPopUpContent.js'
 import {
@@ -510,19 +511,21 @@ export function PreviewPopUpContextProvider({ children }: React.PropsWithChildre
 		<PreviewPopUpContext.Provider value={context}>
 			{children}
 			{previewSession && (
-				<PreviewPopUp
-					key={previewSessionKey}
-					ref={previewRef}
-					anchor={previewSession.anchor}
-					padding={previewSession.padding}
-					size={previewSession.size}
-					placement={previewSession.placement}
-					initialOffsetX={previewSession.initialOffsetX}
-					trackMouse={previewSession.trackMouse}
-				>
-					{previewContent &&
-						previewContent.map((content, i) => <PreviewPopUpContent key={i} time={t} content={content} />)}
-				</PreviewPopUp>
+				<Escape to="viewport">
+					<PreviewPopUp
+						key={previewSessionKey}
+						ref={previewRef}
+						anchor={previewSession.anchor}
+						padding={previewSession.padding}
+						size={previewSession.size}
+						placement={previewSession.placement}
+						initialOffsetX={previewSession.initialOffsetX}
+						trackMouse={previewSession.trackMouse}
+					>
+						{previewContent &&
+							previewContent.map((content, i) => <PreviewPopUpContent key={i} time={t} content={content} />)}
+					</PreviewPopUp>
+				</Escape>
 			)}
 		</PreviewPopUpContext.Provider>
 	)

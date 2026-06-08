@@ -107,7 +107,11 @@ export const PreviewPopUp = React.forwardRef<
 		return () => {
 			anchorRef.current = null
 			anchorYRef.current = 0
-			virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(0, 0)
+			// Clear the virtualElement completely to break closure references
+			if (virtualElement.current) {
+				virtualElement.current.getBoundingClientRect = generateGetBoundingClientRect(0, 0)
+				virtualElement.current = null as any
+			}
 			updateRef.current = null
 		}
 	}, [])
