@@ -257,7 +257,7 @@ async function innerScrollToSegment(
 			clearTimeout(pendingFirstStageTimeout)
 			pendingFirstStageTimeout = undefined
 		}
-		currentScrollingElement = undefined
+		currentScrollingElement = elementToScrollTo
 	} else if (secondStage && elementToScrollTo !== currentScrollingElement) {
 		throw new Error('Scroll overriden by another scroll')
 	}
