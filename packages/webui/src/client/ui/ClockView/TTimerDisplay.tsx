@@ -19,17 +19,7 @@ export function TTimerDisplay({ timer }: Readonly<TTimerDisplayProps>): JSX.Elem
 
 	const diff = calculateTTimerDiff(timer, now)
 	const overUnder = calculateTTimerOverUnder(timer, now)
-	const timeStr = RundownUtils.formatDiffToTimecode(
-		Math.abs(diff),
-		false,
-		true,
-		true,
-		false,
-		true,
-		undefined,
-		true,
-		true
-	)
+	const timeStr = RundownUtils.formatDiffToTimecode(Math.abs(diff), false, true, true, false, true)
 	const timerSign = diff >= 0 ? '' : '-'
 
 	return (
