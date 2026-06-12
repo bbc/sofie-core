@@ -11,11 +11,11 @@ interface TTimerDisplayProps {
 }
 
 export function TTimerDisplay({ timer }: Readonly<TTimerDisplayProps>): JSX.Element | null {
-	useTiming()
+	const timing = useTiming()
 
 	if (!timer.mode) return null
 
-	const now = getCurrentTime()
+	const now = timing.currentTime ?? getCurrentTime()
 
 	const diff = calculateTTimerDiff(timer, now)
 	const overUnder = calculateTTimerOverUnder(timer, now)
