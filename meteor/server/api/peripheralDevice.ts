@@ -83,6 +83,32 @@ import { StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 const apmNamespace = 'peripheralDevice'
 
+type StudioBlueprintLookup = {
+	blueprint: Pick<Blueprint, '_id' | 'name' | 'code'>
+	manifest: StudioBlueprintManifest
+}
+
+/**
+ * Load and evaluate the Studio blueprint manifest for a studio.
+ * Returns undefined when the studio has no blueprint or lookup fails.
+ */
+async function getStudioBlueprintManifest(studioId: StudioId): Promise<StudioBlueprintLookup | undefined> {
+	const studio = (await Studios.findOneAsync(studioId, {
+		projection: { blueprintId: 1 },
+	})) as Pick<DBStudio, 'blueprintId'> | undefined
+
+	if (!studio?.blueprintId) return undefined
+
+	const blueprint = (await Blueprints.findOneAsync(studio.blueprintId, {
+		projection: { _id: 1, name: 1, code: 1 },
+	})) as Pick<Blueprint, '_id' | 'name' | 'code'> | undefined
+
+	if (!blueprint) return undefined
+
+	const manifest = evalBlueprint(blueprint) as StudioBlueprintManifest
+	return { blueprint, manifest }
+}
+
 /**
  * Resolve device status details using the Studio blueprint's deviceStatusMessages.
  * This allows blueprints to customize status messages shown to operators.
@@ -101,27 +127,13 @@ async function resolveDeviceStatusDetails(
 	defaultMessages: string[]
 ): Promise<string[]> {
 	try {
-		// Get the studio and its blueprint
-		const studio = (await Studios.findOneAsync(studioId, {
-			projection: { blueprintId: 1 },
-		})) as Pick<DBStudio, 'blueprintId'> | undefined
-
-		if (!studio?.blueprintId) {
+		const studioBlueprint = await getStudioBlueprintManifest(studioId)
+		if (!studioBlueprint) {
 			// No blueprint, return empty (caller will use original messages)
 			return []
 		}
 
-		// Get the blueprint code
-		const blueprint = (await Blueprints.findOneAsync(studio.blueprintId, {
-			projection: { _id: 1, name: 1, code: 1 },
-		})) as Pick<Blueprint, '_id' | 'name' | 'code'> | undefined
-
-		if (!blueprint) {
-			return []
-		}
-
-		// Evaluate the blueprint to get the manifest with deviceStatusMessages
-		const blueprintManifest = evalBlueprint(blueprint) as StudioBlueprintManifest
+		const { blueprint, manifest: blueprintManifest } = studioBlueprint
 
 		logger.debug(
 			`Blueprint ${blueprint._id} deviceStatusMessages keys: ${Object.keys(blueprintManifest.deviceStatusMessages ?? {}).join(', ')}`
@@ -213,19 +225,10 @@ export async function resolveActionResult(
 
 		if (!device?.studioAndConfigId?.studioId) return result
 
-		const studio = (await Studios.findOneAsync(device.studioAndConfigId.studioId, {
-			projection: { blueprintId: 1 },
-		})) as Pick<DBStudio, 'blueprintId'> | undefined
+		const studioBlueprint = await getStudioBlueprintManifest(device.studioAndConfigId.studioId)
+		if (!studioBlueprint) return result
 
-		if (!studio?.blueprintId) return result
-
-		const blueprint = (await Blueprints.findOneAsync(studio.blueprintId, {
-			projection: { _id: 1, name: 1, code: 1 },
-		})) as Pick<Blueprint, '_id' | 'name' | 'code'> | undefined
-
-		if (!blueprint) return result
-
-		const blueprintManifest = evalBlueprint(blueprint) as StudioBlueprintManifest
+		const { blueprint, manifest: blueprintManifest } = studioBlueprint
 
 		if (!blueprintManifest.deviceActionMessages) return result
 
