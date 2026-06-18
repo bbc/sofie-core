@@ -193,10 +193,11 @@ async function resolveDeviceStatusDetails(
  * Resolve a TSR ActionExecutionResult using the Studio blueprint's deviceActionMessages.
  * If the result has a structured `code` and `context`, and the blueprint defines a custom
  * message template for that code, the `response` field is replaced with the resolved message.
+ * When the blueprint suppresses the message (empty string template), `response` is cleared.
  *
  * @param deviceId - The peripheral device ID (used to look up the studio and blueprint)
  * @param result - The action execution result from TSR
- * @returns The result with `response` resolved if a custom message was found
+ * @returns The result with `response` resolved, cleared on suppression, or unchanged when no custom message applies
  */
 export async function resolveActionResult(
 	deviceId: PeripheralDeviceId,
@@ -244,8 +245,11 @@ export async function resolveActionResult(
 		)
 
 		if (resolved === null) {
-			// Message suppressed by blueprint
-			return result
+			// Message suppressed by blueprint - clear response so the UI doesn't show the raw TSR message
+			return {
+				...result,
+				response: { key: '' },
+			}
 		}
 
 		// resolved.key is either the custom blueprint message or the defaultMessage
