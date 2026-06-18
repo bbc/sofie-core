@@ -135,7 +135,7 @@ export interface StudioBlueprintManifest<
 	 * }
 	 * ```
 	 */
-	deviceActionMessages?: Record<string, string | DeviceStatusMessageFunction | undefined>
+	deviceActionMessages?: Record<string, string | DeviceStatusMessageFunction>
 
 	/** Returns the items used to build the baseline (default state) of a studio, this is the baseline used when there's no active rundown */
 	getBaseline: (context: IStudioBaselineContext) => BlueprintResultStudioBaseline
