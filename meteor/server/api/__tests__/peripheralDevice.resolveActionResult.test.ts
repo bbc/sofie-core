@@ -158,6 +158,41 @@ describe('resolveActionResult', () => {
 		expect(resolved).toBe(result)
 	})
 
+	it('resolves messages for child devices via the parent studio', async () => {
+		const parentDeviceId = protectString<PeripheralDeviceId>('parent0')
+		jest.spyOn(PeripheralDevices, 'findOneAsync').mockImplementation(async (id) => {
+			if (id === deviceId) {
+				return {
+					name: 'casparcg0',
+					parentDeviceId,
+				} as any
+			}
+			if (id === parentDeviceId) {
+				return {
+					studioAndConfigId: { studioId, configId: 'config0' },
+				} as any
+			}
+			return undefined
+		})
+		jest.spyOn(Studios, 'findOneAsync').mockResolvedValue({ blueprintId: 'blueprint0' } as any)
+		jest.spyOn(Blueprints, 'findOneAsync').mockResolvedValue({
+			_id: 'blueprint0',
+			name: 'test',
+			code: '',
+		} as any)
+		mockEvalBlueprint.mockReturnValue({
+			deviceActionMessages: {
+				[ACTION_ERROR_CODE]: 'Failed to trigger graphics at {{url}}: {{errorMessage}}',
+			},
+		} as any)
+
+		const resolved = await resolveActionResult(deviceId, makeErrorResult())
+
+		expect(resolved.response).toEqual({
+			key: 'Failed to trigger graphics at http://graphics/api: connection refused',
+		})
+	})
+
 	it('returns the original result when the device has no studio', async () => {
 		jest.spyOn(PeripheralDevices, 'findOneAsync').mockResolvedValue({
 			name: 'Playout Gateway',

@@ -220,12 +220,23 @@ export async function resolveActionResult(
 
 	try {
 		const device = (await PeripheralDevices.findOneAsync(deviceId, {
-			projection: { name: 1, studioAndConfigId: 1 },
-		})) as Pick<PeripheralDevice, 'name' | 'studioAndConfigId'> | undefined
+			projection: { name: 1, studioAndConfigId: 1, parentDeviceId: 1 },
+		})) as Pick<PeripheralDevice, 'name' | 'studioAndConfigId' | 'parentDeviceId'> | undefined
 
-		if (!device?.studioAndConfigId?.studioId) return result
+		if (!device) return result
 
-		const studioBlueprint = await getStudioBlueprintManifest(device.studioAndConfigId.studioId)
+		// Child devices (like casparcg0) don't have studioAndConfigId directly - get it from parent
+		let studioId = device.studioAndConfigId?.studioId
+		if (!studioId && device.parentDeviceId) {
+			const parentDevice = await PeripheralDevices.findOneAsync(device.parentDeviceId, {
+				projection: { studioAndConfigId: 1 },
+			})
+			studioId = parentDevice?.studioAndConfigId?.studioId
+		}
+
+		if (!studioId) return result
+
+		const studioBlueprint = await getStudioBlueprintManifest(studioId)
 		if (!studioBlueprint) return result
 
 		const { blueprint, manifest: blueprintManifest } = studioBlueprint
