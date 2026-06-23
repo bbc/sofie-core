@@ -1,4 +1,4 @@
-import { useImperativeHandle, useContext, useRef, useState, type RefObject } from 'react'
+import { useImperativeHandle, useContext, useEffect, useRef, useState, type RefObject } from 'react'
 import { type ISourceLayer, SourceLayerType } from '@sofie-automation/blueprints-integration'
 import { DefaultRenderer } from './Renderers/DefaultRenderer.js'
 import { assertNever } from '@sofie-automation/corelib/dist/lib'
@@ -120,6 +120,11 @@ export function StoryboardSecondaryPiece(props: IProps): JSX.Element {
 			width,
 		})
 
+		if (previewSession.current) {
+			previewSession.current.close()
+			previewSession.current = null
+		}
+
 		if (previewContents.length > 0 && element.current)
 			previewSession.current = previewContext.requestPreview(element.current, previewContents, {
 				...previewOptions,
@@ -129,6 +134,15 @@ export function StoryboardSecondaryPiece(props: IProps): JSX.Element {
 
 		if (onPointerEnterCallback) onPointerEnterCallback(e)
 	}
+
+	useEffect(() => {
+		return () => {
+			if (previewSession.current) {
+				previewSession.current.close()
+				previewSession.current = null
+			}
+		}
+	}, [])
 
 	const onPointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
 		setHovering(null)

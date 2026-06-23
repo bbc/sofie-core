@@ -71,6 +71,11 @@ export function StoryboardPartThumbnailInner({
 			return
 		}
 
+		if (previewSession.current) {
+			previewSession.current.close()
+			previewSession.current = null
+		}
+
 		const el = thumbnailEl.current
 		const newOffset = el && getElementDocumentOffset(el)
 		const newWidth = el && getElementWidth(el)
@@ -104,6 +109,15 @@ export function StoryboardPartThumbnailInner({
 
 		setHover(true)
 	}
+
+	useEffect(() => {
+		return () => {
+			if (previewSession.current) {
+				previewSession.current.close()
+				previewSession.current = null
+			}
+		}
+	}, [])
 
 	const onPointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
 		if (e.pointerType !== 'mouse') {
