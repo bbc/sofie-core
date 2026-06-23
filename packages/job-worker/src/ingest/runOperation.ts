@@ -53,6 +53,11 @@ export interface ComputedIngestChangeObject {
 	regenerateRundown: boolean // Future: full vs metadata?
 
 	segmentExternalIdChanges: Record<string, string> // old -> new
+
+	/**
+	 * Force an execution of syncIngestUpdateToPartInstance for this ingest operation.
+	 */
+	forceSyncIngestUpdateToPartInstance?: boolean
 }
 
 export type ComputedIngestChanges = ComputedIngestChangeObject | ComputedIngestChangeAction
@@ -335,12 +340,16 @@ async function updateSofieIngestRundown(
 
 		const ingestObjectGenerator = new SofieIngestRundownDataCacheGenerator(rundownId)
 		const resultChanges = mutableIngestRundown.intoIngestRundown(ingestObjectGenerator)
+		const forceSyncIngestUpdateToPartInstance = blueprintContext.consumeRequestSyncIngestUpdateToPartInstance()
 
 		// Sync changes to the cache
 		sofieIngestObjectCache.replaceDocuments(resultChanges.changedCacheObjects)
 		sofieIngestObjectCache.removeAllOtherDocuments(resultChanges.allCacheObjectIds)
 
-		return resultChanges.computedChanges
+		return {
+			...resultChanges.computedChanges,
+			forceSyncIngestUpdateToPartInstance,
+		}
 	}
 }
 
@@ -438,6 +447,7 @@ async function applyCalculatedIngestChangesToModel(
 		if (result) {
 			return {
 				...result,
+				forceSyncIngestUpdateToPartInstance: computedIngestChanges.forceSyncIngestUpdateToPartInstance,
 				renamedSegments,
 			}
 		} else {
@@ -445,6 +455,7 @@ async function applyCalculatedIngestChangesToModel(
 				changedSegmentIds: [],
 				removedSegmentIds: [],
 				removeRundown: false,
+				forceSyncIngestUpdateToPartInstance: computedIngestChanges.forceSyncIngestUpdateToPartInstance,
 				renamedSegments,
 			}
 		}
@@ -480,6 +491,7 @@ async function applyCalculatedIngestChangesToModel(
 				return {
 					changedSegmentIds: regeneratedSegmentIds.changedSegmentIds,
 					removedSegmentIds: regeneratedSegmentIds.removedSegmentIds,
+					forceSyncIngestUpdateToPartInstance: computedIngestChanges.forceSyncIngestUpdateToPartInstance,
 					renamedSegments: renamedSegments,
 
 					removeRundown: false,
@@ -520,6 +532,7 @@ async function applyCalculatedIngestChangesToModel(
 		return {
 			changedSegmentIds: Array.from(changedSegmentIdsSet),
 			removedSegmentIds: orphanedSegmentIds, // Only inform about the ones that werent renamed
+			forceSyncIngestUpdateToPartInstance: computedIngestChanges.forceSyncIngestUpdateToPartInstance,
 			renamedSegments: renamedSegments,
 
 			removeRundown: false,

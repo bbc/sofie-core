@@ -58,7 +58,8 @@ export interface PartInstanceToSync {
 export async function syncChangesToPartInstances(
 	context: JobContext,
 	playoutModel: PlayoutModel,
-	ingestModel: IngestModelReadonly
+	ingestModel: IngestModelReadonly,
+	forceSyncIngestUpdateToPartInstance = false
 ): Promise<void> {
 	if (!playoutModel.playlist.activationId) return
 
@@ -76,7 +77,13 @@ export async function syncChangesToPartInstances(
 		return
 	}
 
-	const instancesToSync = findInstancesToSync(context, playoutModel, ingestModel, playoutRundownModel)
+	const instancesToSync = findInstancesToSync(
+		context,
+		playoutModel,
+		ingestModel,
+		playoutRundownModel,
+		forceSyncIngestUpdateToPartInstance
+	)
 
 	const worker = new SyncChangesToPartInstancesWorker(context, playoutModel, ingestModel, showStyle, blueprint)
 
@@ -299,7 +306,8 @@ export function findInstancesToSync(
 	context: JobContext,
 	playoutModel: PlayoutModel,
 	ingestModel: IngestModelReadonly,
-	playoutRundownModel: PlayoutRundownModel
+	playoutRundownModel: PlayoutRundownModel,
+	_forceSyncIngestUpdateToPartInstance = false
 ): PartInstanceToSync[] {
 	const currentPartInstance = playoutModel.currentPartInstance
 	const nextPartInstance = playoutModel.nextPartInstance
