@@ -1,18 +1,21 @@
 import { Meteor } from 'meteor/meteor'
 import React, { useContext, useMemo } from 'react'
-import { ParsedQuery, parse as queryStringParse } from 'query-string'
-import { Translated, translateWithTracker, useTracker } from '../lib/ReactMeteorData/react-meteor-data.js'
-import { VTContent, NoteSeverity, ISourceLayer } from '@sofie-automation/blueprints-integration'
+import { type ParsedQuery, parse as queryStringParse } from 'query-string'
+import { type Translated, translateWithTracker, useTracker } from '../lib/ReactMeteorData/react-meteor-data.js'
+import { type VTContent, NoteSeverity, type ISourceLayer } from '@sofie-automation/blueprints-integration'
 import { Spinner } from '../lib/Spinner.js'
 import classNames from 'classnames'
 import * as _ from 'underscore'
 import { Prompt } from 'react-router-dom'
-import { DBRundownPlaylist, QuickLoopMarker } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { DBRundown, Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { DBSegment, SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { StudioRouteSet, UIStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import { SegmentTimelineContainer, PartUi, SegmentUi } from './SegmentTimeline/SegmentTimelineContainer.js'
+import type {
+	DBRundownPlaylist,
+	QuickLoopMarker,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import type { DBRundown, Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import { type DBSegment, SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import type { StudioRouteSet, UIStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { SegmentTimelineContainer, type PartUi, type SegmentUi } from './SegmentTimeline/SegmentTimelineContainer.js'
 import { SegmentContextMenu } from './SegmentTimeline/SegmentContextMenu.js'
 import { Shelf, ShelfTabs } from './Shelf/Shelf.js'
 import { unprotectString, protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
@@ -27,12 +30,13 @@ import {
 	maintainFocusOnPartInstance,
 	scrollToPartInstance,
 	getHeaderHeight,
+	clearViewportLifecycleState,
 } from '../lib/viewPort.js'
 import { AfterBroadcastForm } from './AfterBroadcastForm.js'
 import { RundownRightHandControls } from './RundownView/RundownRightHandControls.js'
 import { PeripheralDevicesAPI } from '../lib/clientAPI.js'
 import {
-	RONotificationEvent,
+	type RONotificationEvent,
 	onRONotificationClick as rundownNotificationHandler,
 	RundownNotifier,
 } from './RundownView/RundownNotifier.js'
@@ -46,15 +50,14 @@ import { hashSingleUseToken } from '../lib/lib.js'
 import { ClipTrimDialog } from './ClipTrimPanel/ClipTrimDialog.js'
 import {
 	RundownLayoutType,
-	RundownLayoutBase,
-	RundownViewLayout,
-	RundownLayoutShelfBase,
-	RundownLayoutRundownHeader,
-	RundownLayoutFilterBase,
+	type RundownLayoutBase,
+	type RundownViewLayout,
+	type RundownLayoutShelfBase,
+	type RundownLayoutFilterBase,
 } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
 import { VirtualElement } from '../lib/VirtualElement.js'
 import { SEGMENT_TIMELINE_ELEMENT_ID } from './SegmentTimeline/SegmentTimeline.js'
-import { OffsetPosition } from '../utils/positions.js'
+import type { OffsetPosition } from '../utils/positions.js'
 import { MeteorCall } from '../lib/meteorApi.js'
 import { Settings } from '../lib/Settings.js'
 import { PointerLockCursor } from '../lib/PointerLockCursor.js'
@@ -65,16 +68,16 @@ import RundownViewEventBus, { RundownViewEvents } from '@sofie-automation/meteor
 import { RundownLayoutsAPI } from '../lib/rundownLayouts.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import { BreakSegment } from './SegmentTimeline/BreakSegment.js'
-import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant.js'
+import type { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant.js'
 import { SegmentStoryboardContainer } from './SegmentStoryboard/SegmentStoryboardContainer.js'
 import { SegmentViewMode } from './SegmentContainer/SegmentViewModes.js'
 import { UIStateStorage } from '../lib/UIStateStorage.js'
-import { AdLibPieceUi, AdlibSegmentUi } from '../lib/shelf.js'
+import type { AdLibPieceUi, AdlibSegmentUi } from '../lib/shelf.js'
 import { SegmentListContainer } from './SegmentList/SegmentListContainer.js'
 import { getNextMode as getNextSegmentViewMode } from './SegmentContainer/SwitchViewModeButton.js'
-import { IResolvedSegmentProps } from './SegmentContainer/withResolvedSegment.js'
+import type { IResolvedSegmentProps } from './SegmentContainer/withResolvedSegment.js'
 import { UIParts, UIShowStyleBases, UIStudios } from './Collections.js'
-import {
+import type {
 	RundownId,
 	RundownLayoutId,
 	RundownPlaylistId,
@@ -93,7 +96,7 @@ import { SegmentAdlibTestingContainer } from './SegmentAdlibTesting/SegmentAdlib
 import { PromiseButton } from '../lib/Components/PromiseButton.js'
 import { logger } from '../lib/logging.js'
 import { RundownPlaylistClientUtil } from '../lib/rundownPlaylistUtil.js'
-import { UserPermissionsContext, UserPermissions } from './UserPermissions.js'
+import { UserPermissionsContext, type UserPermissions } from './UserPermissions.js'
 import { MAGIC_TIME_SCALE_FACTOR } from './SegmentTimeline/Constants.js'
 import { SelectedElementsContext } from './RundownView/SelectedElementsContext.js'
 import { PropertiesPanel } from './UserEditOperations/PropertiesPanel.js'
@@ -108,9 +111,9 @@ import { RundownViewContextProviders } from './RundownView/RundownViewContextPro
 import { AnimatePresence } from 'motion/react'
 import { UserError } from '@sofie-automation/corelib/dist/error'
 import { DragContextProvider } from './RundownView/DragContextProvider.js'
-import { DBPartInstance, PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance.js'
-import { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
-import { PieceExtended, PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
+import type { DBPartInstance, PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance.js'
+import type { UIShowStyleBase } from '@sofie-automation/corelib/src/dataModel/ShowStyleBase.js'
+import type { PieceExtended, PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isEntirePlaylistLooping } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 
 const HIDE_NOTIFICATIONS_AFTER_MOUNT: number | undefined = 5000
@@ -177,7 +180,6 @@ interface ITrackedProps {
 
 	selectedShelfLayout: RundownLayoutShelfBase | undefined
 	selectedViewLayout: RundownViewLayout | undefined
-	selectedHeaderLayout: RundownLayoutRundownHeader | undefined
 	selectedMiniShelfLayout: RundownLayoutShelfBase | undefined
 
 	/** MiniShelf data */
@@ -287,6 +289,7 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 	)
 
 	const hideRundownHeader = params['hideRundownHeader'] === '1'
+	const lockView = props.inActiveRundownView && params['lockView'] === '1'
 
 	return (
 		<div
@@ -313,6 +316,7 @@ export function RundownView(props: Readonly<IProps>): JSX.Element {
 				uiSegmentMap={miniShelfData.uiSegmentMap}
 				miniShelfFilter={miniShelfData.miniShelfFilter}
 				hideRundownHeader={hideRundownHeader}
+				lockView={lockView}
 			/>
 		</div>
 	)
@@ -322,6 +326,7 @@ interface IPropsWithReady extends IProps {
 	subsReady: boolean
 	userPermissions: Readonly<UserPermissions>
 	hideRundownHeader?: boolean
+	lockView?: boolean
 }
 
 interface IRundownViewContentSnapshot {
@@ -335,6 +340,10 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 })(
 	class RundownViewContent extends React.Component<Translated<IPropsWithReady & ITrackedProps>, IState> {
 		private _hideNotificationsAfterMount: number | undefined
+		private _goToTopIdleCallback: number | undefined
+		private _goToLiveSegmentShortTimeout: ReturnType<typeof setTimeout> | undefined
+		private _goToLiveSegmentLongTimeout: ReturnType<typeof setTimeout> | undefined
+		private _headerNoteHighlightTimeout: ReturnType<typeof setTimeout> | undefined
 
 		constructor(props: Translated<IPropsWithReady & ITrackedProps>) {
 			super(props)
@@ -608,6 +617,8 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 			document.body.classList.remove('dark', 'vertical-overflow-only')
 			document.documentElement.removeAttribute('data-bs-theme')
 			window.removeEventListener('beforeunload', this.onBeforeUnload)
+			this.clearPendingDeferredCallbacks()
+			clearViewportLifecycleState()
 
 			documentTitle.set(null)
 
@@ -684,13 +695,37 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 			}
 		}
 
+		private clearPendingDeferredCallbacks = () => {
+			if (this._goToTopIdleCallback !== undefined) {
+				window.cancelIdleCallback(this._goToTopIdleCallback)
+				this._goToTopIdleCallback = undefined
+			}
+			if (this._goToLiveSegmentShortTimeout) {
+				clearTimeout(this._goToLiveSegmentShortTimeout)
+				this._goToLiveSegmentShortTimeout = undefined
+			}
+			if (this._goToLiveSegmentLongTimeout) {
+				clearTimeout(this._goToLiveSegmentLongTimeout)
+				this._goToLiveSegmentLongTimeout = undefined
+			}
+			if (this._headerNoteHighlightTimeout) {
+				clearTimeout(this._headerNoteHighlightTimeout)
+				this._headerNoteHighlightTimeout = undefined
+			}
+		}
+
 		private onGoToTop = () => {
 			scrollToPosition(0).catch((error) => {
 				if (!error.toString().match(/another scroll/)) console.warn(error)
 			})
 
-			window.requestIdleCallback(
+			if (this._goToTopIdleCallback !== undefined) {
+				window.cancelIdleCallback(this._goToTopIdleCallback)
+			}
+
+			this._goToTopIdleCallback = window.requestIdleCallback(
 				() => {
+					this._goToTopIdleCallback = undefined
 					this.setState({
 						followLiveSegments: true,
 					})
@@ -700,6 +735,15 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 		}
 
 		private onGoToLiveSegment = () => {
+			if (this._goToLiveSegmentShortTimeout) {
+				clearTimeout(this._goToLiveSegmentShortTimeout)
+				this._goToLiveSegmentShortTimeout = undefined
+			}
+			if (this._goToLiveSegmentLongTimeout) {
+				clearTimeout(this._goToLiveSegmentLongTimeout)
+				this._goToLiveSegmentLongTimeout = undefined
+			}
+
 			if (
 				this.props.playlist &&
 				this.props.playlist.activationId &&
@@ -710,14 +754,16 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 					followLiveSegments: true,
 				})
 				// Small delay to ensure the nextPartInfo is available
-				setTimeout(() => {
+				this._goToLiveSegmentShortTimeout = setTimeout(() => {
+					this._goToLiveSegmentShortTimeout = undefined
 					if (this.props.playlist && this.props.playlist.nextPartInfo) {
 						scrollToPartInstance(this.props.playlist.nextPartInfo.partInstanceId, true).catch((error) => {
 							if (!error.toString().match(/another scroll/)) console.warn(error)
 						})
 					}
 				}, 120)
-				setTimeout(() => {
+				this._goToLiveSegmentLongTimeout = setTimeout(() => {
+					this._goToLiveSegmentLongTimeout = undefined
 					this.setState({
 						followLiveSegments: true,
 					})
@@ -730,7 +776,8 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 				scrollToPartInstance(this.props.playlist.currentPartInfo.partInstanceId, true).catch((error) => {
 					if (!error.toString().match(/another scroll/)) console.warn(error)
 				})
-				setTimeout(() => {
+				this._goToLiveSegmentLongTimeout = setTimeout(() => {
+					this._goToLiveSegmentLongTimeout = undefined
 					this.setState({
 						followLiveSegments: true,
 					})
@@ -896,7 +943,11 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 			this.setState({
 				isNotificationsCenterOpen: level === NoteSeverity.ERROR ? NoticeLevel.CRITICAL : NoticeLevel.WARNING,
 			})
-			setTimeout(
+			if (this._headerNoteHighlightTimeout) {
+				clearTimeout(this._headerNoteHighlightTimeout)
+				this._headerNoteHighlightTimeout = undefined
+			}
+			this._headerNoteHighlightTimeout = setTimeout(
 				function () {
 					NotificationCenter.highlightSource(
 						segmentId,
@@ -1024,15 +1075,16 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 									const DASHBOARD_PANEL_HEIGHT = 200
 									// Minimum height for hidden segments to prevent layout issues
 									const HIDDEN_SEGMENT_MIN_HEIGHT = 10
+									const showMiniShelf = !!segment.displayMinishelf
 
 									if (segment.isHidden) {
 										// Hidden segments don't render the timeline at all
-										// They only render the dashboard panel if showShelf is true
-										return segment.showShelf ? DASHBOARD_PANEL_HEIGHT : HIDDEN_SEGMENT_MIN_HEIGHT
+										// They only render the dashboard panel if displayMinishelf is set
+										return showMiniShelf ? DASHBOARD_PANEL_HEIGHT : HIDDEN_SEGMENT_MIN_HEIGHT
 									}
 
 									// Normal segment: base timeline height + optional dashboard panel
-									return segment.showShelf ? BASE_SEGMENT_HEIGHT + DASHBOARD_PANEL_HEIGHT : BASE_SEGMENT_HEIGHT
+									return showMiniShelf ? BASE_SEGMENT_HEIGHT + DASHBOARD_PANEL_HEIGHT : BASE_SEGMENT_HEIGHT
 								}
 
 								const segmentPlaceholderHeight = calculatePlaceholderHeight(segment)
@@ -1042,7 +1094,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 										<VirtualElement
 											className={classNames({
 												'segment-timeline-wrapper--hidden': segment.isHidden,
-												'segment-timeline-wrapper--shelf': segment.showShelf,
+												'segment-timeline-wrapper--shelf': !!segment.displayMinishelf,
 											})}
 											id={SEGMENT_TIMELINE_ELEMENT_ID + segment._id}
 											margin={'100% 0px 100% 0px'}
@@ -1405,15 +1457,10 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 												<RundownHeader
 													playlist={playlist}
 													studio={studio}
-													rundownIds={this.props.rundowns.map((r) => r._id)}
 													firstRundown={this.props.rundowns[0]}
-													onActivate={this.onActivate}
-													inActiveRundownView={this.props.inActiveRundownView}
 													currentRundown={currentRundown}
 													rundownCount={this.props.rundowns.length}
-													layout={this.props.selectedHeaderLayout}
-													showStyleBase={showStyleBase}
-													showStyleVariant={showStyleVariant}
+													lockView={this.props.lockView}
 												/>
 											</ErrorBoundary>
 										)}
@@ -1520,7 +1567,7 @@ const RundownViewContent = translateWithTracker<IPropsWithReady & ITrackedProps,
 										<ErrorBoundary>
 											{this.props.userPermissions.studio && (
 												<Prompt
-													when={!!playlist.activationId}
+													when={!!playlist.activationId && !this.props.lockView}
 													message={t('This rundown is now active. Are you sure you want to exit this screen?')}
 												/>
 											)}
@@ -1658,7 +1705,6 @@ function findRundownLayouts(rundownLayouts: RundownLayoutBase[] | undefined, par
 	const shelfLayoutId = protectString<RundownLayoutId>(
 		(params['layout'] as string) || (params['shelfLayout'] as string) || ''
 	)
-	const rundownHeaderLayoutId = protectString<RundownLayoutId>((params['rundownHeaderLayout'] as string) || '')
 
 	const selectedViewLayout = useMemo(() => {
 		if (!rundownLayouts) return undefined
@@ -1747,38 +1793,8 @@ function findRundownLayouts(rundownLayouts: RundownLayoutBase[] | undefined, par
 		return selectedShelfLayout
 	}, [rundownLayouts, shelfLayoutId, selectedViewLayout])
 
-	const selectedHeaderLayout = useMemo(() => {
-		if (!rundownLayouts) return undefined
-
-		const possibleHeaderLayouts = rundownLayouts.filter((layout) => RundownLayoutsAPI.isLayoutForRundownHeader(layout))
-
-		// first try to use the one selected by the user
-		let selectedHeaderLayout = possibleHeaderLayouts.find((i) => i._id === rundownHeaderLayoutId)
-
-		// if couldn't find based on id, try matching part of the name
-		if (rundownHeaderLayoutId && !selectedHeaderLayout) {
-			selectedHeaderLayout = possibleHeaderLayouts.find((i) => i.name.includes(unprotectString(rundownHeaderLayoutId)))
-		}
-
-		// Try to load defaults from rundown view layouts
-		if (selectedViewLayout && RundownLayoutsAPI.isLayoutForRundownView(selectedViewLayout)) {
-			if (!selectedHeaderLayout && selectedViewLayout.rundownHeaderLayout) {
-				selectedHeaderLayout = possibleHeaderLayouts.find((i) => i._id === selectedViewLayout.rundownHeaderLayout)
-			}
-		}
-
-		// if still not found, use the first one - this is a fallback functionality reserved for Shelf layouts
-		// To be removed once Rundown View Layouts/Shelf layouts are refactored
-		if (!selectedHeaderLayout) {
-			selectedHeaderLayout = possibleHeaderLayouts.find((layout) => RundownLayoutsAPI.isDefaultLayout(layout))
-		}
-
-		return selectedHeaderLayout
-	}, [rundownLayouts, rundownHeaderLayoutId, selectedViewLayout])
-
 	return {
 		selectedViewLayout,
-		selectedHeaderLayout,
 		selectedMiniShelfLayout,
 		selectedShelfLayout,
 	}

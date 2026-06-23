@@ -1,15 +1,15 @@
-import * as React from 'react'
+import type * as React from 'react'
 import { doUserAction, UserAction } from '../../lib/clientUserAction.js'
 import { MeteorCall } from '../../lib/meteorApi.js'
 import {
-	DefaultUserOperationEditProperties,
+	type DefaultUserOperationEditProperties,
 	DefaultUserOperationsTypes,
-	JSONBlob,
+	type JSONBlob,
 	JSONBlobParse,
-	JSONSchema,
-	UserEditingDefinitionAction,
-	UserEditingProperties,
-	UserEditingSourceLayer,
+	type JSONSchema,
+	type UserEditingDefinitionAction,
+	type UserEditingProperties,
+	type UserEditingSourceLayer,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
 import { literal } from '@sofie-automation/corelib/dist/lib'
@@ -21,8 +21,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SchemaFormWithState } from '../../lib/forms/SchemaFormWithState.js'
 import { translateMessage } from '@sofie-automation/corelib/dist/TranslatableMessage'
 import { BlueprintAssetIcon } from '../../lib/Components/BlueprintAssetIcon.js'
-import { ReadonlyDeep } from 'type-fest'
-import {
+import type { ReadonlyDeep } from 'type-fest'
+import type {
 	CoreUserEditingDefinition,
 	CoreUserEditingProperties,
 } from '@sofie-automation/corelib/dist/dataModel/UserEditingDefinitions.js'
@@ -164,7 +164,12 @@ export function PropertiesPanel(): JSX.Element {
 				<div className="propertiespanel-pop-up__header">
 					{userEditOperations &&
 						userEditOperations.map((operation) => {
-							if (operation.type !== UserEditingType.ACTION || !operation.icon || !operation.isActive) return null
+							if (
+								(operation.type !== UserEditingType.ACTION && operation.type !== UserEditingType.STATE) ||
+								!operation.icon ||
+								!operation.isActive
+							)
+								return null
 							return <BlueprintAssetIcon key={operation.id} src={operation.icon} className="svg" />
 						})}
 					<div className="title">{title}</div>

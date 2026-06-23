@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { WithTranslation, withTranslation } from 'react-i18next'
+import { type WithTranslation, withTranslation } from 'react-i18next'
 
 import ClassNames from 'classnames'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { SegmentUi, PartUi, IOutputLayerUi } from './SegmentTimelineContainer.js'
+import {
+	type DBRundownPlaylist,
+	RundownHoldState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import type { SegmentUi, PartUi, IOutputLayerUi } from './SegmentTimelineContainer.js'
 import { TimelineGrid } from './TimelineGrid.js'
 import { SegmentTimelinePart, SegmentTimelinePartClass } from './Parts/SegmentTimelinePart.js'
 import { SegmentTimelineZoomControls } from './SegmentTimelineZoomControls.js'
@@ -15,46 +18,50 @@ import { RundownTiming } from '../RundownView/RundownTiming/RundownTiming.js'
 import { CurrentPartOrSegmentRemaining } from '../RundownView/RundownHeader/CurrentPartOrSegmentRemaining.js'
 
 import { RundownUtils } from '../../lib/rundown.js'
-import { Translated } from '../../lib/ReactMeteorData/ReactMeteorData.js'
+import type { Translated } from '../../lib/ReactMeteorData/ReactMeteorData.js'
 import { ErrorBoundary } from '../../lib/ErrorBoundary.js'
 import { scrollToPart, lockPointer, unlockPointer } from '../../lib/viewPort.js'
 
 import { getAllowSpeaking, getAllowVibrating, getShowHiddenSourceLayers } from '../../lib/localStorage.js'
 import { showPointerLockCursor, hidePointerLockCursor } from '../../lib/PointerLockCursor.js'
 import { Settings } from '../../lib/Settings.js'
-import { IContextMenuContext } from '../RundownView.js'
+import type { IContextMenuContext } from '../RundownView.js'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
-import { isPartPlayable, PartExtended } from '@sofie-automation/corelib/dist/dataModel/Part'
+import { isPartPlayable, type PartExtended } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { contextMenuHoldToDisplayTime } from '../../lib/lib.js'
 import RundownViewEventBus, {
 	RundownViewEvents,
-	HighlightEvent,
+	type HighlightEvent,
 } from '@sofie-automation/meteor-lib/dist/triggers/RundownViewEventBus'
 
 import { SegmentTimelineSmallPartFlag } from './SmallParts/SegmentTimelineSmallPartFlag.js'
 import { UIStateStorage } from '../../lib/UIStateStorage.js'
-import { computeSegmentDuration, getPartInstanceTimingId, RundownTimingContext } from '../../lib/rundownTiming.js'
-import { IOutputLayer, ISourceLayer, NoteSeverity, UserEditingType } from '@sofie-automation/blueprints-integration'
+import { computeSegmentDuration, getPartInstanceTimingId, type RundownTimingContext } from '../../lib/rundownTiming.js'
+import {
+	type IOutputLayer,
+	type ISourceLayer,
+	NoteSeverity,
+	UserEditingType,
+} from '@sofie-automation/blueprints-integration'
 import { SegmentTimelineZoomButtons } from './SegmentTimelineZoomButtons.js'
 import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
-import { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import {
 	withTiming,
 	TimingTickResolution,
 	TimingDataResolution,
-	WithTiming,
+	type WithTiming,
 } from '../RundownView/RundownTiming/withTiming.js'
 import { SegmentTimeAnchorTime } from '../RundownView/RundownTiming/SegmentTimeAnchorTime.js'
 import { logger } from '../../lib/logging.js'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { SelectedElementsContext } from '../RundownView/SelectedElementsContext.js'
 import { BlueprintAssetIcon } from '../../lib/Components/BlueprintAssetIcon.js'
 import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js'
-import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
-import { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
+import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isLoopRunning, wrapPartToTemporaryInstance } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
 
@@ -239,7 +246,8 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 		RundownViewEventBus.on(RundownViewEvents.SEGMENT_ZOOM_ON, this.onRundownEventSegmentZoomOn)
 		RundownViewEventBus.on(RundownViewEvents.SEGMENT_ZOOM_OFF, this.onRundownEventSegmentZoomOff)
 
-		setTimeout(() => {
+		this.showEntireSegmentTimeout = setTimeout(() => {
+			this.showEntireSegmentTimeout = undefined
 			// TODO: This doesn't actually handle having new parts added/removed, which should cause the segment to re-scale!
 			if (this.props.onShowEntireSegment) {
 				this.props.onShowEntireSegment(undefined)
@@ -249,17 +257,42 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 
 	componentWillUnmount(): void {
 		super.componentWillUnmount?.()
+		if (this.showEntireSegmentTimeout) {
+			clearTimeout(this.showEntireSegmentTimeout)
+			this.showEntireSegmentTimeout = undefined
+		}
 		clearTimeout(this.highlightTimeout)
 		if (this.segmentBlock) {
 			this.segmentBlock.removeEventListener('wheel', this.onTimelineWheel, { capture: true })
 		}
 
+		// Clean up any document-level listeners that may still be attached due to an
+		// in-progress mouse drag, touch gesture or pointer-lock when the segment unmounts.
+		// Otherwise these listeners (and the closures they hold) leak forever.
+		if (this._mouseAttached) {
+			document.removeEventListener('mousemove', this.onTimelineMouseMove)
+			document.removeEventListener('mouseup', this.onTimelineMouseUp)
+			document.removeEventListener('pointerlockchange', this.onTimelinePointerLockChange)
+			document.removeEventListener('pointerlockerror', this.onTimelinePointerError)
+			this._mouseAttached = false
+		}
+		if (this._touchAttached) {
+			document.removeEventListener('touchmove', this.onTimelineTouchMove)
+			document.removeEventListener('touchend', this.onTimelineTouchEnd)
+			this._touchAttached = false
+		}
+
 		RundownViewEventBus.off(RundownViewEvents.HIGHLIGHT, this.onHighlight)
 		RundownViewEventBus.off(RundownViewEvents.SEGMENT_ZOOM_ON, this.onRundownEventSegmentZoomOn)
 		RundownViewEventBus.off(RundownViewEvents.SEGMENT_ZOOM_OFF, this.onRundownEventSegmentZoomOff)
+
+		// Break any remaining references to detached DOM elements.
+		this.timeline = null
+		this.segmentBlock = null
 	}
 
 	private highlightTimeout: NodeJS.Timeout | undefined
+	private showEntireSegmentTimeout: NodeJS.Timeout | undefined
 
 	private onHighlight = (e: HighlightEvent) => {
 		if (e.segmentId === this.props.segment._id && !e.partId && !e.pieceId) {
@@ -737,7 +770,6 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 						liveLineHistorySize={this.props.liveLineHistorySize}
 						livePosition={this.props.livePosition}
 						onScroll={this.props.onScroll}
-						onCollapseOutputToggle={this.props.onCollapseOutputToggle}
 						onFollowLiveLine={this.props.onFollowLiveLine}
 						onContextMenu={this.props.onContextMenu}
 						onPieceClick={this.props.onPieceClick}
@@ -813,7 +845,6 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				liveLineHistorySize={this.props.liveLineHistorySize}
 				livePosition={this.props.livePosition}
 				onScroll={this.props.onScroll}
-				onCollapseOutputToggle={this.props.onCollapseOutputToggle}
 				onFollowLiveLine={this.props.onFollowLiveLine}
 				onContextMenu={this.props.onContextMenu}
 				onPieceClick={this.props.onPieceClick}
@@ -844,6 +875,10 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 			.sort((a, b) => a._rank - b._rank)
 	}
 
+	private isOutputLayerCollapsible(outputLayer: IOutputLayerUi): boolean {
+		return outputLayer.sourceLayers !== undefined && outputLayer.sourceLayers.length > 1 && !outputLayer.isFlattened
+	}
+
 	private renderOutputLayerControls(outputGroups: IOutputLayerUi[]) {
 		const showHiddenSourceLayers = getShowHiddenSourceLayers()
 
@@ -852,8 +887,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 				return null
 			}
 
-			const isCollapsible =
-				outputLayer.sourceLayers !== undefined && outputLayer.sourceLayers.length > 1 && !outputLayer.isFlattened
+			const isCollapsible = this.isOutputLayerCollapsible(outputLayer)
 			return (
 				<div
 					key={outputLayer._id}
@@ -1168,7 +1202,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 	}
 }
 
-export const SegmentTimeline = withTranslation()(
+export const SegmentTimeline: React.ComponentType<IProps> = withTranslation()(
 	withTiming<IProps & WithTranslation, IStateHeader>((props: IProps) => {
 		return {
 			tickResolution: TimingTickResolution.Synced,
@@ -1197,15 +1231,31 @@ function HeaderEditStates({ userEditOperations }: HeaderEditStatesProps) {
 		<div className="segment-timeline__title__user-edit-states">
 			{userEditOperations &&
 				userEditOperations.map((operation) => {
-					if (operation.type !== UserEditingType.ACTION || !operation.icon || !operation.isActive) return null
-
-					return (
-						<BlueprintAssetIcon
-							key={operation.id}
-							src={operation.icon}
-							className="segment-timeline__title__user-edit-state"
-						/>
+					if (
+						(operation.type !== UserEditingType.ACTION && operation.type !== UserEditingType.STATE) ||
+						(!operation.icon && !operation.iconInactive)
 					)
+						return null
+
+					if (!operation.isActive && operation.iconInactive) {
+						return (
+							<BlueprintAssetIcon
+								key={operation.id}
+								src={operation.iconInactive}
+								className="segment-timeline__title__user-edit-state"
+							/>
+						)
+					} else if (operation.isActive && operation.icon) {
+						return (
+							<BlueprintAssetIcon
+								key={operation.id}
+								src={operation.icon}
+								className="segment-timeline__title__user-edit-state"
+							/>
+						)
+					}
+
+					return null
 				})}
 		</div>
 	)

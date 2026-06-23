@@ -1,11 +1,11 @@
 import * as React from 'react'
-import { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
+import type { DBStudio } from '@sofie-automation/corelib/dist/dataModel/Studio'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
 import { useTranslation } from 'react-i18next'
 import { EditAttribute } from '../../../lib/EditAttribute.js'
 import { StudioBaselineStatus } from './Baseline.js'
-import { ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import type { ShowStyleBaseId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ShowStyleBases, Studios } from '../../../collections/index.js'
 import { useHistory } from 'react-router-dom'
 import { MeteorCall } from '../../../lib/meteorApi.js'
@@ -17,14 +17,14 @@ import {
 	LabelAndOverridesForInt,
 } from '../../../lib/Components/LabelAndOverrides.js'
 import { catchError } from '../../../lib/lib.js'
-import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
-import { SomeObjectOverrideOp } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import { ForceQuickLoopAutoNext, ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
+import type { SomeObjectOverrideOp } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { useOverrideOpHelperForSimpleObject } from '../util/OverrideOpHelper.js'
 import { IntInputControl } from '../../../lib/Components/IntInput.js'
 import { useMemo } from 'react'
 import { CheckboxControl } from '../../../lib/Components/Checkbox.js'
 import { TextInputControl } from '../../../lib/Components/TextInput.js'
-import { DropdownInputControl, DropdownInputOption } from '../../../lib/Components/DropdownInput.js'
+import { DropdownInputControl, type DropdownInputOption } from '../../../lib/Components/DropdownInput.js'
 import { useTracker } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
 import Button from 'react-bootstrap/Button'
 
@@ -182,6 +182,22 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 		[t]
 	)
 
+	const shelfAdlibButtonSizeOptions: DropdownInputOption<ShelfButtonSize.COMPACT | ShelfButtonSize.LARGE>[] = useMemo(
+		() => [
+			{
+				name: t('Large'),
+				value: ShelfButtonSize.LARGE,
+				i: 0,
+			},
+			{
+				name: t('Compact'),
+				value: ShelfButtonSize.COMPACT,
+				i: 1,
+			},
+		],
+		[t]
+	)
+
 	return (
 		<>
 			<LabelAndOverridesForInt
@@ -311,6 +327,18 @@ function StudioSettings({ studio }: { studio: DBStudio }): JSX.Element {
 			>
 				{(value, handleUpdate) => <CheckboxControl value={!!value} handleUpdate={handleUpdate} />}
 			</LabelAndOverridesForCheckbox>
+
+			<LabelAndOverridesForDropdown
+				label={t('Mini shelf AdLib button size')}
+				item={wrappedItem}
+				itemKey={'shelfAdlibButtonSize'}
+				overrideHelper={overrideHelper}
+				options={shelfAdlibButtonSizeOptions}
+			>
+				{(value, handleUpdate, options) => (
+					<DropdownInputControl options={options} value={value} handleUpdate={handleUpdate} />
+				)}
+			</LabelAndOverridesForDropdown>
 
 			<LabelAndOverridesForCheckbox
 				label={t('Enable User Editing')}

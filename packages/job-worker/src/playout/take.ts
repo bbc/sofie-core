@@ -1,6 +1,9 @@
 import { PeripheralDeviceType } from '@sofie-automation/corelib/dist/dataModel/PeripheralDevice'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
-import { RundownHoldState, SelectedPartInstance } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import {
+	RundownHoldState,
+	SelectedPartInstance,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { UserError, UserErrorMessage } from '@sofie-automation/corelib/dist/error'
 import { logger } from '../logging.js'
 import { JobContext, ProcessedShowStyleCompound } from '../jobs/index.js'
@@ -226,6 +229,10 @@ export async function performTakeToNextedPart(
 	const takeRundown = playoutModel.getRundown(takePartInstance.partInstance.rundownId)
 	if (!takeRundown)
 		throw new Error(`takeRundown: takeRundown not found! ("${takePartInstance.partInstance.rundownId}")`)
+
+	if (takePartInstance.partInstance.invalidReason) {
+		throw UserError.create(UserErrorMessage.TakePartInstanceInvalid)
+	}
 
 	const showStyle = await pShowStyle
 	const blueprint = await context.getShowStyleBlueprint(showStyle._id)

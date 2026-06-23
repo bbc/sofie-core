@@ -3,7 +3,7 @@ import { getElementWidth } from '../../../utils/dimensions.js'
 
 import classNames from 'classnames'
 import { PieceMultistepChevron, getPieceSteps } from '../../SegmentContainer/PieceMultistepChevron.js'
-import { CustomLayerItemRenderer, ICustomLayerItemProps } from './CustomLayerItemRenderer.js'
+import { CustomLayerItemRenderer, type ICustomLayerItemProps } from './CustomLayerItemRenderer.js'
 
 type IProps = ICustomLayerItemProps
 interface IState {
@@ -150,6 +150,7 @@ export class L3rdSourceRenderer extends CustomLayerItemRenderer<IProps, IState> 
 							ref={this.setRightLabelRef}
 							style={this.getItemLabelOffsetRight()}
 						>
+							{this.renderCustomPieceIcons()}
 							{this.renderInfiniteIcon()}
 							{this.renderLoopIcon()}
 							{this.renderOverflowTimeLabel()}
