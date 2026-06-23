@@ -25,6 +25,9 @@ export interface CommitIngestData {
 	/** Set to true if the rundown should be removed or orphaned */
 	removeRundown: boolean
 
+	/** Force execution of syncIngestUpdateToPartInstance for this commit operation */
+	forceSyncIngestUpdateToPartInstance?: boolean
+
 	/** Whether to return an error if the rundown is unable to be removed */
 	returnRemoveFailure?: boolean
 }

@@ -20,6 +20,18 @@ import {
  * Custom updates of the IngestRundown are done by calling methods on the mutableIngestRundown itself.
  */
 export class ProcessIngestDataContext extends StudioContext implements IProcessIngestDataContext {
+	#requestSyncIngestUpdateToPartInstance = false
+
+	requestSyncIngestUpdateToPartInstance(): void {
+		this.#requestSyncIngestUpdateToPartInstance = true
+	}
+
+	consumeRequestSyncIngestUpdateToPartInstance(): boolean {
+		const shouldRequest = this.#requestSyncIngestUpdateToPartInstance
+		this.#requestSyncIngestUpdateToPartInstance = false
+		return shouldRequest
+	}
+
 	defaultApplyIngestChanges<TRundownPayload, TSegmentPayload, TPartPayload>(
 		mutableIngestRundown: MutableIngestRundown<TRundownPayload, TSegmentPayload, TPartPayload>,
 		nrcsIngestRundown: IngestRundown,

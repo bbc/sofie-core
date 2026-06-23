@@ -230,7 +230,12 @@ export async function CommitIngestOperation(
 
 			try {
 				// sync changes to the 'selected' partInstances
-				await syncChangesToPartInstances(context, playoutModel, ingestModel)
+				await syncChangesToPartInstances(
+					context,
+					playoutModel,
+					ingestModel,
+					data.forceSyncIngestUpdateToPartInstance
+				)
 
 				// update the quickloop in case we did any changes to things involving marker
 				playoutModel.updateQuickLoopState()
