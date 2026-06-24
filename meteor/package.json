@@ -133,5 +133,5 @@
 		"@sofie-automation/shared-lib": "portal:../packages/shared-lib",
 		"@meteorjs/rspack": "patch:@meteorjs/rspack@npm%3A2.0.1#~/.yarn/patches/@meteorjs-rspack-npm-2.0.1-d001eb481c.patch"
 	},
-	"packageManager": "yarn@4.14.1"
+	"packageManager": "yarn@4.17.0"
 }
