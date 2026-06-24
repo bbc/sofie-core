@@ -38,10 +38,10 @@
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"@apidevtools/json-schema-ref-parser": "^15.3.5",
+		"@apidevtools/json-schema-ref-parser": "^15.3.6",
 		"@openapitools/openapi-generator-cli": "^2.31.1",
 		"eslint": "^9.39.4",
-		"js-yaml": "^4.1.1",
+		"js-yaml": "^4.2.0",
 		"wget-improved": "^3.4.0"
 	},
 	"publishConfig": {
