@@ -12,7 +12,7 @@ import type { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel
 import { useTranslation } from 'react-i18next'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { IContextMenuContext } from '../RundownView.js'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { SegmentTimeAnchorTime } from '../RundownView/RundownTiming/SegmentTimeAnchorTime.js'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
 

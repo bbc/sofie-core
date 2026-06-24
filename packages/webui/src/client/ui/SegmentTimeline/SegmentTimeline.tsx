@@ -41,7 +41,7 @@ import { computeSegmentDuration, getPartInstanceTimingId, type RundownTimingCont
 import {
 	type IOutputLayer,
 	type ISourceLayer,
-	NoteSeverity,
+	type NoteSeverity,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
 import { SegmentTimelineZoomButtons } from './SegmentTimelineZoomButtons.js'
