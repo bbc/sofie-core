@@ -70,9 +70,7 @@ export const PreviewPopUp = React.forwardRef<
 		[padding]
 	)
 	const initialVirtualX =
-		(trackMouse && typeof initialOffsetX === 'number')
-			? initialOffsetX
-			: anchor?.getBoundingClientRect().x ?? 0
+		trackMouse && typeof initialOffsetX === 'number' ? initialOffsetX : (anchor?.getBoundingClientRect().x ?? 0)
 	const virtualPositionRef = useRef({
 		x: initialVirtualX,
 		y: anchor?.getBoundingClientRect().y ?? 0,
