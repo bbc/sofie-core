@@ -328,25 +328,43 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 	}
 
 	shouldComponentUpdate(nextProps: Readonly<WithTiming<IProps>>, nextState: Readonly<IState>): boolean {
+		const logId = `SegmentTimelinePartClass[${this.props.part._id}]`
+		
 		// Compare playlist using render selector (excludes modified field)
-		if (
-			!_.isEqual(
-				SegmentTimelinePartClass.getPlaylistRenderSelector(this.props.playlist),
-				SegmentTimelinePartClass.getPlaylistRenderSelector(nextProps.playlist)
-			)
-		) {
+		const playlistSelectorEqual = _.isEqual(
+			SegmentTimelinePartClass.getPlaylistRenderSelector(this.props.playlist),
+			SegmentTimelinePartClass.getPlaylistRenderSelector(nextProps.playlist)
+		)
+		if (!playlistSelectorEqual) {
+			console.log(`${logId} playlist selector changed → RERENDER`)
 			return true
 		}
 
 		// Compare state
-		if (!_.isMatch(this.state, nextState)) {
+		const stateEqual = _.isMatch(this.state, nextState)
+		if (!stateEqual) {
+			console.log(`${logId} state changed → RERENDER`, {
+				changedStateKeys: Object.keys(this.state).filter(
+					(key) => !_.isEqual((this.state as any)[key], (nextState as any)[key])
+				),
+			})
 			return true
 		}
 
 		// Compare remaining props (without playlist)
 		const { playlist: _p1, ...thisPropsRest } = this.props
 		const { playlist: _p2, ...nextPropsRest } = nextProps
-		return !_.isMatch(thisPropsRest, nextPropsRest)
+		const propsEqual = _.isMatch(thisPropsRest, nextPropsRest)
+		if (!propsEqual) {
+			console.log(`${logId} remaining props changed → RERENDER`, {
+				changedProps: Object.keys(thisPropsRest).filter(
+					(key) => !_.isEqual(thisPropsRest[key as keyof typeof thisPropsRest], nextPropsRest[key as keyof typeof nextPropsRest])
+				),
+			})
+			return true
+		}
+
+		return false
 	}
 
 	componentDidUpdate(prevProps: Readonly<Translated<WithTiming<IProps>>>, prevState: IState, snapshot?: unknown): void {

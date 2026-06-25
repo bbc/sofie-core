@@ -199,25 +199,43 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 		}
 
 		shouldComponentUpdate(nextProps: IProps & ITrackedResolvedSegmentProps, nextState: IState) {
+			const logId = `SegmentTimelineContainerContent[${this.props.segmentId}]`
+			
 			// Compare playlist using render selector (excludes modified field)
-			if (
-				!_.isEqual(
-					SegmentTimelineContainerContent.getPlaylistRenderSelector(this.props.playlist),
-					SegmentTimelineContainerContent.getPlaylistRenderSelector(nextProps.playlist)
-				)
-			) {
+			const playlistSelectorEqual = _.isEqual(
+				SegmentTimelineContainerContent.getPlaylistRenderSelector(this.props.playlist),
+				SegmentTimelineContainerContent.getPlaylistRenderSelector(nextProps.playlist)
+			)
+			if (!playlistSelectorEqual) {
+				console.log(`${logId} playlist selector changed → RERENDER`)
 				return true
 			}
 
 			// Compare state
-			if (!_.isMatch(this.state, nextState)) {
+			const stateEqual = _.isMatch(this.state, nextState)
+			if (!stateEqual) {
+				console.log(`${logId} state changed → RERENDER`, {
+					changedStateKeys: Object.keys(this.state).filter(
+						(key) => !_.isEqual((this.state as any)[key], (nextState as any)[key])
+					),
+				})
 				return true
 			}
 
 			// Compare remaining props (without playlist)
 			const { playlist: _p1, ...thisPropsRest } = this.props
 			const { playlist: _p2, ...nextPropsRest } = nextProps
-			return !_.isMatch(thisPropsRest, nextPropsRest)
+			const propsEqual = _.isMatch(thisPropsRest, nextPropsRest)
+			if (!propsEqual) {
+				console.log(`${logId} remaining props changed → RERENDER`, {
+					changedProps: Object.keys(thisPropsRest).filter(
+						(key) => !_.isEqual(thisPropsRest[key as keyof typeof thisPropsRest], nextPropsRest[key as keyof typeof nextPropsRest])
+					),
+				})
+				return true
+			}
+
+			return false
 		}
 
 		componentDidMount(): void {
