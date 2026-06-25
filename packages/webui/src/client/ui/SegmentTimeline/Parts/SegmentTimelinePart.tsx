@@ -312,12 +312,41 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		if (this.highlightTimeout) clearTimeout(this.highlightTimeout)
 	}
 
-	shouldComponentUpdate(nextProps: Readonly<WithTiming<IProps>>, nextState: Readonly<IState>): boolean {
-		if (!_.isMatch(this.props, nextProps) || !_.isMatch(this.state, nextState)) {
-			return true
-		} else {
-			return false
+	private static getPlaylistRenderSelector(playlist: DBRundownPlaylist): any {
+		// Extract only render-relevant playlist fields, excluding modified/revision fields
+		return {
+			id: playlist._id,
+			activationId: playlist.activationId,
+			currentPartInstanceId: playlist.currentPartInfo?.partInstanceId,
+			nextPartInstanceId: playlist.nextPartInfo?.partInstanceId,
+			previousPartInstanceId: playlist.previousPartInfo?.partInstanceId,
+			holdState: playlist.holdState,
+			nextTimeOffset: playlist.nextTimeOffset,
+			quickLoopStart: playlist.quickLoop?.start,
+			quickLoopEnd: playlist.quickLoop?.end,
 		}
+	}
+
+	shouldComponentUpdate(nextProps: Readonly<WithTiming<IProps>>, nextState: Readonly<IState>): boolean {
+		// Compare playlist using render selector (excludes modified field)
+		if (
+			!_.isEqual(
+				SegmentTimelinePartClass.getPlaylistRenderSelector(this.props.playlist),
+				SegmentTimelinePartClass.getPlaylistRenderSelector(nextProps.playlist)
+			)
+		) {
+			return true
+		}
+
+		// Compare state
+		if (!_.isMatch(this.state, nextState)) {
+			return true
+		}
+
+		// Compare remaining props (without playlist)
+		const { playlist: _p1, ...thisPropsRest } = this.props
+		const { playlist: _p2, ...nextPropsRest } = nextProps
+		return !_.isMatch(thisPropsRest, nextPropsRest)
 	}
 
 	componentDidUpdate(prevProps: Readonly<Translated<WithTiming<IProps>>>, prevState: IState, snapshot?: unknown): void {

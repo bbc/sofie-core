@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import _ from 'underscore'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { SegmentTimeline, type SegmentTimelineClass } from './SegmentTimeline.js'
 import {
 	computeSegmentDisplayDuration,
@@ -181,8 +182,42 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			this.isVisible = false
 		}
 
+		private static getPlaylistRenderSelector(playlist: DBRundownPlaylist): any {
+			// Extract only render-relevant playlist fields, excluding modified/revision fields
+			return {
+				id: playlist._id,
+				activationId: playlist.activationId,
+				currentPartInstanceId: playlist.currentPartInfo?.partInstanceId,
+				nextPartInstanceId: playlist.nextPartInfo?.partInstanceId,
+				previousPartInstanceId: playlist.previousPartInfo?.partInstanceId,
+				queuedSegmentId: playlist.queuedSegmentId,
+				holdState: playlist.holdState,
+				nextTimeOffset: playlist.nextTimeOffset,
+				quickLoopStart: playlist.quickLoop?.start,
+				quickLoopEnd: playlist.quickLoop?.end,
+			}
+		}
+
 		shouldComponentUpdate(nextProps: IProps & ITrackedResolvedSegmentProps, nextState: IState) {
-			return !_.isMatch(this.props, nextProps) || !_.isMatch(this.state, nextState)
+			// Compare playlist using render selector (excludes modified field)
+			if (
+				!_.isEqual(
+					SegmentTimelineContainerContent.getPlaylistRenderSelector(this.props.playlist),
+					SegmentTimelineContainerContent.getPlaylistRenderSelector(nextProps.playlist)
+				)
+			) {
+				return true
+			}
+
+			// Compare state
+			if (!_.isMatch(this.state, nextState)) {
+				return true
+			}
+
+			// Compare remaining props (without playlist)
+			const { playlist: _p1, ...thisPropsRest } = this.props
+			const { playlist: _p2, ...nextPropsRest } = nextProps
+			return !_.isMatch(thisPropsRest, nextPropsRest)
 		}
 
 		componentDidMount(): void {
