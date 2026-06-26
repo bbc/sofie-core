@@ -355,6 +355,9 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			delete (playlist as Partial<typeof playlist>).modified
 		}
 
+		const isCurrentPart = props.playlist.currentPartInfo?.partInstanceId === props.part.instance._id
+		const suppressViewportChurn = isCurrentPart || !!props.isBudgetGap
+
 		const segment = props.segment ? { ...props.segment } : props.segment
 		if (segment) {
 			delete (segment as Partial<typeof segment>).identifier
@@ -372,6 +375,10 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			segment,
 			t: undefined,
 			i18n,
+			scrollLeft: suppressViewportChurn ? undefined : props.scrollLeft,
+			scrollWidth: suppressViewportChurn ? undefined : props.scrollWidth,
+			followLiveLine: suppressViewportChurn ? undefined : props.followLiveLine,
+			liveLineHistorySize: suppressViewportChurn ? undefined : props.liveLineHistorySize,
 			onScroll: undefined,
 			onFollowLiveLine: undefined,
 			onContextMenu: undefined,
