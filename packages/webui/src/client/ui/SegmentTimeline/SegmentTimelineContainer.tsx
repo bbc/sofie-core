@@ -57,8 +57,6 @@ interface IState {
 	displayTimecode: number
 	isLiveSegment: boolean
 	isNextSegment: boolean
-	currentLivePart: PartUi | undefined
-	currentNextPart: PartUi | undefined
 	autoNextPart: boolean
 	budgetDuration: number | undefined
 	budgetGap: number
@@ -169,8 +167,6 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 				isLiveSegment: !!props.ownCurrentPartInstance,
 				isNextSegment: !!props.ownNextPartInstance,
 				autoNextPart: false,
-				currentLivePart: undefined,
-				currentNextPart: undefined,
 				budgetDuration: undefined,
 				budgetGap: 0,
 				timeScale: props.timeScale,
@@ -365,13 +361,22 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 				this.showEntireSegment()
 			}
 
-			this.setState({
-				isLiveSegment,
-				isNextSegment,
-				currentLivePart,
-				currentNextPart,
-				autoNextPart,
-				budgetDuration,
+			this.setState((state) => {
+				if (
+					state.isLiveSegment === isLiveSegment &&
+					state.isNextSegment === isNextSegment &&
+					state.autoNextPart === autoNextPart &&
+					state.budgetDuration === budgetDuration
+				) {
+					return null
+				}
+
+				return {
+					isLiveSegment,
+					isNextSegment,
+					autoNextPart,
+					budgetDuration,
+				}
 			})
 		}
 
@@ -544,8 +549,8 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 		onAirLineRefresh = (e: TimingEvent) => {
 			if (this.isUnmounted) return
 			this.setState((state) => {
-				if (state.isLiveSegment && state.currentLivePart) {
-					const currentLivePartInstance = state.currentLivePart.instance
+				const currentLivePartInstance = this.props.ownCurrentPartInstance
+				if (state.isLiveSegment && currentLivePartInstance) {
 
 					const partOffset =
 						(this.context.durations?.partDisplayStartsAt?.[getPartInstanceTimingId(currentLivePartInstance)] || 0) -
