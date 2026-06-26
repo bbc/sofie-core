@@ -203,7 +203,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			const comparableProps = SegmentTimelineContainerContent.getComparableProps(this.props)
 			const comparableNextProps = SegmentTimelineContainerContent.getComparableProps(nextProps)
 
-			return !_.isMatch(comparableProps, comparableNextProps) || !_.isMatch(this.state, nextState)
+			return !_.isEqual(comparableProps, comparableNextProps) || !_.isEqual(this.state, nextState)
 		}
 
 		componentDidMount(): void {

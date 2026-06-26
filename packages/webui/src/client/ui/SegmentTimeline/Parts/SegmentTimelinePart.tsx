@@ -335,7 +335,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		const comparableProps = SegmentTimelinePartClass.getComparableProps(this.props)
 		const comparableNextProps = SegmentTimelinePartClass.getComparableProps(nextProps)
 
-		if (!_.isMatch(comparableProps, comparableNextProps) || !_.isMatch(this.state, nextState)) {
+		if (!_.isEqual(comparableProps, comparableNextProps) || !_.isEqual(this.state, nextState)) {
 			return true
 		} else {
 			return false
