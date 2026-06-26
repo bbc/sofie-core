@@ -57,6 +57,42 @@ import { getEffectiveInvalidReason, isPartInstanceInvalid } from '../../../lib/p
 export const SegmentTimelineLineElementId = 'rundown__segment__line__'
 export const SegmentTimelinePartElementId = 'rundown__segment__part__'
 
+const TIMELINE_DIAG_STORAGE_KEY = 'sofie.timelineDiag'
+
+function isTimelineDiagEnabled(): boolean {
+	try {
+		return window.localStorage.getItem(TIMELINE_DIAG_STORAGE_KEY) === '1'
+	} catch {
+		return false
+	}
+}
+
+function pushTimelineDiagEvent(event: { type: string; partId: unknown; [key: string]: unknown }): void {
+	if (!isTimelineDiagEnabled()) return
+
+	const win = window as Window & {
+		__sofieTimelineDiag?: {
+			events: Array<Record<string, unknown>>
+		}
+	}
+
+	if (!win.__sofieTimelineDiag) {
+		win.__sofieTimelineDiag = {
+			events: [],
+		}
+	}
+
+	const events = win.__sofieTimelineDiag.events
+	events.push({
+		ts: performance.now(),
+		...event,
+	})
+
+	if (events.length > 3000) {
+		events.splice(0, events.length - 3000)
+	}
+}
+
 /** The width at which a Part is too small to attempt displaying text labels on Pieces, in pixels */
 export const BREAKPOINT_TOO_SMALL_FOR_TEXT = 30
 
@@ -344,6 +380,23 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 
 	componentDidUpdate(prevProps: Readonly<Translated<WithTiming<IProps>>>, prevState: IState, snapshot?: unknown): void {
 		super.componentDidUpdate?.(prevProps, prevState, snapshot)
+
+		if (this.state.isLive || this.props.isBudgetGap) {
+			const partStartsAt = SegmentTimelinePartClass.getPartStartsAt(this.props)
+			const partDuration = SegmentTimelinePartClass.getPartDisplayDuration(this.props.part, this.props.timingDurations)
+			const prevPartStartsAt = SegmentTimelinePartClass.getPartStartsAt(prevProps)
+			const prevPartDuration = SegmentTimelinePartClass.getPartDisplayDuration(prevProps.part, prevProps.timingDurations)
+
+			if (partStartsAt === prevPartStartsAt && partDuration === prevPartDuration) {
+				pushTimelineDiagEvent({
+					type: 'part-no-position-change',
+					partId: this.props.part.partId,
+					isLive: this.state.isLive,
+					isBudgetGap: !!this.props.isBudgetGap,
+				})
+			}
+		}
+
 		const tooSmallState = this.state.isTooSmallForDisplay || this.state.isTooSmallForText
 		const prevTooSmallState = prevState.isTooSmallForDisplay || prevState.isTooSmallForText
 		if (tooSmallState !== prevTooSmallState && this.props.onPartTooSmallChanged) {

@@ -69,6 +69,42 @@ interface IProps extends IResolvedSegmentProps {
 	id: string
 }
 
+const TIMELINE_DIAG_STORAGE_KEY = 'sofie.timelineDiag'
+
+function isTimelineDiagEnabled(): boolean {
+	try {
+		return window.localStorage.getItem(TIMELINE_DIAG_STORAGE_KEY) === '1'
+	} catch {
+		return false
+	}
+}
+
+function pushTimelineDiagEvent(event: { type: string; segmentId: SegmentId; [key: string]: unknown }): void {
+	if (!isTimelineDiagEnabled()) return
+
+	const win = window as Window & {
+		__sofieTimelineDiag?: {
+			events: Array<Record<string, unknown>>
+		}
+	}
+
+	if (!win.__sofieTimelineDiag) {
+		win.__sofieTimelineDiag = {
+			events: [],
+		}
+	}
+
+	const events = win.__sofieTimelineDiag.events
+	events.push({
+		ts: performance.now(),
+		...event,
+	})
+
+	if (events.length > 3000) {
+		events.splice(0, events.length - 3000)
+	}
+}
+
 export function SegmentTimelineContainer(props: Readonly<IProps>): JSX.Element {
 	const partIds = useTracker(
 		() =>
@@ -150,6 +186,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 		mountedTime = 0
 		nextPartOffset = 0
 		isUnmounted = false
+		lastOnAirRefreshAt = 0
 
 		constructor(props: IProps & ITrackedResolvedSegmentProps) {
 			super(props)
@@ -548,6 +585,19 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 
 		onAirLineRefresh = (e: TimingEvent) => {
 			if (this.isUnmounted) return
+
+			const now = performance.now()
+			const sinceLastRefresh = this.lastOnAirRefreshAt === 0 ? 0 : now - this.lastOnAirRefreshAt
+			this.lastOnAirRefreshAt = now
+			if (sinceLastRefresh > 250) {
+				pushTimelineDiagEvent({
+					type: 'high-res-refresh-gap',
+					segmentId: this.props.segmentId,
+					gapMs: sinceLastRefresh,
+					currentTime: e.detail.currentTime,
+				})
+			}
+
 			this.setState((state) => {
 				const currentLivePartInstance = this.props.ownCurrentPartInstance
 				if (state.isLiveSegment && currentLivePartInstance) {
@@ -577,12 +627,21 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							: partOffset + lastTakeOffset
 
 					const budgetDuration = this.getSegmentBudgetDuration()
+					const nextScrollLeft = state.followLiveLine
+						? Math.max(newLivePosition - LIVELINE_HISTORY_SIZE / state.timeScale, 0)
+						: state.scrollLeft
+
+					if (
+						state.livePosition === newLivePosition &&
+						state.scrollLeft === nextScrollLeft &&
+						state.budgetDuration === budgetDuration
+					) {
+						return null
+					}
 
 					return {
 						livePosition: newLivePosition,
-						scrollLeft: state.followLiveLine
-							? Math.max(newLivePosition - LIVELINE_HISTORY_SIZE / state.timeScale, 0)
-							: state.scrollLeft,
+						scrollLeft: nextScrollLeft,
 						budgetDuration,
 					}
 				}
