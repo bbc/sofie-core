@@ -181,8 +181,29 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 			this.isVisible = false
 		}
 
+		private static getComparableProps(props: IProps & ITrackedResolvedSegmentProps) {
+			const playlist = props.playlist ? { ...props.playlist } : props.playlist
+			if (playlist) {
+				delete (playlist as Partial<typeof playlist>).modified
+			}
+
+			const segmentui = props.segmentui ? { ...props.segmentui } : props.segmentui
+			if (segmentui) {
+				delete (segmentui as Partial<typeof segmentui>).identifier
+			}
+
+			return {
+				...props,
+				playlist,
+				segmentui,
+			}
+		}
+
 		shouldComponentUpdate(nextProps: IProps & ITrackedResolvedSegmentProps, nextState: IState) {
-			return !_.isMatch(this.props, nextProps) || !_.isMatch(this.state, nextState)
+			const comparableProps = SegmentTimelineContainerContent.getComparableProps(this.props)
+			const comparableNextProps = SegmentTimelineContainerContent.getComparableProps(nextProps)
+
+			return !_.isMatch(comparableProps, comparableNextProps) || !_.isMatch(this.state, nextState)
 		}
 
 		componentDidMount(): void {
