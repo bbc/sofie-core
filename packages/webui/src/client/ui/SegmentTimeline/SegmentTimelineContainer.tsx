@@ -229,6 +229,13 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 				...props,
 				playlist,
 				segmentui,
+				onContextMenu: undefined,
+				onSegmentScroll: undefined,
+				onPieceClick: undefined,
+				onPieceDoubleClick: undefined,
+				onHeaderNoteClick: undefined,
+				onSwitchViewMode: undefined,
+				segmentRef: undefined,
 			}
 		}
 

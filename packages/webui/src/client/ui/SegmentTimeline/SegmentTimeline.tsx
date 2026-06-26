@@ -711,6 +711,8 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 			const previousPartIsLive = partIsLive
 			if (previousPartIsLive) anyPriorPartWasLive = true
 			partIsLive = part.instance._id === this.props.playlist.currentPartInfo?.partInstanceId
+			const livePositionForPart =
+				this.props.isLiveSegment && (partIsLive || anyPriorPartWasLive) ? this.props.livePosition : null
 			if (partIsLive) livePart = part
 			let emitSmallPartsInFlag: [PartUi, number, number][] | undefined = undefined
 			let emitSmallPartsInFlagAtEnd = false
@@ -768,7 +770,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 						autoNextPart={this.props.autoNextPart}
 						followLiveLine={this.props.followLiveLine}
 						liveLineHistorySize={this.props.liveLineHistorySize}
-						livePosition={this.props.livePosition}
+						livePosition={livePositionForPart}
 						onScroll={this.props.onScroll}
 						onFollowLiveLine={this.props.onFollowLiveLine}
 						onContextMenu={this.props.onContextMenu}

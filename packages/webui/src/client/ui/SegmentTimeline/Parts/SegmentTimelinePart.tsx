@@ -348,7 +348,7 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		if (this.highlightTimeout) clearTimeout(this.highlightTimeout)
 	}
 
-	private static getComparableProps(props: Readonly<WithTiming<IProps>>) {
+	private static getComparableProps(props: Readonly<Translated<WithTiming<IProps>>>) {
 		// Ignore noisy reactive fields that do not affect transform math for a part.
 		const playlist = props.playlist ? { ...props.playlist } : props.playlist
 		if (playlist) {
@@ -360,14 +360,28 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 			delete (segment as Partial<typeof segment>).identifier
 		}
 
+		const i18n = props.i18n
+			? {
+				language: props.i18n.language,
+			}
+			: props.i18n
+
 		return {
 			...props,
 			playlist,
 			segment,
+			t: undefined,
+			i18n,
+			onScroll: undefined,
+			onFollowLiveLine: undefined,
+			onContextMenu: undefined,
+			onPieceClick: undefined,
+			onPieceDoubleClick: undefined,
+			onPartTooSmallChanged: undefined,
 		}
 	}
 
-	shouldComponentUpdate(nextProps: Readonly<WithTiming<IProps>>, nextState: Readonly<IState>): boolean {
+	shouldComponentUpdate(nextProps: Readonly<Translated<WithTiming<IProps>>>, nextState: Readonly<IState>): boolean {
 		const comparableProps = SegmentTimelinePartClass.getComparableProps(this.props)
 		const comparableNextProps = SegmentTimelinePartClass.getComparableProps(nextProps)
 
