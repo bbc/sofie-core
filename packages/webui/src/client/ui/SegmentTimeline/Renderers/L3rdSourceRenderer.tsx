@@ -5,8 +5,8 @@ import classNames from 'classnames'
 import { PieceMultistepChevron, getPieceSteps } from '../../SegmentContainer/PieceMultistepChevron.js'
 import { CustomLayerItemRenderer, type ICustomLayerItemProps } from './CustomLayerItemRenderer.js'
 
-import { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
-import { ReadonlyDeep } from 'type-fest'
+import type { PieceContentStatusObj } from '@sofie-automation/corelib/dist/dataModel/PieceContentStatus'
+import type { ReadonlyDeep } from 'type-fest'
 import { getNoticeLevelForPieceStatus } from '../../../lib/notifications/notifications.js'
 import { PieceStatusIcon } from '../../../lib/ui/PieceStatusIcon.js'
 
