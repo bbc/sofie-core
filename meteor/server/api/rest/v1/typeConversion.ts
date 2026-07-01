@@ -175,7 +175,7 @@ export async function APIShowStyleVariantFrom(
 	}
 }
 
-export function sourceLayerFrom(apiSourceLayer: APISourceLayer): ISourceLayer {
+export function sourceLayerFrom(apiSourceLayer: APISourceLayer): Complete<ISourceLayer> {
 	let layerType: SourceLayerType
 	switch (apiSourceLayer.layerType) {
 		case 'audio':
@@ -249,7 +249,7 @@ export function sourceLayerFrom(apiSourceLayer: APISourceLayer): ISourceLayer {
 	}
 }
 
-export function APISourceLayerFrom(sourceLayer: ISourceLayer): APISourceLayer {
+export function APISourceLayerFrom(sourceLayer: ISourceLayer): Complete<APISourceLayer> {
 	let layerType: APISourceLayer['layerType']
 	switch (sourceLayer.type) {
 		case SourceLayerType.AUDIO:
