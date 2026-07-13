@@ -566,17 +566,17 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	}
 
 	deactivatePlaylist(): void {
-		// Clean up segments after AdlibTesting
-		for (const rundown of this.rundowns) {
-			rundown.removeAdlibTestingSegment()
-		}
-
 		// Make sure that the part instances are marked as reset
 		for (const partInstance of this.loadedPartInstances) {
 			const segment = this.findSegment(partInstance.partInstance.segmentId)
 			if (segment?.segment.orphaned === SegmentOrphanedReason.ADLIB_TESTING) {
 				partInstance.markAsReset()
 			}
+		}
+
+		// Clean up segments after AdlibTesting
+		for (const rundown of this.rundowns) {
+			rundown.removeAdlibTestingSegment()
 		}
 
 		delete this.playlistImpl.activationId
