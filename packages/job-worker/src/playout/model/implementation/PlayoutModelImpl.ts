@@ -82,7 +82,7 @@ import {
 } from '../../timeline/generate.js'
 import { deNowifyMultiGatewayTimeline } from '../../timeline/multi-gateway.js'
 import { validateTTimerIndex } from '../../tTimers.js'
-import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment.js'
+import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
