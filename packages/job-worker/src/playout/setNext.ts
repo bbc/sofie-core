@@ -38,7 +38,6 @@ import { PlayoutPartInstanceModelImpl } from './model/implementation/PlayoutPart
 import { QuickLoopService } from './model/services/QuickLoopService.js'
 import { recalculateTTimerProjections } from './tTimers.js'
 
-// TODO: Better document behavior
 /**
  * Set or clear the nexted part, from a given PartInstance, or SelectNextPartResult
  * @param context Context for the running job
