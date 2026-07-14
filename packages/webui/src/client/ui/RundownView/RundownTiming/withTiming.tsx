@@ -34,7 +34,6 @@ type IWrappedComponent<IProps, IState> =
 export interface IRundownTimingProviderValues {
 	durations: RundownTimingContext
 	syncedDurations: RundownTimingContext
-	currentPartAutoNextBlockedByInvalidReason?: boolean
 }
 export const RundownTimingProviderContext = React.createContext<IRundownTimingProviderValues>({
 	durations: {
