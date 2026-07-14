@@ -747,6 +747,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							sourceLayers={this.props.segment.sourceLayers}
 							timeToPixelRatio={this.props.timeScale}
 							autoNextPart={this.props.autoNextPart}
+							currentPartAutoNextBlockedByInvalidReason={this.props.currentPartAutoNextBlockedByInvalidReason}
 							collapsedOutputs={this.props.collapsedOutputs}
 							playlist={this.props.playlist}
 							studio={this.props.studio}
@@ -806,6 +807,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							sourceLayers={this.props.segment.sourceLayers}
 							timeToPixelRatio={this.props.timeScale}
 							autoNextPart={this.props.autoNextPart}
+							currentPartAutoNextBlockedByInvalidReason={this.props.currentPartAutoNextBlockedByInvalidReason}
 							collapsedOutputs={this.props.collapsedOutputs}
 							playlist={this.props.playlist}
 							studio={this.props.studio}
