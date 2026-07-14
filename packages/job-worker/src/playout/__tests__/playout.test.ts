@@ -1027,6 +1027,9 @@ describe('Playout API', () => {
 			return playlist
 		}
 
+		// Activate the playlist
+		await handleResetRundownPlaylist(context, { playlistId: playlistId0, activate: 'rehearsal' })
+
 		useFakeCurrentTime(new Date(2020, 0, 1, 12, 0, 0).getTime())
 
 		// Take the first Part (which has autoNext enabled and expectedDuration)
