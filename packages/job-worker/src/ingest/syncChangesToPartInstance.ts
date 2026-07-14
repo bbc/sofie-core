@@ -343,7 +343,8 @@ export function findInstancesToSync(
 							partAndPartInstance.partInstance,
 							null,
 							partAndPartInstance.part,
-							'previous'
+							'previous',
+							_forceSyncIngestUpdateToPartInstance
 						)
 					} catch (err) {
 						logger.error(
@@ -369,7 +370,8 @@ export function findInstancesToSync(
 				ingestModel,
 				currentPartInstance,
 				previousPartInstance,
-				'current'
+				'current',
+				_forceSyncIngestUpdateToPartInstance
 			)
 		} catch (err) {
 			logger.error(`Failed to prepare currentPartInstance for syncChangesToPartInstances: ${stringifyError(err)}`)
@@ -390,7 +392,8 @@ export function findInstancesToSync(
 				ingestModel,
 				nextPartInstance,
 				currentPartInstance,
-				currentPartInstance?.isTooCloseToAutonext(false) ? 'current' : 'next'
+				currentPartInstance?.isTooCloseToAutonext(false) ? 'current' : 'next',
+				_forceSyncIngestUpdateToPartInstance
 			)
 		} catch (err) {
 			logger.error(`Failed to prepare nextPartInstance for syncChangesToPartInstances: ${stringifyError(err)}`)
@@ -412,7 +415,8 @@ function insertToSyncedInstanceCandidates(
 	thisPartInstance: PlayoutPartInstanceModel,
 	previousPartInstance: PlayoutPartInstanceModel | null,
 	part: ReadonlyDeep<DBPart> | undefined,
-	playStatus: PlayStatus
+	playStatus: PlayStatus,
+	_forceSyncIngestUpdateToPartInstance = false
 ): void {
 	const partOrInstancePart = part ?? thisPartInstance.partInstance.part
 
@@ -474,7 +478,8 @@ function findPartAndInsertToSyncedInstanceCandidates(
 	ingestModel: IngestModelReadonly,
 	thisPartInstance: PlayoutPartInstanceModel,
 	previousPartInstance: PlayoutPartInstanceModel | null,
-	playStatus: PlayStatus
+	playStatus: PlayStatus,
+	forceSyncIngestUpdateToPartInstance = false
 ): void {
 	const newPart = playoutModel.findPart(thisPartInstance.partInstance.part._id)
 
@@ -487,7 +492,8 @@ function findPartAndInsertToSyncedInstanceCandidates(
 		thisPartInstance,
 		previousPartInstance,
 		newPart,
-		playStatus
+		playStatus,
+		forceSyncIngestUpdateToPartInstance
 	)
 }
 
