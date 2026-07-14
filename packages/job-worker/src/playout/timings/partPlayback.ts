@@ -1,4 +1,5 @@
 import { PartInstanceId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { UserError, UserErrorMessage } from '@sofie-automation/corelib/dist/error'
 import { logger } from '../../logging.js'
 import { JobContext } from '../../jobs/index.js'
 import { PlayoutModel } from '../model/PlayoutModel.js'
@@ -56,6 +57,11 @@ export async function onPartPlaybackStarted(
 			await afterTake(context, playoutModel, playingPartInstance)
 		} else if (playlist.nextPartInfo?.partInstanceId === data.partInstanceId) {
 			// this is the next part, clearly an autoNext has taken place
+
+			// Validate that the part can be taken (e.g., no invalidReason set)
+			if (playingPartInstance.partInstance.invalidReason) {
+				throw UserError.create(UserErrorMessage.TakePartInstanceInvalid)
+			}
 
 			playoutModel.cycleSelectedPartInstances()
 			playoutModel.resetHoldState()
