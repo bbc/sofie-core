@@ -725,6 +725,7 @@ const SegmentTimelineContainerContent = withResolvedSegment(
 							showCountdownToSegment={this.props.showCountdownToSegment}
 							fixedSegmentDuration={this.props.fixedSegmentDuration}
 							showDurationSourceLayers={this.props.showDurationSourceLayers}
+							currentPartAutoNextBlockedByInvalidReason={this.context?.currentPartAutoNextBlockedByInvalidReason ?? false}
 						/>
 					)}
 					{this.props.segmentui.displayMinishelf && this.props.adLibSegmentUi && (
