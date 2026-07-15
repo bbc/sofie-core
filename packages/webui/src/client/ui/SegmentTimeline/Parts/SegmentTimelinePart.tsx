@@ -195,13 +195,18 @@ export class SegmentTimelinePartClass extends React.Component<Translated<WithTim
 		if (!isDurationSettling) {
 			// if the duration isn't settling, calculate the live line position and add some liveLive time padding
 			if (isLive && (!nextProps.autoNextPart || nextProps.currentPartAutoNextBlockedByInvalidReason)) {
+				// When blocked by invalidReason, calculate live position from current time instead of fixed duration
+				const liveLinePosition =
+					nextProps.currentPartAutoNextBlockedByInvalidReason && startedPlayback
+						? nextProps.timingDurations.currentTime! - startedPlayback
+						: SegmentTimelinePartClass.getCurrentLiveLinePosition(
+								nextProps.part,
+								nextProps.timingDurations.currentTime || getCurrentTime()
+							)
 				liveDuration = Math.max(
 					(startedPlayback &&
 						nextProps.timingDurations.partDurations &&
-						SegmentTimelinePartClass.getCurrentLiveLinePosition(
-							nextProps.part,
-							nextProps.timingDurations.currentTime || getCurrentTime()
-						) + SegmentTimelinePartClass.getLiveLineTimePadding(nextProps.timeToPixelRatio)) ||
+						liveLinePosition + SegmentTimelinePartClass.getLiveLineTimePadding(nextProps.timeToPixelRatio)) ||
 						0,
 					nextProps.timingDurations.partDurations
 						? nextPartInstance.part.displayDuration ||

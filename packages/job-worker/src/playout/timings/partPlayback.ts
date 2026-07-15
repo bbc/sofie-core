@@ -51,7 +51,7 @@ export async function onPartPlaybackStarted(
 
 		if (playlist.currentPartInfo?.partInstanceId === data.partInstanceId) {
 			// this is the current part, it has just started playback
-			reportPartInstanceHasStarted(context, playoutModel, playingPartInstance, data.startedPlayback)
+			reportPartInstanceHasStarted(context, playoutModel, playingPartInstance, data.startedPlayback, false)
 
 			// complete the take
 			await afterTake(context, playoutModel, playingPartInstance)
@@ -66,7 +66,7 @@ export async function onPartPlaybackStarted(
 			playoutModel.cycleSelectedPartInstances()
 			playoutModel.resetHoldState()
 
-			reportPartInstanceHasStarted(context, playoutModel, playingPartInstance, data.startedPlayback)
+			reportPartInstanceHasStarted(context, playoutModel, playingPartInstance, data.startedPlayback, true)
 
 			// Update generated properties on the newly playing partInstance
 			const currentRundown = currentPartInstance
@@ -183,7 +183,8 @@ export function reportPartInstanceHasStarted(
 	_context: JobContext,
 	playoutModel: PlayoutModel,
 	partInstance: PlayoutPartInstanceModel,
-	timestamp: Time
+	timestamp: Time,
+	isAutoNext: boolean = false
 ): void {
 	const timestampUpdated = partInstance.setReportedStartedPlayback(timestamp)
 
@@ -193,8 +194,15 @@ export function reportPartInstanceHasStarted(
 		}
 		const previousPartInstance = playoutModel.previousPartInstance
 		if (timestampUpdated && previousPartInstance) {
+			let stopTimestamp = timestamp
+			// When autoNext triggers (even if delayed), set planned stop to the originally planned time
+			// This keeps the planned timeline correct so the next part doesn't jump ahead
+			if (isAutoNext && previousPartInstance.partInstance.part.expectedDuration) {
+				const plannedStartTime = previousPartInstance.partInstance.timings?.plannedStartedPlayback ?? timestamp
+				stopTimestamp = plannedStartTime + previousPartInstance.partInstance.part.expectedDuration
+			}
 			// Ensure the plannedStoppedPlayback is set for the previous partinstance too
-			previousPartInstance.setPlannedStoppedPlayback(timestamp)
+			previousPartInstance.setPlannedStoppedPlayback(stopTimestamp)
 		}
 	}
 
