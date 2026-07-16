@@ -184,6 +184,7 @@ async function setNextPartAndCheckForPendingMoveNextPart(
 		})
 
 		playoutModel.setPartInstanceAsNext(newPartInstance, setManually, consumesQueuedSegmentId, nextTimeOffset)
+		newPartInstance.recueNextPartSnapshot = newPartInstance.snapshotMakeCopy()
 
 		return executeOnSetAsNextCallback(playoutModel, newPartInstance, context, setManually)
 	} else {
@@ -231,7 +232,6 @@ async function executeOnSetAsNextCallback(
 		new PartAndPieceInstanceActionService(context, playoutModel, showStyle, rundownOfNextPart),
 		setManually
 	)
-	newPartInstance.recueNextPartSnapshot = newPartInstance.snapshotMakeCopy()
 
 	// Clear any existing notifications for this partInstance. This will clear any from the previous setAsNext
 	playoutModel.clearAllNotifications(NOTIFICATION_CATEGORY)
