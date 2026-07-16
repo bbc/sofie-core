@@ -235,6 +235,16 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 		return this.takeAfterExecute
 	}
 
+	async recueNextPart(): Promise<void> {
+		const nextPartInstance = this._playoutModel.nextPartInstance
+		if (!nextPartInstance) {
+			throw new Error('Cannot recue next part when no next part instance is set')
+		}
+
+		nextPartInstance.recueNextPart()
+		this.partAndPieceInstanceService.nextPartState = ActionPartChange.NONE
+	}
+
 	async blockTakeUntil(time: Time | null): Promise<void> {
 		if (time !== null && (time < getCurrentTime() || typeof time !== 'number'))
 			throw new Error('Cannot block taking out of the current part, to a time in the past')

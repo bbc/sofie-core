@@ -8,6 +8,8 @@ export interface IPlayoutActionContext {
 	moveNextPart(partDelta: number, segmentDelta: number, ignoreQuickloop?: boolean): Promise<void>
 	/** Set flag to perform a take after the current handler completes. Returns state of the flag after each call. */
 	takeAfterExecuteAction(take: boolean): Promise<boolean>
+	/** Restore the next part instance to its original state before any mutations that have occurred after queueing. */
+	recueNextPart(): Promise<void>
 	/** Insert a queued part to follow the current part */
 	queuePart(part: IBlueprintPart, pieces: IBlueprintPiece[]): Promise<IBlueprintPartInstance>
 	/** Insert a queued part to follow the taken part */

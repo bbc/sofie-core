@@ -113,5 +113,20 @@ describe('PlayoutPartInstanceModelImpl', () => {
 			).not.toThrow()
 			expect(model.pieceInstances.map((p) => p.pieceInstance._id)).toEqual(['p1'])
 		})
+
+		it('restores the recue snapshot back to the original next-part state', async () => {
+			const partInstance = createBasicDBPartInstance()
+			const model = new PlayoutPartInstanceModelImpl(partInstance, [], false, {} as any)
+
+			model.blockTakeUntil(1000)
+			model.recueNextPartSnapshot = model.snapshotMakeCopy()
+			model.blockTakeUntil(2000)
+
+			expect(model.partInstance.blockTakeUntil).toBe(2000)
+
+			model.recueNextPart()
+
+			expect(model.partInstance.blockTakeUntil).toBe(1000)
+		})
 	})
 })

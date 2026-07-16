@@ -70,6 +70,7 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 	partInstanceImpl: DBPartInstance
 	pieceInstancesImpl: Map<PieceInstanceId, PlayoutPieceInstanceModelImpl | null>
 	quickLoopService: QuickLoopService
+	recueNextPartSnapshot: PlayoutPartInstanceModelSnapshot | undefined
 
 	#setPartInstanceValue<T extends keyof DBPartInstance>(key: T, newValue: DBPartInstance[T]): void {
 		if (newValue === undefined) {
@@ -186,6 +187,15 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 
 	snapshotMakeCopy(): PlayoutPartInstanceModelSnapshot {
 		return new PlayoutPartInstanceModelSnapshotImpl(this)
+	}
+
+	recueNextPart(): void {
+		if (!this.recueNextPartSnapshot) {
+			throw new Error('Cannot recue next part when no snapshot is available')
+		}
+
+		this.snapshotRestore(this.recueNextPartSnapshot)
+		this.recueNextPartSnapshot = this.snapshotMakeCopy()
 	}
 
 	snapshotRestore(snapshot: PlayoutPartInstanceModelSnapshot): void {

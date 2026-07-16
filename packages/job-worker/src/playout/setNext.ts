@@ -231,6 +231,7 @@ async function executeOnSetAsNextCallback(
 		new PartAndPieceInstanceActionService(context, playoutModel, showStyle, rundownOfNextPart),
 		setManually
 	)
+	newPartInstance.recueNextPartSnapshot = newPartInstance.snapshotMakeCopy()
 
 	// Clear any existing notifications for this partInstance. This will clear any from the previous setAsNext
 	playoutModel.clearAllNotifications(NOTIFICATION_CATEGORY)
