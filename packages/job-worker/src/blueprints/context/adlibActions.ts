@@ -75,6 +75,7 @@ export class DatastoreActionExecutionContext
 /** Actions */
 export class ActionExecutionContext extends ShowStyleUserContext implements IActionExecutionContext, IEventContext {
 	readonly #tTimersService: TTimersService
+	public recueAfterExecute = false
 
 	/**
 	 * Whether the blueprints requested a take to be performed at the end of this action
@@ -243,6 +244,7 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 
 		nextPartInstance.recueNextPart()
 		this.partAndPieceInstanceService.nextPartState = ActionPartChange.NONE
+		this.recueAfterExecute = true
 	}
 
 	async blockTakeUntil(time: Time | null): Promise<void> {
