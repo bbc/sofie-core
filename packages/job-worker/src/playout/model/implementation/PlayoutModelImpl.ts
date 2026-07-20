@@ -380,6 +380,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	}
 
 	clearSelectedPartInstances(): void {
+		const nextPartInstance = this.nextPartInstance
+		if (nextPartInstance) nextPartInstance.recueNextPartSnapshot = undefined
 		this.playlistImpl.currentPartInfo = null
 		this.playlistImpl.nextPartInfo = null
 		this.playlistImpl.previousPartInfo = null
@@ -663,6 +665,8 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	 * Reset the playlist for playout
 	 */
 	resetPlaylist(regenerateActivationId: boolean): void {
+		const nextPartInstance = this.nextPartInstance
+		if (nextPartInstance) nextPartInstance.recueNextPartSnapshot = undefined
 		this.playlistImpl.previousPartInfo = null
 		this.playlistImpl.currentPartInfo = null
 		this.playlistImpl.nextPartInfo = null
@@ -803,12 +807,17 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 		consumesQueuedSegmentId: boolean,
 		nextTimeOffset?: number
 	): void {
+		const previousNextPartInstance = this.nextPartInstance
 		if (partInstance) {
 			const storedPartInstance = this.allPartInstances.get(partInstance.partInstance._id)
 			if (!storedPartInstance) throw new Error(`PartInstance being set as next was not constructed correctly`)
 			// Make sure we were given the exact same object
 			if (storedPartInstance.partInstance._id !== partInstance.partInstance._id)
 				throw new Error(`PartInstance being set as next is not current`)
+		}
+
+		if (previousNextPartInstance && previousNextPartInstance.partInstance._id !== partInstance?.partInstance._id) {
+			previousNextPartInstance.recueNextPartSnapshot = undefined
 		}
 
 		if (partInstance) {

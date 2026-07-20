@@ -153,6 +153,7 @@ describe('Test blueprint api context', () => {
 
 			expect(mockNextPartInstance.recueNextPart).toHaveBeenCalledTimes(1)
 			expect(mockActionService.nextPartState).toBe(ActionPartChange.NONE)
+			expect(context.forceRegenerateTimeline).toBe(true)
 			expect(context.recueAfterExecute).toBe(true)
 		})
 

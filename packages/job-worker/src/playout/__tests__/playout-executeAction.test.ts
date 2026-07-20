@@ -14,7 +14,7 @@ import * as SetNextApi from '../setNext.js'
 
 const syncPlayheadInfinitesForNextPartInstanceMock = jest.spyOn(Infinites, 'syncPlayheadInfinitesForNextPartInstance')
 const takeNextPartMock = jest.spyOn(TakeApi, 'performTakeToNextedPart')
-const setNextPartFromPartMock = jest.spyOn(SetNextApi, 'setNextPartFromPart')
+const setNextPartMock = jest.spyOn(SetNextApi, 'setNextPart')
 
 jest.mock('../timeline/generate')
 import { updateTimeline } from '../timeline/generate.js'
@@ -46,7 +46,7 @@ describe('Playout API', () => {
 			syncPlayheadInfinitesForNextPartInstanceMock.mockClear()
 			updateTimelineMock.mockClear()
 			takeNextPartMock.mockClear()
-			setNextPartFromPartMock.mockClear()
+			setNextPartMock.mockClear()
 		})
 
 		test('throws errors', async () => {
@@ -205,7 +205,7 @@ describe('Playout API', () => {
 		})
 
 		test('recue next part reruns setNext', async () => {
-			setNextPartFromPartMock.mockImplementationOnce(async () => Promise.resolve())
+			setNextPartMock.mockImplementationOnce(async () => Promise.resolve())
 
 			context.updateShowStyleBlueprint({
 				executeAction: async (context) => {
@@ -223,7 +223,7 @@ describe('Playout API', () => {
 				userData,
 			})
 
-			expect(setNextPartFromPartMock).toHaveBeenCalledTimes(1)
+			expect(setNextPartMock).toHaveBeenCalledTimes(1)
 		})
 	})
 })

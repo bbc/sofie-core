@@ -60,6 +60,29 @@ describe('PlayoutPartInstanceModelImpl', () => {
 		})
 	}
 
+	function createBasicPieceInstance(id: string): PieceInstance {
+		return literal<PieceInstance>({
+			_id: protectString(id),
+			rundownId: protectString(''),
+			partInstanceId: protectString(''),
+			playlistActivationId: protectString('active'),
+			piece: literal<PieceInstancePiece>({
+				_id: protectString(`${id}_p`),
+				externalId: '',
+				startPartId: protectString(''),
+				enable: { start: 0 },
+				name: '',
+				lifespan: PieceLifespan.WithinPart,
+				sourceLayerId: '',
+				outputLayerId: '',
+				invalid: false,
+				content: {},
+				timelineObjectsString: protectString(''),
+				pieceType: IBlueprintPieceType.Normal,
+			}),
+		})
+	}
+
 	describe('replaceInfinitesFromPreviousPlayhead', () => {
 		it('works for an empty part', async () => {
 			const partInstance = createBasicDBPartInstance()
@@ -127,6 +150,21 @@ describe('PlayoutPartInstanceModelImpl', () => {
 			model.recueNextPart()
 
 			expect(model.partInstance.blockTakeUntil).toBe(1000)
+		})
+
+		it('snapshotRestore keeps removed current pieces tracked for persistence', async () => {
+			const partInstance = createBasicDBPartInstance()
+			const model = new PlayoutPartInstanceModelImpl(partInstance, [createBasicPieceInstance('p1')], false, {} as any)
+
+			const snapshot = model.snapshotMakeCopy()
+			const insertedPieceInstance = model.insertPlannedPiece(createBasicPieceInstance('p2').piece)
+
+			expect(model.pieceInstancesImpl.get(insertedPieceInstance.pieceInstance._id)).toBeDefined()
+
+			model.snapshotRestore(snapshot)
+
+			expect(model.pieceInstancesImpl.get(insertedPieceInstance.pieceInstance._id)).toBeNull()
+			expect(model.partInstanceHasChanges).toBe(true)
 		})
 	})
 })

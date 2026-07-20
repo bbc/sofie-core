@@ -244,6 +244,7 @@ export class ActionExecutionContext extends ShowStyleUserContext implements IAct
 
 		nextPartInstance.recueNextPart()
 		this.partAndPieceInstanceService.nextPartState = ActionPartChange.NONE
+		this.forceRegenerateTimeline = true
 		this.recueAfterExecute = true
 	}
 

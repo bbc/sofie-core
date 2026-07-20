@@ -33,7 +33,7 @@ import {
 	PartAndPieceInstanceActionService,
 	applyActionSideEffects,
 } from '../blueprints/context/services/PartAndPieceInstanceActionService.js'
-import { setNextPartFromPart } from './setNext.js'
+import { setNextPart } from './setNext.js'
 import { convertNoteToNotification } from '../notifications/util.js'
 import type { INoteBase } from '@sofie-automation/corelib/dist/dataModel/Notes'
 import { NotificationsModelHelper } from '../notifications/NotificationsModelHelper.js'
@@ -325,7 +325,7 @@ export async function applyAnyExecutionSideEffects(
 			throw new Error('Cannot recue next part when no next part instance is set')
 		}
 
-		await setNextPartFromPart(context, playoutModel, nextPartInstance.partInstance, true)
+		await setNextPart(context, playoutModel, nextPartInstance, true)
 	}
 
 	if (actionContext.takeAfterExecute) {

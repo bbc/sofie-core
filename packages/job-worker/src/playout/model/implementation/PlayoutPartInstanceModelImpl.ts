@@ -233,8 +233,9 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 		snapshotImpl.isRestored = true
 
 		this.partInstanceImpl = snapshotImpl.partInstance
-		this.#partInstanceHasChanges = snapshotImpl.partInstanceHasChanges
-		this.pieceInstancesImpl.clear()
+		for (const pieceInstanceId of this.pieceInstancesImpl.keys()) {
+			this.pieceInstancesImpl.set(pieceInstanceId, null)
+		}
 		const pieceInstancesEntries =
 			snapshotImpl.pieceInstances instanceof Map
 				? snapshotImpl.pieceInstances.entries()
@@ -250,6 +251,8 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 				this.pieceInstancesImpl.set(pieceInstanceId as PieceInstanceId, null)
 			}
 		}
+
+		this.#partInstanceHasChanges = true
 	}
 
 	blockTakeUntil(timestamp: Time | null): void {
