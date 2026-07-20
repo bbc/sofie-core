@@ -554,6 +554,9 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	}
 
 	cycleSelectedPartInstances(): void {
+		const nextPartInstance = this.nextPartInstance
+		if (nextPartInstance) nextPartInstance.recueNextPartSnapshot = undefined
+
 		this.playlistImpl.previousPartInfo = this.playlistImpl.currentPartInfo
 		this.playlistImpl.currentPartInfo = this.playlistImpl.nextPartInfo
 		this.playlistImpl.nextPartInfo = null
