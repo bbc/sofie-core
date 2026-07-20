@@ -1,4 +1,9 @@
-import { PartInstanceId, PieceId, PieceInstanceId, RundownPlaylistActivationId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import {
+	PartInstanceId,
+	PieceId,
+	PieceInstanceId,
+	RundownPlaylistActivationId,
+} from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { ReadonlyDeep } from 'type-fest'
 import { DBPartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import {
@@ -239,7 +244,9 @@ export class PlayoutPartInstanceModelImpl implements PlayoutPartInstanceModel {
 		const pieceInstancesEntries =
 			snapshotImpl.pieceInstances instanceof Map
 				? snapshotImpl.pieceInstances.entries()
-				: Object.entries(snapshotImpl.pieceInstances)
+				: Object.entries<PlayoutPieceInstanceModelSnapshotImpl | null>(
+						snapshotImpl.pieceInstances as Record<string, PlayoutPieceInstanceModelSnapshotImpl | null>
+					)
 
 		for (const [pieceInstanceId, pieceInstance] of pieceInstancesEntries) {
 			if (pieceInstance) {

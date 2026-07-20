@@ -154,7 +154,12 @@ describe('PlayoutPartInstanceModelImpl', () => {
 
 		it('snapshotRestore keeps removed current pieces tracked for persistence', async () => {
 			const partInstance = createBasicDBPartInstance()
-			const model = new PlayoutPartInstanceModelImpl(partInstance, [createBasicPieceInstance('p1')], false, {} as any)
+			const model = new PlayoutPartInstanceModelImpl(
+				partInstance,
+				[createBasicPieceInstance('p1')],
+				false,
+				{} as any
+			)
 
 			const snapshot = model.snapshotMakeCopy()
 			const insertedPieceInstance = model.insertPlannedPiece(createBasicPieceInstance('p2').piece)
