@@ -4465,10 +4465,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/diff-sequences@npm:30.0.1":
-  version: 30.0.1
-  resolution: "@jest/diff-sequences@npm:30.0.1"
-  checksum: 10/0ddb7c7ba92d6057a2ee51a9cfc2155b77cca707fe959167466ea02dcb0687018cc3c22b9622f25f3a417d6ad370e2d4dcfedf9f1410dc9c02954a7484423cc7
+"@jest/diff-sequences@npm:30.3.0":
+  version: 30.3.0
+  resolution: "@jest/diff-sequences@npm:30.3.0"
+  checksum: 10/0d5b6e1599c5e0bb702f0804e7f93bbe4911b5929c40fd6a77c06105711eae24d709c8964e8d623cc70c34b7dc7262d76a115a6eb05f1576336cdb6c46593e7c
   languageName: node
   linkType: hard
 
@@ -23649,7 +23649,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"picocolors@npm:1.1.1, picocolors@npm:^1.0.0, picocolors@npm:^1.1.1":
+"picocolors@npm:1.1.1, picocolors@npm:^1.0.0, picocolors@npm:^1.1.0, picocolors@npm:^1.1.1":
   version: 1.1.1
   resolution: "picocolors@npm:1.1.1"
   checksum: 10/e1cf46bf84886c79055fdfa9dcb3e4711ad259949e3565154b004b260cd356c5d54b31a1437ce9782624bf766272fe6b0154f5f0c744fb7af5d454d2b60db045
@@ -24652,6 +24652,13 @@ asn1@evs-broadcast/node-asn1:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10/d02ad19eb1e0fa53a1229ee6d53807eb88f903f2b9a8cac66993367f3ac7dd3b97238c783a54ccbf4145f82f6ca9a5cbd58f089846285d759c8a3259fbea8318
+  languageName: node
+  linkType: hard
+
+"powershell-utils@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "powershell-utils@npm:0.1.0"
+  checksum: 10/4cc0846bc903ef9c8ac8cc9d178185d5972160a6c8776d44cf4c27ce31c0b614fc7cd20a53e8fcaf7f5296cdb34087a5d4396bdd863492972c84f76f3cadef67
   languageName: node
   linkType: hard
 

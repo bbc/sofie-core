@@ -5,7 +5,7 @@ import { contextMenuHoldToDisplayTime } from '../../lib/lib.js'
 import { ErrorBoundary } from '../../lib/ErrorBoundary.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
 import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
-import type { PartUi, SegmentNoteCounts, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { PartCountdown } from '../RundownView/RundownTiming/PartCountdown.js'
 import { SegmentDuration } from '../RundownView/RundownTiming/SegmentDuration.js'
 import type { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { IContextMenuContext } from '../RundownView.js'
 import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { CriticalIconSmall, WarningIconSmall } from '../../lib/ui/icons/notifications.js'
+import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
 
 export function SegmentListHeader({
 	isDetached,
@@ -22,7 +22,6 @@ export function SegmentListHeader({
 	parts,
 	playlist,
 	highlight,
-	segmentNoteCounts,
 	isLiveSegment,
 	isNextSegment,
 	isQueuedSegment,
@@ -41,7 +40,6 @@ export function SegmentListHeader({
 	segment: SegmentUi
 	playlist: DBRundownPlaylist
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 	highlight: boolean
 	isLiveSegment: boolean
 	isNextSegment: boolean
@@ -76,9 +74,6 @@ export function SegmentListHeader({
 	// 	const shouldDetach = !inView && parts.length > 1 && entry.boundingClientRect.top < window.innerHeight / 2
 	// 	setDetached(shouldDetach)
 	// }
-
-	const criticalNotes = segmentNoteCounts.criticial
-	const warningNotes = segmentNoteCounts.warning
 
 	const contents = (
 		<ContextMenuTrigger
@@ -138,30 +133,13 @@ export function SegmentListHeader({
 					)}
 				</div>
 			</div>
-			{(criticalNotes > 0 || warningNotes > 0) && (
-				<div className="segment-opl__notes">
-					{criticalNotes > 0 && (
-						<div
-							className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
-							onClick={() => onHeaderNoteClick?.(segment._id, NoteSeverity.ERROR)}
-							aria-label={t('Critical problems')}
-						>
-							<CriticalIconSmall />
-							<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
-						</div>
-					)}
-					{warningNotes > 0 && (
-						<div
-							className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
-							onClick={() => onHeaderNoteClick?.(segment._id, NoteSeverity.WARNING)}
-							aria-label={t('Warnings')}
-						>
-							<WarningIconSmall />
-							<div className="segment-timeline__title__notes__count">{warningNotes}</div>
-						</div>
-					)}
-				</div>
-			)}
+
+			<SegmentHeaderNotes
+				classname="segment-opl__notes"
+				segmentId={segment._id}
+				onHeaderNoteClick={onHeaderNoteClick}
+			/>
+
 			<ErrorBoundary>
 				<SwitchViewModeButton currentMode={SegmentViewMode.List} onSwitchViewMode={onSwitchViewMode} />
 			</ErrorBoundary>

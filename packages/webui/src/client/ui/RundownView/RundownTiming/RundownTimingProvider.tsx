@@ -13,7 +13,6 @@ import {
 	findPartInstancesInQuickLoop,
 } from '../../../lib/rundownTiming.js'
 import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-
 import { sortPartInstancesInSortedSegments } from '@sofie-automation/corelib/dist/playout/playlist'
 import { RundownPlaylistClientUtil } from '../../../lib/rundownPlaylistUtil.js'
 import { getCurrentTime } from '../../../lib/systemTime.js'

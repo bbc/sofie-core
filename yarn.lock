@@ -1633,6 +1633,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tinyexec@npm:^1.0.4":
+  version: 1.1.1
+  resolution: "tinyexec@npm:1.1.1"
+  checksum: 10/480bbd7b0cdd73652e1a03ed82cec29cbde7d75e68094b65d289eb31578d467954d81af41f3a6de0bc805f6c22c89a36d24986a6c4c0349fa230dfb3924530a7
+  languageName: node
+  linkType: hard
+
 "tinylogic@npm:^2.0.0":
   version: 2.0.0
   resolution: "tinylogic@npm:2.0.0"

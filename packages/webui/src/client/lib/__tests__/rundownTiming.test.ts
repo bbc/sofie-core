@@ -5,7 +5,6 @@ import {
 import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { unprotectString, protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { RundownTimingCalculator, type RundownTimingContext, findPartInstancesInQuickLoop } from '../rundownTiming.js'

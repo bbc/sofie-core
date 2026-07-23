@@ -24,7 +24,6 @@ import {
 import { objectFromEntries } from '@sofie-automation/shared-lib/dist/lib/lib'
 import { getCurrentTime } from './systemTime.js'
 import { Settings } from '../lib/Settings.js'
-
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { CountdownType } from '@sofie-automation/blueprints-integration'
 import { RundownUtils } from './rundown.js'
