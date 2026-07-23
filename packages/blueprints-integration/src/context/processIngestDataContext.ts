@@ -4,6 +4,14 @@ import type { IngestDefaultChangesOptions, MutableIngestRundown, NrcsIngestChang
 
 export interface IProcessIngestDataContext extends IStudioContext {
 	/**
+	 * Request that `syncIngestUpdateToPartInstance` should be executed for the active PartInstances
+	 * in this ingest operation, even if it would otherwise be skipped.
+	 *
+	 * The request is one-shot and only applies to the current ingest operation.
+	 */
+	requestSyncIngestUpdateToPartInstance(): void
+
+	/**
 	 * Perform the default syncing of changes from the ingest data to the rundown.
 	 *
 	 * Please note that this may be overly aggressive at removing any changes made by user operations
