@@ -53,6 +53,7 @@ import {
 	IBlueprintShowStyleVariant,
 	IOutputLayer,
 	ISourceLayer,
+	ITranslatableMessage,
 	NoteSeverity,
 	PieceAbSessionInfo,
 	RundownPlaylistTiming,
