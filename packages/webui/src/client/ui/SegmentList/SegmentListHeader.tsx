@@ -10,7 +10,7 @@ import { PartCountdown } from '../RundownView/RundownTiming/PartCountdown.js'
 import { SegmentDuration } from '../RundownView/RundownTiming/SegmentDuration.js'
 import type { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { useTranslation } from 'react-i18next'
-import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
 import type { IContextMenuContext } from '../RundownView.js'
 import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
@@ -38,7 +38,7 @@ export function SegmentListHeader({
 	isDetached: boolean
 	isDetachedStick: boolean
 	segment: SegmentUi
-	playlist: DBRundownPlaylist
+	playlist: RundownViewPlaylist
 	parts: Array<PartUi>
 	highlight: boolean
 	isLiveSegment: boolean
