@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
 import type { IContextMenuContext } from '../RundownView.js'
