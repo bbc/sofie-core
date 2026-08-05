@@ -2,7 +2,7 @@ import { ReactiveCacheCollection } from '../../lib/ReactiveCacheCollection'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mongo'
 import { ExpectedPackageDB } from '@sofie-automation/corelib/dist/dataModel/ExpectedPackages'
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
 
 export type RundownPlaylistCompact = Pick<
@@ -28,10 +28,11 @@ export const pieceInstanceFieldsSpecifier = literal<MongoFieldSpecifierOnesStric
 	neededExpectedPackageIds: 1,
 })
 
-export type ExpectedPackageDBCompact = Pick<ExpectedPackageDB, '_id' | 'package'>
+export type ExpectedPackageDBCompact = Pick<ExpectedPackageDB, '_id' | 'rundownId' | 'package'>
 
 export const expectedPackageDBFieldsSpecifier = literal<MongoFieldSpecifierOnesStrict<ExpectedPackageDB>>({
 	_id: 1,
+	rundownId: 1,
 	package: 1,
 })
 

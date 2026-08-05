@@ -2,6 +2,11 @@ import { SYSTEM_ID, GENESIS_SYSTEM_VERSION } from '@sofie-automation/meteor-lib/
 import { parseVersion } from '../systemStatus/semverUtils'
 import { getCurrentTime } from '../lib/lib'
 import { stringifyError } from '@sofie-automation/shared-lib/dist/lib/stringifyError'
+import {
+	DEFAULT_MAXIMUM_DATA_AGE,
+	DEFAULT_CONFIRM_KEY_CODE,
+	DEFAULT_POISON_KEY,
+} from '@sofie-automation/shared-lib/dist/core/constants'
 import { Meteor } from 'meteor/meteor'
 import { prepareMigration, runMigration } from '../migration/databaseMigration'
 import { CURRENT_SYSTEM_VERSION } from '../migration/currentSystemVersion'
@@ -18,6 +23,8 @@ import { checkDatabaseVersions } from './checkDatabaseVersions'
 import PLazy from 'p-lazy'
 import { getCoreSystemAsync } from './collection'
 import { wrapDefaultObject } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+const mosPkgJson = require('@mos-connection/helper/package.json')
+const superTimelinePkgJson = require('superfly-timeline/package.json')
 
 export { PackageInfo }
 
@@ -77,6 +84,9 @@ async function initializeCoreSystem() {
 					heading: '',
 					message: '',
 				},
+				maximumDataAge: DEFAULT_MAXIMUM_DATA_AGE,
+				confirmKeyCode: DEFAULT_CONFIRM_KEY_CODE,
+				poisonKey: DEFAULT_POISON_KEY,
 			}),
 			lastBlueprintConfig: undefined,
 		})
@@ -125,30 +135,10 @@ function onCoreSystemChanged() {
 export const RelevantSystemVersions = PLazy.from(async () => {
 	const versions: { [name: string]: string } = {}
 
-	const dependencies: any = PackageInfo.dependencies
-	if (dependencies) {
-		const libNames: string[] = ['@mos-connection/helper', 'superfly-timeline']
-
-		const getRealVersion = async (name: string, fallback: string): Promise<string> => {
-			try {
-				const pkgInfo = require(name + '/package.json')
-				return pkgInfo.version
-			} catch (e) {
-				logger.warn(`Failed to read version of package "${name}": ${stringifyError(e)}`)
-				return parseVersion(fallback)
-			}
-		}
-
-		await Promise.all([
-			...libNames.map(async (name) => {
-				versions[name] = await getRealVersion(name, dependencies[name])
-			}),
-		])
-		versions['core'] = PackageInfo.versionExtended || PackageInfo.version // package version
-		versions['timeline-state-resolver-types'] = TMP_TSR_VERSION
-	} else {
-		logger.error(`Core package dependencies missing`)
-	}
+	versions['@mos-connection/helper'] = mosPkgJson.version
+	versions['superfly-timeline'] = superTimelinePkgJson.version
+	versions['core'] = PackageInfo.versionExtended || PackageInfo.version // package version
+	versions['timeline-state-resolver-types'] = TMP_TSR_VERSION
 
 	return versions
 })

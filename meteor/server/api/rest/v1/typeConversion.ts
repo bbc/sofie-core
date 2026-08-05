@@ -55,7 +55,7 @@ import {
 	DEFAULT_FALLBACK_PART_DURATION,
 } from '@sofie-automation/shared-lib/dist/core/constants'
 import { Bucket } from '@sofie-automation/corelib/dist/dataModel/Bucket'
-import { ForceQuickLoopAutoNext } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
+import { ForceQuickLoopAutoNext, ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import { PlaylistSnapshotOptions, SystemSnapshotOptions } from '@sofie-automation/meteor-lib/dist/api/shapshot'
 
 /*
@@ -175,7 +175,7 @@ export async function APIShowStyleVariantFrom(
 	}
 }
 
-export function sourceLayerFrom(apiSourceLayer: APISourceLayer): ISourceLayer {
+export function sourceLayerFrom(apiSourceLayer: APISourceLayer): Complete<ISourceLayer> {
 	let layerType: SourceLayerType
 	switch (apiSourceLayer.layerType) {
 		case 'audio':
@@ -235,10 +235,21 @@ export function sourceLayerFrom(apiSourceLayer: APISourceLayer): ISourceLayer {
 		_rank: apiSourceLayer.rank,
 		type: layerType,
 		exclusiveGroup: apiSourceLayer.exclusiveGroup,
+		isRemoteInput: apiSourceLayer.isRemoteInput,
+		isGuestInput: apiSourceLayer.isGuestInput,
+		isClearable: apiSourceLayer.isClearable,
+		isSticky: apiSourceLayer.isSticky,
+		stickyOriginalOnly: apiSourceLayer.stickyOriginalOnly,
+		isQueueable: apiSourceLayer.isQueueable,
+		isHidden: apiSourceLayer.isHidden,
+		allowDisable: apiSourceLayer.allowDisable,
+		onPresenterScreen: apiSourceLayer.onPresenterScreen,
+		onListViewColumn: apiSourceLayer.onListViewColumn,
+		onListViewAdLibColumn: apiSourceLayer.onListViewAdLibColumn,
 	}
 }
 
-export function APISourceLayerFrom(sourceLayer: ISourceLayer): APISourceLayer {
+export function APISourceLayerFrom(sourceLayer: ISourceLayer): Complete<APISourceLayer> {
 	let layerType: APISourceLayer['layerType']
 	switch (sourceLayer.type) {
 		case SourceLayerType.AUDIO:
@@ -298,6 +309,17 @@ export function APISourceLayerFrom(sourceLayer: ISourceLayer): APISourceLayer {
 		rank: sourceLayer._rank,
 		layerType,
 		exclusiveGroup: sourceLayer.exclusiveGroup,
+		isRemoteInput: sourceLayer.isRemoteInput,
+		isGuestInput: sourceLayer.isGuestInput,
+		isClearable: sourceLayer.isClearable,
+		isSticky: sourceLayer.isSticky,
+		stickyOriginalOnly: sourceLayer.stickyOriginalOnly,
+		isQueueable: sourceLayer.isQueueable,
+		isHidden: sourceLayer.isHidden,
+		allowDisable: sourceLayer.allowDisable,
+		onPresenterScreen: sourceLayer.onPresenterScreen,
+		onListViewColumn: sourceLayer.onListViewColumn,
+		onListViewAdLibColumn: sourceLayer.onListViewAdLibColumn,
 	}
 }
 
@@ -424,8 +446,18 @@ export function studioSettingsFrom(apiStudioSettings: APIStudioSettings): Comple
 		allowPieceDirectPlay: apiStudioSettings.allowPieceDirectPlay ?? true, // Backwards compatible
 		enableBuckets: apiStudioSettings.enableBuckets ?? true, // Backwards compatible
 		enableEvaluationForm: apiStudioSettings.enableEvaluationForm ?? true, // Backwards compatible
+		shelfAdlibButtonSize: apiStudioSettings.shelfAdlibButtonSize ?? ShelfButtonSize.LARGE,
 		mockPieceContentStatus: apiStudioSettings.mockPieceContentStatus,
 		rundownGlobalPiecesPrepareTime: apiStudioSettings.rundownGlobalPiecesPrepareTime,
+		autoRewindLeavingSegment: apiStudioSettings.autoRewindLeavingSegment,
+		disableBlurBorder: apiStudioSettings.disableBlurBorder,
+		allowGrabbingTimeline: apiStudioSettings.allowGrabbingTimeline,
+		useCountdownToFreezeFrame: apiStudioSettings.useCountdownToFreezeFrame,
+		// defaultShelfDisplayOptions is intentionally not exposed through the REST API
+		defaultShelfDisplayOptions: undefined,
+		defaultDisplayDuration: apiStudioSettings.defaultDisplayDuration,
+		defaultTimeScale: apiStudioSettings.defaultTimeScale,
+		followOnAirSegmentsHistory: apiStudioSettings.followOnAirSegmentsHistory,
 	}
 }
 
@@ -452,8 +484,16 @@ export function APIStudioSettingsFrom(settings: IStudioSettings): Complete<APISt
 		allowPieceDirectPlay: settings.allowPieceDirectPlay,
 		enableBuckets: settings.enableBuckets,
 		enableEvaluationForm: settings.enableEvaluationForm,
+		shelfAdlibButtonSize: settings.shelfAdlibButtonSize,
 		mockPieceContentStatus: settings.mockPieceContentStatus,
 		rundownGlobalPiecesPrepareTime: settings.rundownGlobalPiecesPrepareTime,
+		autoRewindLeavingSegment: settings.autoRewindLeavingSegment,
+		disableBlurBorder: settings.disableBlurBorder,
+		allowGrabbingTimeline: settings.allowGrabbingTimeline,
+		useCountdownToFreezeFrame: settings.useCountdownToFreezeFrame,
+		defaultDisplayDuration: settings.defaultDisplayDuration,
+		defaultTimeScale: settings.defaultTimeScale,
+		followOnAirSegmentsHistory: settings.followOnAirSegmentsHistory,
 	}
 }
 

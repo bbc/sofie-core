@@ -9,7 +9,7 @@ import { OnSetAsNextContext } from '../context/index.js'
 import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
-import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 
 describe('Test blueprint api context', () => {
 	async function getTestee(setManually = false, rehearsal?: boolean) {
@@ -186,7 +186,25 @@ describe('Test blueprint api context', () => {
 
 			await context.updatePartInstance('next', { title: 'My Part' } as Partial<IBlueprintMutatablePart<unknown>>)
 			expect(mockActionService.updatePartInstance).toHaveBeenCalledTimes(1)
-			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith('next', { title: 'My Part' })
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith('next', { title: 'My Part' }, {})
+		})
+
+		test('updatePartInstance with instanceProps', async () => {
+			const { context, mockActionService } = await getTestee()
+
+			await context.updatePartInstance(
+				'next',
+				{ title: 'My Part' } as Partial<IBlueprintMutatablePart<unknown>>,
+				{ invalidReason: { key: 'test' } }
+			)
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledTimes(1)
+			expect(mockActionService.updatePartInstance).toHaveBeenCalledWith(
+				'next',
+				{ title: 'My Part' },
+				{
+					invalidReason: { key: 'test' },
+				}
+			)
 		})
 
 		test('manuallySelected when false', async () => {

@@ -16,9 +16,9 @@ import {
 	DBRundownPlaylist,
 	QuickLoopMarker,
 	RundownHoldState,
-	RundownTTimer,
 	SelectedPartInstance,
-} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import { RundownTTimer } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import { ReadonlyDeep } from 'type-fest'
 import { JobContext } from '../../../jobs/index.js'
 import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
@@ -82,6 +82,7 @@ import {
 } from '../../timeline/generate.js'
 import { deNowifyMultiGatewayTimeline } from '../../timeline/multi-gateway.js'
 import { validateTTimerIndex } from '../../tTimers.js'
+import { SegmentOrphanedReason } from '@sofie-automation/corelib/dist/dataModel/Segment'
 
 export class PlayoutModelReadonlyImpl implements PlayoutModelReadonly {
 	public readonly playlistId: RundownPlaylistId
@@ -565,6 +566,19 @@ export class PlayoutModelImpl extends PlayoutModelReadonlyImpl implements Playou
 	}
 
 	deactivatePlaylist(): void {
+		// Make sure that the part instances are marked as reset
+		for (const partInstance of this.loadedPartInstances) {
+			const segment = this.findSegment(partInstance.partInstance.segmentId)
+			if (segment?.segment.orphaned === SegmentOrphanedReason.ADLIB_TESTING) {
+				partInstance.markAsReset()
+			}
+		}
+
+		// Clean up segments after AdlibTesting
+		for (const rundown of this.rundowns) {
+			rundown.removeAdlibTestingSegment()
+		}
+
 		delete this.playlistImpl.activationId
 
 		if (this.currentPartInstance) {

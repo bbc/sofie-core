@@ -12,6 +12,7 @@ import {
 	StatusCode,
 	TSR,
 } from '@sofie-automation/blueprints-integration'
+import { ShelfButtonSize } from '@sofie-automation/shared-lib/dist/core/model/StudioSettings'
 import {
 	PeripheralDeviceType,
 	PeripheralDeviceCategory,
@@ -72,7 +73,7 @@ import {
 	setupDefaultStudioEnvironment,
 } from '../../__mocks__/helpers/database'
 import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { Settings } from '../Settings'
+import { DEFAULT_MAXIMUM_DATA_AGE } from '@sofie-automation/shared-lib/dist/core/constants'
 import { SofieIngestCacheType } from '@sofie-automation/corelib/dist/dataModel/SofieIngestDataCache'
 import { ObjectOverrideSetOp, ObjectWithOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
 import { PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
@@ -441,7 +442,7 @@ describe('cronjobs', () => {
 				clientAddress: '',
 				context: '',
 				method: '',
-				timestamp: lib.getCurrentTime() - Settings.maximumDataAge - 1000,
+				timestamp: lib.getCurrentTime() - DEFAULT_MAXIMUM_DATA_AGE - 1000,
 			})
 
 			await runCronjobs()
@@ -476,7 +477,7 @@ describe('cronjobs', () => {
 				type: SnapshotType.DEBUG,
 				version: '',
 				// Very old:
-				created: lib.getCurrentTime() - Settings.maximumDataAge - 1000,
+				created: lib.getCurrentTime() - DEFAULT_MAXIMUM_DATA_AGE - 1000,
 			})
 
 			await runCronjobs()
@@ -509,6 +510,7 @@ describe('cronjobs', () => {
 				name: props.deviceName,
 				status: {
 					statusCode: StatusCode.GOOD,
+					statusDetails: [],
 				},
 				token: '',
 				...props,
@@ -590,6 +592,7 @@ describe('cronjobs', () => {
 					frameRate: 25,
 					mediaPreviewsUrl: '',
 					minimumTakeSpan: 1000,
+					shelfAdlibButtonSize: ShelfButtonSize.LARGE,
 				}),
 				routeSetsWithOverrides: newObjectWithOverrides({}),
 				routeSetExclusivityGroupsWithOverrides: newObjectWithOverrides({}),

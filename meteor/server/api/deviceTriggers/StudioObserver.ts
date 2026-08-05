@@ -10,7 +10,7 @@ import { MongoFieldSpecifierOnesStrict } from '@sofie-automation/corelib/dist/mo
 import EventEmitter from 'events'
 import { Meteor } from 'meteor/meteor'
 import _ from 'underscore'
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { DBShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
 import { logger } from '../../logging'
@@ -212,6 +212,8 @@ export class StudioObserver extends EventEmitter {
 		this.nextProps = undefined
 
 		const { activePlaylistId, activationId } = this.currentProps
+		const rundownContentChanged = this.#rundownContentChanged
+		const pieceInstancesChanged = this.#pieceInstancesChanged
 
 		this.showStyleBaseId = showStyleBaseId
 
@@ -219,7 +221,7 @@ export class StudioObserver extends EventEmitter {
 			logger.silly(`Creating new RundownContentObserver`)
 
 			const obs1 = await RundownContentObserver.create(activePlaylistId, showStyleBaseId, rundownIds, (cache) => {
-				return this.#rundownContentChanged(showStyleBaseId, cache)
+				return rundownContentChanged(showStyleBaseId, cache)
 			})
 
 			return () => {
@@ -228,11 +230,9 @@ export class StudioObserver extends EventEmitter {
 		})
 
 		this.#pieceInstancesLiveQuery = await PieceInstancesObserver.create(activationId, showStyleBaseId, (cache) => {
-			const cleanupChanges = this.#pieceInstancesChanged(showStyleBaseId, cache)
+			const cleanupChanges = pieceInstancesChanged(showStyleBaseId, cache)
 
-			return () => {
-				cleanupChanges?.()
-			}
+			return () => cleanupChanges?.()
 		})
 
 		if (this.#disposed) {
@@ -249,5 +249,6 @@ export class StudioObserver extends EventEmitter {
 		this.#playlistInStudioLiveQuery.stop()
 		this.updatePlaylistInStudio.cancel()
 		this.#rundownsLiveQuery?.stop()
+		this.#pieceInstancesLiveQuery?.stop()
 	}
 }

@@ -14,9 +14,11 @@ import {
 	IBlueprintPieceInstance,
 	OmitId,
 	IBlueprintMutatablePart,
+	IBlueprintMutatablePartInstance,
 	IBlueprintPartInstance,
 	SomeContent,
 	WithTimeline,
+	Time,
 } from '@sofie-automation/blueprints-integration'
 import { postProcessPieces, postProcessTimelineObjects } from '../postProcess.js'
 import {
@@ -24,6 +26,7 @@ import {
 	convertPieceInstanceToBlueprints,
 	convertPartInstanceToBlueprints,
 	convertPartialBlueprintMutablePartToCore,
+	convertPartialBlueprintMutatablePartInstanceToCore,
 } from './lib.js'
 import { DBRundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import { JobContext, JobStudio, ProcessedShowStyleCompound } from '../../jobs/index.js'
@@ -34,11 +37,8 @@ import {
 import { EXPECTED_INGEST_TO_PLAYOUT_TIME } from '@sofie-automation/shared-lib/dist/core/constants'
 import { getCurrentTime } from '../../lib/index.js'
 import { TTimersService } from './services/TTimersService.js'
-import type {
-	DBRundownPlaylist,
-	RundownTTimer,
-	RundownTTimerIndex,
-} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import { RundownTTimer, RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
 import type { IPlaylistTTimer } from '@sofie-automation/blueprints-integration/dist/context/tTimersContext'
 
 export class SyncIngestUpdateToPartInstanceContext
@@ -59,6 +59,10 @@ export class SyncIngestUpdateToPartInstanceContext
 
 	public get changedTTimers(): RundownTTimer[] {
 		return Array.from(this.#changedTTimers.values())
+	}
+
+	public get startedPlayback(): Time | undefined {
+		return this.#playoutModel.playlist.startedPlayback
 	}
 
 	constructor(
@@ -201,7 +205,10 @@ export class SyncIngestUpdateToPartInstanceContext
 
 		return convertPieceInstanceToBlueprints(pieceInstance.pieceInstance)
 	}
-	updatePartInstance(updatePart: Partial<IBlueprintMutatablePart>): IBlueprintPartInstance {
+	updatePartInstance(
+		updatePart: Partial<IBlueprintMutatablePart>,
+		instanceProps: Partial<IBlueprintMutatablePartInstance> = {}
+	): IBlueprintPartInstance {
 		if (!this.#partInstance) throw new Error(`PartInstance has been removed`)
 
 		// for autoNext, the new expectedDuration cannot be shorter than the time a part has been on-air for
@@ -219,8 +226,24 @@ export class SyncIngestUpdateToPartInstanceContext
 			updatePart,
 			this.showStyleCompound.blueprintId
 		)
+		const playoutUpdatePartInstance = convertPartialBlueprintMutatablePartInstanceToCore(
+			instanceProps,
+			this.showStyleCompound.blueprintId
+		)
 
-		if (!this.#partInstance.updatePartProps(playoutUpdatePart)) {
+		const partPropsUpdated = this.#partInstance.updatePartProps(playoutUpdatePart)
+		let instancePropsUpdated = false
+
+		if (playoutUpdatePartInstance) {
+			instancePropsUpdated = true
+
+			if (this.playStatus === 'next') {
+				// Only allow changing the invalidReason for the 'next' PartInstance
+				this.#partInstance.setInvalidReason(playoutUpdatePartInstance.invalidReason)
+			}
+		}
+
+		if (!partPropsUpdated && !instancePropsUpdated) {
 			throw new Error(`Cannot update PartInstance. Some valid properties must be defined`)
 		}
 

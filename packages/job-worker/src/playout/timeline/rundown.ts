@@ -7,7 +7,10 @@ import {
 } from '@sofie-automation/blueprints-integration'
 import { PartInstanceId, PieceInstanceId, PieceInstanceInfiniteId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import { PieceInstanceInfinite } from '@sofie-automation/corelib/dist/dataModel/PieceInstance'
-import { DBRundownPlaylist, RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import {
+	DBRundownPlaylist,
+	RundownHoldState,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import {
 	TimelineObjGroupPart,
 	TimelineObjRundown,
@@ -46,6 +49,24 @@ export interface RundownTimelineTimingContext {
 export interface RundownTimelineResult {
 	timeline: (TimelineObjRundown & OnGenerateTimelineObjExt)[]
 	timingContext: RundownTimelineTimingContext | undefined
+}
+
+function getAutoNextExpectedDurationExtension(
+	currentPartInfo: SelectedPartInstanceTimelineInfo,
+	nextPartTimings: PartCalculatedTimings | undefined
+): number {
+	if (!nextPartTimings) return 0
+
+	// Keepalive and outTransition extend the effective expectedDuration, but preroll must stay unchanged.
+	const requiredExtension = Math.max(
+		0,
+		nextPartTimings.fromPartKeepalive,
+		currentPartInfo.partInstance.part.outTransition?.duration ?? 0
+	)
+
+	const availablePostrollDuration = currentPartInfo.partInstance.part.availablePostrollDuration ?? 0
+
+	return Math.max(0, Math.min(requiredExtension, availablePostrollDuration))
 }
 
 export function buildTimelineObjsForRundown(
@@ -136,7 +157,11 @@ export function buildTimelineObjsForRundown(
 			: new Map()
 
 	// The startTime of this start is used as the reference point for the calculated timings, so we can use 'now' and everything will lie after this point
-	const currentPartEnable = createCurrentPartGroupEnable(partInstancesInfo.current, !!partInstancesInfo.next)
+	const currentPartEnable = createCurrentPartGroupEnable(
+		partInstancesInfo.current,
+		!!partInstancesInfo.next,
+		partInstancesInfo.next?.calculatedTimings
+	)
 	const currentPartGroup = createPartGroup(partInstancesInfo.current.partInstance, currentPartEnable)
 
 	const timingContext: RundownTimelineTimingContext = {
@@ -222,7 +247,8 @@ export function buildTimelineObjsForRundown(
 
 function createCurrentPartGroupEnable(
 	currentPartInfo: SelectedPartInstanceTimelineInfo,
-	hasNextPart: boolean
+	hasNextPart: boolean,
+	nextPartTimings: PartCalculatedTimings | undefined
 ): PartEnable {
 	// The startTime of this start is used as the reference point for the calculated timings, so we can use 'now' and everything will lie after this point
 	const currentPartEnable: PartEnable = { start: 'now' }
@@ -236,9 +262,12 @@ function createCurrentPartGroupEnable(
 		currentPartInfo.partInstance.part.autoNext &&
 		currentPartInfo.partInstance.part.expectedDuration !== undefined
 	) {
+		const expectedDurationExtension = getAutoNextExpectedDurationExtension(currentPartInfo, nextPartTimings)
+
 		// If there is a valid autonext out of the current part, then calculate the duration
 		currentPartEnable.duration =
 			currentPartInfo.partInstance.part.expectedDuration +
+			expectedDurationExtension +
 			currentPartInfo.calculatedTimings.toPartDelay +
 			currentPartInfo.calculatedTimings.toPartPostroll // autonext should have the postroll added to it to not confuse the timeline
 

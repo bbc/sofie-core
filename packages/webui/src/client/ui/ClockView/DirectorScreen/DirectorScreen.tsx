@@ -1,8 +1,11 @@
 import ClassNames from 'classnames'
-import { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
-import { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer.js'
-import { DBRundownPlaylist, ABSessionAssignment } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
+import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
+import type { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer.js'
+import type {
+	DBRundownPlaylist,
+	ABSessionAssignment,
+} from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import type { Rundown } from '@sofie-automation/corelib/dist/dataModel/Rundown'
 import {
 	useSubscription,
 	useSubscriptions,
@@ -16,17 +19,17 @@ import { PieceNameContainer } from '../ClockViewPieceIcons/ClockViewPieceName.js
 import { Timediff } from '../Timediff.js'
 import { RundownUtils } from '../../../lib/rundown.js'
 import { PieceLifespan, SourceLayerType } from '@sofie-automation/blueprints-integration'
-import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
+import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { PieceFreezeContainer } from '../ClockViewPieceIcons/ClockViewFreezeCount.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
-import {
+import type {
 	RundownId,
 	RundownPlaylistId,
 	ShowStyleBaseId,
 	ShowStyleVariantId,
 	StudioId,
 } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
+import type { DBShowStyleVariant } from '@sofie-automation/corelib/dist/dataModel/ShowStyleVariant'
 import { calculatePartInstanceExpectedDurationWithTransition } from '@sofie-automation/corelib/dist/playout/timings'
 import { UIShowStyleBases, UIStudios } from '../../Collections.js'
 import { PieceInstances, RundownPlaylists, Rundowns, ShowStyleVariants } from '../../../collections/index.js'
@@ -40,14 +43,13 @@ import { CurrentPartOrSegmentRemaining } from '../../RundownView/RundownHeader/C
 import { AdjustLabelFit } from '../../util/AdjustLabelFit.js'
 import { AutoNextStatus } from '../../RundownView/RundownTiming/AutoNextStatus.js'
 import { useTranslation } from 'react-i18next'
-import { DBShowStyleBase, UIShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
-import { TTimerDisplay } from '../TTimerDisplay.js'
-import { getDefaultTTimer } from '../../../lib/tTimerUtils.js'
-import { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance.js'
+import type { DBShowStyleBase, UIShowStyleBase } from '@sofie-automation/corelib/dist/dataModel/ShowStyleBase'
+import type { PieceInstance } from '@sofie-automation/corelib/dist/dataModel/PieceInstance.js'
 import { DirectorScreenTop } from './DirectorScreenTop.js'
 import { useTiming } from '../../RundownView/RundownTiming/withTiming.js'
-import { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
-import { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
+import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
+import type { PartInstance } from '@sofie-automation/corelib/src/dataModel/PartInstance.js'
+import { RundownStatusBar } from '../RundownStatusBar.js'
 
 interface SegmentUi extends DBSegment {
 	items: Array<PartUi>
@@ -139,7 +141,6 @@ export interface DirectorScreenTrackedProps {
 	nextShowStyleBaseId: ShowStyleBaseId | undefined
 	showStyleBaseIds: ShowStyleBaseId[]
 	rundownIds: RundownId[]
-	partInstanceToCountTimeFrom: PartInstance | undefined
 }
 
 function getShowStyleBaseIdSegmentPartUi(
@@ -268,7 +269,6 @@ const getDirectorScreenReactive = (props: DirectorScreenProps): DirectorScreenTr
 	let nextSegment: SegmentUi | undefined = undefined
 	let nextPartInstanceUi: PartUi | undefined = undefined
 	let nextShowStyleBaseId: ShowStyleBaseId | undefined = undefined
-	let partInstanceToCountTimeFromUi: PartInstance | undefined = undefined
 
 	if (playlist) {
 		rundowns = RundownPlaylistCollectionUtil.getRundownsOrdered(playlist)
@@ -281,10 +281,7 @@ const getDirectorScreenReactive = (props: DirectorScreenProps): DirectorScreenTr
 		}
 
 		showStyleBaseIds = rundowns.map((rundown) => rundown.showStyleBaseId)
-		const { currentPartInstance, nextPartInstance, partInstanceToCountTimeFrom } =
-			RundownPlaylistClientUtil.getSelectedPartInstances(playlist)
-
-		partInstanceToCountTimeFromUi = partInstanceToCountTimeFrom
+		const { currentPartInstance, nextPartInstance } = RundownPlaylistClientUtil.getSelectedPartInstances(playlist)
 
 		const partInstance = currentPartInstance ?? nextPartInstance
 		if (partInstance) {
@@ -354,7 +351,6 @@ const getDirectorScreenReactive = (props: DirectorScreenProps): DirectorScreenTr
 		nextSegment,
 		nextPartInstance: nextPartInstanceUi,
 		nextShowStyleBaseId,
-		partInstanceToCountTimeFrom: partInstanceToCountTimeFromUi,
 	}
 }
 
@@ -378,6 +374,7 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 
 	useSubscription(CorelibPubSub.segments, rundownIds, {})
 	useSubscription(CorelibPubSub.parts, rundownIds, null)
+	useSubscription(MeteorPubSub.uiParts, playlist?._id ?? null)
 	useSubscription(MeteorPubSub.uiPartInstances, playlist?.activationId ?? null)
 	useSubscriptions(
 		MeteorPubSub.uiShowStyleBase,
@@ -386,11 +383,7 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 	useSubscription(CorelibPubSub.showStyleVariants, null, showStyleVariantIds)
 	useSubscription(MeteorPubSub.rundownLayouts, showStyleBaseIds)
 
-	const {
-		currentPartInstance,
-		nextPartInstance,
-		partInstanceToCountTimeFrom: firstTakenPartInstance,
-	} = useTracker(
+	const { currentPartInstance, nextPartInstance } = useTracker(
 		() => {
 			const playlist = RundownPlaylists.findOne(props.playlistId, {
 				fields: {
@@ -408,7 +401,6 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 					currentPartInstance: undefined,
 					nextPartInstance: undefined,
 					previousPartInstance: undefined,
-					partInstanceToCountTimeFrom: undefined,
 				}
 			}
 		},
@@ -417,14 +409,12 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 			currentPartInstance: undefined,
 			nextPartInstance: undefined,
 			previousPartInstance: undefined,
-			partInstanceToCountTimeFrom: undefined,
 		}
 	)
 
 	useSubscriptions(CorelibPubSub.pieceInstances, [
 		currentPartInstance && [[currentPartInstance.rundownId], [currentPartInstance._id], {}],
 		nextPartInstance && [[nextPartInstance.rundownId], [nextPartInstance._id], {}],
-		firstTakenPartInstance && [[firstTakenPartInstance.rundownId], [firstTakenPartInstance._id], {}],
 	])
 }
 
@@ -446,7 +436,6 @@ function DirectorScreenRender({
 	nextPartInstance,
 	nextSegment,
 	rundownIds,
-	partInstanceToCountTimeFrom,
 }: Readonly<DirectorScreenProps & DirectorScreenTrackedProps>) {
 	useSetDocumentClass('dark', 'xdark')
 	const { t } = useTranslation()
@@ -571,11 +560,9 @@ function DirectorScreenRender({
 			}
 		}
 
-		const activeTTimer = getDefaultTTimer(playlist.tTimers)
-
 		return (
 			<div className="director-screen">
-				<DirectorScreenTop partInstanceToCountTimeFrom={partInstanceToCountTimeFrom} playlist={playlist} />
+				<DirectorScreenTop playlist={playlist} />
 				<div className="director-screen__body">
 					{
 						// Current Part:
@@ -758,12 +745,8 @@ function DirectorScreenRender({
 							</>
 						) : null}
 					</div>
-					{!!activeTTimer && (
-						<div className="director-screen__body__t-timer">
-							<TTimerDisplay timer={activeTTimer} />
-						</div>
-					)}
 				</div>
+				<RundownStatusBar playlist={playlist} className="director-screen__bottom-bar" showPlaylistName={false} />
 			</div>
 		)
 	}

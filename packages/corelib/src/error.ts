@@ -64,6 +64,7 @@ export enum UserErrorMessage {
 	IdempotencyKeyAlreadyUsed = 48,
 	RateLimitExceeded = 49,
 	SystemSingleStudio = 50,
+	TakePartInstanceInvalid = 51,
 }
 
 const UserErrorMessagesTranslations: { [key in UserErrorMessage]: string } = {
@@ -116,7 +117,7 @@ const UserErrorMessagesTranslations: { [key in UserErrorMessage]: string } = {
 	[UserErrorMessage.DeviceAlreadyAttachedToStudio]: t(`Device is already attached to another studio.`),
 	[UserErrorMessage.ShowStyleBaseNotFound]: t(`ShowStyleBase not found!`),
 	[UserErrorMessage.NoMigrationsToApply]: t(`No migrations to apply`),
-	[UserErrorMessage.ValidationFailed]: t('Validation failed!'),
+	[UserErrorMessage.ValidationFailed]: t('Validation failed! {{message}}'),
 	[UserErrorMessage.AdlibTestingNotAllowed]: t(`Rehearsal mode is not allowed`),
 	[UserErrorMessage.AdlibTestingAlreadyActive]: t(`Rehearsal mode is already active`),
 	[UserErrorMessage.BucketNotFound]: t(`Bucket not found!`),
@@ -126,6 +127,7 @@ const UserErrorMessagesTranslations: { [key in UserErrorMessage]: string } = {
 	[UserErrorMessage.IdempotencyKeyAlreadyUsed]: t(`Idempotency-Key is already used`),
 	[UserErrorMessage.RateLimitExceeded]: t(`Rate limit exceeded`),
 	[UserErrorMessage.SystemSingleStudio]: t(`System must have exactly one studio`),
+	[UserErrorMessage.TakePartInstanceInvalid]: t(`Part has issues and cannot be taken`),
 }
 
 export interface SerializedUserError {
