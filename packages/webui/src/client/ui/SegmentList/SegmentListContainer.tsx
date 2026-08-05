@@ -201,7 +201,6 @@ export const SegmentListContainer = withResolvedSegment<IProps>(function Segment
 				parts={props.parts}
 				playlist={props.playlist}
 				currentPartWillAutoNext={currentPartWillAutoNext}
-				segmentNoteCounts={props.segmentNoteCounts}
 				isLiveSegment={isLiveSegment}
 				isNextSegment={isNextSegment}
 				isQueuedSegment={props.playlist.queuedSegmentId === props.segmentui._id}
