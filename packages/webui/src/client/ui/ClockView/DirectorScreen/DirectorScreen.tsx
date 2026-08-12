@@ -375,6 +375,7 @@ function useDirectorScreenSubscriptions(props: DirectorScreenProps): void {
 	useSubscription(CorelibPubSub.segments, rundownIds, {})
 	useSubscription(CorelibPubSub.uiParts, playlist?._id ?? null)
 	useSubscription(CorelibPubSub.uiPartInstances, playlist?.activationId ?? null)
+	useSubscription(CorelibPubSub.playlistTimingState, props.playlistId)
 	useSubscriptions(
 		MeteorPubSub.uiShowStyleBase,
 		showStyleBaseIds.map((id) => [id])
