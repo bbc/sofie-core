@@ -5,7 +5,7 @@ import type { TFunction } from 'i18next'
 import ClassNames from 'classnames'
 import type { RundownViewPlaylist } from '../../../lib/rundownPlaylistProjection.js'
 import type { SegmentUi, PartUi, IOutputLayerUi } from '../SegmentTimelineContainer.js'
-import { TimingTickResolution } from '../../RundownView/RundownTiming/withTiming.js'
+import { TimingTickResolution } from '../../RundownView/RundownTiming/RundownTiming.js'
 import {
 	useSegmentPartTimings,
 	useTimingNow,
