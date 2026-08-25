@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { IContextMenuContext } from '../RundownView.js'
-import { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import type { IContextMenuContext } from '../RundownView.js'
+import type { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { contextMenuHoldToDisplayTime, useCombinedRefs, useRundownViewEventBusListener } from '../../lib/lib.js'
 import { useTranslation } from 'react-i18next'
@@ -30,6 +30,7 @@ import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js
 import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isLoopRunning } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
+import { HOVER_TIMEOUT } from '../Shelf/DashboardPieceButton/types.js'
 
 interface IProps {
 	id: string

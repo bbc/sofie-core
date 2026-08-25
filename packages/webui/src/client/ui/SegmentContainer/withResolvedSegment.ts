@@ -15,7 +15,7 @@ import type {
 	RundownLayoutFilterBase,
 	RundownViewLayout,
 } from '@sofie-automation/meteor-lib/dist/collections/RundownLayouts'
-import { SegmentViewMode } from './SegmentViewModes.js'
+import type { SegmentViewMode } from './SegmentViewModes.js'
 import { PlaylistTiming } from '@sofie-automation/corelib/dist/playout/rundownTiming'
 import type { AdlibSegmentUi } from '../../lib/shelf.js'
 import type {

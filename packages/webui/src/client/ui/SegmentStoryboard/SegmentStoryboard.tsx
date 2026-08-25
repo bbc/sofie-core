@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
-import { IContextMenuContext } from '../RundownView.js'
-import { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
+import type { IContextMenuContext } from '../RundownView.js'
+import type { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 import { SegmentDuration } from '../RundownView/RundownTiming/SegmentDuration.js'
 import { PartCountdown } from '../RundownView/RundownTiming/PartCountdown.js'
@@ -45,6 +44,9 @@ import {
 	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
 } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
+import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
+import { HOVER_TIMEOUT } from '../Shelf/DashboardPieceButton/types.js'
+import { RundownHoldState } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist/RundownPlaylist.js'
 
 interface IProps {
 	id: string

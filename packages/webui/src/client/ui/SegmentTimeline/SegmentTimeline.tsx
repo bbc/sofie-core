@@ -4,7 +4,6 @@ import { type WithTranslation, withTranslation } from 'react-i18next'
 import ClassNames from 'classnames'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
 import type { SegmentUi, PartUi, IOutputLayerUi } from './SegmentTimelineContainer.js'
 import { TimelineGrid } from './TimelineGrid.js'
@@ -39,14 +38,13 @@ import { DEFAULT_DISPLAY_DURATION } from '@sofie-automation/shared-lib/dist/core
 import {
 	type IOutputLayer,
 	type ISourceLayer,
-	NoteSeverity,
+	type NoteSeverity,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
 import { SegmentTimelineZoomButtons } from './SegmentTimelineZoomButtons.js'
 import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
-import { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist'
+import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import {
 	withTiming,
 	TimingTickResolution,
@@ -62,6 +60,7 @@ import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js
 import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isLoopRunning, wrapPartToTemporaryInstance } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
 import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
+import { RundownHoldState } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist/RundownPlaylist.js'
 
 interface IProps {
 	id: string

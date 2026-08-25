@@ -54,6 +54,7 @@ import {
 	IOutputLayer,
 	ISourceLayer,
 	ITranslatableMessage,
+	NoteSeverity,
 	PieceAbSessionInfo,
 	RundownPlaylistTiming,
 } from '@sofie-automation/blueprints-integration'
