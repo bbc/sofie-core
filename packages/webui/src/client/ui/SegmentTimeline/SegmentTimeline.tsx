@@ -4,7 +4,6 @@ import { type WithTranslation, withTranslation } from 'react-i18next'
 import ClassNames from 'classnames'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
 
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
 import type { SegmentUi, PartUi, IOutputLayerUi } from './SegmentTimelineContainer.js'
 import { TimelineGrid } from './TimelineGrid.js'
@@ -27,7 +26,6 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { isPartPlayable, type PartExtended } from '@sofie-automation/corelib/dist/dataModel/Part'
 import { contextMenuHoldToDisplayTime } from '../../lib/lib.js'
-import { WarningIconSmall, CriticalIconSmall } from '../../lib/ui/icons/notifications.js'
 import RundownViewEventBus, {
 	RundownViewEvents,
 	type HighlightEvent,
@@ -40,14 +38,13 @@ import { DEFAULT_DISPLAY_DURATION } from '@sofie-automation/shared-lib/dist/core
 import {
 	type IOutputLayer,
 	type ISourceLayer,
-	NoteSeverity,
+	type NoteSeverity,
 	UserEditingType,
 } from '@sofie-automation/blueprints-integration'
 import { SegmentTimelineZoomButtons } from './SegmentTimelineZoomButtons.js'
 import { SegmentViewMode } from '../SegmentContainer/SegmentViewModes.js'
 import { SwitchViewModeButton } from '../SegmentContainer/SwitchViewModeButton.js'
 import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import type { SegmentNoteCounts } from '../SegmentContainer/withResolvedSegment.js'
 import {
 	withTiming,
 	TimingTickResolution,
@@ -62,6 +59,8 @@ import { hasUserEditableContent } from '../UserEditOperations/PropertiesPanel.js
 import type { UIStudio } from '@sofie-automation/corelib/src/dataModel/Studio.js'
 import type { PieceUi } from '@sofie-automation/corelib/src/dataModel/Piece.js'
 import { isLoopRunning, wrapPartToTemporaryInstance } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
+import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
+import { RundownHoldState } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist/RundownPlaylist.js'
 
 interface IProps {
 	id: string
@@ -71,7 +70,6 @@ interface IProps {
 	followLiveSegments: boolean
 	studio: UIStudio
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 	timeScale: number
 	maxTimeScale: number
 	onRecalculateMaxTimeScale: () => Promise<number>
@@ -979,9 +977,6 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 	render(): JSX.Element {
 		const { t } = this.props
 
-		const criticalNotes = this.props.segmentNoteCounts.criticial
-		const warningNotes = this.props.segmentNoteCounts.warning
-
 		const identifiers: Array<{ partId: PartId; ident: string }> = this.props.parts
 			.map((p) =>
 				p.instance.part.identifier
@@ -1050,6 +1045,7 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 							renderTag="div"
 						>
 							<div
+								className="segment-timeline__title__content"
 								onDoubleClick={() => {
 									if (this.props.studio.settings.enableUserEdits) {
 										const segment = this.props.segment
@@ -1075,36 +1071,11 @@ export class SegmentTimelineClass extends React.Component<Translated<WithTiming<
 								>
 									{this.props.segment.name}
 								</h2>
-								{(criticalNotes > 0 || warningNotes > 0) && (
-									<div className="segment-timeline__title__notes">
-										{criticalNotes > 0 && (
-											<div
-												className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
-												onClick={() =>
-													this.props.onHeaderNoteClick &&
-													this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.ERROR)
-												}
-												aria-label={t('Critical problems')}
-											>
-												<CriticalIconSmall />
-												<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
-											</div>
-										)}
-										{warningNotes > 0 && (
-											<div
-												className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
-												onClick={() =>
-													this.props.onHeaderNoteClick &&
-													this.props.onHeaderNoteClick(this.props.segment._id, NoteSeverity.WARNING)
-												}
-												aria-label={t('Warnings')}
-											>
-												<WarningIconSmall />
-												<div className="segment-timeline__title__notes__count">{warningNotes}</div>
-											</div>
-										)}
-									</div>
-								)}
+								<SegmentHeaderNotes
+									segmentId={this.props.segment._id}
+									onHeaderNoteClick={this.props.onHeaderNoteClick}
+								/>
+
 								{identifiers.length > 0 && (
 									<div className="segment-timeline__part-identifiers">
 										{identifiers.map((ident) => (
