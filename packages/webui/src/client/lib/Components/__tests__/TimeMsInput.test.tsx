@@ -15,6 +15,12 @@ describe('TimeMsInputControl', () => {
 		expect(input).toHaveValue('10:30')
 	})
 
+	test('keeps milliseconds and hours in the existing display', () => {
+		const { input } = renderInput({ value: 3661234 })
+
+		expect(input).toHaveValue('01:01:01.234')
+	})
+
 	test('keeps the existing flexible timeMs parser as the default', () => {
 		const { input, handleUpdate } = renderInput({ value: 0 })
 
@@ -23,6 +29,19 @@ describe('TimeMsInputControl', () => {
 		fireEvent.blur(input)
 
 		expect(handleUpdate).toHaveBeenCalledWith(62345)
+	})
+
+	test('does not commit invalid flexible time values', () => {
+		const { input, handleUpdate } = renderInput({ value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '1:2:3:4' } })
+		fireEvent.blur(input)
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '-1' } })
+		fireEvent.blur(input)
+
+		expect(handleUpdate).not.toHaveBeenCalled()
 	})
 
 	test('formats timecode values as a fixed time', () => {
@@ -91,6 +110,18 @@ describe('TimeMsInputControl', () => {
 		expect(handleUpdate).toHaveBeenCalledWith(45296000)
 	})
 
+	test('supports digit entry for frame-based timecode', async () => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecodeFrames', frameRate: 25, value: 0 })
+
+		const user = userEvent.setup()
+		await user.click(input)
+		await user.keyboard('12345624')
+
+		expect(input).toHaveValue('12:34:56:24')
+		fireEvent.blur(input)
+		expect(handleUpdate).toHaveBeenCalledWith(45296960)
+	})
+
 	test('updates on each valid digit when updateOnKey is enabled', async () => {
 		const { input, handleUpdate } = renderInput({ inputFormat: 'timecode', value: 0, updateOnKey: true })
 
@@ -113,6 +144,37 @@ describe('TimeMsInputControl', () => {
 		expect(handleUpdate).not.toHaveBeenCalled()
 	})
 
+	test('cancels a flexible edit with Escape on key up', () => {
+		const { input, handleUpdate } = renderInput({ value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '12' } })
+		fireEvent.keyUp(input, { key: 'Escape' })
+
+		expect(input).toHaveValue('00:00')
+		expect(handleUpdate).not.toHaveBeenCalled()
+	})
+
+	test('commits a valid edit with Enter', () => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecode', value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '00:00:12' } })
+		fireEvent.keyUp(input, { key: 'Enter' })
+
+		expect(handleUpdate).toHaveBeenCalledWith(12000)
+	})
+
+	test('blocks unsupported keyboard input', () => {
+		const { input } = renderInput({ inputFormat: 'timecode', value: 0 })
+
+		fireEvent.focus(input)
+		const event = new KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true })
+		input.dispatchEvent(event)
+
+		expect(event.defaultPrevented).toBe(true)
+	})
+
 	test('accepts pasted formatted time values', () => {
 		const { input, handleUpdate } = renderInput({ inputFormat: 'timecode', value: 0 })
 
@@ -121,6 +183,25 @@ describe('TimeMsInputControl', () => {
 		fireEvent.blur(input)
 
 		expect(handleUpdate).toHaveBeenCalledWith(45296000)
+	})
+
+	test('ignores malformed fixed-format values', () => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecodeFrames', value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '12:34:56' } })
+		fireEvent.blur(input)
+
+		expect(handleUpdate).not.toHaveBeenCalled()
+	})
+
+	test('parses hours in the legacy format and updates on change', () => {
+		const { input, handleUpdate } = renderInput({ value: 0, updateOnKey: true })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '1:02:03' } })
+
+		expect(handleUpdate).toHaveBeenCalledWith(3723000)
 	})
 
 	test('honours value constraints', () => {
