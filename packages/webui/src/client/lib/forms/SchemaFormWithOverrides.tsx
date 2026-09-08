@@ -1,5 +1,7 @@
 import { joinObjectPathFragments, literal } from '@sofie-automation/corelib/dist/lib'
 import { useMemo } from 'react'
+import { useRouteMatch } from 'react-router-dom'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
 import { useTracker } from '../ReactMeteorData/react-meteor-data.js'
 import { useTranslation } from 'react-i18next'
 import type {
@@ -365,7 +367,12 @@ const IntegerFormWithOverrides = ({ schema, commonAttrs }: Readonly<FormComponen
 
 const TimeMsFormWithOverrides = ({ schema, commonAttrs }: Readonly<FormComponentProps>) => {
 	// UIStudios exposes the flattened studio settings already used by the playout UI.
-	const frameRate = useTracker(() => UIStudios.findOne()?.settings.frameRate, []) ?? 25
+	const routeMatch = useRouteMatch<{ studioId: string }>()
+	const studioId = routeMatch ? protectString(routeMatch.params.studioId) : undefined
+	const frameRate = useTracker(
+		() => (studioId ? UIStudios.findOne(studioId)?.settings.frameRate : undefined),
+		[studioId]
+	) ?? 25
 	const displayType = getSchemaUIField(schema, SchemaFormUIField.DisplayType)
 	const inputFormat =
 		displayType === 'timecode' || displayType === 'timecodeFrames' || displayType === 'tod' ? displayType : undefined

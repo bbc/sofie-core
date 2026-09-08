@@ -21,6 +21,16 @@ describe('TimeMsInputControl', () => {
 		expect(input).toHaveValue('01:01:01.234')
 	})
 
+	test.each([29.97, 23.976])('round-trips frame timecode at %s fps', (frameRate) => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecodeFrames', frameRate, value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '00:00:00:01' } })
+		fireEvent.blur(input)
+
+		expect(handleUpdate).toHaveBeenCalledWith(frameRate === 29.97 ? 33 : 42)
+	})
+
 	test('keeps the existing flexible timeMs parser as the default', () => {
 		const { input, handleUpdate } = renderInput({ value: 0 })
 
@@ -47,7 +57,7 @@ describe('TimeMsInputControl', () => {
 	test('formats timecode values as a fixed time', () => {
 		const { input } = renderInput({ inputFormat: 'timecode' })
 
-		expect(input).toHaveValue('01:01:02')
+		expect(input).toHaveValue('01:01:01')
 	})
 
 	test('clamps overflowing timecode fields', () => {
@@ -68,7 +78,17 @@ describe('TimeMsInputControl', () => {
 		fireEvent.change(input, { target: { value: '00:00:01:12' } })
 		fireEvent.blur(input)
 
-		expect(handleUpdate).toHaveBeenCalledWith(1480)
+		expect(handleUpdate).not.toHaveBeenCalled()
+	})
+
+	test('commits an edited frame-based timecode', () => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecodeFrames', frameRate: 25, value: 1480 })
+
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: '00:00:01:13' } })
+		fireEvent.blur(input)
+
+		expect(handleUpdate).toHaveBeenCalledWith(1520)
 	})
 
 	test('keeps the final frame within the timecode maximum', () => {
@@ -120,6 +140,15 @@ describe('TimeMsInputControl', () => {
 		expect(input).toHaveValue('12:34:56:24')
 		fireEvent.blur(input)
 		expect(handleUpdate).toHaveBeenCalledWith(45296960)
+	})
+
+	test('treats a short frame digit as frames', () => {
+		const { input } = renderInput({ inputFormat: 'timecodeFrames', value: 0 })
+
+		fireEvent.focus(input)
+		fireEvent.keyDown(input, { key: '1' })
+
+		expect(input).toHaveValue('00:00:00:01')
 	})
 
 	test('updates on each valid digit when updateOnKey is enabled', async () => {
@@ -233,6 +262,15 @@ describe('TimeMsInputControl', () => {
 		fireEvent.focus(input)
 		fireEvent.change(input, { target: { value: '12:34:56' } })
 		fireEvent.blur(input)
+
+		expect(input).toHaveValue('00:00:00')
+		expect(handleUpdate).not.toHaveBeenCalled()
+	})
+
+	test('does not process digit keys on a read-only formatted input', () => {
+		const { input, handleUpdate } = renderInput({ inputFormat: 'timecode', readOnly: true, value: 0 })
+
+		fireEvent.keyDown(input, { key: '1' })
 
 		expect(input).toHaveValue('00:00:00')
 		expect(handleUpdate).not.toHaveBeenCalled()

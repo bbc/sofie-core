@@ -127,7 +127,7 @@ function formatInputTime(time: number, inputFormat: TimeMsInputFormat, frameRate
 
 	const max = inputFormat === 'tod' ? MAX_TOD_MS : MAX_TIMECODE_MS
 	const displayTime = Math.min(Math.max(0, time), max)
-	const roundedTime = Math.min(max, Math.ceil(displayTime / 1000) * 1000)
+	const roundedTime = Math.floor(displayTime / 1000) * 1000
 	const hours = Math.floor(roundedTime / 3600000)
 	const minutes = Math.floor(roundedTime / 60000) % 60
 	const seconds = Math.floor(roundedTime / 1000) % 60
@@ -146,9 +146,11 @@ function parseInputTime(time: string, inputFormat: TimeMsInputFormat, frameRate:
 		const seconds = Math.min(Number(match[3]), 59)
 		const frames = Math.min(Number(match[4]), Math.ceil(frameRate) - 1)
 
-		return Math.min(
-			getMaxTimecodeMs(frameRate),
-			(((hours * 60 + minutes) * 60 + seconds) * frameRate + frames) * (1000 / frameRate)
+		return Math.round(
+			Math.min(
+				getMaxTimecodeMs(frameRate),
+				(((hours * 60 + minutes) * 60 + seconds) * frameRate + frames) * (1000 / frameRate)
+			)
 		)
 	}
 
@@ -168,11 +170,13 @@ function parseInputTime(time: string, inputFormat: TimeMsInputFormat, frameRate:
 }
 
 function formatModeDigits(digits: string, inputFormat: TimeMsInputFormat): string {
-	const timeDigits = digits.slice(0, TIME_DIGIT_COUNT).padStart(TIME_DIGIT_COUNT, '0')
+	const digitCount = inputFormat === 'timecodeFrames' ? TIME_DIGIT_COUNT + 2 : TIME_DIGIT_COUNT
+	const paddedDigits = digits.padStart(digitCount, '0')
+	const timeDigits = paddedDigits.slice(0, TIME_DIGIT_COUNT)
 	const result = `${timeDigits.slice(0, 2)}:${timeDigits.slice(2, 4)}:${timeDigits.slice(4, 6)}`
 	if (inputFormat !== 'timecodeFrames') return result
 
-	return `${result}:${digits.slice(TIME_DIGIT_COUNT).padStart(2, '0')}`
+	return `${result}:${paddedDigits.slice(TIME_DIGIT_COUNT)}`
 }
 
 export function TimeMsInputControl({
@@ -233,8 +237,15 @@ export function TimeMsInputControl({
 				setEditingValue(null)
 				return
 			}
-			const number = getParsedValue(editingValue ?? event.currentTarget.value)
-			if (!isNaN(number) && isValidValue(number)) {
+			const editedValue = editingValue ?? event.currentTarget.value
+			const formattedValue =
+				value !== undefined
+					? inputFormat
+						? formatInputTime(value, inputFormat, validFrameRate)
+						: formatTime(value)
+					: undefined
+			const number = getParsedValue(editedValue)
+			if (editedValue !== formattedValue && !isNaN(number) && isValidValue(number)) {
 				handleUpdate(number)
 			}
 
@@ -270,6 +281,8 @@ export function TimeMsInputControl({
 	)
 	const handleKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
+			if (readOnly) return
+
 			if (isFormattedInput && /^\d$/.test(event.key)) {
 				event.preventDefault()
 				const currentDigits = (editingValue ?? '').replace(/\D/g, '')
@@ -299,7 +312,7 @@ export function TimeMsInputControl({
 				event.preventDefault()
 			}
 		},
-		[editingValue, getParsedValue, handleUpdate, isFormattedInput, isValidValue, shouldReset, frameRate, updateOnKey]
+		[editingValue, getParsedValue, handleUpdate, isFormattedInput, isValidValue, readOnly, shouldReset, updateOnKey]
 	)
 
 	let showValue: string | number | undefined = editingValue ?? undefined
