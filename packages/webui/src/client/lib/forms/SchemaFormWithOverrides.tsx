@@ -369,10 +369,8 @@ const TimeMsFormWithOverrides = ({ schema, commonAttrs }: Readonly<FormComponent
 	// UIStudios exposes the flattened studio settings already used by the playout UI.
 	const routeMatch = useRouteMatch<{ studioId: string }>()
 	const studioId = routeMatch ? protectString(routeMatch.params.studioId) : undefined
-	const frameRate = useTracker(
-		() => (studioId ? UIStudios.findOne(studioId)?.settings.frameRate : undefined),
-		[studioId]
-	) ?? 25
+	const frameRate =
+		useTracker(() => (studioId ? UIStudios.findOne(studioId)?.settings.frameRate : undefined), [studioId]) ?? 25
 	const displayType = getSchemaUIField(schema, SchemaFormUIField.DisplayType)
 	const inputFormat =
 		displayType === 'timecode' || displayType === 'timecodeFrames' || displayType === 'tod' ? displayType : undefined
