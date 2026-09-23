@@ -53,6 +53,7 @@ import {
 	IBlueprintShowStyleVariant,
 	IOutputLayer,
 	ISourceLayer,
+	ITranslatableMessage,
 	NoteSeverity,
 	PieceAbSessionInfo,
 	RundownPlaylistTiming,
@@ -146,6 +147,7 @@ export const PlayoutMutatablePartSampleKeys = allKeysOfObject<PlayoutMutatablePa
 	displayDurationGroup: true,
 	displayDuration: true,
 	identifier: true,
+	segmentHeaderNotes: true,
 	hackListenToMediaObjectUpdates: true,
 	userEditOperations: true,
 	userEditProperties: true,
@@ -340,6 +342,7 @@ export function convertPartToBlueprints(part: ReadonlyDeep<DBPart>): IBlueprintP
 		displayDurationGroup: part.displayDurationGroup,
 		displayDuration: part.displayDuration,
 		identifier: part.identifier,
+		segmentHeaderNotes: clone<ITranslatableMessage[] | undefined>(part.segmentHeaderNotes),
 		hackListenToMediaObjectUpdates: clone<HackPartMediaObjectSubscription[] | undefined>(
 			part.hackListenToMediaObjectUpdates
 		),
@@ -741,7 +744,13 @@ export function convertPartialBlueprintMutablePartToCore(
 			blueprintId,
 		])
 	} else {
-		delete playoutUpdatePart.userEditOperations
+		delete playoutUpdatePart.userEditProperties
+	}
+
+	if ('segmentHeaderNotes' in updatePart) {
+		playoutUpdatePart.segmentHeaderNotes = updatePart.segmentHeaderNotes?.map((note) =>
+			wrapTranslatableMessageFromBlueprints(note, [blueprintId])
+		)
 	}
 
 	return playoutUpdatePart

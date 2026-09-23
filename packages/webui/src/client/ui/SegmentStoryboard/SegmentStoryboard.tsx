@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { NoteSeverity } from '@sofie-automation/blueprints-integration'
-import { RundownHoldState } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
-import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
+import type { NoteSeverity } from '@sofie-automation/blueprints-integration'
 import type { IContextMenuContext } from '../RundownView.js'
-import type { IOutputLayerUi, PartUi, SegmentNoteCounts, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
+import type { IOutputLayerUi, PartUi, SegmentUi } from '../SegmentContainer/withResolvedSegment.js'
 import { ContextMenuTrigger } from '@jstarpl/react-contextmenu'
-import { CriticalIconSmall, WarningIconSmall } from '../../lib/ui/icons/notifications.js'
 import { SegmentDuration } from '../RundownView/RundownTiming/SegmentDuration.js'
 import { PartCountdown } from '../RundownView/RundownTiming/PartCountdown.js'
 import { contextMenuHoldToDisplayTime, useCombinedRefs, useRundownViewEventBusListener } from '../../lib/lib.js'
@@ -46,7 +43,10 @@ import {
 	isQuickLoopEnd as getIsQuickLoopEnd,
 	isEntirePlaylistLooping as getIsEntirePlaylistLooping,
 } from '@sofie-automation/corelib/src/playout/stateCacheResolver.js'
+import { SegmentHeaderNotes } from '../SegmentHeader/SegmentHeaderNotes.js'
+import type { RundownViewPlaylist } from '../../lib/rundownPlaylistProjection.js'
 import { HOVER_TIMEOUT } from '../Shelf/DashboardPieceButton/types.js'
+import { RundownHoldState } from '@sofie-automation/corelib/src/dataModel/RundownPlaylist/RundownPlaylist.js'
 
 interface IProps {
 	id: string
@@ -55,7 +55,6 @@ interface IProps {
 	playlist: RundownViewPlaylist
 	studio: UIStudio
 	parts: Array<PartUi>
-	segmentNoteCounts: SegmentNoteCounts
 	// timeScale: number
 	// maxTimeScale: number
 	// onRecalculateMaxTimeScale: () => Promise<number>
@@ -130,9 +129,6 @@ export const SegmentStoryboard = React.memo(
 				countdownToPartId = nextPart.instance.part._id
 			}
 		}
-
-		const criticalNotes = props.segmentNoteCounts.criticial
-		const warningNotes = props.segmentNoteCounts.warning
 
 		const [useTimeOfDayCountdowns, setUseTimeOfDayCountdowns] = useState(
 			UIStateStorage.getItemBoolean(
@@ -580,30 +576,8 @@ export const SegmentStoryboard = React.memo(
 					>
 						{props.segment.name}
 					</h2>
-					{(criticalNotes > 0 || warningNotes > 0) && (
-						<div className="segment-timeline__title__notes">
-							{criticalNotes > 0 && (
-								<div
-									className="segment-timeline__title__notes__note segment-timeline__title__notes__note--critical"
-									onClick={() => props.onHeaderNoteClick?.(props.segment._id, NoteSeverity.ERROR)}
-									aria-label={t('Critical problems')}
-								>
-									<CriticalIconSmall />
-									<div className="segment-timeline__title__notes__count">{criticalNotes}</div>
-								</div>
-							)}
-							{warningNotes > 0 && (
-								<div
-									className="segment-timeline__title__notes__note segment-timeline__title__notes__note--warning"
-									onClick={() => props.onHeaderNoteClick?.(props.segment._id, NoteSeverity.WARNING)}
-									aria-label={t('Warnings')}
-								>
-									<WarningIconSmall />
-									<div className="segment-timeline__title__notes__count">{warningNotes}</div>
-								</div>
-							)}
-						</div>
-					)}
+					<SegmentHeaderNotes segmentId={props.segment._id} onHeaderNoteClick={props.onHeaderNoteClick} />
+
 					{identifiers.length > 0 && (
 						<div className="segment-timeline__part-identifiers">
 							{identifiers.map((ident) => (
