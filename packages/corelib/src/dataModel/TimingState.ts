@@ -104,6 +104,14 @@ export interface PlaylistTimingStateDoc {
 	currentPartWillAutoNext: boolean
 
 	/**
+	 * The timer that every Part's countdown is a shift of. It has no meaning of its own, and no display
+	 * shows it. A Part's countdown is
+	 *   offsetTimerState(playlist.partCountdownBase, part.countdownOffset)
+	 * using `offsetTimerState` from TimerState.ts, and a Part without a `countdownOffset` has no countdown.
+	 */
+	partCountdownBase: TimerState
+
+	/**
 	 * Schedule balance ("Over"/"Under").
 	 * duration read = the time in hand: positive = under (ahead of schedule), negative = over.
 	 * The UI's over-positive diff is therefore `-timerStateToDuration(overUnder, now)`.
@@ -184,6 +192,22 @@ export interface PartTimingStateDoc {
 	countsTowardsTiming: boolean
 
 	/**
+	 * Whether the Part is untimed, as set on the Part. An untimed Part still has its own
+	 * `expectedDuration` here, but it is left out of the playlist and segment totals, and so has to be
+	 * left out of any total a consumer adds up from the Parts.
+	 */
+	untimed: boolean
+
+	/**
+	 * Whether the PartInstance is orphaned: there is no Part for it in the rundown, because it was
+	 * created by an adlib, or because its Part has been removed from the rundown since. An orphaned Part
+	 * still has its own `expectedDuration` here, but it is not part of the Segment as planned, so it is
+	 * left out of the segment totals, and has to be left out of any segment total a consumer adds up
+	 * from the Parts.
+	 */
+	orphaned: boolean
+
+	/**
 	 * The Part's expected duration, resolved. Constant - duration read, positive.
 	 */
 	expectedDuration?: TimerState
@@ -195,14 +219,17 @@ export interface PartTimingStateDoc {
 	displayDuration?: TimerState
 
 	/**
-	 * Countdown until this Part goes on air.
-	 * duration read = time until it starts, holding at the Part's own wait once the on-air Part has
-	 * overrun (the countdown cannot go below the waits that still have to happen).
+	 * Where this Part's countdown is against the playlist document's `partCountdownBase`, in ms. The
+	 * number alone has no meaning; the countdown until this Part goes on air is
+	 *   offsetTimerState(playlist.partCountdownBase, part.countdownOffset)
+	 * using `offsetTimerState` from TimerState.ts. Its duration read is the time until the Part starts,
+	 * holding at the Part's own wait once the on-air Part has overrun (the countdown cannot go below
+	 * the waits that still have to happen).
 	 *
 	 * Absent when the Part will probably not be played out if the rundown is played in order - which
 	 * is what the displays use to decide not to show a countdown at all.
 	 */
-	countdown?: TimerState
+	countdownOffset?: number
 
 	/**
 	 * How much of this Part has played.

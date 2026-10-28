@@ -100,7 +100,15 @@ export namespace PlaylistTiming {
 
 		if (contentRemainingState === undefined) return undefined
 
-		if (startedPlayback) {
+		// The remaining duration counts down while the on-air Part (or the on-air segment's budget) runs
+		// within its planned length, and then now + remaining holds. That can be so before the playlist
+		// has started too: from the first take until the start of its Part is reported, when the take
+		// plans that start (a take in a multi-gateway studio schedules it a little ahead, and a take with
+		// a time offset plans it in the past), and while an untimed opening Part plays in a segment with a
+		// budget.
+		const remainingIsCountingDown = !contentRemainingState.paused
+
+		if (startedPlayback || remainingIsCountingDown) {
 			// estimatedEnd = now + remaining: this is exactly the remaining-duration state read
 			// through timerStateToZeroTime (fixed while remaining counts down, pushing 1:1 with
 			// time once remaining freezes)
@@ -108,7 +116,7 @@ export namespace PlaylistTiming {
 		}
 
 		// Not started: estimatedEnd = max(now, expectedStart ?? now) + remaining
-		// (remaining is constant while nothing is playing)
+		// (remaining is constant while nothing counts it down)
 		const remaining = timerStateToDuration(contentRemainingState, now)
 		const expectedStart = PlaylistTiming.getExpectedStart(timing)
 		if (expectedStart !== undefined && expectedStart > now) {
