@@ -12,7 +12,6 @@ import {
 	useTracker,
 	withTracker,
 } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
-import { getCurrentTime } from '../../../lib/systemTime.js'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import { PieceIconContainer } from '../ClockViewPieceIcons/ClockViewPieceIcon.js'
 import { PieceNameContainer } from '../ClockViewPieceIcons/ClockViewPieceName.js'
@@ -448,6 +447,8 @@ function DirectorScreenRender({
 	useTimingNow()
 
 	const expectedStart = usePlaylistTimingValue(playlistId, 'plannedStart', TimerValueMode.Timestamp) ?? 0
+	// the time until the planned start, drawn again at the moment its own second changes
+	const untilPlannedStart = usePlaylistTimingValue(playlistId, 'plannedStart', TimerValueMode.Duration)
 
 	// Compute current and next clip player ids (for pieces with AB sessions)
 	const currentClipPlayer: string | undefined = useTracker(() => {
@@ -659,10 +660,10 @@ function DirectorScreenRender({
 									</>
 								)}
 							</>
-						) : expectedStart ? (
+						) : expectedStart && untilPlannedStart !== null ? (
 							<div className="director-screen__body__part__timeto-content">
 								<div className="director-screen__body__part__timeto-countdown">
-									<Timediff time={expectedStart - getCurrentTime()} />
+									<Timediff time={untilPlannedStart} />
 								</div>
 								<div className="director-screen__body__part__timeto-name">{t('Time to planned start')}</div>
 							</div>

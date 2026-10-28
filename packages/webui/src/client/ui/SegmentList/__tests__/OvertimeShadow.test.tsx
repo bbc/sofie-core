@@ -169,3 +169,45 @@ describe('OvertimeShadow', () => {
 		expect(drawnShadowLeft(container, UPCOMING_PART_ID)).toBe('20%')
 	})
 })
+
+describe('OvertimeShadow freeze marker', () => {
+	/** The clip ends 12.5 s into the part; the part is planned for 10 s, so it ends in a freeze */
+	const CLIP_END = 12500
+	const PART_LENGTH = 10000
+	const STARTED_AT = NOW
+
+	beforeEach(() => {
+		currentTime = NOW
+		publishedDocs = [makeDoc(ON_AIR_PART_ID, 0, countUp(0, STARTED_AT))]
+	})
+
+	function renderFreezeMarker(): HTMLElement {
+		const { container } = render(
+			<OvertimeShadow
+				partId={ON_AIR_PART_ID}
+				maxDuration={TIMELINE_BASE}
+				timelineBase={TIMELINE_BASE}
+				mainSourceEnd={CLIP_END}
+				endsInFreeze={true}
+				partRenderedDuration={PART_LENGTH}
+				partActualDuration={undefined}
+				isPartZeroBudget={false}
+				isLive={true}
+				hasAlreadyPlayed={false}
+			/>
+		)
+		return container
+	}
+
+	it('rounds the time left until the freeze up, and shows it until the freeze', () => {
+		const container = renderFreezeMarker()
+
+		// 0.7 s until the freeze: the countdown shows 00:01, as every countdown does in its last second
+		dispatchHighResolutionTicks(1, STARTED_AT + 11800)
+		expect(container.querySelector('.segment-opl__freeze-marker-timer')?.textContent).toBe('00:01')
+
+		// 1.7 s until the freeze
+		dispatchHighResolutionTicks(1, STARTED_AT + 10800)
+		expect(container.querySelector('.segment-opl__freeze-marker-timer')?.textContent).toBe('00:02')
+	})
+})

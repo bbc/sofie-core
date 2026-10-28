@@ -56,9 +56,15 @@ function dispatchTick(event: RundownTiming.Events, tickTime: number): void {
 	})
 }
 
-function renderSegmentDuration(): HTMLElement | null {
+/** Move the clock on, and send the high-resolution tick that RundownTimingProvider sends on each frame */
+function advanceClockTo(time: number): void {
+	currentTime = time
+	dispatchTick(RundownTiming.Events.timeupdateHighResolution, time)
+}
+
+function renderSegmentDuration(countUp?: boolean): HTMLElement | null {
 	const segment = { _id: SEGMENT_ID } as DBSegment
-	const { container } = render(<SegmentDuration segment={segment} parts={[]} />)
+	const { container } = render(<SegmentDuration segment={segment} parts={[]} countUp={countUp} />)
 	return container.querySelector<HTMLElement>('[role="timer"]')
 }
 
@@ -69,24 +75,42 @@ describe('SegmentDuration', () => {
 		publishedDocs.set(ON_AIR_SEGMENT_DOC._id, ON_AIR_SEGMENT_DOC)
 	})
 
-	it('reads the remaining time at the last whole second, as every other countdown does', () => {
+	it('changes at the moment its own whole second changes, and shows 00:00 for the first second past zero', () => {
+		// 1.06 s left
 		const timer = renderSegmentDuration()
 		expect(timer?.textContent).toBe('00:02')
 
-		// just after a whole second, the provider sends a high-resolution tick with the time, and the synced tick
-		// with the time rounded down to the whole second: 60 ms before the zero
-		dispatchTick(RundownTiming.Events.timeupdateHighResolution, 130003)
+		// still more than 1 s left
+		advanceClockTo(129050)
+		expect(timer?.textContent).toBe('00:02')
+
+		// 1 s before the zero, which is 60 ms past the full second of the clock
+		advanceClockTo(129061)
+		expect(timer?.textContent).toBe('00:01')
+
+		// the full second of the clock does not change it
 		dispatchTick(RundownTiming.Events.timeupdateSynced, 130000)
+		advanceClockTo(130003)
 		expect(timer?.textContent).toBe('00:01')
 
-		// the high-resolution ticks of the rest of that second, also those after the zero, leave it as it is
-		dispatchTick(RundownTiming.Events.timeupdateHighResolution, 130500)
-		dispatchTick(RundownTiming.Events.timeupdateHighResolution, 130983)
-		expect(timer?.textContent).toBe('00:01')
+		// past the zero: the overrun rounds down, so it shows 00:00 for the first second, not +00:01
+		advanceClockTo(130061)
+		expect(timer?.textContent).toBe('00:00')
+		advanceClockTo(130983)
+		expect(timer?.textContent).toBe('00:00')
 
-		// it shows the overrun from the next whole second on
-		dispatchTick(RundownTiming.Events.timeupdateHighResolution, 131001)
-		dispatchTick(RundownTiming.Events.timeupdateSynced, 131000)
+		// one second past the zero
+		advanceClockTo(131061)
 		expect(timer?.textContent).toBe('+00:01')
+	})
+
+	it('rounds the played time down when it counts up, as a stopwatch does', () => {
+		// on air since 30 s before its zero: 28.94 s played
+		const timer = renderSegmentDuration(true)
+		expect(timer?.textContent).toBe('00:28')
+
+		// 29.5 s played
+		advanceClockTo(SEGMENT_ZERO_TIME - 30000 + 29500)
+		expect(timer?.textContent).toBe('00:29')
 	})
 })

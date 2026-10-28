@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { PartId, PartInstanceId, RundownPlaylistId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import {
 	getPartTimingStateDocId,
@@ -24,7 +24,12 @@ import { assertNever } from '@sofie-automation/corelib/dist/lib'
 import { PlaylistTimingStates } from '../../Collections.js'
 import { useTracker } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
 import { getCurrentTime } from '../../../lib/systemTime.js'
-import { TimingTickResolution, rundownTimingEventFromTickResolution, type TimingEvent } from './RundownTiming.js'
+import {
+	RundownTiming,
+	TimingTickResolution,
+	rundownTimingEventFromTickResolution,
+	type TimingEvent,
+} from './RundownTiming.js'
 import { getOnAirTimerStateRightAfterTake } from './onAirTimerRightAfterTake.js'
 
 /** How to read a published TimerState as a number */
@@ -65,7 +70,8 @@ export type PartTimerKey = TimerKeysOf<PartTimingStateDoc>
 export interface UsePlaylistTimingValueOptions {
 	/**
 	 * How often the value should be recomputed (which re-renders the caller).
-	 * Defaults to Synced (1Hz, aligned with the rest of the timing UI).
+	 * Defaults to Synced: the caller is drawn again at the moment the value's whole second changes,
+	 * see {@link useTimeOfOwnSecond}.
 	 */
 	tickResolution?: TimingTickResolution
 
@@ -78,6 +84,14 @@ export interface UsePlaylistTimingValueOptions {
 	 * Timestamp read is always recomputed at `tickResolution`; see {@link timerValueChangesWithClock}.
 	 */
 	tickResolutionWhileHolding?: TimingTickResolution
+
+	/**
+	 * The number that the caller shows, made from the value: for example the end of a clip minus the played time. With
+	 * the Synced tick resolution, the caller is drawn again at the moment the whole second of that number changes, not
+	 * of the value itself. A number made with a constant that is not a whole number of seconds changes at another
+	 * moment than the value. Default: the value itself.
+	 */
+	drawnAs?: (value: number) => number
 
 	/**
 	 * Only return a value that is about this PartInstance.
@@ -176,7 +190,7 @@ export function usePartTimingValue(
 export function usePartCountdownValue(
 	partId: PartId | undefined,
 	mode: TimerValueMode,
-	options?: Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding'>
+	options?: Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding' | 'drawnAs'>
 ): number | null {
 	const state = useTracker(
 		() => {
@@ -495,16 +509,35 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
 function useTimerStateValue(
 	state: TimerState | undefined,
 	mode: TimerValueMode,
-	options: Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding'> | undefined
+	options:
+		| Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding' | 'drawnAs'>
+		| undefined
 ): number | null {
 	const tickResolution = options?.tickResolution ?? TimingTickResolution.Synced
 	const tickResolutionWhileHolding = options?.tickResolutionWhileHolding ?? tickResolution
 
 	const isValueHolding = !timerValueChangesWithClock(state, mode)
-	const now = useTimingNow(isValueHolding ? tickResolutionWhileHolding : tickResolution)
+	const activeTickResolution = isValueHolding ? tickResolutionWhileHolding : tickResolution
+	const isDrawnOnOwnSecond = activeTickResolution === TimingTickResolution.Synced
+
+	const tickTime = useTimingNow(isDrawnOnOwnSecond ? TimingTickResolution.None : activeTickResolution)
+	const drawnAs = options?.drawnAs
+	const readMovingValue =
+		isDrawnOnOwnSecond && !isValueHolding && state
+			? (now: number) => {
+					const value = readTimerState(state, mode, now)
+					return drawnAs ? drawnAs(value) : value
+				}
+			: undefined
+	const ownSecondTime = useTimeOfOwnSecond(readMovingValue)
 
 	if (!state) return null
 
+	return readTimerState(state, mode, isDrawnOnOwnSecond ? ownSecondTime : tickTime)
+}
+
+/** A published timer state read as a number at a time */
+function readTimerState(state: TimerState, mode: TimerValueMode, now: number): number {
 	switch (mode) {
 		case TimerValueMode.Duration:
 			return timerStateToDuration(state, now)
@@ -515,8 +548,81 @@ function useTimerStateValue(
 			return timerStateToZeroTime(state, now)
 		default:
 			assertNever(mode)
-			return null
+			return timerStateToDuration(state, now)
 	}
+}
+
+/**
+ * A number that moves with the clock, which the caller calculates itself, for example the time until the end of a
+ * clip. The caller is drawn again at the moment the number's own whole second changes, as with the published timing
+ * values (see {@link useTimeOfOwnSecond}).
+ *
+ * @param read The number at a time, in milliseconds. Undefined while there is no such number.
+ * @returns The number at the current time, or null while `read` is undefined
+ */
+export function useClockValue(read: ((now: number) => number) | undefined): number | null {
+	const now = useTimeOfOwnSecond(read)
+	return read ? read(now) : null
+}
+
+/**
+ * The time to read a value at, for a caller that is drawn again at the moment the value's whole
+ * second changes.
+ *
+ * The Synced tick comes at each full second of the clock, but most timing values count from another
+ * moment: from the start of a part, which comes some milliseconds after the take, or at any moment
+ * after a take by hand. Read at the tick, such a value would show the second before for most of each
+ * second. So the value is checked on each high-resolution tick instead, and the caller is drawn again
+ * only when the whole second of the value has changed, rounded down or rounded up. Values that count from the same moment change
+ * in the same frame.
+ *
+ * Each time the caller is drawn, this is the current time. So a value that arrives between two
+ * ticks, such as the timing that the server publishes when a part starts, is read at the time it
+ * arrives, never at the time of an earlier tick.
+ *
+ * @param readMovingValue The value at a time, in milliseconds, while it moves with the clock.
+ * Undefined while it holds: then the clock never draws the caller again.
+ * @returns The current time
+ */
+function useTimeOfOwnSecond(readMovingValue: ((now: number) => number) | undefined): number {
+	const now = getCurrentTime()
+	const drawnSeconds = readMovingValue ? shownSecondsOf(readMovingValue(now)) : null
+
+	const drawnSecondsRef = useRef(drawnSeconds)
+	const readMovingValueRef = useRef(readMovingValue)
+	useLayoutEffect(() => {
+		drawnSecondsRef.current = drawnSeconds
+		readMovingValueRef.current = readMovingValue
+	})
+
+	const [, drawAgain] = useReducer((drawCount: number) => drawCount + 1, 0)
+
+	const isMovingWithClock = readMovingValue !== undefined
+	useEffect(() => {
+		if (!isMovingWithClock) return
+
+		const onTick = () => {
+			const read = readMovingValueRef.current
+			if (!read) return
+
+			const haveSecondsChanged = shownSecondsOf(read(getCurrentTime())) !== drawnSecondsRef.current
+			if (haveSecondsChanged) drawAgain()
+		}
+
+		window.addEventListener(RundownTiming.Events.timeupdateHighResolution, onTick)
+		return () => window.removeEventListener(RundownTiming.Events.timeupdateHighResolution, onTick)
+	}, [isMovingWithClock])
+
+	return now
+}
+
+/**
+ * The whole seconds that a value in milliseconds shows as, rounded down and rounded up. A display rounds one way or
+ * the other, so the caller is drawn again when either changes: when the value passes a whole second, and also when it
+ * reaches one exactly and stops there, as a countdown does that holds at the end of the on-air part.
+ */
+function shownSecondsOf(milliseconds: number): string {
+	return `${Math.floor(milliseconds / 1000)}/${Math.ceil(milliseconds / 1000)}`
 }
 
 /**

@@ -56,7 +56,11 @@ function OverUnderChipInner({ valueMs, format = 'playlistDiff', className, style
 				return RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, false, true, false, true)
 			case 'playlistDiff':
 			default:
-				return RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, false, true, true, true)
+				// late: the time past the plan rounds down, as a time since does, so a moment late shows +00:00;
+				// early: the time in hand rounds up, and under 0.1 s it shows 00:00
+				return valueMs > 0
+					? RundownUtils.formatDiffToTimecode(valueMs, false, false, true, false, true, undefined, true)
+					: RundownUtils.formatDiffToTimecode(Math.abs(valueMs), false, false, true, true, true)
 		}
 	})()
 

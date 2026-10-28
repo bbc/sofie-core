@@ -10,6 +10,8 @@ const NOW = 100000
 
 /** The document the mocked collection will return */
 let publishedDoc: PartTimingStateDoc | undefined
+/** What the mocked system clock reads */
+let currentTime = NOW
 
 jest.mock('../../../Collections.js', () => ({
 	PlaylistTimingStates: {
@@ -21,7 +23,7 @@ jest.mock('../../../../lib/ReactMeteorData/ReactMeteorData.js', () => ({
 	useTracker: (fn: () => unknown) => fn(),
 }))
 jest.mock('../../../../lib/systemTime.js', () => ({
-	getCurrentTime: () => NOW,
+	getCurrentTime: () => currentTime,
 }))
 
 import { TimerValueMode, usePartTimingValue, type PartTimerKey } from '../usePlaylistTimingValue.js'
@@ -43,10 +45,13 @@ function makeDoc(fields: Partial<PartTimingStateDoc>): PartTimingStateDoc {
 	}
 }
 
-/** Dispatch a timing tick, as RundownTimingProvider does */
-function tick(currentTime: number): void {
+/** Move the clock on, and send the high-resolution tick that RundownTimingProvider sends on each frame */
+function tick(time: number): void {
+	currentTime = time
 	act(() => {
-		window.dispatchEvent(new CustomEvent(RundownTiming.Events.timeupdateSynced, { detail: { currentTime } }))
+		window.dispatchEvent(
+			new CustomEvent(RundownTiming.Events.timeupdateHighResolution, { detail: { currentTime: time } })
+		)
 	})
 }
 
@@ -82,6 +87,7 @@ function renderHighResolutionOnlyWhileMoving(timer: PartTimerKey, mode: TimerVal
 describe('usePartTimingValue', () => {
 	beforeEach(() => {
 		publishedDoc = undefined
+		currentTime = NOW
 	})
 
 	it('returns null when nothing is published for the part', () => {
@@ -106,6 +112,39 @@ describe('usePartTimingValue', () => {
 
 		tick(NOW + 60000)
 		expect(result.current).toBe(10000)
+	})
+
+	describe('a number made from the value', () => {
+		it('is drawn again when the number that the caller shows changes its second, not the value', () => {
+			// on air since NOW; the caller shows a clip end of 10.5 s minus the played time
+			publishedDoc = makeDoc({ played: { paused: true, duration: 0, resumesAt: NOW } })
+
+			let renders = 0
+			const { result } = renderHook(() => {
+				renders++
+				return usePartTimingValue(PART_ID, 'played', TimerValueMode.CountUp, {
+					drawnAs: (played) => 10500 - played,
+				})
+			})
+			const rendersAtStart = renders
+
+			// the shown number is still above 10 s: not drawn again
+			tick(NOW + 400)
+			expect(renders).toBe(rendersAtStart)
+
+			// the shown number passes 10 s at 0.5 s played: drawn again at once
+			tick(NOW + 501)
+			expect(renders).toBe(rendersAtStart + 1)
+			expect(result.current).toBe(501)
+
+			// the played time passes 1 s, but the shown number (9.5 s) is still in the same second: not drawn again
+			tick(NOW + 1000)
+			expect(renders).toBe(rendersAtStart + 1)
+
+			// the shown number passes 9 s at 1.5 s played
+			tick(NOW + 1501)
+			expect(renders).toBe(rendersAtStart + 2)
+		})
 	})
 
 	describe('count-up values', () => {

@@ -21,6 +21,8 @@ import { CountdownType, PlaylistTimingType } from '@sofie-automation/blueprints-
 
 const PLAYLIST_ID = protectString<RundownPlaylistId>('playlist0')
 const NOW = 100000
+/** What the mocked system clock reads */
+let currentTime = NOW
 
 const SEGMENT_A = protectString<SegmentId>('segmentA')
 const SEGMENT_B = protectString<SegmentId>('segmentB')
@@ -84,7 +86,7 @@ jest.mock('../../../../lib/ReactMeteorData/ReactMeteorData.js', () => ({
 	useTracker: (fn: () => unknown) => fn(),
 }))
 jest.mock('../../../../lib/systemTime.js', () => ({
-	getCurrentTime: () => NOW,
+	getCurrentTime: () => currentTime,
 }))
 
 import { TimerValueMode, usePlaylistTimingValue, type PlaylistTimerKey } from '../usePlaylistTimingValue.js'
@@ -231,14 +233,19 @@ function renderOnAirTimer(
 }
 
 /** Dispatch a timing tick, as RundownTimingProvider does */
-function dispatchSyncedTick(currentTime: number): void {
+/** Move the clock on, and send the high-resolution tick that RundownTimingProvider sends on each frame */
+function advanceClockTo(time: number): void {
+	currentTime = time
 	act(() => {
-		window.dispatchEvent(new CustomEvent(RundownTiming.Events.timeupdateSynced, { detail: { currentTime } }))
+		window.dispatchEvent(
+			new CustomEvent(RundownTiming.Events.timeupdateHighResolution, { detail: { currentTime: time } })
+		)
 	})
 }
 
 describe('usePlaylistTimingValue for one part, right after a take', () => {
 	beforeEach(() => {
+		currentTime = NOW
 		publishedPlaylistTiming = undefined
 		publishedPartTimings = []
 		pagePlaylist = undefined
@@ -271,7 +278,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 			setUpRightAfterTake(makeTakenPartInstance('same segment'))
 
 			const { result } = renderOnAirTimer('remainingOnCurrentPart')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 
 			expect(result.current).toBe(TAKEN_PART_PLANNED_LENGTH)
 		})
@@ -279,7 +286,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 		it("does not jump when the server's countdown arrives, with one playout gateway", () => {
 			setUpRightAfterTake(makeTakenPartInstance('same segment'))
 			const { result, rerender } = renderOnAirTimer('remainingOnCurrentPart')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 			const shownBeforeTimingArrives = result.current
 
 			// The server holds the part at its full length until the gateway reports its start
@@ -297,7 +304,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 			const reportedStart = NOW + 40
 			setUpRightAfterTake(makeTakenPartInstance('same segment', { plannedStartedPlayback: reportedStart }))
 			const { result, rerender } = renderOnAirTimer('remainingOnCurrentPart')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 			const shownBeforeTimingArrives = result.current
 
 			publishTimingForTakenPart(
@@ -323,7 +330,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 			setUpRightAfterTake(makeTakenPartInstance('same segment', { plannedStartedPlayback: plannedStart }))
 			const { result, rerender } = renderOnAirTimer('remainingOnCurrentPart')
 			const shownAtTheTake = result.current
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 			const shownBeforeTimingArrives = result.current
 
 			publishTimingForTakenPart(
@@ -361,7 +368,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 				TimingTickResolution.None
 			)
 			const rendersBeforeTicks = renders.count
-			for (let i = 1; i <= 10; i++) dispatchSyncedTick(NOW + i * 1000)
+			for (let i = 1; i <= 10; i++) advanceClockTo(NOW + i * 1000)
 
 			expect(renders.count - rendersBeforeTicks).toBe(0)
 			expect(result.current).toBe(TAKEN_PART_PLANNED_LENGTH)
@@ -451,7 +458,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 			setUpRightAfterTake(makeTakenPartInstance('next segment'))
 
 			const { result } = renderOnAirTimer('remainingBudgetOnCurrentSegment')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 
 			expect(result.current).toBe(SEGMENT_B_BUDGET)
 		})
@@ -460,7 +467,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 			giveSegmentBABudget()
 			setUpRightAfterTake(makeTakenPartInstance('next segment'))
 			const { result, rerender } = renderOnAirTimer('remainingBudgetOnCurrentSegment')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 			const shownBeforeTimingArrives = result.current
 
 			// The server holds the budget until the segment's start is reported
@@ -483,7 +490,7 @@ describe('usePlaylistTimingValue for one part, right after a take', () => {
 				segmentsStartedPlayback: { [PLAY_OF_SEGMENT_B as unknown as string]: reportedStart },
 			}
 			const { result, rerender } = renderOnAirTimer('remainingBudgetOnCurrentSegment')
-			dispatchSyncedTick(NOW + 300)
+			advanceClockTo(NOW + 300)
 			const shownBeforeTimingArrives = result.current
 
 			publishTimingForTakenPart(

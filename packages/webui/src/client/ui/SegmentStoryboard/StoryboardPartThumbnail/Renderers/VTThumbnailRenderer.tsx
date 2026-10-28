@@ -38,7 +38,7 @@ export function VTThumbnailRenderer(props: Readonly<IProps>): JSX.Element {
 	)
 }
 
-function VTThumbnailRendererWithTiming({
+export function VTThumbnailRendererWithTiming({
 	partId,
 	pieceInstance,
 	partAutoNext,
@@ -54,12 +54,17 @@ function VTThumbnailRendererWithTiming({
 	isLive: boolean
 	hovering: boolean
 	contentStatus: PieceContentStatusObj | undefined
-}) {
-	const partPlayedValue = usePartTimingValue(partId, 'played', TimerValueMode.CountUp)
+}): JSX.Element | null {
+	const vtContent = pieceInstance.instance.piece.content as VTContent
+	const contentEnd = (vtContent?.sourceDuration ?? 0) - (vtContent?.seek ?? 0) + (pieceInstance.renderedInPoint ?? 0)
+
+	// drawn again when the shown number changes its second: the content left is the clip's end minus the played
+	// time, and the clip's end is not a whole number of seconds
+	const partPlayedValue = usePartTimingValue(partId, 'played', TimerValueMode.CountUp, {
+		drawnAs: (played) => contentEnd - played,
+	})
 	const partExpectedDurationValue = usePartTimingValue(partId, 'liveDisplayDuration', TimerValueMode.CountUp)
 	const currentTime = useTimingNow()
-
-	const vtContent = pieceInstance.instance.piece.content as VTContent
 
 	const previewUrl: string | undefined = contentStatus?.previewUrl
 	const thumbnailUrl: string | undefined = contentStatus?.thumbnailUrl
@@ -68,8 +73,6 @@ function VTThumbnailRendererWithTiming({
 	if (pieceInstance.instance.piece.content?.loop) return null
 
 	const partPlayed = partPlayedValue
-	const contentEnd = (vtContent?.sourceDuration ?? 0) - (vtContent?.seek ?? 0) + (pieceInstance.renderedInPoint ?? 0)
-
 	const contentLeft = contentEnd - partPlayed
 
 	const partExpectedDuration = partExpectedDurationValue

@@ -29,16 +29,30 @@ export function SegmentDuration(props: ISegmentDurationProps): JSX.Element | nul
 
 	if (remaining === null) return null
 
-	// A budgeted segment counts down to a hard floor rather than into overtime
-	const hardFloor = props.segment.segmentTiming?.countdownType === CountdownType.SEGMENT_BUDGET_DURATION
 	const showNegativeStyling = !props.fixed && !props.countUp
 
-	let value = remaining
+	let text: string
 	if (props.fixed) {
-		value = plannedDuration ?? 0
+		// a budgeted segment's planned length rounds down, as it always did
+		const hardFloor = props.segment.segmentTiming?.countdownType === CountdownType.SEGMENT_BUDGET_DURATION
+		text = RundownUtils.formatDiffToTimecode(
+			plannedDuration ?? 0,
+			false,
+			false,
+			true,
+			false,
+			true,
+			'+',
+			false,
+			hardFloor
+		)
 	} else if (props.countUp) {
 		// the published value counts up by going negative; this display is elapsed-positive
-		value = 0 - (playedOut ?? 0)
+		text = RundownUtils.formatDiffToTimecodeElapsed(0 - (playedOut ?? 0))
+	} else {
+		// a countdown: the time left rounds up, and the overrun rounds down, so 00:00 shows for the first second
+		// past zero and each number shows for a full second
+		text = RundownUtils.formatDiffToTimecodeCountdown(0 - remaining)
 	}
 
 	return (
@@ -50,7 +64,7 @@ export function SegmentDuration(props: ISegmentDurationProps): JSX.Element | nul
 				})}
 				role="timer"
 			>
-				{RundownUtils.formatDiffToTimecode(value, false, false, true, false, true, '+', false, hardFloor)}
+				{text}
 			</span>
 		</>
 	)

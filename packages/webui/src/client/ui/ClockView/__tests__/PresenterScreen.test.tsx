@@ -1,5 +1,5 @@
 import type React from 'react'
-import { render } from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import type {
 	PartId,
@@ -26,6 +26,8 @@ import type { PartUi } from '../../SegmentTimeline/SegmentTimelineContainer.js'
 
 const PLAYLIST_ID = protectString<RundownPlaylistId>('playlist0')
 const NOW = 100000
+/** What the mocked system clock reads */
+let currentTime = NOW
 const PREVIOUS_PART = protectString<PartInstanceId>('previousPartInstance')
 const TAKEN_PART = protectString<PartInstanceId>('takenPartInstance')
 const PREVIOUS_SEGMENT = protectString<SegmentId>('previousSegment')
@@ -72,7 +74,7 @@ jest.mock('../../../lib/ReactMeteorData/ReactMeteorData.js', () => ({
 	useTracker: (fn: () => unknown) => fn(),
 }))
 jest.mock('../../../lib/systemTime.js', () => ({
-	getCurrentTime: () => NOW,
+	getCurrentTime: () => currentTime,
 }))
 
 // Only the big on-air countdown is under test: the rest of the screen is mocked away
@@ -87,6 +89,7 @@ jest.mock('../RundownStatusBar.js', () => ({ RundownStatusBar: () => null }))
 jest.mock('../../Shelf/ShelfDashboardLayout.js', () => ({ ShelfDashboardLayout: () => null }))
 
 import { PresenterScreenContentDefaultLayout } from '../PresenterScreen.js'
+import { RundownTiming } from '../../RundownView/RundownTiming/RundownTiming.js'
 
 function makeDoc(fields: Partial<PlaylistTimingStateDoc>): PlaylistTimingStateDoc {
 	return {
@@ -169,6 +172,15 @@ function renderWithPartOnAir(partInstanceId: PartInstanceId): HTMLElement {
 			part: { title: 'Taken part', autoNext: false },
 		},
 	} as PartUi
+	const { container } = renderPresenter(currentPartInstance)
+
+	const partCountdown = container.querySelector<HTMLElement>('.presenter-screen__part__part-countdown')
+	if (!partCountdown) throw new Error('The on-air countdown was not rendered')
+	return partCountdown
+}
+
+/** Render the Presenter screen with the given part instance on air, or with nothing on air */
+function renderPresenter(currentPartInstance: PartUi | undefined): { container: HTMLElement } {
 	const props: React.ComponentProps<typeof PresenterScreenContentDefaultLayout> = {
 		studioId: protectString<StudioId>('studio0'),
 		playlistId: PLAYLIST_ID,
@@ -192,15 +204,44 @@ function renderWithPartOnAir(partInstanceId: PartInstanceId): HTMLElement {
 		fontSize: undefined,
 	}
 
-	const { container } = render(<PresenterScreenContentDefaultLayout {...props} />)
-
-	const partCountdown = container.querySelector<HTMLElement>('.presenter-screen__part__part-countdown')
-	if (!partCountdown) throw new Error('The on-air countdown was not rendered')
-	return partCountdown
+	return render(<PresenterScreenContentDefaultLayout {...props} />)
 }
+
+/** Move the clock on, and send the high-resolution tick that RundownTimingProvider sends on each frame */
+function advanceClockTo(time: number): void {
+	currentTime = time
+	act(() => {
+		window.dispatchEvent(
+			new CustomEvent(RundownTiming.Events.timeupdateHighResolution, { detail: { currentTime: time } })
+		)
+	})
+}
+
+describe('Presenter screen countdown to the planned start', () => {
+	beforeEach(() => {
+		currentTime = NOW
+		publishedPartTimings = []
+		pagePlaylist = { _id: PLAYLIST_ID } as DBRundownPlaylist
+		pagePartInstances = []
+		pageSegments = []
+		// the planned start is 20.5 s away
+		publishedPlaylistTiming = makeDoc({ plannedStart: { paused: false, zeroTime: NOW + 20_500 } })
+	})
+
+	it('counts down as the clock moves, while nothing is on air', () => {
+		const { container } = renderPresenter(undefined)
+		const countdown = () => container.querySelector('.presenter-screen__rundown-countdown')?.textContent
+		expect(countdown()).toBe('00:21')
+
+		// 19.9 s to go
+		advanceClockTo(NOW + 600)
+		expect(countdown()).toBe('00:20')
+	})
+})
 
 describe('Presenter screen on-air countdown', () => {
 	beforeEach(() => {
+		currentTime = NOW
 		publishedPlaylistTiming = undefined
 		publishedPartTimings = []
 		pagePlaylist = undefined

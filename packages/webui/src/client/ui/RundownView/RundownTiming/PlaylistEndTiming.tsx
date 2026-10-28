@@ -40,7 +40,7 @@ export function PlaylistEndTiming({
 
 	// where a running loop returns to, so the "Next Loop at" clock counts down to it
 	const firstPartId = useOrderedPartIds(playlistId)[0]
-	const firstPartCountdown = usePartCountdownValue(firstPartId, TimerValueMode.Duration)
+	const firstPartStartTime = usePartCountdownValue(firstPartId, TimerValueMode.Timestamp)
 
 	const plannedEnd = usePlaylistTimingValue(playlistId, 'plannedEnd', TimerValueMode.Timestamp)
 	const estimatedEnd = usePlaylistTimingValue(playlistId, 'estimatedEnd', TimerValueMode.Timestamp)
@@ -82,10 +82,10 @@ export function PlaylistEndTiming({
 						<Moment interval={0} format="HH:mm:ss" date={plannedEnd} />
 					</span>
 				) : isLoopRunning(rundownPlaylist) ? (
-					firstPartCountdown !== null && rundownPlaylist.activationId && rundownPlaylist.currentPartInfo ? (
+					firstPartStartTime !== null && rundownPlaylist.activationId && rundownPlaylist.currentPartInfo ? (
 						<span className="timing-clock plan-end visual-last-child" role="timer">
 							{!hidePlannedEndLabel && <span className="timing-clock-label right">{t('Next Loop at')}</span>}
-							<Moment interval={0} format="HH:mm:ss" date={now + firstPartCountdown} />
+							<Moment interval={0} format="HH:mm:ss" date={firstPartStartTime} />
 						</span>
 					) : null
 				) : estimatedEnd !== null ? (

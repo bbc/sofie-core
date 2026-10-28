@@ -128,37 +128,17 @@ export function OvertimeShadow({
 					/>
 					{!isPartZeroBudget &&
 						shouldShowFreezeFrameTimer &&
-						((contentVsPartDiff < 0 && Math.floor(toFreezeFrame / 1000) > 0) ||
-							(contentVsPartDiff >= 0 &&
-								Math.floor(toFreezeFrame / 1000) > 0 &&
-								livePosition > partRenderedDuration)) && (
+						((contentVsPartDiff < 0 && toFreezeFrame > 0) ||
+							(contentVsPartDiff >= 0 && toFreezeFrame > 0 && livePosition > partRenderedDuration)) && (
 							<span className="segment-opl__freeze-marker-timer" role="timer">
-								{RundownUtils.formatDiffToTimecode(
-									toFreezeFrame,
-									false,
-									false,
-									true,
-									false,
-									true,
-									undefined,
-									false,
-									true
-								)}
+								{/* the time left until the freeze rounds up, as every countdown does */}
+								{RundownUtils.formatDiffToTimecode(toFreezeFrame, false, false, true, false, true)}
 							</span>
 						)}
 					{isPartZeroBudget && shouldShowFreezeFrameTimer && livePosition < mainSourceEnd && (
 						<span className="segment-opl__freeze-marker-timer" role="timer">
-							{RundownUtils.formatDiffToTimecode(
-								mainSourceEnd - livePosition,
-								true,
-								false,
-								true,
-								false,
-								true,
-								undefined,
-								false,
-								true
-							)}
+							{/* the time left until the freeze rounds up, as every countdown does */}
+							{RundownUtils.formatDiffToTimecode(mainSourceEnd - livePosition, true, false, true, false, true)}
 						</span>
 					)}
 				</div>

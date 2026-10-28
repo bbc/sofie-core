@@ -28,7 +28,8 @@ export function RundownHeaderDurations({
 			) : null}
 			{clampedEstDuration !== null ? (
 				<Countdown label={t('Rem. Dur')} className="rundown-header__show-timers-countdown" ms={clampedEstDuration}>
-					{RundownUtils.formatDiffToTimecode(-clampedEstDuration, false, true, true, true, true, '', true, true)}
+					{/* the time left rounds up, also in its last 0.1 s */}
+					{RundownUtils.formatDiffToTimecode(-clampedEstDuration, false, true, true, false, true, '', true, true)}
 				</Countdown>
 			) : null}
 		</div>

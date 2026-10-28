@@ -22,9 +22,13 @@ interface IPartDurationProps {
 export function PartDisplayDuration(props: IPartDurationProps): JSX.Element | null {
 	const part = props.part
 	const expectedDuration = usePartTimingValue(part.instance.part._id, 'expectedDuration', TimerValueMode.Duration)
-	const played = usePartTimingValue(part.instance.part._id, 'played', TimerValueMode.CountUp)
-
 	const budget = part.instance.orphaned || part.instance.part.untimed ? 0 : (expectedDuration ?? 0)
+	// drawn again when the shown number changes its second: the time left is the budget minus the played time,
+	// and the budget is not always a whole number of seconds
+	const played = usePartTimingValue(part.instance.part._id, 'played', TimerValueMode.CountUp, {
+		drawnAs: props.countUp || props.fixed || part.instance.part.untimed ? undefined : (playedNow) => budget - playedNow,
+	})
+
 	const playedOut = (!part.instance.part.untimed ? played : 0) ?? 0
 
 	const duration = budget - playedOut
@@ -39,11 +43,12 @@ export function PartDisplayDuration(props: IPartDurationProps): JSX.Element | nu
 					</span>
 				) : props.countUp ? (
 					<span className={ClassNames(props.className)} role="timer">
-						{RundownUtils.formatDiffToTimecodeWithSign(playedOut)}
+						{RundownUtils.formatDiffToTimecodeElapsed(playedOut)}
 					</span>
 				) : (
 					<span className={ClassNames(props.className, duration < 0 ? 'negative' : undefined)} role="timer">
-						{RundownUtils.formatDiffToTimecodeWithSign(duration)}
+						{/* a countdown: the time left rounds up, and the overrun rounds down */}
+						{RundownUtils.formatDiffToTimecodeCountdown(0 - duration)}
 					</span>
 				)}
 			</>

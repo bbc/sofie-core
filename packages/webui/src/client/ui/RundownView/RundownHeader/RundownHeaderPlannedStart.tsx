@@ -18,6 +18,11 @@ export function RundownHeaderPlannedStart({
 
 	// The countdown is displayed as time-since-planned-start, so it is negative until we get there
 	const startsIn = -(untilStart ?? 0)
+	const hasStarted = startsIn >= 0
+	// a countdown: the time left rounds up, and the time since the planned start rounds down, as a stopwatch does
+	const startsInText = hasStarted
+		? `+${RundownUtils.formatDiffToTimecodeElapsed(startsIn)}`
+		: RundownUtils.formatDiffToTimecode(-startsIn, false, false, true, false, true, '')
 
 	return (
 		<div className="rundown-header__show-timers-endtimes">
@@ -27,17 +32,7 @@ export function RundownHeaderPlannedStart({
 			{startedPlayback !== null && <Countdown label={t('Started')} time={startedPlayback} />}
 			{startedPlayback === null && expectedStart !== null && (
 				<Countdown label={t('Start In')} className="rundown-header__show-timers-countdown" ms={startsIn}>
-					{`${startsIn > -1000 ? '+' : ''}${RundownUtils.formatDiffToTimecode(
-						-startsIn,
-						false,
-						false,
-						true,
-						true,
-						true,
-						'',
-						true,
-						true
-					)}`}
+					{startsInText}
 				</Countdown>
 			)}
 		</div>

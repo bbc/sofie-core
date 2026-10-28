@@ -16,6 +16,9 @@ const SEGMENT_ID = protectString<SegmentId>('segment0')
 const PART_ID = protectString<PartId>('part0')
 const NOW = 100000
 
+/** What the mocked system clock reads */
+let currentTime = NOW
+
 /** The documents the mocked collection holds, by id */
 const publishedDocs = new Map<unknown, TimingStateDoc>()
 
@@ -29,7 +32,7 @@ jest.mock('../../../../lib/ReactMeteorData/ReactMeteorData.js', () => ({
 	useTracker: (fn: () => unknown) => fn(),
 }))
 jest.mock('../../../../lib/systemTime.js', () => ({
-	getCurrentTime: () => NOW,
+	getCurrentTime: () => currentTime,
 }))
 
 import { TimerValueMode, usePartCountdownValue } from '../usePlaylistTimingValue.js'
@@ -67,10 +70,13 @@ function publishPart(countdownOffset: number | undefined): void {
 	publishedDocs.set(doc._id, doc)
 }
 
-/** Dispatch a timing tick, as RundownTimingProvider does */
-function tick(currentTime: number): void {
+/** Move the clock on, and send the high-resolution tick that RundownTimingProvider sends on each frame */
+function tick(time: number): void {
+	currentTime = time
 	act(() => {
-		window.dispatchEvent(new CustomEvent(RundownTiming.Events.timeupdateSynced, { detail: { currentTime } }))
+		window.dispatchEvent(
+			new CustomEvent(RundownTiming.Events.timeupdateHighResolution, { detail: { currentTime: time } })
+		)
 	})
 }
 
@@ -106,6 +112,7 @@ function renderHighResolutionOnlyWhileMoving(mode: TimerValueMode) {
 describe('usePartCountdownValue', () => {
 	beforeEach(() => {
 		publishedDocs.clear()
+		currentTime = NOW
 	})
 
 	it('returns null when nothing is published for the part', () => {

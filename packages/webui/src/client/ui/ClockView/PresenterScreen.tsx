@@ -11,7 +11,6 @@ import {
 	useTracker,
 } from '../../lib/ReactMeteorData/ReactMeteorData.js'
 import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
-import { getCurrentTime } from '../../lib/systemTime.js'
 import { MeteorPubSub } from '@sofie-automation/meteor-lib/dist/api/pubsub'
 import { PieceIconContainer } from '../PieceIcons/PieceIcon.js'
 import { PieceNameContainer } from '../PieceIcons/PieceName.js'
@@ -523,6 +522,8 @@ export function PresenterScreenContentDefaultLayout({
 		forThisPart
 	)
 	const expectedStart = usePlaylistTimingValue(playlistId, 'plannedStart', TimerValueMode.Timestamp)
+	// the time until the planned start, drawn again at the moment its own second changes
+	const untilPlannedStart = usePlaylistTimingValue(playlistId, 'plannedStart', TimerValueMode.Duration)
 
 	if (playlist && playlistId && segments) {
 		const currentPartOrSegmentCountdown = remainingBudget ?? remainingOnPart
@@ -582,9 +583,9 @@ export function PresenterScreenContentDefaultLayout({
 								{currentPartOrSegmentCountdown !== null && <Timediff time={currentPartOrSegmentCountdown} />}
 							</div>
 						</>
-					) : expectedStart ? (
+					) : expectedStart && untilPlannedStart !== null ? (
 						<div className="presenter-screen__rundown-countdown">
-							<Timediff time={expectedStart - getCurrentTime()} />
+							<Timediff time={untilPlannedStart} />
 						</div>
 					) : null}
 				</div>

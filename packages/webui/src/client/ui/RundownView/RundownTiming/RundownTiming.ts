@@ -34,7 +34,11 @@ export namespace RundownTiming {
 export enum TimingTickResolution {
 	/** Not re-rendered by the clock at all, for things drawn only from values that hold until something new is published. */
 	None = -1,
-	/** Used for things that we want to "tick" at the same time (every full second) for all things in the GUI. */
+	/**
+	 * Used for things that we want to change in step with the rest of the GUI. A plain read of the clock
+	 * (`useTimingNow`) ticks at every full second. A published timing value is drawn again at the
+	 * moment its own whole second changes, so values that count from the same moment change together.
+	 */
 	Synced = 0,
 	/** Updated with Low accuracy (ie about 4 times a second - based on LOW_RESOLUTION_TIMING_DECIMATOR). */
 	Low = 1,
