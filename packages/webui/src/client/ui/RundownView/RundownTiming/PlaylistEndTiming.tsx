@@ -5,7 +5,7 @@ import { RundownUtils } from '../../../lib/rundown.js'
 import {
 	TimerValueMode,
 	useOrderedPartIds,
-	usePartTimingValue,
+	usePartCountdownValue,
 	usePlaylistTimingValue,
 	useTimingNow,
 } from './usePlaylistTimingValue.js'
@@ -40,7 +40,7 @@ export function PlaylistEndTiming({
 
 	// where a running loop returns to, so the "Next Loop at" clock counts down to it
 	const firstPartId = useOrderedPartIds(playlistId)[0]
-	const firstPartCountdown = usePartTimingValue(firstPartId, 'countdown', TimerValueMode.Duration)
+	const firstPartCountdown = usePartCountdownValue(firstPartId, TimerValueMode.Duration)
 
 	const plannedEnd = usePlaylistTimingValue(playlistId, 'plannedEnd', TimerValueMode.Timestamp)
 	const estimatedEnd = usePlaylistTimingValue(playlistId, 'estimatedEnd', TimerValueMode.Timestamp)

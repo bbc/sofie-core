@@ -12,8 +12,12 @@ export const LiveLineIsPast = React.memo(function LiveLineIsPast({
 	time: number
 	children?: (isPast: boolean) => JSX.Element | null
 }) {
+	// The played time only moves while this part is on air, so only then is this redrawn on every tick
 	const livePosition =
-		usePartTimingValue(partId, 'played', TimerValueMode.CountUp, { tickResolution: TimingTickResolution.High }) ?? 0
+		usePartTimingValue(partId, 'played', TimerValueMode.CountUp, {
+			tickResolution: TimingTickResolution.High,
+			tickResolutionWhileHolding: TimingTickResolution.None,
+		}) ?? 0
 
 	return children ? children(livePosition > time) : null
 })

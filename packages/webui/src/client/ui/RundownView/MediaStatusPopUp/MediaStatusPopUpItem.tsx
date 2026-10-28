@@ -3,7 +3,7 @@ import type { PartId, PartInstanceId, SegmentId } from '@sofie-automation/coreli
 import type { SourceLayerType } from '@sofie-automation/blueprints-integration'
 import { PieceStatusCode } from '@sofie-automation/corelib/dist/dataModel/Piece'
 import { TimingTickResolution } from '../RundownTiming/RundownTiming.js'
-import { TimerValueMode, usePartTimingValue } from '../RundownTiming/usePlaylistTimingValue.js'
+import { TimerValueMode, usePartCountdownValue } from '../RundownTiming/usePlaylistTimingValue.js'
 import { RundownUtils } from '../../../lib/rundown.js'
 import classNames from 'classnames'
 import { MediaStatusIndicator } from '../../MediaStatus/MediaStatusIndicator.js'
@@ -48,7 +48,7 @@ export function MediaStatusPopUpItem({
 	followOnAirSegmentsHistory,
 }: IMediaStatusPopUpItemProps): JSX.Element {
 	const thisPartCountdown =
-		usePartTimingValue(partId, 'countdown', TimerValueMode.Duration, {
+		usePartCountdownValue(partId, TimerValueMode.Duration, {
 			tickResolution: TimingTickResolution.Low,
 		}) ?? undefined
 

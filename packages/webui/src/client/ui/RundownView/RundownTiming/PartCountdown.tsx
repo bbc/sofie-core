@@ -3,7 +3,12 @@ import Moment from 'react-moment'
 import { RundownUtils } from '../../../lib/rundown.js'
 import type { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
 import type { PartId } from '@sofie-automation/corelib/dist/dataModel/Ids'
-import { TimerValueMode, usePartTimingValue, usePlaylistTimingValue, useTimingNow } from './usePlaylistTimingValue.js'
+import {
+	TimerValueMode,
+	usePartCountdownValue,
+	usePlaylistTimingValue,
+	useTimingNow,
+} from './usePlaylistTimingValue.js'
 
 interface IPartCountdownProps {
 	partId?: PartId
@@ -18,7 +23,7 @@ interface IPartCountdownProps {
  */
 export function PartCountdown(props: IPartCountdownProps): JSX.Element | null {
 	// absent when the Part will probably not be played out, if played in order
-	const thisPartCountdown = usePartTimingValue(props.partId, 'countdown', TimerValueMode.Duration)
+	const thisPartCountdown = usePartCountdownValue(props.partId, TimerValueMode.Duration)
 	const plannedStart = usePlaylistTimingValue(props.playlist._id, 'plannedStart', TimerValueMode.Timestamp)
 	const now = useTimingNow()
 

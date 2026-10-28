@@ -80,9 +80,9 @@ function vibrate(displayTime: number) {
 
 function usePartRemaining(props: IPartRemainingProps) {
 	const playlistId = useRundownPlaylistId()
-	// The hook discards a state that is about a different part, which is the same guard the
-	// timing context needed - the published state and this component's prop can disagree for a
-	// moment after a take
+	// The published state and this component's prop can disagree for a moment after a take. The
+	// hook never returns a state that is about a different part: for that moment it returns what
+	// the server publishes for the part just taken
 	const forThisPart = { forPartInstanceId: props.currentPartInstanceId }
 	const remainingOnPart = usePlaylistTimingValue(
 		playlistId,

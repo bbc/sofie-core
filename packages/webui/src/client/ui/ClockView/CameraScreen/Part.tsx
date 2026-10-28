@@ -10,6 +10,7 @@ import { PartDisplayDuration } from '../../RundownView/RundownTiming/PartDuratio
 import { TimingTickResolution } from '../../RundownView/RundownTiming/RundownTiming.js'
 import {
 	TimerValueMode,
+	usePartCountdownValue,
 	usePartTimingValue,
 	usePlaylistTimingValue,
 } from '../../RundownView/RundownTiming/usePlaylistTimingValue.js'
@@ -29,7 +30,7 @@ export function Part({ playlist, part, piece, isLive, isNext }: IProps): JSX.Ele
 	const areaZoom = useContext(AreaZoom)
 
 	const highResolution = { tickResolution: TimingTickResolution.High }
-	const countdown = usePartTimingValue(part.partId, 'countdown', TimerValueMode.Duration, highResolution)
+	const countdown = usePartCountdownValue(part.partId, TimerValueMode.Duration, highResolution)
 	const played = usePartTimingValue(part.partId, 'played', TimerValueMode.CountUp, highResolution)
 	// the live display duration, which grows past the planned one while the part overruns
 	const displayDuration = usePartTimingValue(part.partId, 'liveDisplayDuration', TimerValueMode.CountUp, highResolution)

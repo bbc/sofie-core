@@ -6,7 +6,7 @@ import type { RundownPlaylistId } from '@sofie-automation/corelib/dist/dataModel
 import {
 	TimerValueMode,
 	useOrderedPartIds,
-	usePartTimingValue,
+	usePartCountdownValue,
 	useTimingNow,
 } from './RundownTiming/usePlaylistTimingValue.js'
 import { RundownUtils } from '../../lib/rundown.js'
@@ -14,7 +14,7 @@ import { RundownUtils } from '../../lib/rundown.js'
 function NextLoopClock({ useWallClock, playlistId }: { useWallClock?: boolean; playlistId: RundownPlaylistId }) {
 	// the countdown to the first part of the rundown, which is where the loop returns to
 	const firstPartId = useOrderedPartIds(playlistId)[0]
-	const thisPartCountdown = usePartTimingValue(firstPartId, 'countdown', TimerValueMode.Duration)
+	const thisPartCountdown = usePartCountdownValue(firstPartId, TimerValueMode.Duration)
 	const now = useTimingNow()
 
 	if (thisPartCountdown === null) return null

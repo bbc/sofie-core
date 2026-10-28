@@ -874,7 +874,12 @@ const SegmentTimelinePartTranslated = withTranslation()(SegmentTimelinePartClass
 export const SegmentTimelinePart: React.ComponentType<IProps & Partial<WithSegmentPartTimings>> =
 	function SegmentTimelinePart(props) {
 		const ownTimings = useSegmentPartTimings(props.segmentPartTimings ? undefined : props.segment._id)
-		const ownNow = useTimingNow(TimingTickResolution.High)
+
+		// Only the on-air part reads the clock itself, for its live line and the room kept ahead of it.
+		// Every other part is placed by its segment's timings alone, which only follow the clock in the
+		// segment holding the on-air part, so a part anywhere else is not redrawn by the clock at all.
+		const isOnAir = props.playlist.currentPartInfo?.partInstanceId === props.part.instance._id
+		const ownNow = useTimingNow(isOnAir ? TimingTickResolution.High : TimingTickResolution.None)
 
 		return (
 			<SegmentTimelinePartTranslated

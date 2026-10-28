@@ -32,6 +32,8 @@ export namespace RundownTiming {
 
 /** How often a component wants to be re-rendered by the timing clock */
 export enum TimingTickResolution {
+	/** Not re-rendered by the clock at all, for things drawn only from values that hold until something new is published. */
+	None = -1,
 	/** Used for things that we want to "tick" at the same time (every full second) for all things in the GUI. */
 	Synced = 0,
 	/** Updated with Low accuracy (ie about 4 times a second - based on LOW_RESOLUTION_TIMING_DECIMATOR). */
@@ -40,9 +42,13 @@ export enum TimingTickResolution {
 	High = 2,
 }
 
-/** The window event that fires at the requested rate */
-export function rundownTimingEventFromTickResolution(tickResolution: TimingTickResolution): RundownTiming.Events {
+/** The window event that fires at the requested rate, or undefined if there is none to listen to */
+export function rundownTimingEventFromTickResolution(
+	tickResolution: TimingTickResolution
+): RundownTiming.Events | undefined {
 	switch (tickResolution) {
+		case TimingTickResolution.None:
+			return undefined
 		case TimingTickResolution.High:
 			return RundownTiming.Events.timeupdateHighResolution
 		case TimingTickResolution.Low:

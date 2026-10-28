@@ -725,7 +725,8 @@ interface ScrollAnchor {
 }
 type PrompterSnapshot = ScrollAnchor[] | null
 
-function Prompter(props: Readonly<PropsWithChildren<IPrompterProps>>): JSX.Element {
+/** Exported for tests only */
+export function Prompter(props: Readonly<PropsWithChildren<IPrompterProps>>): JSX.Element {
 	useSubscription(CorelibPubSub.rundownsInPlaylists, [props.rundownPlaylistId])
 
 	const playlist = useTracker(
@@ -751,6 +752,8 @@ function Prompter(props: Readonly<PropsWithChildren<IPrompterProps>>): JSX.Eleme
 		playlist?.activationId ?? null,
 		{ omitTimings: true }
 	)
+	// the Over/Under chip reads its value from the published timing
+	useSubscriptionIfEnabled(CorelibPubSub.playlistTimingState, props.config.showOverUnder, props.rundownPlaylistId)
 
 	const rundowns = useTracker(
 		() =>

@@ -37,9 +37,14 @@ export function OvertimeShadow({
 	isLive,
 	hasAlreadyPlayed,
 }: IProps): JSX.Element {
-	// a TimerState, so this moves smoothly at 60Hz without the publication having to say anything
+	// A TimerState, so this moves smoothly at 60Hz without the publication having to say anything. It
+	// only moves while this part is on air, so only then is the shadow redrawn on every tick; a part
+	// anywhere else holds its played time and is not redrawn by the clock at all.
 	const livePosition =
-		usePartTimingValue(partId, 'played', TimerValueMode.CountUp, { tickResolution: TimingTickResolution.High }) ?? 0
+		usePartTimingValue(partId, 'played', TimerValueMode.CountUp, {
+			tickResolution: TimingTickResolution.High,
+			tickResolutionWhileHolding: TimingTickResolution.None,
+		}) ?? 0
 
 	const contentVsPartDiff = mainSourceEnd - partRenderedDuration
 	const toFreezeFrame =

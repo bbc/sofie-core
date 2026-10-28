@@ -796,6 +796,7 @@ export class SegmentTimelineClass extends React.Component<Translated<IProps & Wi
 						livePartStartsAt={livePartStartsAt}
 						livePartDisplayDuration={livePartDisplayDuration}
 						budgetDuration={undefined}
+						segmentPartTimings={this.props.segmentPartTimings}
 					/>
 					{emitSmallPartsInFlag && emitSmallPartsInFlagAtEnd && (
 						<SegmentTimelineSmallPartFlag
@@ -866,6 +867,7 @@ export class SegmentTimelineClass extends React.Component<Translated<IProps & Wi
 				livePartStartsAt={livePartStartsAt}
 				livePartDisplayDuration={livePartDisplayDuration}
 				budgetDuration={budgetDuration}
+				segmentPartTimings={this.props.segmentPartTimings}
 			/>
 		)
 	}

@@ -24,8 +24,8 @@ jest.mock('../../../../lib/systemTime.js', () => ({
 	getCurrentTime: () => NOW,
 }))
 
-import { TimerValueMode, usePartTimingValue } from '../usePlaylistTimingValue.js'
-import { RundownTiming } from '../RundownTiming.js'
+import { TimerValueMode, usePartTimingValue, type PartTimerKey } from '../usePlaylistTimingValue.js'
+import { RundownTiming, TimingTickResolution } from '../RundownTiming.js'
 
 function makeDoc(fields: Partial<PartTimingStateDoc>): PartTimingStateDoc {
 	return {
@@ -37,6 +37,8 @@ function makeDoc(fields: Partial<PartTimingStateDoc>): PartTimingStateDoc {
 		rank: 0,
 		isInQuickLoop: false,
 		countsTowardsTiming: true,
+		untimed: false,
+		orphaned: false,
 		...fields,
 	}
 }
@@ -48,21 +50,50 @@ function tick(currentTime: number): void {
 	})
 }
 
+/** Dispatch high-resolution ticks a frame apart, as RundownTimingProvider does */
+function dispatchHighResolutionTicks(count: number, startingAt: number): void {
+	for (let i = 0; i < count; i++) {
+		act(() => {
+			window.dispatchEvent(
+				new CustomEvent(RundownTiming.Events.timeupdateHighResolution, {
+					detail: { currentTime: startingAt + i * 16 },
+				})
+			)
+		})
+	}
+}
+
+/**
+ * Read a timer on every high-resolution tick while it moves and on no tick while it holds, counting
+ * how many times the caller is rendered
+ */
+function renderHighResolutionOnlyWhileMoving(timer: PartTimerKey, mode: TimerValueMode) {
+	const renders = { count: 0 }
+	const hook = renderHook(() => {
+		renders.count++
+		return usePartTimingValue(PART_ID, timer, mode, {
+			tickResolution: TimingTickResolution.High,
+			tickResolutionWhileHolding: TimingTickResolution.None,
+		})
+	})
+	return { ...hook, renders }
+}
+
 describe('usePartTimingValue', () => {
 	beforeEach(() => {
 		publishedDoc = undefined
 	})
 
 	it('returns null when nothing is published for the part', () => {
-		const { result } = renderHook(() => usePartTimingValue(PART_ID, 'countdown', TimerValueMode.Duration))
+		const { result } = renderHook(() => usePartTimingValue(PART_ID, 'expectedDuration', TimerValueMode.Duration))
 
 		expect(result.current).toBeNull()
 	})
 
-	it('returns null when the countdown is absent, meaning the part will not be played in order', () => {
+	it('returns null when the document omits the requested timer', () => {
 		publishedDoc = makeDoc({ expectedDuration: { paused: true, duration: 10000 } })
 
-		const { result } = renderHook(() => usePartTimingValue(PART_ID, 'countdown', TimerValueMode.Duration))
+		const { result } = renderHook(() => usePartTimingValue(PART_ID, 'played', TimerValueMode.CountUp))
 
 		expect(result.current).toBeNull()
 	})
@@ -75,21 +106,6 @@ describe('usePartTimingValue', () => {
 
 		tick(NOW + 60000)
 		expect(result.current).toBe(10000)
-	})
-
-	it('counts a countdown down, holding once the on-air part overruns', () => {
-		// the part is 30s away, and the on-air part is due to end at 130000
-		publishedDoc = makeDoc({ countdown: { paused: false, zeroTime: 130000, pauseTime: 130000 } })
-
-		const { result } = renderHook(() => usePartTimingValue(PART_ID, 'countdown', TimerValueMode.Duration))
-		expect(result.current).toBe(30000)
-
-		tick(120000)
-		expect(result.current).toBe(10000)
-
-		// once the on-air part is overrunning, the countdown cannot fall any further
-		tick(140000)
-		expect(result.current).toBe(0)
 	})
 
 	describe('count-up values', () => {
@@ -153,6 +169,52 @@ describe('usePartTimingValue', () => {
 			const { result } = renderHook(() => usePartTimingValue(PART_ID, 'played', TimerValueMode.CountUp))
 
 			expect(Object.is(result.current, 0)).toBe(true)
+		})
+	})
+
+	describe('with no ticks while the timer holds', () => {
+		it('is not re-rendered by any tick while the timer holds its value', () => {
+			// a part that has played for 8s and is done
+			publishedDoc = makeDoc({ played: { paused: true, duration: 0 - 8000 } })
+
+			const { result, renders } = renderHighResolutionOnlyWhileMoving('played', TimerValueMode.CountUp)
+			const rendersBeforeTicks = renders.count
+
+			dispatchHighResolutionTicks(60, NOW + 16)
+
+			expect(renders.count - rendersBeforeTicks).toBe(0)
+			expect(result.current).toBe(8000)
+		})
+
+		it('is re-rendered on every tick while the timer moves', () => {
+			// on air since 95000
+			publishedDoc = makeDoc({ played: { paused: true, duration: 0, resumesAt: 95000 } })
+
+			const { result, renders } = renderHighResolutionOnlyWhileMoving('played', TimerValueMode.CountUp)
+			const rendersBeforeTicks = renders.count
+
+			dispatchHighResolutionTicks(60, NOW + 16)
+
+			expect(renders.count - rendersBeforeTicks).toBe(60)
+			// the last tick was at 100960
+			expect(result.current).toBe(5960)
+		})
+
+		it('keeps ticking for a timestamp, since the moment a timer that holds would reach zero moves with the clock', () => {
+			// holding at 30s, so it reaches zero 30s after whenever it is read
+			publishedDoc = makeDoc({ expectedDuration: { paused: true, duration: 30000 } })
+
+			const { result, renders } = renderHighResolutionOnlyWhileMoving(
+				'expectedDuration',
+				TimerValueMode.Timestamp
+			)
+			const rendersBeforeTicks = renders.count
+
+			dispatchHighResolutionTicks(60, NOW + 16)
+
+			expect(renders.count - rendersBeforeTicks).toBe(60)
+			// the last tick was at 100960
+			expect(result.current).toBe(100960 + 30000)
 		})
 	})
 

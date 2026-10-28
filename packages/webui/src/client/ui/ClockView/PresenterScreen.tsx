@@ -492,7 +492,7 @@ function PresenterScreenContentDashboardLayout({
 	return null
 }
 
-function PresenterScreenContentDefaultLayout({
+export function PresenterScreenContentDefaultLayout({
 	playlist,
 	segments,
 	currentShowStyleBaseId,
@@ -504,14 +504,28 @@ function PresenterScreenContentDefaultLayout({
 	nextPartInstance,
 	nextSegment,
 	rundownIds,
-}: Readonly<PresenterScreenProps & PresenterScreenTrackedProps>) {
+}: Readonly<PresenterScreenProps & PresenterScreenTrackedProps>): JSX.Element | null {
+	// Only the countdown of the part shown here, as on the Director screen: for a moment after a
+	// take the published state can still describe the previous part, and the hook then returns what
+	// the server publishes for the part just taken instead
+	const forThisPart = { forPartInstanceId: currentPartInstance?.instance._id ?? null }
 	// The segment budget takes precedence when the on-air segment has one
-	const remainingBudget = usePlaylistTimingValue(playlistId, 'remainingBudgetOnCurrentSegment', TimerValueMode.Duration)
-	const remainingOnPart = usePlaylistTimingValue(playlistId, 'remainingOnCurrentPart', TimerValueMode.Duration)
+	const remainingBudget = usePlaylistTimingValue(
+		playlistId,
+		'remainingBudgetOnCurrentSegment',
+		TimerValueMode.Duration,
+		forThisPart
+	)
+	const remainingOnPart = usePlaylistTimingValue(
+		playlistId,
+		'remainingOnCurrentPart',
+		TimerValueMode.Duration,
+		forThisPart
+	)
 	const expectedStart = usePlaylistTimingValue(playlistId, 'plannedStart', TimerValueMode.Timestamp)
 
 	if (playlist && playlistId && segments) {
-		const currentPartOrSegmentCountdown = remainingBudget ?? remainingOnPart ?? 0
+		const currentPartOrSegmentCountdown = remainingBudget ?? remainingOnPart
 
 		return (
 			<div className="presenter-screen">
@@ -564,7 +578,8 @@ function PresenterScreenContentDefaultLayout({
 								)}
 							</div>
 							<div className="presenter-screen__part__part-countdown">
-								<Timediff time={currentPartOrSegmentCountdown} />
+								{/* empty rather than 00:00 while there is no countdown for this part */}
+								{currentPartOrSegmentCountdown !== null && <Timediff time={currentPartOrSegmentCountdown} />}
 							</div>
 						</>
 					) : expectedStart ? (

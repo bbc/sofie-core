@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { PartId, PartInstanceId, RundownPlaylistId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import {
 	getPartTimingStateDocId,
@@ -14,6 +14,7 @@ import {
 	type TimingStateDocId,
 } from '@sofie-automation/corelib/dist/dataModel/TimingState'
 import {
+	offsetTimerState,
 	type TimerState,
 	timerStateToDuration,
 	timerStateToZeroTime,
@@ -24,6 +25,7 @@ import { PlaylistTimingStates } from '../../Collections.js'
 import { useTracker } from '../../../lib/ReactMeteorData/ReactMeteorData.js'
 import { getCurrentTime } from '../../../lib/systemTime.js'
 import { TimingTickResolution, rundownTimingEventFromTickResolution, type TimingEvent } from './RundownTiming.js'
+import { getOnAirTimerStateRightAfterTake } from './onAirTimerRightAfterTake.js'
 
 /** How to read a published TimerState as a number */
 export enum TimerValueMode {
@@ -52,7 +54,11 @@ type TimerKeysOf<TDoc> = {
 	[K in keyof TDoc]-?: NonNullable<TDoc[K]> extends TimerState ? K : never
 }[keyof TDoc]
 
-export type PlaylistTimerKey = TimerKeysOf<PlaylistTimingStateDoc>
+/**
+ * The playlist's timers that mean something on their own. `partCountdownBase` does not: it is read through
+ * {@link usePartCountdownValue}, together with a part's offset
+ */
+export type PlaylistTimerKey = Exclude<TimerKeysOf<PlaylistTimingStateDoc>, 'partCountdownBase'>
 export type SegmentTimerKey = TimerKeysOf<SegmentTimingStateDoc>
 export type PartTimerKey = TimerKeysOf<PartTimingStateDoc>
 
@@ -64,11 +70,23 @@ export interface UsePlaylistTimingValueOptions {
 	tickResolution?: TimingTickResolution
 
 	/**
-	 * Only return a value while the published state is about this PartInstance.
+	 * How often the value should be recomputed while the published timer holds its value, as a Part's
+	 * `played` does whenever that Part is not on air. Defaults to `tickResolution`.
 	 *
-	 * The on-air timers describe whichever part is on air, and a component rendering a specific
-	 * part must not show another part's numbers during the moment after a take when the two
-	 * disagree. Pass the part being rendered and the hook returns null until they match.
+	 * A Duration or CountUp read of a timer that holds is the same at any time, so None here draws the
+	 * same while sparing the caller every re-render by the clock until the timer moves again. A
+	 * Timestamp read is always recomputed at `tickResolution`; see {@link timerValueChangesWithClock}.
+	 */
+	tickResolutionWhileHolding?: TimingTickResolution
+
+	/**
+	 * Only return a value that is about this PartInstance.
+	 *
+	 * The on-air timers describe whichever part the server last had on air, and a component rendering
+	 * a specific part must not show another part's numbers during the moment after a take when the
+	 * two disagree. Pass the part being rendered: while the published state is about another part,
+	 * the hook returns null, except right after a take of this part, when it returns what the server
+	 * publishes for a part just taken (see {@link getOnAirTimerStateRightAfterTake}).
 	 */
 	forPartInstanceId?: PartInstanceId | null
 	/** Only return a value while the published state is about this Segment. See `forPartInstanceId`. */
@@ -140,6 +158,56 @@ export function usePartTimingValue(
 	options?: UsePlaylistTimingValueOptions
 ): number | null {
 	return useTimingStateValue(partId && getPartTimingStateDocId(partId), isPartTimingStateDoc, timer, mode, options)
+}
+
+/**
+ * The countdown until a part goes on air, from the published timing state: the playlist's
+ * `partCountdownBase` shifted by the part's `countdownOffset`. See {@link usePlaylistTimingValue}.
+ *
+ * The caller re-renders when the part's offset or the playlist's base changes, which is at playout
+ * events, and on the timing ticks while the countdown moves.
+ *
+ * @param partId The part to read, or undefined outside a timing scope
+ * @param mode Whether to read it as a duration or as a wall-clock timestamp
+ * @returns The value in milliseconds, or null when the part has no countdown, because it will
+ * probably not be played out if the rundown is played in order, or nothing is published for the
+ * part or its playlist
+ */
+export function usePartCountdownValue(
+	partId: PartId | undefined,
+	mode: TimerValueMode,
+	options?: Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding'>
+): number | null {
+	const state = useTracker(
+		() => {
+			if (!partId) return undefined
+
+			// `type` narrows the published union, so it has to be in each projection
+			const partDoc = PlaylistTimingStates.findOne(getPartTimingStateDocId(partId), {
+				fields: {
+					type: 1,
+					playlistId: 1,
+					countdownOffset: 1,
+				} satisfies MongoFieldSpecifierOnes<PartTimingStateDoc>,
+			}) as (Pick<TimingStateDoc, 'type'> & Partial<PartTimingStateDoc>) | undefined
+			if (!partDoc || !isPartTimingStateDoc(partDoc)) return undefined
+
+			const countdownOffset = partDoc.countdownOffset
+			const hasCountdown = countdownOffset !== undefined
+			if (!hasCountdown) return undefined
+
+			const playlistDoc = PlaylistTimingStates.findOne(getPlaylistTimingStateDocId(partDoc.playlistId), {
+				fields: { type: 1, partCountdownBase: 1 } satisfies MongoFieldSpecifierOnes<PlaylistTimingStateDoc>,
+			}) as (Pick<TimingStateDoc, 'type'> & Partial<PlaylistTimingStateDoc>) | undefined
+			if (!playlistDoc || !isPlaylistTimingStateDoc(playlistDoc)) return undefined
+
+			return offsetTimerState(playlistDoc.partCountdownBase, countdownOffset)
+		},
+		[partId],
+		undefined
+	)
+
+	return useTimerStateValue(state, mode, options)
 }
 
 /**
@@ -255,12 +323,11 @@ export interface SegmentPartTiming {
  * external consumer of the publication would do, so if this is not enough to render the timeline,
  * the publication is missing something.
  *
- * @param tickResolution How often to re-evaluate, since the on-air Part's values grow with the clock
+ * Only the on-air Part's values grow with the clock, so only the Segment holding it is re-evaluated
+ * on every high-resolution tick. Every other Segment's values hold until something new is published,
+ * and the caller is not re-rendered by the clock at all.
  */
-export function useSegmentPartTimings(
-	segmentId: SegmentId | undefined,
-	tickResolution: TimingTickResolution = TimingTickResolution.High
-): Map<PartId, SegmentPartTiming> {
+export function useSegmentPartTimings(segmentId: SegmentId | undefined): Map<PartId, SegmentPartTiming> {
 	const docs = useTracker(
 		() => {
 			if (!segmentId) return []
@@ -280,10 +347,18 @@ export function useSegmentPartTimings(
 		[]
 	)
 
-	const now = useTimingNow(tickResolution)
+	const hasPartChangingWithClock = docs.some(
+		(doc) => timerStateChangesWithClock(doc.liveDisplayDuration) || timerStateChangesWithClock(doc.duration)
+	)
+	const now = useTimingNow(hasPartChangingWithClock ? TimingTickResolution.High : TimingTickResolution.None)
 
+	// The same Map for as long as nothing it is built from has changed, so that the components it is
+	// handed to can tell by its identity that they have nothing new to draw
+	return useMemo(() => evaluateSegmentPartTimings(docs, now), [docs, now])
+}
+
+function evaluateSegmentPartTimings(docs: PartTimingStateDoc[], now: number): Map<PartId, SegmentPartTiming> {
 	const timings = new Map<PartId, SegmentPartTiming>()
-	if (!docs) return timings
 
 	let displayStartsAt = 0
 	for (const doc of docs) {
@@ -302,6 +377,37 @@ export function useSegmentPartTimings(
 	}
 
 	return timings
+}
+
+/**
+ * Whether a published timer's value moves with the clock. A running timer does, and so does a paused
+ * one that has a time to start running at. Any other paused timer holds its value until a new state
+ * is published.
+ */
+function timerStateChangesWithClock(state: TimerState | undefined): boolean {
+	if (!state) return false
+
+	const isRunning = !state.paused
+	const hasScheduledStart = state.paused && state.resumesAt != null
+	return isRunning || hasScheduledStart
+}
+
+/**
+ * Whether the value read from a published timer moves with the clock. A Duration or CountUp read
+ * moves only while the timer itself does. A Timestamp read of a timer that holds is the moment it
+ * would reach zero if it resumed now, which moves with the clock, so a Timestamp read always moves.
+ */
+function timerValueChangesWithClock(state: TimerState | undefined, mode: TimerValueMode): boolean {
+	switch (mode) {
+		case TimerValueMode.Duration:
+		case TimerValueMode.CountUp:
+			return timerStateChangesWithClock(state)
+		case TimerValueMode.Timestamp:
+			return true
+		default:
+			assertNever(mode)
+			return true
+	}
 }
 
 /**
@@ -340,7 +446,6 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
 	mode: TimerValueMode,
 	options?: UsePlaylistTimingValueOptions
 ): number | null {
-	const tickResolution = options?.tickResolution ?? TimingTickResolution.Synced
 	const forPartInstanceId = options?.forPartInstanceId
 	const forSegmentId = options?.forSegmentId
 
@@ -353,6 +458,7 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
 			const doc = PlaylistTimingStates.findOne(docId, {
 				fields: {
 					type: 1,
+					playlistId: 1,
 					currentPartInstanceId: 1,
 					currentSegmentId: 1,
 					[timer]: 1,
@@ -361,8 +467,14 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
 
 			if (!doc || !isWantedDoc(doc)) return undefined
 
-			// Discard a state that is about a different part or segment than the caller renders
-			if (forPartInstanceId !== undefined && doc.currentPartInstanceId !== forPartInstanceId) return undefined
+			// Never a state that is about a different part than the caller renders. Right after a take
+			// the page has the new part on air a moment before the server's timing for it, and for
+			// that moment the caller gets the state the server publishes for a part just taken
+			const isAboutAnotherPart =
+				forPartInstanceId !== undefined && doc.currentPartInstanceId !== forPartInstanceId
+			if (isAboutAnotherPart) return getOnAirTimerStateRightAfterTake(doc, timer, forPartInstanceId)
+
+			// Discard a state that is about a different segment than the caller renders
 			if (forSegmentId !== undefined && doc.currentSegmentId !== forSegmentId) return undefined
 
 			return (doc as TDoc)[timer] as TimerState | undefined
@@ -371,8 +483,25 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
 		undefined
 	)
 
-	// so the value stays current between published states
-	const now = useTimingNow(tickResolution)
+	return useTimerStateValue(state, mode, options)
+}
+
+/**
+ * A published timer state read as a number at the current time, and read again on the timing ticks
+ * for as long as the value moves with the clock, so that it stays current between published states.
+ *
+ * @returns The value in milliseconds, or null when there is no state
+ */
+function useTimerStateValue(
+	state: TimerState | undefined,
+	mode: TimerValueMode,
+	options: Pick<UsePlaylistTimingValueOptions, 'tickResolution' | 'tickResolutionWhileHolding'> | undefined
+): number | null {
+	const tickResolution = options?.tickResolution ?? TimingTickResolution.Synced
+	const tickResolutionWhileHolding = options?.tickResolutionWhileHolding ?? tickResolution
+
+	const isValueHolding = !timerValueChangesWithClock(state, mode)
+	const now = useTimingNow(isValueHolding ? tickResolutionWhileHolding : tickResolution)
 
 	if (!state) return null
 
@@ -401,13 +530,27 @@ function useTimingStateValue<TDoc extends TimingStateDoc>(
  * mounts one (as all the rundown views do).
  *
  * @param tickResolution How often to re-render. Defaults to Synced (1Hz, aligned with the rest of
- * the timing UI).
+ * the timing UI). With None the caller is not re-rendered by the clock at all, and keeps the time it
+ * last had.
  */
 export function useTimingNow(tickResolution: TimingTickResolution = TimingTickResolution.Synced): number {
 	const [now, setNow] = useState(() => getCurrentTime())
+	const [nowTickResolution, setNowTickResolution] = useState(tickResolution)
+
+	// A caller that moves to another rate - in particular one that starts ticking after not ticking
+	// at all - takes the current time straight away, rather than rendering with the time it last had
+	// until its first new tick arrives. Setting state while rendering makes React render again at
+	// once, before anything is drawn.
+	const hasTickResolutionChanged = nowTickResolution !== tickResolution
+	if (hasTickResolutionChanged) {
+		setNowTickResolution(tickResolution)
+		setNow(getCurrentTime())
+	}
 
 	useEffect(() => {
 		const eventName = rundownTimingEventFromTickResolution(tickResolution)
+		if (!eventName) return
+
 		const handler = (e: Event) => setNow((e as TimingEvent).detail?.currentTime ?? getCurrentTime())
 
 		window.addEventListener(eventName, handler)

@@ -37,7 +37,16 @@ export function OverlayScreen({ playlistId, studioId }: OverlayScreenProps): Rea
 	)
 
 	const currentTime = useTimingNow()
-	const remainingOnCurrentPart = usePlaylistTimingValue(playlistId, 'remainingOnCurrentPart', TimerValueMode.Duration)
+	// Only the countdown of the part on air here, as on the Director screen: for a moment after a
+	// take the published state can still describe the previous part, and the hook then returns what
+	// the server publishes for the part just taken instead
+	const forThisPart = { forPartInstanceId: presenterScreenProps?.currentPartInstance?.instance._id ?? null }
+	const remainingOnCurrentPart = usePlaylistTimingValue(
+		playlistId,
+		'remainingOnCurrentPart',
+		TimerValueMode.Duration,
+		forThisPart
+	)
 
 	useEffect(() => {
 		const bodyClassList: string[] = ['transparent']
@@ -58,11 +67,7 @@ export function OverlayScreen({ playlistId, studioId }: OverlayScreenProps): Rea
 	}
 
 	const currentPart = presenterScreenProps?.currentPartInstance
-
-	let currentPartCountdown: number | null = null
-	if (currentPart) {
-		currentPartCountdown = remainingOnCurrentPart ?? 0
-	}
+	const isPartOnAir = currentPart !== undefined
 
 	const nextPart = presenterScreenProps?.nextPartInstance
 
@@ -70,8 +75,9 @@ export function OverlayScreen({ playlistId, studioId }: OverlayScreenProps): Rea
 		<div className="clocks-overlay">
 			<div className="clocks-lower-third bottom">
 				<div className="clocks-current-segment-countdown clocks-segment-countdown">
-					{currentPartCountdown !== null ? (
-						<Timediff time={currentPartCountdown} />
+					{isPartOnAir ? (
+						// empty rather than 00:00 while there is no countdown for this part
+						remainingOnCurrentPart !== null && <Timediff time={remainingOnCurrentPart} />
 					) : (
 						<span className="clock-segment-countdown-next">{t('Next')}</span>
 					)}
