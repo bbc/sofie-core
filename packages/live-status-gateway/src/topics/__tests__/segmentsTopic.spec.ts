@@ -372,6 +372,99 @@ describe('SegmentsTopic', () => {
 		expect(mockSubscriber.send.mock.calls).toEqual([[JSON.stringify(expectedStatus)]])
 	})
 
+	it('leaves untimed parts out of expectedDuration', async () => {
+		const handlers = makeMockHandlers()
+		const topic = new SegmentsTopic(makeMockLogger(), handlers)
+		const mockSubscriber = makeMockSubscriber()
+
+		const testPlaylist = makeTestPlaylist()
+		handlers.playlistHandler.notify(testPlaylist)
+
+		topic.addSubscriber(mockSubscriber)
+		mockSubscriber.send.mockClear()
+
+		const segment_1_1_id = '1_1'
+		handlers.segmentsHandler.notify([makeTestSegment(segment_1_1_id, 1, RUNDOWN_1_ID)])
+		mockSubscriber.send.mockClear()
+		// an untimed part is published with its own expected duration, like any other part
+		handlers.playlistTimingStatesHandler.notify(
+			makeTestTimingStates({
+				segments: {
+					[segment_1_1_id]: {
+						parts: {
+							'1_1_1': { expectedDuration: constantMs(5000), untimed: false },
+							'1_1_2': { expectedDuration: constantMs(20000), untimed: true },
+							'1_1_3': { expectedDuration: constantMs(3000), untimed: false },
+						},
+					},
+				},
+			})
+		)
+		jest.advanceTimersByTime(THROTTLE_PERIOD_MS)
+
+		const expectedStatus: SegmentsEvent = {
+			event: 'segments',
+			rundownPlaylistId: unprotectString(testPlaylist._id),
+			segments: [
+				{
+					id: '1_1',
+					rundownId: RUNDOWN_1_ID,
+					name: 'Segment 1_1',
+					timing: { expectedDurationMs: 8000 },
+					publicData: undefined,
+				},
+			],
+		}
+		expect(mockSubscriber.send.mock.calls).toEqual([[JSON.stringify(expectedStatus)]])
+	})
+
+	it('leaves adlibbed and deleted parts out of expectedDuration', async () => {
+		const handlers = makeMockHandlers()
+		const topic = new SegmentsTopic(makeMockLogger(), handlers)
+		const mockSubscriber = makeMockSubscriber()
+
+		const testPlaylist = makeTestPlaylist()
+		handlers.playlistHandler.notify(testPlaylist)
+
+		topic.addSubscriber(mockSubscriber)
+		mockSubscriber.send.mockClear()
+
+		const segment_1_1_id = '1_1'
+		handlers.segmentsHandler.notify([makeTestSegment(segment_1_1_id, 1, RUNDOWN_1_ID)])
+		mockSubscriber.send.mockClear()
+		// a part created by an adlib is published with its own expected duration, like any other part,
+		// and is orphaned because there is no Part for it in the rundown
+		handlers.playlistTimingStatesHandler.notify(
+			makeTestTimingStates({
+				segments: {
+					[segment_1_1_id]: {
+						parts: {
+							'1_1_1': { expectedDuration: constantMs(5000), untimed: false, orphaned: false },
+							adlibbed_part: { expectedDuration: constantMs(20000), untimed: false, orphaned: true },
+							'1_1_2': { expectedDuration: constantMs(3000), untimed: false, orphaned: false },
+						},
+					},
+				},
+			})
+		)
+		jest.advanceTimersByTime(THROTTLE_PERIOD_MS)
+
+		const expectedStatus: SegmentsEvent = {
+			event: 'segments',
+			rundownPlaylistId: unprotectString(testPlaylist._id),
+			segments: [
+				{
+					id: '1_1',
+					rundownId: RUNDOWN_1_ID,
+					name: 'Segment 1_1',
+					timing: { expectedDurationMs: 8000 },
+					publicData: undefined,
+				},
+			],
+		}
+		expect(mockSubscriber.send.mock.calls).toEqual([[JSON.stringify(expectedStatus)]])
+	})
+
 	it('includes segment identifier', async () => {
 		const handlers = makeMockHandlers()
 		const topic = new SegmentsTopic(makeMockLogger(), handlers)

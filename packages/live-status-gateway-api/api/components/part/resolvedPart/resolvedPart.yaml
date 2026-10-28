@@ -45,8 +45,9 @@ $defs:
             $ref: '../../timing/resolvedPartTiming/resolvedPartTiming.yaml#/$defs/resolvedPartTiming'
           rundownTiming:
             description: >-
-              The Part's rundown timing as Sofie resolves it - durations and countdowns. Distinct
-              from `timing`, which describes where this Part sits in the resolved playout.
+              The rundown timing of the part, as Sofie resolves it: durations and countdowns. It is
+              different from `timing`, which describes the position of this part in the resolved
+              playout.
             $ref: '../../timing/partRundownTiming/partRundownTiming.yaml#/$defs/partRundownTiming'
           pieces:
             description: Pieces in this part

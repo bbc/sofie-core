@@ -12,8 +12,13 @@ import {
 } from './resolvedPlaylistConversionTestUtils.js'
 import { createResolvedPlaylistConversionContext } from '../context/conversionContext.js'
 import { splitTimingStates } from '../../../../collections/playlistTimingStatesHandler.js'
-import type { PartTimingStateDoc } from '@sofie-automation/corelib/dist/dataModel/TimingState'
-import type { PartId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import type {
+	PartTimingStateDoc,
+	PlaylistTimingStateDoc,
+	TimingStateDoc,
+} from '@sofie-automation/corelib/dist/dataModel/TimingState'
+import type { TimerState } from '@sofie-automation/corelib/dist/dataModel/TimerState'
+import type { PartId, RundownPlaylistId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 
 describe('toResolvedPartStatus', () => {
 	it('maps current part state and nested pieces', () => {
@@ -114,8 +119,21 @@ describe('toResolvedPartStatus', () => {
 describe('toResolvedPartStatus rundown timing', () => {
 	const partId = protectString<PartId>('part0')
 	const segmentId = protectString<SegmentId>('segment0')
+	const playlistId = protectString<RundownPlaylistId>('playlist0')
 
-	function contextWithTiming(timing: Partial<PartTimingStateDoc> | undefined) {
+	/** The playlist's timing document, with this base for the part countdowns */
+	function playlistTiming(
+		partCountdownBase: TimerState,
+		ofPlaylist: RundownPlaylistId = playlistId
+	): PlaylistTimingStateDoc {
+		return { type: 'playlist', playlistId: ofPlaylist, partCountdownBase } as PlaylistTimingStateDoc
+	}
+
+	function contextWithTiming(timing: Partial<PartTimingStateDoc> | undefined, playlist?: PlaylistTimingStateDoc) {
+		const docs: TimingStateDoc[] = []
+		if (playlist) docs.push(playlist)
+		if (timing) docs.push({ type: 'part', playlistId, partId, segmentId, ...timing } as PartTimingStateDoc)
+
 		return createResolvedPlaylistConversionContext({
 			playlistState: makePlaylist({}),
 			rundownsState: [makeRundown('rundown0')],
@@ -125,21 +143,63 @@ describe('toResolvedPartStatus rundown timing', () => {
 			partInstancesInPlaylistState: [],
 			piecesInPlaylistState: [],
 			pieceInstancesInPlaylistState: [],
-			timingStatesState: timing
-				? splitTimingStates([{ type: 'part', partId, segmentId, ...timing } as PartTimingStateDoc])
-				: undefined,
+			timingStatesState: docs.length > 0 ? splitTimingStates(docs) : undefined,
 		})
 	}
 
 	const partExtended = { partId, instance: makePartInstance('pi0', 'part0', 'segment0', 'rundown0') } as any
 
 	it('forwards the published timers untouched, so the client evaluates them itself', () => {
-		const countdown = { paused: false as const, zeroTime: 1600000070000, pauseTime: 1600000060000 }
 		const played = { paused: true as const, duration: 0, resumesAt: 1600000060000 }
+		const duration = { paused: true as const, duration: -10000, resumesAt: 1600000070000 }
 
-		const result = toResolvedPartStatus(contextWithTiming({ countdown, played }), partExtended)
+		const result = toResolvedPartStatus(contextWithTiming({ played, duration }), partExtended)
 
-		expect(result.rundownTiming).toMatchObject({ countdown, played })
+		expect(result.rundownTiming).toMatchObject({ played, duration })
+	})
+
+	it("sends the countdown as the playlist's base shifted by the part's offset, so the client evaluates it itself", () => {
+		const base = { paused: false as const, zeroTime: 1600000100000, pauseTime: 1600000060000 }
+
+		const result = toResolvedPartStatus(
+			contextWithTiming({ countdownOffset: -30000 }, playlistTiming(base)),
+			partExtended
+		)
+
+		expect(result.rundownTiming?.countdown).toEqual({
+			paused: false,
+			zeroTime: 1600000070000,
+			pauseTime: 1600000060000,
+		})
+	})
+
+	it('sends no countdown for a part without an offset, which will probably not be played in order', () => {
+		const result = toResolvedPartStatus(
+			contextWithTiming({}, playlistTiming({ paused: true, duration: 60000 })),
+			partExtended
+		)
+
+		expect(result.rundownTiming?.countdown).toBeUndefined()
+	})
+
+	it("sends no countdown while the playlist's timing has not arrived", () => {
+		const result = toResolvedPartStatus(contextWithTiming({ countdownOffset: -30000 }), partExtended)
+
+		expect(result.rundownTiming?.countdown).toBeUndefined()
+	})
+
+	it('sends no countdown from the timing of another playlist, still held after a switch of playlist', () => {
+		const previousPlaylistTiming = playlistTiming(
+			{ paused: true, duration: 60000 },
+			protectString<RundownPlaylistId>('previousPlaylist')
+		)
+
+		const result = toResolvedPartStatus(
+			contextWithTiming({ countdownOffset: -30000 }, previousPlaylistTiming),
+			partExtended
+		)
+
+		expect(result.rundownTiming?.countdown).toBeUndefined()
 	})
 
 	it('evaluates the resolved durations, which are constant', () => {

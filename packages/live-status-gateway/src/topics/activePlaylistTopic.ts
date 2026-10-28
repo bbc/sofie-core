@@ -17,6 +17,7 @@ import { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import _ from 'underscore'
 import { calculateCurrentPartTiming } from './helpers/partTiming.js'
 import type { PlaylistTimingStates } from '../collections/playlistTimingStatesHandler.js'
+import type { PlaylistTimingStateDoc } from '@sofie-automation/corelib/dist/dataModel/TimingState'
 import { getCurrentSegmentParts } from './helpers/segmentParts.js'
 import { SelectedPieceInstances, PieceInstanceMin } from '../collections/pieceInstancesHandler.js'
 import { toPieceStatus } from './helpers/pieceStatus.js'
@@ -118,6 +119,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 		const nextPart = this._nextPartInstance ? this._nextPartInstance.part : null
 		const currentSegmentParts =
 			(currentPart && this._partsBySegmentId[unprotectString(currentPart.segmentId)]) ?? []
+		const playlistTiming = this.getPlaylistTimingState()
 
 		const message = this._activePlaylist
 			? literal<Complete<ActivePlaylistEvent>>({
@@ -137,7 +139,7 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 									timing: calculateCurrentPartTiming(
 										this._currentPartInstance,
 										this._timingStates?.parts.get(currentPart._id),
-										this._timingStates?.playlist,
+										playlistTiming,
 										now
 									),
 									pieces:
@@ -194,6 +196,11 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 							this._activePlaylist.timing.type !== PlaylistTimingType.Duration
 								? this._activePlaylist.timing.expectedEnd
 								: undefined,
+						// Forwarded as TimerStates for the subscriber to evaluate against its own clock
+						remainingDuration: playlistTiming?.remainingDuration ?? null,
+						estimatedEnd: playlistTiming?.estimatedEnd ?? null,
+						// The publication's overUnder is already the time in hand: positive is ahead of schedule
+						timeInHand: playlistTiming?.overUnder ?? null,
 					},
 					tTimers: this.transformTTimers(this._activePlaylist.tTimers),
 				})
@@ -211,6 +218,10 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 					playoutState: undefined,
 					timing: {
 						timingMode: ActivePlaylistTimingMode.NONE,
+						// No playlist is active, so there is nothing to time
+						remainingDuration: null,
+						estimatedEnd: null,
+						timeInHand: null,
 					},
 					tTimers: this.transformTTimers(null),
 				})
@@ -335,6 +346,19 @@ export class ActivePlaylistTopic extends WebSocketTopicBase implements WebSocket
 			(this._pieceInstancesInNextPartInstance?.[0] &&
 				this._pieceInstancesInNextPartInstance?.[0].partInstanceId !== this._nextPartInstance?._id)
 		)
+	}
+
+	/**
+	 * The published playlist-level timing, but only if it describes the active playlist: after a
+	 * switch of playlist the previous playlist's document can still be held until the new
+	 * subscription delivers, and its numbers must not be reported as this playlist's.
+	 */
+	private getPlaylistTimingState(): PlaylistTimingStateDoc | undefined {
+		const playlistTiming = this._timingStates?.playlist
+		if (!playlistTiming || !this._activePlaylist) return undefined
+
+		const describesActivePlaylist = playlistTiming.playlistId === this._activePlaylist._id
+		return describesActivePlaylist ? playlistTiming : undefined
 	}
 
 	private onTimingStatesUpdate = (timingStates: PlaylistTimingStates | undefined): void => {

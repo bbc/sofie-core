@@ -23,6 +23,7 @@ function playlistDoc(): PlaylistTimingStateDoc {
 		playlistId: PLAYLIST_ID,
 		timingType: PlaylistTimingType.ForwardTime,
 		currentPartWillAutoNext: false,
+		partCountdownBase: { paused: true, duration: 0 },
 	}
 }
 
@@ -46,6 +47,8 @@ function partDoc(partId: PartId, rank: number): PartTimingStateDoc {
 		rank,
 		isInQuickLoop: false,
 		countsTowardsTiming: true,
+		untimed: false,
+		orphaned: false,
 	}
 }
 
