@@ -44,9 +44,9 @@ The Live Status Gateway was introduced to Sofie in version 1.50. This gateway se
 
 ## Rundown Timing
 
-The `playlistTimingState` publication is a custom publication with an unusual property: rather than
-publishing values, it publishes *descriptions of how values move*, which the consumer evaluates
-against its own clock. That keeps the update volume tied to playout events rather than to the clock,
-while still giving millisecond accuracy, and means an external consumer can show exactly the numbers
-the Sofie UI shows without reimplementing any of Sofie's timing logic. See
-[Rundown Timing](./rundown-timing.md).
+The `playlistTimingState` publication is a custom publication with an unusual property. It does
+not publish values. Instead, it publishes *descriptions of how values move*, and the subscriber
+evaluates them against its own clock. Thus the number of updates depends on playout events, not on
+the clock, and the values are still accurate to the millisecond. An external subscriber can also
+show exactly the numbers that the Sofie UI shows, and it does not have to implement Sofie's timing
+logic again. See [Rundown Timing](./rundown-timing.md).
