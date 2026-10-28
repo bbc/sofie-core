@@ -23,8 +23,7 @@ export interface PreparedTimingPartInstances {
  * Parts without an instance as temporary instances), sort into playout order, and deduplicate for
  * a running QuickLoop.
  *
- * This is shared between the client RundownTimingProvider and the server playlistTimingState
- * publication, so both feed the calculator identical inputs.
+ * Used by the playlistTimingState publication. The web UI calculates no timing of its own.
  *
  * @param playlist The playlist
  * @param sortedSegments Segments of the playlist, in playout order (see `sortSegmentsInRundowns`)

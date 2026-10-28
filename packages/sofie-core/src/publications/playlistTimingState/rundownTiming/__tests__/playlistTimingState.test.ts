@@ -4,7 +4,12 @@ import type { DBPart } from '@sofie-automation/corelib/dist/dataModel/Part'
 import type { DBSegment } from '@sofie-automation/corelib/dist/dataModel/Segment'
 import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
-import { CountdownType, PlaylistTimingType, type SegmentTimingInfo } from '@sofie-automation/blueprints-integration'
+import {
+	CountdownType,
+	PlaylistTimingType,
+	type RundownPlaylistTiming,
+	type SegmentTimingInfo,
+} from '@sofie-automation/blueprints-integration'
 import type { SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
 import { wrapPartToTemporaryInstance } from '@sofie-automation/corelib/dist/playout/stateCacheResolver'
@@ -29,6 +34,7 @@ function makeMockPlaylist(): DBRundownPlaylist {
 		name: 'Mock Playlist',
 		created: 0,
 		modified: 0,
+		defaultBrandingId: null,
 		currentPartInfo: null,
 		nextPartInfo: null,
 		previousPartsInfo: [],
@@ -532,6 +538,214 @@ describe('calculatePlaylistTimingStates', () => {
 
 		it('matches the reference throughout', () => {
 			assertEquivalence(makePreRollScenario(), TAKE_TIME, [0, 100, 399, 400, 401, 5000, 15000])
+		})
+	})
+
+	/**
+	 * The same wait at the first take, before the playlist has started: it has no startedPlayback until
+	 * the gateway reports the start of the first Part. The remaining duration counts down from the take
+	 * here too, so the estimated end and the over/under must hold across the wait, at what they read once
+	 * the start is reported, rather than move on with the clock from the take and jump back at the start.
+	 */
+	describe('the first take, before the playlist has started', () => {
+		const TAKE_TIME = 20000
+		const GATEWAY_LATENCY = 400
+		const PLANNED_START = TAKE_TIME + GATEWAY_LATENCY
+
+		/**
+		 * A take with a time offset plays its Part from a point inside it, so the take plans the start in the
+		 * past, by the offset, in either gateway mode. The start is reported a moment after the take
+		 */
+		const TIME_OFFSET = 3000
+		const PLANNED_START_FROM_A_TIME_OFFSET = TAKE_TIME - TIME_OFFSET
+		const START_REPORTED_AT = TAKE_TIME + GATEWAY_LATENCY
+
+		/** The playlist with its first Part taken at TAKE_TIME, and planned to start at plannedStart */
+		function makeFirstTakeScenario(timing: RundownPlaylistTiming, plannedStart = PLANNED_START): MockScenario {
+			const scenario = makeStandardScenario()
+			scenario.playlist.timing = timing
+			putFirstPartOnAir(scenario, plannedStart)
+			scenario.partInstances[0].timings = { take: TAKE_TIME, plannedStartedPlayback: plannedStart }
+			scenario.playlist.startedPlayback = undefined
+			return scenario
+		}
+
+		/**
+		 * The same playlist once the gateway has reported the start of the first Part: the start of its part group,
+		 * which the take planned
+		 */
+		function makeReportedStartScenario(timing: RundownPlaylistTiming, plannedStart = PLANNED_START): MockScenario {
+			const scenario = makeFirstTakeScenario(timing, plannedStart)
+			scenario.playlist.startedPlayback = plannedStart
+			return scenario
+		}
+
+		function calculateAt(now: number, scenario: MockScenario) {
+			return calculatePlaylistTimingStates(
+				now,
+				scenario.playlist,
+				scenario.partInstances,
+				scenario.segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+		}
+
+		const TIMINGS: Array<{ name: string; timing: RundownPlaylistTiming }> = [
+			{
+				name: 'forward-time, taken after the planned start',
+				timing: { type: PlaylistTimingType.ForwardTime, expectedStart: 10000, expectedDuration: 40000 },
+			},
+			{
+				name: 'forward-time with a planned end, taken after the planned start',
+				timing: { type: PlaylistTimingType.ForwardTime, expectedStart: 10000, expectedEnd: 65000 },
+			},
+			{
+				name: 'forward-time, taken before the planned start',
+				timing: { type: PlaylistTimingType.ForwardTime, expectedStart: 30000, expectedDuration: 40000 },
+			},
+			{
+				name: 'forward-time with a planned end, taken before the planned start',
+				timing: { type: PlaylistTimingType.ForwardTime, expectedStart: 30000, expectedEnd: 65000 },
+			},
+			{
+				name: 'back-time with a planned duration, taken before the planned start',
+				timing: { type: PlaylistTimingType.BackTime, expectedEnd: 65000, expectedDuration: 40000 },
+			},
+			{
+				name: 'none, with a planned duration',
+				timing: { type: PlaylistTimingType.None, expectedDuration: 40000 },
+			},
+		]
+
+		it.each(TIMINGS)('holds at what the reported start reads, in $name', ({ timing }) => {
+			const atTheTake = calculateAt(TAKE_TIME, makeFirstTakeScenario(timing))
+			const atTheStart = calculateAt(PLANNED_START, makeReportedStartScenario(timing))
+
+			// the first Part and the three after it, 10 s each, from its planned start
+			const projectedEnd = PLANNED_START + 4 * 10000
+			const timeInHandAtTheStart = evalDuration(atTheStart.overUnder, PLANNED_START)
+			expect(evalZeroTime(atTheStart.estimatedEnd, PLANNED_START)).toBe(projectedEnd)
+
+			for (const now of [TAKE_TIME, TAKE_TIME + 100, PLANNED_START - 1, PLANNED_START]) {
+				expect({ now, estimatedEnd: evalZeroTime(atTheTake.estimatedEnd, now) }).toEqual({
+					now,
+					estimatedEnd: projectedEnd,
+				})
+				expect({ now, timeInHand: evalDuration(atTheTake.overUnder, now) }).toEqual({
+					now,
+					timeInHand: timeInHandAtTheStart,
+				})
+			}
+		})
+
+		it.each(TIMINGS)(
+			'holds at what the reported start reads, after a take with a time offset, in $name',
+			({ timing }) => {
+				const atTheTake = calculateAt(
+					TAKE_TIME,
+					makeFirstTakeScenario(timing, PLANNED_START_FROM_A_TIME_OFFSET)
+				)
+				const atTheReport = calculateAt(
+					START_REPORTED_AT,
+					makeReportedStartScenario(timing, PLANNED_START_FROM_A_TIME_OFFSET)
+				)
+
+				// the first Part and the three after it, 10 s each, from its planned start
+				const projectedEnd = PLANNED_START_FROM_A_TIME_OFFSET + 4 * 10000
+				const timeInHandAtTheReport = evalDuration(atTheReport.overUnder, START_REPORTED_AT)
+				expect(evalZeroTime(atTheReport.estimatedEnd, START_REPORTED_AT)).toBe(projectedEnd)
+
+				for (const now of [TAKE_TIME, TAKE_TIME + 100, START_REPORTED_AT - 1, START_REPORTED_AT]) {
+					expect({ now, estimatedEnd: evalZeroTime(atTheTake.estimatedEnd, now) }).toEqual({
+						now,
+						estimatedEnd: projectedEnd,
+					})
+					expect({ now, timeInHand: evalDuration(atTheTake.overUnder, now) }).toEqual({
+						now,
+						timeInHand: timeInHandAtTheReport,
+					})
+				}
+			}
+		)
+
+		it("counts the planned duration from the first Part's planned start, in forward-time without a planned end", () => {
+			const atTheTake = calculateAt(
+				TAKE_TIME,
+				makeFirstTakeScenario({
+					type: PlaylistTimingType.ForwardTime,
+					expectedStart: 10000,
+					expectedDuration: 40000,
+				})
+			)
+
+			// planned 40 s, and 40 s of parts to play: on time, not over by the wait
+			expect(evalDuration(atTheTake.overUnder, TAKE_TIME)).toBe(0)
+			expect(evalDuration(atTheTake.overUnder, PLANNED_START - 1)).toBe(0)
+		})
+
+		it('matches the reference throughout', () => {
+			const scenario = makeFirstTakeScenario({
+				type: PlaylistTimingType.ForwardTime,
+				expectedStart: 10000,
+				expectedEnd: 65000,
+			})
+			assertEquivalence(scenario, TAKE_TIME, [0, 100, 399, 400, 401, 5000, 15000])
+		})
+	})
+
+	/**
+	 * An untimed Part does not start the playlist, but in a segment with a budget the budget counts down from the
+	 * segment's start, so the remaining duration counts down before the playlist has started. The playlist starts
+	 * with its first timed Part, not with the untimed one.
+	 */
+	describe('an untimed opening Part in a segment with a budget, before the playlist has started', () => {
+		const SEGMENT_STARTED = 20000
+		const NOW = 25000
+
+		/** The first segment, with a budget of 20 s, started at SEGMENT_STARTED with its untimed first Part */
+		function makeUntimedOpeningScenario(timing: RundownPlaylistTiming): MockScenario {
+			const scenario = makeStandardScenario({
+				budgetDuration: 20000,
+				countdownType: CountdownType.SEGMENT_BUDGET_DURATION,
+			})
+			scenario.playlist.timing = timing
+			scenario.partInstances[0].part.untimed = true
+			putFirstPartOnAir(scenario, SEGMENT_STARTED)
+			scenario.playlist.startedPlayback = undefined
+			scenario.playlist.segmentsStartedPlayback = {
+				[scenario.partInstances[0].segmentPlayoutId as unknown as string]: SEGMENT_STARTED,
+			}
+			return scenario
+		}
+
+		it('matches the reference throughout', () => {
+			const scenario = makeUntimedOpeningScenario({
+				type: PlaylistTimingType.ForwardTime,
+				expectedStart: 10000,
+				expectedEnd: 65000,
+			})
+			// the budget runs out at 40000
+			assertEquivalence(scenario, NOW, [0, 1000, 14999, 15000, 15001, 20000])
+		})
+
+		it("counts the planned duration from now, not from the untimed Part's start, in forward-time without a planned end", () => {
+			const scenario = makeUntimedOpeningScenario({
+				type: PlaylistTimingType.ForwardTime,
+				expectedStart: 10000,
+				expectedDuration: 40000,
+			})
+			const states = calculatePlaylistTimingStates(
+				NOW,
+				scenario.playlist,
+				scenario.partInstances,
+				scenario.segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+
+			// planned 40 s from now, against 15 s left of the budget and the second segment's 20 s
+			expect(evalDuration(states.overUnder, NOW)).toBe(5000)
 		})
 	})
 

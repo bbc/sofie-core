@@ -10,7 +10,11 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { unprotectString, protectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { RundownTimingCalculator, type RundownTimingContext, findPartInstancesInQuickLoop } from '../index'
 import { getPlaylistTimingDiff } from '../playlistTimingState'
-import { timerStateToDuration, type TimerState } from '@sofie-automation/corelib/dist/dataModel/TimerState'
+import {
+	offsetTimerState,
+	timerStateToDuration,
+	type TimerState,
+} from '@sofie-automation/corelib/dist/dataModel/TimerState'
 import { PlaylistTimingType, type SegmentTimingInfo } from '@sofie-automation/blueprints-integration'
 import type { PartId, RundownId, SegmentId } from '@sofie-automation/corelib/dist/dataModel/Ids'
 import type { PartInstance } from '@sofie-automation/corelib/dist/dataModel/PartInstance'
@@ -84,6 +88,9 @@ function getInstanceOrThrow(partInstancesMap: Map<PartId, PartInstance>, part: D
 	return instance
 }
 
+/** What the tests below pin of a RundownTimingContext: the timer the part countdowns are shifts of is checked by itself */
+type ExpectedTimingContext = Omit<RundownTimingContext, 'partCountdownBase'>
+
 /**
  * Assert a full RundownTimingContext against an expected literal.
  *
@@ -93,14 +100,15 @@ function getInstanceOrThrow(partInstancesMap: Map<PartId, PartInstance>, part: D
  * checked against their own numbers here. That is the property that has to hold anyway, and it
  * keeps the expectations readable.
  */
-function expectContextToEqual(result: RundownTimingContext, expected: RundownTimingContext): void {
+function expectContextToEqual(result: RundownTimingContext, expected: ExpectedTimingContext): void {
 	const now = expected.currentTime ?? 0
 
 	const {
 		remainingPlaylistDurationState,
 		remainingTimeOnCurrentPartState,
 		remainingBudgetOnCurrentSegmentState,
-		partCountdownStates,
+		partCountdownBase,
+		partCountdownOffsets,
 		// These two exist for the publication rather than for any of these scenarios' expectations.
 		// They are checked exhaustively against this same calculator in partTimingState.test.ts, so
 		// listing them in every expectation below would be churn without added coverage.
@@ -122,14 +130,14 @@ function expectContextToEqual(result: RundownTimingContext, expected: RundownTim
 	expect(evaluate(remainingTimeOnCurrentPartState)).toBe(expected.remainingTimeOnCurrentPart)
 	expect(evaluate(remainingBudgetOnCurrentSegmentState)).toBe(expected.remainingBudgetOnCurrentSegment)
 
-	// The published countdown states must agree with the numbers the calculator reports, for every
-	// part, in every one of these scenarios - that is what makes them the same implementation rather
-	// than a second one that happens to look right
+	// The published countdowns - the base shifted by each part's offset - must agree with the numbers the
+	// calculator reports, for every part, in every one of these scenarios - that is what makes them the same
+	// implementation rather than a second one that happens to look right
 	expect(
 		Object.fromEntries(
-			Object.entries<TimerState | null>(partCountdownStates ?? {}).map(([partId, state]) => [
+			Object.entries<number | null>(partCountdownOffsets ?? {}).map(([partId, offset]) => [
 				partId,
-				state === null ? null : timerStateToDuration(state, now),
+				offset === null ? null : timerStateToDuration(offsetTimerState(partCountdownBase, offset), now),
 			])
 		)
 	).toEqual(expected.partCountdown ?? {})
@@ -161,7 +169,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 0,
@@ -207,7 +215,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 4000,
@@ -292,7 +300,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 4000,
@@ -378,7 +386,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 4000,
@@ -490,7 +498,7 @@ describe('rundown Timing Calculator', () => {
 			const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 			expectContextToEqual(
 				result,
-				literal<RundownTimingContext>({
+				literal<ExpectedTimingContext>({
 					currentPartInstanceId: null,
 					isLowResolution: false,
 					asDisplayedPlaylistDuration: 4000,
@@ -637,7 +645,7 @@ describe('rundown Timing Calculator', () => {
 			)
 			expectContextToEqual(
 				result,
-				literal<RundownTimingContext>({
+				literal<ExpectedTimingContext>({
 					currentPartInstanceId: currentPartInstanceId,
 					isLowResolution: false,
 					asDisplayedPlaylistDuration: 7000,
@@ -645,6 +653,7 @@ describe('rundown Timing Calculator', () => {
 					currentPartWillAutoNext: false,
 					currentSegmentId: protectString(segmentId1),
 					currentTime: 3500,
+					onAirPartPlannedStart: 3000,
 					// the live part (part3) started at 3000 with a group expected duration of 3000
 					livePushTime: 6000,
 					rundownExpectedDurations: {
@@ -788,7 +797,7 @@ describe('rundown Timing Calculator', () => {
 			)
 			expectContextToEqual(
 				result,
-				literal<RundownTimingContext>({
+				literal<ExpectedTimingContext>({
 					currentPartInstanceId: currentPartInstanceId,
 					isLowResolution: false,
 					asDisplayedPlaylistDuration: 11000,
@@ -796,6 +805,7 @@ describe('rundown Timing Calculator', () => {
 					currentPartWillAutoNext: false,
 					currentSegmentId: protectString(segmentId1),
 					currentTime: 10000,
+					onAirPartPlannedStart: 3000,
 					// the live part (part3) started at 3000 with a group expected duration of 3000,
 					// and has been overrunning since 6000
 					livePushTime: 6000,
@@ -888,7 +898,7 @@ describe('rundown Timing Calculator', () => {
 			)
 			expectContextToEqual(
 				result,
-				literal<RundownTimingContext>({
+				literal<ExpectedTimingContext>({
 					currentPartInstanceId: null,
 					isLowResolution: false,
 					asDisplayedPlaylistDuration: 4000,
@@ -1011,7 +1021,7 @@ describe('rundown Timing Calculator', () => {
 			)
 			expectContextToEqual(
 				result,
-				literal<RundownTimingContext>({
+				literal<ExpectedTimingContext>({
 					currentPartInstanceId: null,
 					isLowResolution: false,
 					asDisplayedPlaylistDuration: 5000,
@@ -1131,7 +1141,7 @@ describe('rundown Timing Calculator', () => {
 		)
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 4000,
@@ -1252,7 +1262,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(0, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 4000,
@@ -1392,7 +1402,7 @@ describe('rundown Timing Calculator', () => {
 		const result = timing.updateDurations(3000, false, playlist, partInstances, segmentsMap, DEFAULT_DURATION, {})
 		expectContextToEqual(
 			result,
-			literal<RundownTimingContext>({
+			literal<ExpectedTimingContext>({
 				currentPartInstanceId: null,
 				isLowResolution: false,
 				asDisplayedPlaylistDuration: 6000,
@@ -1492,12 +1502,111 @@ describe('rundown Timing Calculator', () => {
 			})
 		)
 	})
+
+	describe("The on-air part's planned start", () => {
+		const PLANNED_START = 2000
+
+		/** Two segments of 1 s parts, with the first part taken at 1000 and planned to start at PLANNED_START */
+		function calculateWithFirstPartTaken(
+			now: number,
+			options: {
+				firstSegmentTiming?: SegmentTimingInfo
+				firstPartUntimed?: boolean
+				/** When the gateway reported the first segment started, if it has */
+				firstSegmentStartedAt?: number
+			}
+		): RundownTimingContext {
+			const playlist: DBRundownPlaylist = makeMockPlaylist()
+			const rundownId = 'rundown1'
+			const segmentId1 = 'segment1'
+			const segmentId2 = 'segment2'
+			const segmentsMap: Map<SegmentId, DBSegment> = new Map()
+			segmentsMap.set(
+				protectString<SegmentId>(segmentId1),
+				makeMockSegment(segmentId1, 0, rundownId, options.firstSegmentTiming)
+			)
+			segmentsMap.set(protectString<SegmentId>(segmentId2), makeMockSegment(segmentId2, 1, rundownId))
+			const parts: DBPart[] = [
+				{
+					...makeMockPart('part1', 0, rundownId, segmentId1, { expectedDuration: 1000 }),
+					untimed: options.firstPartUntimed,
+				},
+				makeMockPart('part2', 1, rundownId, segmentId1, { expectedDuration: 1000 }),
+				makeMockPart('part3', 0, rundownId, segmentId2, { expectedDuration: 1000 }),
+			]
+			const partInstances = convertPartsToPartInstances(parts)
+			const [onAirPartInstance, nextPartInstance] = partInstances
+			onAirPartInstance.timings = { take: 1000, plannedStartedPlayback: PLANNED_START }
+			playlist.currentPartInfo = {
+				partInstanceId: onAirPartInstance._id,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			playlist.nextPartInfo = {
+				partInstanceId: nextPartInstance._id,
+				rundownId: protectString<RundownId>(rundownId),
+				manuallySelected: false,
+				consumesQueuedSegmentId: false,
+			}
+			if (options.firstSegmentStartedAt !== undefined) {
+				playlist.segmentsStartedPlayback = {
+					[unprotectString(onAirPartInstance.segmentPlayoutId)]: options.firstSegmentStartedAt,
+				}
+			}
+			return new RundownTimingCalculator().updateDurations(
+				now,
+				false,
+				playlist,
+				partInstances,
+				segmentsMap,
+				DEFAULT_DURATION,
+				{}
+			)
+		}
+
+		it('is given before the planned start, as a take in a multi-gateway studio plans it', () => {
+			const result = calculateWithFirstPartTaken(1500, {})
+
+			expect(result.onAirPartPlannedStart).toBe(PLANNED_START)
+		})
+
+		it('is given once the part has started', () => {
+			const result = calculateWithFirstPartTaken(2500, { firstSegmentStartedAt: PLANNED_START })
+
+			expect(result.onAirPartPlannedStart).toBe(PLANNED_START)
+		})
+
+		it("is not given while an untimed part is on air in a segment with a budget, though the budget's countdown drives the remaining duration", () => {
+			const result = calculateWithFirstPartTaken(2500, {
+				firstSegmentTiming: { budgetDuration: 1500 },
+				firstPartUntimed: true,
+				firstSegmentStartedAt: PLANNED_START,
+			})
+
+			expect(result.remainingPlaylistDurationState).toEqual({ paused: false, zeroTime: 4500, pauseTime: 3500 })
+			expect(result.onAirPartPlannedStart).toBeUndefined()
+		})
+
+		it('is not given while a part in a segment with a budget is on air', () => {
+			const result = calculateWithFirstPartTaken(2500, {
+				firstSegmentTiming: { budgetDuration: 1500 },
+				firstSegmentStartedAt: PLANNED_START,
+			})
+
+			expect(result.onAirPartPlannedStart).toBeUndefined()
+		})
+	})
 })
 
 describe('getPlaylistTimingDiff', () => {
-	function makeTimingContext(fields: Omit<RundownTimingContext, 'isLowResolution'>): RundownTimingContext {
+	function makeTimingContext(
+		fields: Omit<RundownTimingContext, 'isLowResolution' | 'partCountdownBase'>
+	): RundownTimingContext {
 		return {
 			isLowResolution: false,
+			// the over/under does not read the part countdowns
+			partCountdownBase: { paused: true, duration: 0 },
 			...fields,
 		}
 	}

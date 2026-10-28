@@ -16,9 +16,19 @@ import {
 	getPlaylistTimingStateDocId,
 	getPartTimingStateDocId,
 	getSegmentTimingStateDocId,
+	isPartTimingStateDoc,
+	isSegmentTimingStateDoc,
+	type PartTimingStateDoc,
+	type PlaylistTimingStateDoc,
+	type SegmentTimingStateDoc,
 	type TimingStateDoc,
 } from '@sofie-automation/corelib/dist/dataModel/TimingState'
-import { timerStateToDuration, type TimerState } from '@sofie-automation/corelib/dist/dataModel/TimerState'
+import { DEFAULT_DISPLAY_DURATION } from '@sofie-automation/shared-lib/dist/core/constants'
+import {
+	offsetTimerState,
+	timerStateToDuration,
+	type TimerState,
+} from '@sofie-automation/corelib/dist/dataModel/TimerState'
 import {
 	manipulatePlaylistTimingStatePublicationData,
 	createPlaylistTimingStateDoc,
@@ -26,6 +36,13 @@ import {
 	isCacheViewConsistent,
 } from '../publication'
 import { ContentCache, createReactiveContentCache } from '../reactiveContentCache'
+import {
+	setUpOptimizedObserverArray,
+	type CustomPublish,
+	type CustomPublishChanges,
+	type TriggerUpdate,
+} from '../../../lib/customPublication'
+import { sleep } from '../../../lib/lib'
 
 describe('playlistTimingState publication', () => {
 	const playlistId = protectString<RundownPlaylistId>('playlist0')
@@ -89,6 +106,15 @@ describe('playlistTimingState publication', () => {
 		return cache
 	}
 
+	/** A part's countdown, as a client composes it: the playlist's base for the part countdowns, shifted by the part's offset */
+	function countdownOf(
+		partDoc: PartTimingStateDoc,
+		playlistDoc: PlaylistTimingStateDoc | undefined
+	): TimerState | undefined {
+		if (partDoc.countdownOffset === undefined || !playlistDoc) return undefined
+		return offsetTimerState(playlistDoc.partCountdownBase, partDoc.countdownOffset)
+	}
+
 	function evalDuration(state: TimerState | undefined, now: number): number {
 		if (!state) throw new Error('Expected a timer state')
 		return timerStateToDuration(state, now)
@@ -104,6 +130,9 @@ describe('playlistTimingState publication', () => {
 		timings: PartInstance['timings']
 	): PartInstanceId {
 		const _id = protectString<PartInstanceId>(instanceId)
+		// A PartInstance carries a copy of its Part
+		const part = cache.Parts.findOne(protectString<PartId>(partId))
+		if (!part) throw new Error(`Part ${partId} not found in cache`)
 		// As published by uiPartInstances: a DBPartInstance, so no isTemporary
 		cache.PartInstances.insert({
 			_id,
@@ -113,7 +142,8 @@ describe('playlistTimingState publication', () => {
 			segmentPlayoutId: protectString<SegmentPlayoutId>('segmentPlayout0'),
 			takeCount,
 			rehearsal: false,
-			part: makeMockPart(partId, takeCount - 1, segmentId),
+			part: part as DBPart,
+			brandingId: null,
 			timings,
 			orphaned: undefined,
 		})
@@ -124,7 +154,8 @@ describe('playlistTimingState publication', () => {
 	function setPlaylistPlayout(
 		cache: ContentCache,
 		playout: {
-			startedPlayback: number
+			/** Undefined until the first part of the show has started */
+			startedPlayback: number | undefined
 			currentPartInstanceId: PartInstanceId
 			segmentsStartedPlayback?: Record<string, number>
 		}
@@ -141,6 +172,46 @@ describe('playlistTimingState publication', () => {
 		}
 		playlist.segmentsStartedPlayback = playout.segmentsStartedPlayback
 		cache.RundownPlaylists.replace(playlist)
+	}
+
+	/** Set the playlist's next PartInstance */
+	function setNextPartInstance(cache: ContentCache, partInstanceId: PartInstanceId): void {
+		const playlist = cache.RundownPlaylists.findOne(playlistId)
+		if (!playlist) throw new Error('Playlist not found in cache')
+		playlist.nextPartInfo = {
+			partInstanceId,
+			rundownId,
+			manuallySelected: false,
+			consumesQueuedSegmentId: false,
+		}
+		cache.RundownPlaylists.replace(playlist)
+	}
+
+	/** Replace the timings of a PartInstance in the cache */
+	function replaceTimings(
+		cache: ContentCache,
+		partInstanceId: PartInstanceId,
+		timings: PartInstance['timings']
+	): void {
+		const partInstance = cache.PartInstances.findOne(partInstanceId)
+		if (!partInstance) throw new Error(`PartInstance ${partInstanceId} not found in cache`)
+		cache.PartInstances.replace({ ...partInstance, timings })
+	}
+
+	/** Give part3 a duration of its own, or none (undefined) */
+	function setPart3Duration(cache: ContentCache, expectedDuration: number | undefined): void {
+		const part = cache.Parts.findOne(protectString<PartId>('part3'))
+		if (!part) throw new Error('Part not found in cache')
+		cache.Parts.replace({ ...part, expectedDuration, expectedDurationWithTransition: expectedDuration })
+	}
+
+	/** Set the studio's default display duration, or remove the setting (undefined) */
+	function setStudioDefaultDisplayDuration(cache: ContentCache, defaultDisplayDuration: number | undefined): void {
+		cache.StudioSettings.remove(studioId)
+		cache.StudioSettings.insert({
+			_id: studioId,
+			settings: (defaultDisplayDuration === undefined ? {} : { defaultDisplayDuration }) as IStudioSettings,
+		})
 	}
 
 	describe('createPlaylistTimingStateDoc', () => {
@@ -178,6 +249,8 @@ describe('playlistTimingState publication', () => {
 				// Planned for 40s of content but only 40s exists, and both the target and the
 				// projection slip together while unstarted, so the balance is a steady zero
 				overUnder: { paused: true, duration: EXPECTED_DURATION - totalPartDurations },
+				// Nothing is on air, so the part countdowns hold; each is this, less what is left from its part on
+				partCountdownBase: { paused: true, duration: totalPartDurations },
 			})
 		})
 
@@ -345,21 +418,197 @@ describe('playlistTimingState publication', () => {
 			expect(uiTotal).not.toEqual(rawTotal)
 		})
 
-		it('uses the studio defaultDisplayDuration for parts without a duration', () => {
+		it('the remaining duration ignores the default display duration', () => {
 			const cache = createAndPopulateMockCache()
 
 			// Give one part no duration of its own
-			const part = cache.Parts.findOne(protectString<PartId>('part3'))
-			if (!part) throw new Error('Part not found in cache')
-			part.expectedDuration = undefined
-			part.expectedDurationWithTransition = undefined
-			cache.Parts.replace(part)
+			setPart3Duration(cache, undefined)
 
 			const doc = createPlaylistTimingStateDoc(playlistId, cache, 10000)
 
 			// The remaining pool only counts expectedDurations (the default duration affects display
 			// durations, not remaining) - so this should simply drop to 3 parts
 			expect(doc?.remainingDuration).toEqual({ paused: true, duration: 3 * PART_DURATION })
+
+			// whatever the default is
+			setStudioDefaultDisplayDuration(cache, 7000)
+			expect(createPlaylistTimingStateDoc(playlistId, cache, 10000)?.remainingDuration).toEqual({
+				paused: true,
+				duration: 3 * PART_DURATION,
+			})
+
+			// and a part shorter than the default counts at its own length
+			setPart3Duration(cache, 1000)
+			expect(createPlaylistTimingStateDoc(playlistId, cache, 10000)?.remainingDuration).toEqual({
+				paused: true,
+				duration: 3 * PART_DURATION + 1000,
+			})
+		})
+	})
+
+	/**
+	 * In a multi-gateway studio a take plans the start of the taken part a moment ahead. Until that
+	 * start the on-air segment's timers hold, and they carry the start as their `resumesAt`, as the
+	 * part's own countdown does, so that they run from the start on, and a consumer can work out from
+	 * them when the segment will end.
+	 */
+	describe('the on-air segment between a take and the start of the taken part', () => {
+		const TAKE = 30000
+		const PLANNED_START = TAKE + 2000
+		const IN_THE_WINDOW = TAKE + 1000
+
+		function segment0DocAt(cache: ContentCache, now: number): SegmentTimingStateDoc {
+			const doc = createTimingStateDocs(playlistId, cache, now).find(
+				(candidate) => candidate._id === getSegmentTimingStateDocId(segmentId0)
+			)
+			if (!doc || !isSegmentTimingStateDoc(doc)) throw new Error('No timing document for segment0')
+			return doc
+		}
+
+		/** part0 played from 20000 until the take of part1, which is planned to start at PLANNED_START */
+		function takePart1(cache: ContentCache): PartInstanceId {
+			putPartOnAir(cache, 'part0', segmentId0, 'instance0', 1, {
+				take: 20000,
+				plannedStartedPlayback: 20000,
+				duration: TAKE - 20000,
+			})
+			const part1InstanceId = putPartOnAir(cache, 'part1', segmentId0, 'instance1', 2, {
+				take: TAKE,
+				plannedStartedPlayback: PLANNED_START,
+			})
+			setPlaylistPlayout(cache, { startedPlayback: 20000, currentPartInstanceId: part1InstanceId })
+			return part1InstanceId
+		}
+
+		it('a segment timed by its parts holds what has played and what is left until the start', () => {
+			const cache = createAndPopulateMockCache()
+			takePart1(cache)
+
+			const doc = segment0DocAt(cache, IN_THE_WINDOW)
+
+			// part0 played 10s of the segment's 20s
+			expect(doc.playedOut).toEqual({ paused: true, duration: -10000, resumesAt: PLANNED_START })
+			expect(doc.remaining).toEqual({ paused: true, duration: 10000, resumesAt: PLANNED_START })
+		})
+
+		it('from the start on, it reads as the document calculated once the part has started', () => {
+			const cache = createAndPopulateMockCache()
+			takePart1(cache)
+			const docInTheWindow = segment0DocAt(cache, IN_THE_WINDOW)
+
+			const calculatedAfterTheStart = PLANNED_START + 3000
+			const docAfterTheStart = segment0DocAt(cache, calculatedAfterTheStart)
+
+			// and on into the overrun
+			for (const now of [calculatedAfterTheStart, calculatedAfterTheStart + 20000]) {
+				expect({ now, playedOut: evalDuration(docInTheWindow.playedOut, now) }).toEqual({
+					now,
+					playedOut: evalDuration(docAfterTheStart.playedOut, now),
+				})
+				expect({ now, remaining: evalDuration(docInTheWindow.remaining, now) }).toEqual({
+					now,
+					remaining: evalDuration(docAfterTheStart.remaining, now),
+				})
+			}
+		})
+
+		it('an untimed part adds no time to its segment, so the timers hold without a start', () => {
+			const cache = createAndPopulateMockCache()
+			const part1InstanceId = takePart1(cache)
+			const part1Instance = cache.PartInstances.findOne(part1InstanceId)
+			if (!part1Instance) throw new Error('instance1 not found in cache')
+			cache.PartInstances.replace({ ...part1Instance, part: { ...part1Instance.part, untimed: true } })
+
+			const doc = segment0DocAt(cache, IN_THE_WINDOW)
+
+			// only part0 counts, and it has played
+			expect(doc.playedOut).toEqual({ paused: true, duration: -PART_DURATION })
+			expect(doc.remaining).toEqual({ paused: true, duration: 0 })
+		})
+
+		it('a segment with a budget holds the whole budget until the start of its first part', () => {
+			const cache = createAndPopulateMockCache()
+			const budgetDuration = 25000
+			const segment = cache.Segments.findOne(segmentId0)
+			if (!segment) throw new Error('Segment not found in cache')
+			segment.segmentTiming = { budgetDuration, countdownType: CountdownType.SEGMENT_BUDGET_DURATION }
+			cache.Segments.replace(segment)
+
+			// the first take of the show, so nothing has started yet
+			const part0InstanceId = putPartOnAir(cache, 'part0', segmentId0, 'instance0', 1, {
+				take: TAKE,
+				plannedStartedPlayback: PLANNED_START,
+			})
+			setPlaylistPlayout(cache, { startedPlayback: undefined, currentPartInstanceId: part0InstanceId })
+
+			expect(segment0DocAt(cache, IN_THE_WINDOW).remaining).toEqual({
+				paused: true,
+				duration: budgetDuration,
+				resumesAt: PLANNED_START,
+			})
+		})
+	})
+
+	/**
+	 * The default only decides how long a part is drawn, so it reaches the part documents and nothing
+	 * else (the remaining duration above ignores it).
+	 */
+	describe('the studio default display duration', () => {
+		function part3DocAt(cache: ContentCache, now: number): PartTimingStateDoc {
+			const doc = createTimingStateDocs(playlistId, cache, now).find(
+				(candidate) => candidate._id === getPartTimingStateDocId(protectString('part3'))
+			)
+			if (!doc || !isPartTimingStateDoc(doc)) throw new Error('No timing document for part3')
+			return doc
+		}
+
+		it('a part without a duration is drawn at the studio default', () => {
+			const cache = createAndPopulateMockCache()
+			setPart3Duration(cache, undefined)
+
+			const doc = part3DocAt(cache, 10000)
+
+			expect(doc.displayDuration).toEqual({ paused: true, duration: DEFAULT_DISPLAY_DURATION_FROM_STUDIO })
+			// counting up, so published negated; the part is not on air, so it does not grow
+			expect(doc.liveDisplayDuration).toEqual({
+				paused: true,
+				duration: -DEFAULT_DISPLAY_DURATION_FROM_STUDIO,
+				resumesAt: null,
+			})
+			// it is only drawn at that length: it still has no duration of its own
+			expect(doc.expectedDuration).toEqual({ paused: true, duration: 0 })
+			// and it goes on air after the three parts before it, as usual
+			expect(countdownOf(doc, createPlaylistTimingStateDoc(playlistId, cache, 10000))).toEqual({
+				paused: true,
+				duration: 3 * PART_DURATION,
+			})
+		})
+
+		it('the drawn length follows the studio setting', () => {
+			const cache = createAndPopulateMockCache()
+			setPart3Duration(cache, undefined)
+
+			setStudioDefaultDisplayDuration(cache, 7000)
+			expect(part3DocAt(cache, 10000).displayDuration).toEqual({ paused: true, duration: 7000 })
+
+			// without a setting, the built-in default applies
+			setStudioDefaultDisplayDuration(cache, undefined)
+			expect(part3DocAt(cache, 10000).displayDuration).toEqual({
+				paused: true,
+				duration: DEFAULT_DISPLAY_DURATION,
+			})
+		})
+
+		it('a short part without auto-next is drawn at least as long as the default', () => {
+			const cache = createAndPopulateMockCache()
+			setPart3Duration(cache, 1000)
+
+			const doc = part3DocAt(cache, 10000)
+
+			expect(doc.displayDuration).toEqual({ paused: true, duration: DEFAULT_DISPLAY_DURATION_FROM_STUDIO })
+			// while its own length stays as it is
+			expect(doc.expectedDuration).toEqual({ paused: true, duration: 1000 })
+			expect(doc.duration).toEqual({ paused: true, duration: -1000, resumesAt: null })
 		})
 	})
 
@@ -522,7 +771,7 @@ describe('playlistTimingState publication', () => {
 			).toEqual(['playlist_playlist0'])
 		})
 
-		it('changing one part changes that part, and the countdowns that follow it', () => {
+		it('changing one part changes that part, and the countdown offsets of the parts from Next up to it', () => {
 			const cache = createAndPopulateMockCache()
 			const before = createTimingStateDocs(playlistId, cache, 1000)
 
@@ -530,45 +779,181 @@ describe('playlistTimingState publication', () => {
 			if (!part1) throw new Error('part1 not found in cache')
 			cache.Parts.replace({ ...part1, expectedDuration: 20000, expectedDurationWithTransition: 20000 })
 
-			// part1's own durations change, and the parts after it start later - but part0, which comes
-			// before it, is untouched, as are the segment and playlist documents that do not span it
+			// part1's own durations change. Each part's countdown offset counts the waits from its own start to
+			// the end, so part0's, which counts part1's, changes too - with nothing next, that is from the
+			// first part on - while those of the parts after part1 stay, and the playlist's base takes up that
+			// they start later. segment1 does not span part1, and is untouched
 			expect(changedDocIds(before, createTimingStateDocs(playlistId, cache, 1000))).toEqual([
 				'playlist_playlist0',
 				'segment_segment0',
+				'part_part0',
 				'part_part1',
-				'part_part2',
-				'part_part3',
 			])
 		})
 
-		it('a take changes every downstream countdown', () => {
+		it('a take and its playback confirmation change only the documents they are about', () => {
 			const cache = createAndPopulateMockCache()
 			const instance0 = putPartOnAir(cache, 'part0', segmentId0, 'instance0', 1, { plannedStartedPlayback: 1000 })
+			const instance1 = putPartOnAir(cache, 'part1', segmentId0, 'instance1', 2, {})
 			setPlaylistPlayout(cache, { startedPlayback: 1000, currentPartInstanceId: instance0 })
-			const before = createTimingStateDocs(playlistId, cache, 5000)
+			setNextPartInstance(cache, instance1)
+			const beforeTheTake = createTimingStateDocs(playlistId, cache, 5000)
 
-			const instance1 = putPartOnAir(cache, 'part1', segmentId0, 'instance1', 2, { plannedStartedPlayback: 5000 })
-			const playedInstance0 = cache.PartInstances.findOne(instance0)
-			if (!playedInstance0) throw new Error('instance0 not found in cache')
-			cache.PartInstances.replace({
-				...playedInstance0,
-				timings: { ...playedInstance0.timings, duration: 4000 },
-			})
+			// The take: part1 goes on air, and part2 is next. With one playout gateway, part0 plays on until
+			// the gateway confirms the start of part1
+			replaceTimings(cache, instance1, { take: 5000 })
+			const instance2 = putPartOnAir(cache, 'part2', segmentId1, 'instance2', 3, {})
 			setPlaylistPlayout(cache, { startedPlayback: 1000, currentPartInstanceId: instance1 })
+			setNextPartInstance(cache, instance2)
+			const atTheTake = createTimingStateDocs(playlistId, cache, 5000)
 
-			// Every part's countdown is an offset from the one that is running, so a take necessarily
-			// moves all of them. This is inherent to publishing per-part countdowns at all - any
-			// absolute per-part time depends on the durations accumulated before it - so it is pinned
-			// here rather than treated as something to optimise away.
-			// (segment0 is unchanged: the take stays within it and its played-out total is the same
-			// either side of it)
-			expect(changedDocIds(before, createTimingStateDocs(playlistId, cache, 5000))).toEqual([
+			// part0 stops being counted, part1 has no countdown any more, and part2 has its PartInstance. The
+			// countdown offsets of part2 and part3 count the waits from their own start on, which the take
+			// does not change, so their countdowns change through the playlist's base alone
+			expect(changedDocIds(beforeTheTake, atTheTake)).toEqual([
 				'playlist_playlist0',
+				'segment_segment0',
 				'part_part0',
 				'part_part1',
 				'part_part2',
-				'part_part3',
 			])
+
+			// The confirmation: part1 started at 5120, where part0 stopped
+			replaceTimings(cache, instance1, { take: 5000, plannedStartedPlayback: 5120 })
+			replaceTimings(cache, instance0, {
+				plannedStartedPlayback: 1000,
+				plannedStoppedPlayback: 5120,
+				duration: 4120,
+			})
+
+			// part0 has its played length, and part1 has started
+			expect(changedDocIds(atTheTake, createTimingStateDocs(playlistId, cache, 5120))).toEqual([
+				'playlist_playlist0',
+				'segment_segment0',
+				'part_part0',
+				'part_part1',
+			])
+		})
+	})
+
+	describe('what a subscriber is sent', () => {
+		/** A subscriber that keeps every batch of changes it is sent */
+		class RecordingSubscriber implements CustomPublish<TimingStateDoc> {
+			readonly isReady = true
+			readonly sentChanges: CustomPublishChanges<TimingStateDoc>[] = []
+			unsubscribe: () => void = () => undefined
+
+			onStop(callback: () => void): void {
+				this.unsubscribe = callback
+			}
+			init(_docs: TimingStateDoc[]): void {
+				// the documents it starts from are not what these tests are about
+			}
+			changed(changes: CustomPublishChanges<TimingStateDoc>): void {
+				this.sentChanges.push(changes)
+			}
+		}
+
+		/**
+		 * Subscribe to the documents computed from `cache` at `now`, through the same kind of shared
+		 * observer the publication runs: it keeps what it sent last, compares each recompute with that,
+		 * and sends the subscribers only what differs.
+		 */
+		async function subscribe(
+			observerName: string,
+			cache: ContentCache,
+			now: number
+		): Promise<{ subscriber: RecordingSubscriber; recompute: () => Promise<void> }> {
+			const subscriber = new RecordingSubscriber()
+			let triggerUpdate: TriggerUpdate<Record<string, never>> | undefined
+
+			await setUpOptimizedObserverArray<
+				TimingStateDoc,
+				Record<string, never>,
+				Record<string, never>,
+				Record<string, never>
+			>(
+				observerName,
+				{},
+				async (_args, triggerUpdateOfObserver) => {
+					triggerUpdate = triggerUpdateOfObserver
+					return []
+				},
+				async () => createTimingStateDocs(playlistId, cache, now),
+				subscriber,
+				0
+			)
+
+			const recompute = async () => {
+				if (!triggerUpdate) throw new Error('The observer has not been set up')
+				triggerUpdate({})
+				await sleep(20)
+			}
+
+			return { subscriber, recompute }
+		}
+
+		async function unsubscribe(subscriber: RecordingSubscriber): Promise<void> {
+			subscriber.unsubscribe()
+			await sleep(20)
+		}
+
+		function changedDocIdsSentTo(subscriber: RecordingSubscriber): string[] {
+			return subscriber.sentChanges.flatMap((changes) =>
+				changes.changed.map((changedDoc) => unprotectString(changedDoc._id))
+			)
+		}
+
+		it('recomputing before the show, with nothing changed, sends nothing', async () => {
+			const cache = createAndPopulateMockCache()
+			const { subscriber, recompute } = await subscribe('timing_unchanged_before_the_show', cache, 1000)
+
+			try {
+				await recompute()
+
+				expect(subscriber.sentChanges).toEqual([])
+			} finally {
+				await unsubscribe(subscriber)
+			}
+		})
+
+		it('recomputing while a part is on air, with nothing changed, sends nothing', async () => {
+			const cache = createAndPopulateMockCache()
+			const partInstanceId = putPartOnAir(cache, 'part0', segmentId0, 'instance0', 1, {
+				plannedStartedPlayback: 1000,
+			})
+			setPlaylistPlayout(cache, { startedPlayback: 1000, currentPartInstanceId: partInstanceId })
+			const { subscriber, recompute } = await subscribe('timing_unchanged_while_on_air', cache, 2000)
+
+			try {
+				await recompute()
+
+				expect(subscriber.sentChanges).toEqual([])
+			} finally {
+				await unsubscribe(subscriber)
+			}
+		})
+
+		it('recomputing after a part has changed sends the documents that changed, and no others', async () => {
+			const cache = createAndPopulateMockCache()
+			const { subscriber, recompute } = await subscribe('timing_one_part_changed', cache, 1000)
+
+			try {
+				const part1 = cache.Parts.findOne(protectString('part1'))
+				if (!part1) throw new Error('part1 not found in cache')
+				cache.Parts.replace({ ...part1, expectedDuration: 20000, expectedDurationWithTransition: 20000 })
+				await recompute()
+
+				// the same documents as a plain comparison of the two computations finds (see above)
+				expect(changedDocIdsSentTo(subscriber)).toEqual([
+					'playlist_playlist0',
+					'segment_segment0',
+					'part_part0',
+					'part_part1',
+				])
+			} finally {
+				await unsubscribe(subscriber)
+			}
 		})
 	})
 

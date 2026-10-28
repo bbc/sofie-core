@@ -78,42 +78,55 @@ function calculateOnePartTimingStates(
 	// playback, so they never grow. Its plain duration is not pinned, and does.
 	const isGrowing = isRunning && !(partInstance.part.invalid && !partInstance.part.gap)
 
-	// `partCountdown` is keyed by PartId, unlike every other map here
-	const countdown = timingContext.partCountdownStates?.[partId]
+	// `partCountdown` is keyed by PartId, unlike every other map here, and so is this
+	const countdownOffset = timingContext.partCountdownOffsets?.[partId]
 
-	return {
+	// adlibbed, or its Part has been removed from the rundown since; either way there is no Part for it
+	const isOrphaned = partInstance.orphaned !== undefined
+
+	const values: PartTimingStateValues = {
 		rank,
 		isInQuickLoop: timingContext.partsInQuickLoop?.[timingId] ?? false,
 		countsTowardsTiming: timingContext.partCountsTowardsTiming?.[timingId] ?? false,
-
-		expectedDuration: expectedDuration === undefined ? undefined : { paused: true, duration: expectedDuration },
-		displayDuration:
-			displayDurationNoPlayback === undefined ? undefined : { paused: true, duration: displayDurationNoPlayback },
-
-		// A null countdown means "will probably not be played out, if played in order", which the
-		// displays render as no countdown at all - so it is simply absent from the document
-		countdown: countdown ?? undefined,
-
-		// The played time grows from the moment the part starts, from zero
-		played: played === undefined ? undefined : isGrowing ? countUp(0, startedPlayback) : countUp(played, undefined),
-
-		// Same shape as the display duration below: holds at the as-planned value, then grows
-		duration:
-			duration === undefined
-				? undefined
-				: isRunning && durationNoPlayback !== undefined && startedPlayback !== undefined
-					? countUp(durationNoPlayback, startedPlayback + durationNoPlayback + playOffset)
-					: countUp(duration, undefined),
-
-		// The display duration holds at its static value and only starts growing once the part passes
-		// it, so that is where the slope changes
-		liveDisplayDuration:
-			liveDisplayDuration === undefined
-				? undefined
-				: isGrowing && displayDurationNoPlayback !== undefined && startedPlayback !== undefined
-					? countUp(displayDurationNoPlayback, startedPlayback + displayDurationNoPlayback)
-					: countUp(liveDisplayDuration, undefined),
+		untimed: partInstance.part.untimed ?? false,
+		orphaned: isOrphaned,
 	}
+
+	// A value the part does not have is left out, rather than set to undefined (see
+	// `computeTimingState` in publication.ts for why)
+	if (expectedDuration !== undefined) values.expectedDuration = { paused: true, duration: expectedDuration }
+	if (displayDurationNoPlayback !== undefined) {
+		values.displayDuration = { paused: true, duration: displayDurationNoPlayback }
+	}
+
+	// A null offset means "will probably not be played out, if played in order", which the displays
+	// render as no countdown at all - so it is simply absent from the document
+	const hasCountdownOffset = countdownOffset !== undefined && countdownOffset !== null
+	if (hasCountdownOffset) values.countdownOffset = countdownOffset
+
+	// The played time grows from the moment the part starts, from zero
+	if (played !== undefined) {
+		values.played = isGrowing ? countUp(0, startedPlayback) : countUp(played, undefined)
+	}
+
+	// Same shape as the display duration below: holds at the as-planned value, then grows
+	if (duration !== undefined) {
+		values.duration =
+			isRunning && durationNoPlayback !== undefined && startedPlayback !== undefined
+				? countUp(durationNoPlayback, startedPlayback + durationNoPlayback + playOffset)
+				: countUp(duration, undefined)
+	}
+
+	// The display duration holds at its static value and only starts growing once the part passes
+	// it, so that is where the slope changes
+	if (liveDisplayDuration !== undefined) {
+		values.liveDisplayDuration =
+			isGrowing && displayDurationNoPlayback !== undefined && startedPlayback !== undefined
+				? countUp(displayDurationNoPlayback, startedPlayback + displayDurationNoPlayback)
+				: countUp(liveDisplayDuration, undefined)
+	}
+
+	return values
 }
 
 /**

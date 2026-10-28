@@ -66,15 +66,26 @@ function calculateOneSegmentTimingStates(
 ): SegmentTimingStateValues {
 	const budgetDuration = segment.segmentTiming?.budgetDuration
 	const countdownType = segment.segmentTiming?.countdownType ?? CountdownType.PART_EXPECTED_DURATION
+	const onAirPartInstance = partInstances.find(
+		(partInstance) => partInstance._id === timingContext.currentPartInstanceId
+	)
+	const onAirPartScheduledStart = scheduledStartOf(onAirPartInstance, now)
 
 	if (countdownType === CountdownType.SEGMENT_BUDGET_DURATION) {
 		const plannedDuration = budgetDuration ?? 0
 
 		// Only the on-air segment's budget is actually counting down
 		const isOnAir = timingContext.currentSegmentId === segment._id
-		const remaining =
-			(isOnAir ? timingContext.remainingBudgetOnCurrentSegmentState : undefined) ??
-			({ paused: true, duration: plannedDuration } satisfies TimerState)
+		const budgetCountdown = isOnAir ? timingContext.remainingBudgetOnCurrentSegmentState : undefined
+		// The budget counts down from the segment's start, and holds while that is not known. If the
+		// on-air part is then still waiting for its planned start, the segment starts with that part,
+		// so the budget carries that start as its `resumesAt`, as the part's own countdown does.
+		let remaining: TimerState
+		if (budgetCountdown?.paused && onAirPartScheduledStart !== undefined) {
+			remaining = { paused: true, duration: budgetCountdown.duration, resumesAt: onAirPartScheduledStart }
+		} else {
+			remaining = budgetCountdown ?? { paused: true, duration: plannedDuration }
+		}
 
 		return {
 			countdownType,
@@ -88,19 +99,46 @@ function calculateOneSegmentTimingStates(
 
 	const { playedOut, isAccumulating } = sumPlayedOut(now, timingContext, partInstances)
 	const plannedDuration = budgetDuration ?? sumExpectedDurations(partInstances)
+	const remainingDuration = plannedDuration - playedOut
+	// The segment's time grows with its on-air part's, so while that part is still waiting for its
+	// planned start - the window after a take in a multi-gateway studio - the timers hold, and
+	// `resumesAt` carries that start, as the part's own countdown does. An untimed part adds no
+	// time to its segment, so the timers hold for it without a start to resume at.
+	const isOnAirPartTimed = onAirPartInstance !== undefined && !onAirPartInstance.part.untimed
+	const startsAccumulatingAt = isOnAirPartTimed ? onAirPartScheduledStart : undefined
+
+	// Counting up is a value going negative, per the usual convention
+	// (subtracting rather than negating, so that nothing played gives 0 rather than -0)
+	let playedOutState: TimerState
+	let remainingState: TimerState
+	if (isAccumulating) {
+		playedOutState = { paused: false, zeroTime: now - playedOut }
+		remainingState = { paused: false, zeroTime: now + remainingDuration }
+	} else if (startsAccumulatingAt !== undefined) {
+		playedOutState = { paused: true, duration: 0 - playedOut, resumesAt: startsAccumulatingAt }
+		remainingState = { paused: true, duration: remainingDuration, resumesAt: startsAccumulatingAt }
+	} else {
+		playedOutState = { paused: true, duration: 0 - playedOut }
+		remainingState = { paused: true, duration: remainingDuration }
+	}
 
 	return {
 		countdownType,
 		plannedDuration: { paused: true, duration: plannedDuration },
-		// Counting up is a value going negative, per the usual convention
-		// (subtracting rather than negating, so that nothing played gives 0 rather than -0)
-		playedOut: isAccumulating
-			? { paused: false, zeroTime: now - playedOut }
-			: { paused: true, duration: 0 - playedOut },
-		remaining: isAccumulating
-			? { paused: false, zeroTime: now + plannedDuration - playedOut }
-			: { paused: true, duration: plannedDuration - playedOut },
+		playedOut: playedOutState,
+		remaining: remainingState,
 	}
+}
+
+/**
+ * When a part is planned to start, while that is still to come: in a multi-gateway studio a take
+ * plans the start of the taken part a moment ahead. Undefined once the part has started, and for a
+ * part with no planned start.
+ */
+function scheduledStartOf(partInstance: CalculateTimingsPartInstance | undefined, now: number): number | undefined {
+	const plannedStart = partInstance?.timings?.plannedStartedPlayback
+	const isStillToCome = plannedStart !== undefined && plannedStart > now
+	return isStillToCome ? plannedStart : undefined
 }
 
 /**

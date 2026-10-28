@@ -95,35 +95,77 @@ export function calculatePlaylistTimingStatesFromContext(
 		!playlist.startedPlayback
 	)
 
-	return {
+	// Identities, so consumers can tell whether the on-air timers are about the part or segment
+	// they are rendering
+	const currentPartInstanceId = timingContext.currentPartInstanceId ?? undefined
+	const currentSegmentId = timingContext.currentSegmentId ?? undefined
+	const remainingOnCurrentPart = timingContext.remainingTimeOnCurrentPartState
+	const remainingBudgetOnCurrentSegment = timingContext.remainingBudgetOnCurrentSegmentState
+
+	const remainingDuration = PlaylistTiming.getRemainingDurationState(
+		timing,
+		timingContext.remainingPlaylistDurationState,
+		startedPlayback
+	)
+	const estimatedEnd = PlaylistTiming.getEstimatedEndState(
+		timing,
+		now,
+		remainingCountedFromTheTake(now, timingContext),
+		startedPlayback
+	)
+
+	const values: PlaylistTimingStateValues = {
 		timingType: timing.type,
-
-		// Identities, so consumers can tell whether the on-air timers are about the part or segment
-		// they are rendering
-		currentPartInstanceId: timingContext.currentPartInstanceId ?? undefined,
-		currentSegmentId: timingContext.currentSegmentId ?? undefined,
-		remainingOnCurrentPart: timingContext.remainingTimeOnCurrentPartState,
-		remainingBudgetOnCurrentSegment: timingContext.remainingBudgetOnCurrentSegmentState,
 		currentPartWillAutoNext: timingContext.currentPartWillAutoNext ?? false,
-
-		plannedStart: expectedStart !== undefined ? { paused: false, zeroTime: expectedStart } : undefined,
-		plannedEnd: expectedEnd !== undefined ? { paused: false, zeroTime: expectedEnd } : undefined,
-		plannedDuration: expectedDuration !== undefined ? { paused: true, duration: expectedDuration } : undefined,
-		startedPlayback: startedPlayback !== undefined ? { paused: false, zeroTime: startedPlayback } : undefined,
-
-		remainingDuration: PlaylistTiming.getRemainingDurationState(
-			timing,
-			timingContext.remainingPlaylistDurationState,
-			startedPlayback
-		),
-		estimatedEnd: PlaylistTiming.getEstimatedEndState(
-			timing,
-			now,
-			timingContext.remainingPlaylistDurationState,
-			startedPlayback
-		),
-		overUnder: overUnderIsMeaningful ? calculateOverUnderState(now, playlist, timingContext) : undefined,
+		partCountdownBase: timingContext.partCountdownBase,
 	}
+
+	// A value the playlist does not have is left out, rather than set to undefined (see
+	// `computeTimingState` in publication.ts for why)
+	if (currentPartInstanceId !== undefined) values.currentPartInstanceId = currentPartInstanceId
+	if (currentSegmentId !== undefined) values.currentSegmentId = currentSegmentId
+	if (remainingOnCurrentPart !== undefined) values.remainingOnCurrentPart = remainingOnCurrentPart
+	if (remainingBudgetOnCurrentSegment !== undefined) {
+		values.remainingBudgetOnCurrentSegment = remainingBudgetOnCurrentSegment
+	}
+
+	if (expectedStart !== undefined) values.plannedStart = { paused: false, zeroTime: expectedStart }
+	if (expectedEnd !== undefined) values.plannedEnd = { paused: false, zeroTime: expectedEnd }
+	if (expectedDuration !== undefined) values.plannedDuration = { paused: true, duration: expectedDuration }
+	if (startedPlayback !== undefined) values.startedPlayback = { paused: false, zeroTime: startedPlayback }
+
+	if (remainingDuration !== undefined) values.remainingDuration = remainingDuration
+	if (estimatedEnd !== undefined) values.estimatedEnd = estimatedEnd
+	if (overUnderIsMeaningful) values.overUnder = calculateOverUnderState(now, playlist, timingContext)
+
+	return values
+}
+
+/**
+ * The remaining duration from which the estimated end and the over/under count.
+ *
+ * Between a take and the playout gateway's report that the taken part started, the remaining duration holds at the
+ * part's full length. Now + remaining would then grow with the clock, and fall back when the start is reported: a
+ * screen showed one second more for a moment, then the second before. Here the remaining duration counts from the
+ * later of the take and the planned end of the part that was on air before it. That is the moment from which the
+ * estimated end counted just before the take: the part that was on air played to its planned end, or it ran over and
+ * the estimated end moved with the clock up to the take. So the estimated end keeps its value from before the take,
+ * and changes only once, when the start is reported. The published remaining duration itself still holds, so it does
+ * not fall back either.
+ */
+function remainingCountedFromTheTake(now: number, timingContext: RundownTimingContext): TimerState | undefined {
+	const remainingState = timingContext.remainingPlaylistDurationState
+	const takenAt = timingContext.onAirPartTakenAt
+	const isWaitingForTheStart =
+		takenAt !== undefined &&
+		takenAt <= now &&
+		remainingState !== undefined &&
+		remainingState.paused &&
+		remainingState.resumesAt == null
+	if (!isWaitingForTheStart) return remainingState
+
+	const countsFrom = Math.max(takenAt, timingContext.previousPartPlannedEnd ?? takenAt)
+	return { paused: false, zeroTime: countsFrom + timerStateToDuration(remainingState, now) }
 }
 
 /**
@@ -230,10 +272,17 @@ function calculateOverUnderAnchors(
 
 	// End-anchored modes: diff = frontAnchor + remaining - backAnchor
 	const remaining = timingContext.remainingPlaylistDuration || 0
-	const remainingState: TimerState = timingContext.remainingPlaylistDurationState ?? {
+	const remainingState: TimerState = remainingCountedFromTheTake(now, timingContext) ?? {
 		paused: true,
 		duration: remaining,
 	}
+
+	// Before the playlist has started, the remaining duration can already be counting down, so that
+	// now + remaining holds (see the calculator): from the first take until the start of its Part is
+	// reported, when the take plans that start (a take in a multi-gateway studio schedules it a little
+	// ahead, and a take with a time offset plans it in the past), and while an untimed opening Part plays
+	// in a segment with a budget
+	const remainingCountsDownBeforeTheStart = startedPlayback === undefined && !remainingState.paused
 
 	let target: TimerState
 	if (PlaylistTiming.isPlaylistTimingBackTime(timing)) {
@@ -244,6 +293,15 @@ function calculateOverUnderAnchors(
 		} else if (startedPlayback !== undefined) {
 			// backAnchor = startedPlayback + plannedDuration: constant
 			target = { paused: false, zeroTime: startedPlayback + plannedDuration }
+		} else if (
+			remainingCountsDownBeforeTheStart &&
+			(timingContext.onAirPartPlannedStart ?? timingContext.onAirPartTakenAt) !== undefined
+		) {
+			// The on-air Part's own countdown drives the remaining duration, and the playlist starts when
+			// that Part does: backAnchor = its planned start (or its take, while it waits for its start)
+			// + plannedDuration: constant
+			const playlistStart = timingContext.onAirPartPlannedStart ?? timingContext.onAirPartTakenAt ?? now
+			target = { paused: false, zeroTime: playlistStart + plannedDuration }
 		} else if (timing.expectedStart > now) {
 			// backAnchor = expectedStart + plannedDuration until the planned start passes, then pushes
 			target = {
@@ -266,9 +324,13 @@ function calculateOverUnderAnchors(
 		// frontAnchor = now: projected = now + remaining, which is exactly the remaining-duration
 		// state read through timerStateToZeroTime
 		projected = remainingState
+	} else if (remainingCountsDownBeforeTheStart) {
+		// frontAnchor = now as well: projected = now + remaining holds while the remaining duration
+		// counts down
+		projected = remainingState
 	} else {
 		// Not started: frontAnchor = max(now, expectedStart) for ForwardTime, now otherwise
-		// (remaining is constant while nothing is playing)
+		// (remaining is constant while nothing counts it down)
 		const frontStart = PlaylistTiming.isPlaylistTimingForwardTime(timing)
 			? Math.max(timing.expectedStart, now)
 			: now

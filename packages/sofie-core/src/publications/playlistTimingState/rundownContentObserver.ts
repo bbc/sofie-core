@@ -113,7 +113,7 @@ export class RundownContentObserver {
 				}
 			),
 			// The Parts and PartInstances are taken from the UI publications rather than the
-			// collections, because those are what the UI computes its timings from. A QuickLoop with
+			// collections, because those are the ones the UI shows. A QuickLoop with
 			// forced auto-next rewrites expectedDuration there, so reading the raw collections would
 			// produce different numbers to the ones on screen.
 			observeUIParts(playlistId, cache.Parts, onChanged),

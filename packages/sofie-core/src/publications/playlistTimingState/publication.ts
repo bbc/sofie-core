@@ -191,6 +191,12 @@ export function createPlaylistTimingStateDoc(
 /**
  * All the timing math lives in ./rundownTiming (server-only); this only feeds it the
  * cached documents, and runs the calculator once for both the playlist and the segments.
+ *
+ * A document leaves out each field it has no value for, rather than setting it to undefined. The
+ * publication keeps a copy of every document it sent, to compare the next recompute with, and a copy
+ * has no fields with an undefined value. A field set to undefined would therefore read as changed on
+ * every recompute: the document would be copied again and handed to every subscriber as a change,
+ * for nothing.
  */
 function computeTimingState(
 	playlistId: RundownPlaylistId,
@@ -200,7 +206,7 @@ function computeTimingState(
 	| { playlistDoc: PlaylistTimingStateDoc; segmentDocs: SegmentTimingStateDoc[]; partDocs: PartTimingStateDoc[] }
 	| undefined {
 	// Note: the casts below are safe because the cache projections include every field the timing
-	// calculations read (matching the projections the client RundownTimingProvider uses)
+	// calculations read
 	const playlist = contentCache.RundownPlaylists.findOne(playlistId) as unknown as DBRundownPlaylist | undefined
 	if (!playlist) return undefined
 
@@ -261,17 +267,21 @@ function computeTimingState(
 		partDocs: Array.from(partStates.entries(), ([partId, values]) => {
 			const partInstance = partInstancesByPartId.get(partId)
 
-			return {
+			const partDoc: PartTimingStateDoc = {
 				_id: getPartTimingStateDocId(partId),
-				type: 'part' as const,
+				type: 'part',
 				playlistId,
 				segmentId: partInstance?.segmentId as SegmentId,
 				partId,
-				// temporary instances are wrappers around a Part that has never been played, so they
-				// have no PartInstance identity to report
-				partInstanceId: partInstance && !partInstance.isTemporary ? partInstance._id : undefined,
 				...values,
 			}
+
+			// temporary instances are wrappers around a Part that has never been played, so they
+			// have no PartInstance identity to report
+			const isRealPartInstance = partInstance !== undefined && !partInstance.isTemporary
+			if (isRealPartInstance) partDoc.partInstanceId = partInstance._id
+
+			return partDoc
 		}),
 	}
 }

@@ -43,10 +43,8 @@ export type { CalculateTimingsPartInstance }
 export type TimingId = string
 
 /**
- * This is a class for calculating timings in a Rundown playlist used by RundownTimingProvider.
- *
- * @export
- * @class RundownTimingCalculator
+ * Calculates the timing of a Rundown playlist for the playlistTimingState publication.
+ * The publication creates a new instance for every calculation.
  */
 export class RundownTimingCalculator {
 	private linearParts: Array<[PartId, number | null]> = []
@@ -55,8 +53,8 @@ export class RundownTimingCalculator {
 	private nextSegmentId: SegmentId | undefined = undefined
 
 	// look at the comments on RundownTimingContext to understand what these do
-	// Note, that these objects are created when an instance is created and are reused for the lifetime
-	// of the component. This is to avoid GC running all the time on discarded objects.
+	// Note, that these objects are created when an instance is created and are reused by every call
+	// to `updateDurations` on that instance.
 	// Only the RundownTimingContext object is unique for a call to `updateDurations`.
 	private partDurations: Record<TimingId, number> = {}
 	private partExpectedDurations: Record<TimingId, number> = {}
@@ -122,9 +120,20 @@ export class RundownTimingCalculator {
 		 * in the playlist aggregates.
 		 */
 		let liveCountdown: (TimerState & { paused: false; pauseTime: number }) | undefined
+		/** The planned start of the on-air part, while its own countdown is `liveCountdown` */
+		let onAirPartPlannedStart: number | undefined
+		/**
+		 * The take of the on-air part, while it waits for its start: between the take and the playout gateway's report
+		 * of the start, with one playout gateway. The part starts at or after it.
+		 */
+		let onAirPartTakenAt: number | undefined
+		/** The start and the planned end of the part that started last, other than the on-air part */
+		let lastStartedPartBeforeTheOnAirPart: { start: number; plannedEnd: number } | undefined
 
 		/** Keyed by partId, matching `partCountdown`. Rebuilt each run, so it never goes stale */
-		const partCountdownStates: Record<TimingId, TimerState | null> = {}
+		const partCountdownOffsets: Record<TimingId, number | null> = {}
+		/** What every part's countdown is a shift of; set below once the waits are known */
+		let partCountdownBase: TimerState = { paused: true, duration: 0 }
 		/** Rebuilt each run, so it never goes stale */
 		const partCountsTowardsTiming: Record<TimingId, boolean> = {}
 
@@ -250,6 +259,18 @@ export class RundownTimingCalculator {
 				const { memberOfDisplayDurationGroup, displayDurationFromGroup } = resolved
 				const partExpectedDuration = resolved.expectedDuration
 				const partDuration = resolved.duration
+				const isTheOnAirPart = playlist.currentPartInfo?.partInstanceId === partInstance._id
+				if (
+					lastStartedPlayback !== undefined &&
+					!isTheOnAirPart &&
+					(lastStartedPartBeforeTheOnAirPart === undefined ||
+						lastStartedPlayback > lastStartedPartBeforeTheOnAirPart.start)
+				) {
+					lastStartedPartBeforeTheOnAirPart = {
+						start: lastStartedPlayback,
+						plannedEnd: lastStartedPlayback + partExpectedDuration,
+					}
+				}
 				const partDisplayDurationNoPlayback = resolved.displayDurationNoPlayback
 				let partDisplayDuration = resolved.displayDuration
 				this.partPlayed[partInstanceOrPartId] = resolved.played
@@ -433,6 +454,12 @@ export class RundownTimingCalculator {
 						plannedStartedPlayback !== undefined &&
 						!partInstance.timings?.duration &&
 						!partIsUntimed
+					const isWaitingForItsStart =
+						playlist.currentPartInfo?.partInstanceId === partInstance._id &&
+						plannedStartedPlayback === undefined &&
+						partInstance.timings?.reportedStartedPlayback === undefined &&
+						partInstance.timings?.take !== undefined
+					if (isWaitingForItsStart) onAirPartTakenAt = partInstance.timings?.take
 
 					if (isOnAir) {
 						// The on-air part's remaining time: a countdown to its expected end, freezing
@@ -442,6 +469,7 @@ export class RundownTimingCalculator {
 						// amount of the wait - which is what keeps the projected end fixed.
 						const expectedEndTime = plannedStartedPlayback + partExpectedDuration
 						liveCountdown = { paused: false, zeroTime: expectedEndTime, pauseTime: expectedEndTime }
+						onAirPartPlannedStart = plannedStartedPlayback
 						remainingRundownDuration += timerStateToDuration(liveCountdown, now)
 					} else if (
 						typeof lastStartedPlayback !== 'number' &&
@@ -518,13 +546,28 @@ export class RundownTimingCalculator {
 				}
 			}
 
-			// Apply the one live term to every offset, giving each part's countdown as a state, and take
-			// the numbers back out of those states so that the two can never disagree
+			// Each part's countdown is published as one base timer shifted by an offset of the part's own, and
+			// every changed offset is a part document sent to every subscriber. The offsets above count from the
+			// start of the Next part (of the first part when nothing is next), so a take, which moves Next, would
+			// change all of them. So the base is the live term moved to the end of the last part's wait, and each
+			// offset counts back from there. A part's offset is then made of the waits from that part on, which
+			// for a part at or after Next have not been played, so a take, a playback confirmation or the clock
+			// mostly changes the base alone. Each countdown is the same either way: the live state, shifted by the
+			// same total.
+			const waitsFromNextToTheEnd = waitAccumulator - localAccum
+			partCountdownBase = offsetTimerState(currentRemainingState, waitsFromNextToTheEnd)
+
+			// Give each part its offset from the base, and take the numbers back out of the countdowns the two
+			// give, as a consumer composes them, so that the numbers and the published values can never disagree
 			for (const linearPart of this.linearParts) {
-				const offset = linearPart[1]
-				const state = offset === null ? null : offsetTimerState(currentRemainingState, offset)
-				partCountdownStates[unprotectString(linearPart[0])] = state
-				linearPart[1] = state && timerStateToDuration(state, now)
+				const partId = unprotectString(linearPart[0])
+				const offsetFromNext = linearPart[1]
+				const hasCountdown = offsetFromNext !== null
+				const countdownOffset = hasCountdown ? offsetFromNext - waitsFromNextToTheEnd : null
+				partCountdownOffsets[partId] = countdownOffset
+
+				const countdown = countdownOffset === null ? null : offsetTimerState(partCountdownBase, countdownOffset)
+				linearPart[1] = countdown && timerStateToDuration(countdown, now)
 			}
 
 			// For the sake of Segment Budget Durations, we need to now iterate over all Segments
@@ -638,7 +681,8 @@ export class RundownTimingCalculator {
 			rundownExpectedDurations,
 			rundownAsPlayedDurations,
 			partCountdown: objectFromEntries(this.linearParts),
-			partCountdownStates,
+			partCountdownBase,
+			partCountdownOffsets,
 			partCountsTowardsTiming,
 			partDurations: this.partDurations,
 			partPlayed: this.partPlayed,
@@ -651,6 +695,14 @@ export class RundownTimingCalculator {
 			currentTime: now,
 			remainingTimeOnCurrentPart,
 			remainingTimeOnCurrentPartState,
+			onAirPartPlannedStart,
+			onAirPartTakenAt,
+			previousPartPlannedEnd:
+				onAirPartTakenAt !== undefined &&
+				lastStartedPartBeforeTheOnAirPart !== undefined &&
+				lastStartedPartBeforeTheOnAirPart.start <= onAirPartTakenAt
+					? lastStartedPartBeforeTheOnAirPart.plannedEnd
+					: undefined,
 			remainingBudgetOnCurrentSegment,
 			remainingBudgetOnCurrentSegmentState,
 			currentPartWillAutoNext,
@@ -673,7 +725,8 @@ export interface RundownTimingContext {
 	 * The remaining content duration as a TimerState (read via `timerStateToDuration`): counts down
 	 * 1:1 while the on-air part (or segment budget) is playing, freezing once it overruns.
 	 * `remainingPlaylistDuration` is this state's evaluation at `currentTime`.
-	 * Read via `timerStateToZeroTime` (when playback has started) it yields the estimated end.
+	 * Read via `timerStateToZeroTime` (when playback has started, or while it counts down) it yields
+	 * the estimated end.
 	 */
 	remainingPlaylistDurationState?: TimerState
 	/**
@@ -694,11 +747,17 @@ export interface RundownTimingContext {
 	/** this is the countdown to each of the parts relative to the current on air part. This always uses PartId's as the index */
 	partCountdown?: Record<string, number | null>
 	/**
-	 * `partCountdown` as states, so that a consumer can keep the countdowns current between recomputes.
-	 * Every entry is the same live state shifted by that part's static wait, so they cannot drift apart.
-	 * Also keyed by PartId; `null` means "will probably not be played out, if played in order".
+	 * The timer every part's countdown is a shift of: a part's countdown is
+	 * `offsetTimerState(partCountdownBase, partCountdownOffsets[partId])`. It has no meaning of its own: it is
+	 * the live term of the countdowns, moved to the end of the last part's wait.
 	 */
-	partCountdownStates?: Record<string, TimerState | null>
+	partCountdownBase: TimerState
+	/**
+	 * How far each part's countdown is from `partCountdownBase`, in ms: for a part at or after Next, minus the
+	 * waits from the part's start to the end of the last part's wait. Also keyed by PartId; `null` means "will
+	 * probably not be played out, if played in order", as in `partCountdown`.
+	 */
+	partCountdownOffsets?: Record<string, number | null>
 	/**
 	 * Whether each part contributes to the playlist and rundown totals - false for parts that will be
 	 * skipped if the rundown is played in order, unless the playlist allows out-of-order timing.
@@ -741,6 +800,25 @@ export interface RundownTimingContext {
 	 * `remainingTimeOnCurrentPart` is this state's evaluation at `currentTime`.
 	 */
 	remainingTimeOnCurrentPartState?: TimerState
+	/**
+	 * When the on-air part starts, or started, playing as planned (its `plannedStartedPlayback`), while its
+	 * own countdown drives the remaining duration: a timed part, outside a segment budget, still playing.
+	 * Undefined otherwise, such as while an untimed part, or a part in a segment with a budget, is on air.
+	 * A take in a multi-gateway studio sets it a little ahead, so just after a take it lies in the future.
+	 */
+	onAirPartPlannedStart?: number
+	/**
+	 * When the on-air part was taken, while it waits for the playout gateway's report of its start (with one playout
+	 * gateway; in a multi-gateway studio the take plans the start instead, see `onAirPartPlannedStart`). The part starts
+	 * at or after its take. Undefined once the start is known, and while no part is on air.
+	 */
+	onAirPartTakenAt?: number
+	/**
+	 * While the on-air part waits for its start (see `onAirPartTakenAt`): the planned end of the part that was on air
+	 * before the take, its start plus its expected duration. Before the take, the playlist's estimated end counted that
+	 * part to this end. Undefined otherwise.
+	 */
+	previousPartPlannedEnd?: number
 	/** Remaining budget on current segment, if its countdownType === CountdownType.SEGMENT_BUDGET_DURATION, undefined otherwise */
 	remainingBudgetOnCurrentSegment?: number | undefined
 	/**

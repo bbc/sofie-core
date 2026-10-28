@@ -7,7 +7,11 @@ import { literal } from '@sofie-automation/corelib/dist/lib'
 import { protectString, unprotectString } from '@sofie-automation/shared-lib/dist/lib/protectedString'
 import { PlaylistTimingType } from '@sofie-automation/blueprints-integration'
 import { wrapPartToTemporaryInstance } from '@sofie-automation/corelib/dist/playout/stateCacheResolver'
-import { timerStateToDuration, type TimerState } from '@sofie-automation/corelib/dist/dataModel/TimerState'
+import {
+	offsetTimerState,
+	timerStateToDuration,
+	type TimerState,
+} from '@sofie-automation/corelib/dist/dataModel/TimerState'
 import { RundownTimingCalculator, getPartInstanceTimingId, type RundownTimingContext } from '../index'
 import { calculatePartTimingStates, type PartTimingStateValues } from '../partTimingState'
 
@@ -26,6 +30,7 @@ function makeMockPlaylist(): DBRundownPlaylist {
 		name: 'Mock Playlist',
 		created: 0,
 		modified: 0,
+		defaultBrandingId: null,
 		currentPartInfo: null,
 		nextPartInfo: null,
 		previousPartsInfo: [],
@@ -143,8 +148,10 @@ function evalDuration(state: TimerState | undefined, now: number): number | unde
 /**
  * Evaluate a whole set of part states at `t`, reduced to the plain numbers the calculator reports,
  * so that they can be compared directly against a calculator run at `t`.
+ *
+ * @param partCountdownBase The playlist's base for the part countdowns, from the same calculation
  */
-function evaluateStates(states: Map<PartId, PartTimingStateValues>, t: number) {
+function evaluateStates(states: Map<PartId, PartTimingStateValues>, partCountdownBase: TimerState, t: number) {
 	return Object.fromEntries(
 		Array.from(states.entries()).map(([partId, state]) => [
 			unprotectString(partId),
@@ -155,7 +162,11 @@ function evaluateStates(states: Map<PartId, PartTimingStateValues>, t: number) {
 				displayDuration: negate(evalDuration(state.liveDisplayDuration, t)),
 				duration: negate(evalDuration(state.duration, t)),
 				played: negate(evalDuration(state.played, t)),
-				countdown: evalDuration(state.countdown, t) ?? null,
+				// as a consumer composes it
+				countdown:
+					state.countdownOffset === undefined
+						? null
+						: timerStateToDuration(offsetTimerState(partCountdownBase, state.countdownOffset), t),
 				countsTowardsTiming: state.countsTowardsTiming,
 				isInQuickLoop: state.isInQuickLoop,
 			},
@@ -198,11 +209,15 @@ function negate(value: number | undefined): number | undefined {
  * the calculator would say, at every later instant, without being republished.
  */
 function expectMatchesCalculator(scenario: MockScenario, now: number, offsets: number[]): void {
-	const states = statesAt(scenario, now)
+	const timingContext = contextAt(scenario, now)
+	const states = calculatePartTimingStates(timingContext, scenario.partInstances)
 
 	for (const offset of offsets) {
 		const t = now + offset
-		expect({ offset, values: evaluateStates(states, t) }).toEqual({ offset, values: calculatorValues(scenario, t) })
+		expect({ offset, values: evaluateStates(states, timingContext.partCountdownBase, t) }).toEqual({
+			offset,
+			values: calculatorValues(scenario, t),
+		})
 	}
 }
 
@@ -212,6 +227,36 @@ describe('calculatePartTimingStates', () => {
 
 		expect(Array.from(states.keys()).map(unprotectString)).toEqual(['part0', 'part1', 'part2', 'part3'])
 		expect(Array.from(states.values()).map((state) => state.rank)).toEqual([0, 1, 2, 3])
+	})
+
+	it('says which parts are untimed, while still giving an untimed part its own expected duration', () => {
+		const states = statesAt(makeScenario([{}, { untimed: true }]), 10000)
+		const timedPart = states.get(protectString('part0'))
+		const untimedPart = states.get(protectString('part1'))
+
+		// the expected duration is the Part's own either way, so a consumer that adds them up has to
+		// leave the untimed ones out itself
+		expect(evalDuration(untimedPart?.expectedDuration, 10000)).toBe(PART_DURATION)
+		expect(timedPart?.untimed).toBe(false)
+		expect(untimedPart?.untimed).toBe(true)
+	})
+
+	it('says which parts are orphaned, while still giving an orphaned part its own expected duration', () => {
+		const scenario = makeScenario()
+		scenario.partInstances[1].orphaned = 'adlib-part'
+		scenario.partInstances[2].orphaned = 'deleted'
+		const states = statesAt(scenario, 10000)
+		const plannedPart = states.get(protectString('part0'))
+		const adlibbedPart = states.get(protectString('part1'))
+		const deletedPart = states.get(protectString('part2'))
+
+		// the expected duration is the Part's own either way, so a consumer that adds up a Segment has
+		// to leave the orphaned ones out itself
+		expect(evalDuration(adlibbedPart?.expectedDuration, 10000)).toBe(PART_DURATION)
+		expect(evalDuration(deletedPart?.expectedDuration, 10000)).toBe(PART_DURATION)
+		expect(plannedPart?.orphaned).toBe(false)
+		expect(adlibbedPart?.orphaned).toBe(true)
+		expect(deletedPart?.orphaned).toBe(true)
 	})
 
 	describe('matches the calculator', () => {
