@@ -1,0 +1,346 @@
+import { ShowStyleBaseId, StudioId } from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { Complete, literal } from '@sofie-automation/corelib/dist/lib'
+import { applyAndValidateOverrides } from '@sofie-automation/corelib/dist/settings/objectWithOverrides'
+import { ReadonlyObjectDeep } from 'type-fest/source/readonly-deep'
+import {
+	createAction,
+	ExecutableAction,
+	isPreviewableAction,
+} from '@sofie-automation/meteor-lib/dist/triggers/actionFactory'
+import {
+	DeviceActionId,
+	DeviceTriggerMountedActionId,
+	PreviewWrappedAdLib,
+	PreviewWrappedAdLibId,
+	ShiftRegisterActionArguments,
+} from '@sofie-automation/meteor-lib/dist/api/MountedTriggers'
+import { isDeviceTrigger } from '@sofie-automation/meteor-lib/dist/triggers/triggerTypeSelectors'
+import {
+	DBTriggeredActions,
+	UITriggeredActionsObj,
+} from '@sofie-automation/meteor-lib/dist/collections/TriggeredActions'
+import { protectString } from '@sofie-automation/corelib/dist/protectedString'
+import { StudioActionManager, StudioActionManagers } from './StudioActionManagers'
+import { DeviceTriggerMountedActionAdlibsPreview, DeviceTriggerMountedActions } from './observer'
+import { ContentCache } from './reactiveContentCache'
+import { ContentCache as PieceInstancesContentCache } from './reactiveContentCacheForPieceInstances'
+import { logger } from '../../logging'
+import { SomeAction, SomeBlueprintTrigger } from '@sofie-automation/blueprints-integration'
+import { DeviceActions } from '@sofie-automation/shared-lib/dist/core/model/ShowStyle'
+import { TriggersContext } from '@sofie-automation/meteor-lib/dist/triggers/triggersContext'
+import { createContextFromCache, TriggersContextFactory } from './triggersContext'
+import { TagsService } from './TagsService'
+import { ResolvedAdLibCache } from './resolvedAdLibCache'
+import { SofieError } from '@sofie-automation/corelib/dist/error'
+
+export class StudioDeviceTriggerManager {
+	#lastShowStyleBaseId: ShowStyleBaseId | null = null
+
+	lastCache: ContentCache | undefined
+
+	private readonly triggersContext: TriggersContext
+
+	/** The AdLibs of the active Playlist, resolved for its Branding. Rebuilt whenever the triggers are. */
+	readonly #resolvedAdLibs = new ResolvedAdLibCache()
+
+	constructor(
+		public studioId: StudioId,
+		protected tagsService: TagsService,
+		createTriggersContext: TriggersContextFactory
+	) {
+		// `lastCache` is reassigned during the lifetime, so pass a getter
+		this.triggersContext = createTriggersContext(() => this.#getCacheForTriggers())
+
+		if (StudioActionManagers.get(studioId)) {
+			logger.error(`A StudioActionManager for "${studioId}" already exists`)
+			return
+		}
+
+		StudioActionManagers.set(studioId, new StudioActionManager())
+	}
+
+	/**
+	 * The ContentCache as the compiled filter chains should see it: the AdLibs resolved for the Branding,
+	 * everything else as stored. AdLibs are matched on properties a Branding can change, so they must be
+	 * resolved before the filter chain queries them.
+	 */
+	#getCacheForTriggers(): ContentCache | undefined {
+		if (!this.lastCache) return undefined
+
+		return {
+			...this.lastCache,
+			AdLibActions: this.#resolvedAdLibs.AdLibActions,
+			AdLibPieces: this.#resolvedAdLibs.AdLibPieces,
+			RundownBaselineAdLibActions: this.#resolvedAdLibs.RundownBaselineAdLibActions,
+			RundownBaselineAdLibPieces: this.#resolvedAdLibs.RundownBaselineAdLibPieces,
+		}
+	}
+
+	async updateTriggers(cache: ContentCache, showStyleBaseId: ShowStyleBaseId): Promise<void> {
+		const studioId = this.studioId
+
+		const showStyleBase = cache.ShowStyleBases.findOne(showStyleBaseId)
+		const rundownPlaylist = cache.RundownPlaylists.findOne({
+			activationId: {
+				$exists: true,
+			},
+		})
+		if (!showStyleBase || !rundownPlaylist) {
+			// The observer doesn't clear before re-running an update, so tear down anything mounted from a
+			// previous (valid) cache rather than leaving it active against this one
+			await this.clearTriggers()
+			return
+		}
+
+		// Must be before anything reads AdLibs through the TriggersContext
+		this.#resolvedAdLibs.update(cache)
+
+		this.lastCache = cache
+		this.#lastShowStyleBaseId = showStyleBaseId
+
+		const context = createContextFromCache(cache, studioId, rundownPlaylist)
+		const actionManager = StudioActionManagers.get(studioId)
+		if (!actionManager)
+			throw new SofieError(
+				500,
+				`No Studio Action Manager available to handle action context in Studio "${studioId}"`
+			)
+		actionManager.setContext(context)
+
+		const { obj: sourceLayers } = applyAndValidateOverrides(showStyleBase.sourceLayersWithOverrides)
+
+		const allTriggeredActions = cache.TriggeredActions.findFetch({
+			showStyleBaseId: {
+				$in: [showStyleBaseId, null],
+			},
+		})
+
+		const upsertedDeviceTriggerMountedActionIds: DeviceTriggerMountedActionId[] = []
+		const touchedActionIds: DeviceActionId[] = []
+
+		this.tagsService.clearObservedTags()
+
+		for (const rawTriggeredAction of allTriggeredActions) {
+			const triggeredAction = convertDocument(rawTriggeredAction)
+
+			if (!Object.values<SomeBlueprintTrigger>(triggeredAction.triggers).find(isDeviceTrigger)) continue
+
+			const addedPreviewIds: PreviewWrappedAdLibId[] = []
+
+			const updateActionsPromises = Object.entries<SomeAction>(triggeredAction.actions).map(
+				async ([key, action]) => {
+					// Since the compiled action is cached using this actionId as a key, having the action
+					// and the filterChain allows for a quicker invalidation without doing a deepEquals
+					const actionId = protectString<DeviceActionId>(
+						`${studioId}_${triggeredAction._id}_${key}_${JSON.stringify(action)}`
+					)
+					const existingAction = actionManager.getAction(actionId)
+					let thisAction: ExecutableAction
+					// Use the cached action or put a new one in the cache
+					if (existingAction) {
+						thisAction = existingAction
+					} else {
+						const compiledAction = createAction(this.triggersContext, action, sourceLayers)
+						actionManager.setAction(actionId, compiledAction)
+						thisAction = compiledAction
+					}
+					touchedActionIds.push(actionId)
+
+					const updateMountedActionsPromises = Object.entries<SomeBlueprintTrigger>(
+						triggeredAction.triggers
+					).map(async ([key, trigger]) => {
+						if (!isDeviceTrigger(trigger)) {
+							return
+						}
+
+						let deviceActionArguments: ShiftRegisterActionArguments | undefined = undefined
+
+						if (action.action === DeviceActions.modifyShiftRegister) {
+							deviceActionArguments = {
+								type: 'modifyRegister',
+								register: action.register,
+								operation: action.operation,
+								value: action.value,
+								limitMin: action.limitMin,
+								limitMax: action.limitMax,
+							}
+						}
+
+						const deviceTriggerMountedActionId = protectString<DeviceTriggerMountedActionId>(
+							`${actionId}_${key}`
+						)
+						upsertedDeviceTriggerMountedActionIds.push(deviceTriggerMountedActionId)
+						return DeviceTriggerMountedActions.replace({
+							_id: deviceTriggerMountedActionId,
+							studioId,
+							showStyleBaseId,
+							actionType: thisAction.action,
+							actionId,
+							deviceId: trigger.deviceId,
+							deviceTriggerId: trigger.triggerId,
+							values: trigger.values ?? {},
+							deviceActionArguments,
+							name: triggeredAction.name,
+						})
+					})
+
+					if (!isPreviewableAction(thisAction)) {
+						const adLibPreviewId = protectString(`${actionId}_preview`)
+
+						addedPreviewIds.push(adLibPreviewId)
+						DeviceTriggerMountedActionAdlibsPreview.replace(
+							literal<PreviewWrappedAdLib>({
+								_id: adLibPreviewId,
+								_rank: 0,
+								partId: null,
+								type: undefined,
+								label: thisAction.action,
+								item: null,
+								triggeredActionId: triggeredAction._id,
+								actionId,
+								studioId,
+								showStyleBaseId,
+								sourceLayerType: undefined,
+								sourceLayerName: undefined,
+								styleClassNames: triggeredAction.styleClassNames,
+								isActive: undefined,
+								isNext: undefined,
+							})
+						)
+					} else {
+						const previewedAdLibs = await thisAction.preview(context, null)
+
+						const previewedAdlibsUpdatePromises = previewedAdLibs.map(async (adLib) => {
+							const adLibPreviewId = protectString<PreviewWrappedAdLibId>(
+								`${triggeredAction._id}_${studioId}_${key}_${adLib._id}`
+							)
+
+							addedPreviewIds.push(adLibPreviewId)
+
+							this.tagsService.observeTallyTags(adLib)
+							const { isActive, isNext } = this.tagsService.getTallyStateFromTags(adLib)
+							return DeviceTriggerMountedActionAdlibsPreview.replace(
+								literal<PreviewWrappedAdLib>({
+									...adLib,
+									_id: adLibPreviewId,
+									triggeredActionId: triggeredAction._id,
+									actionId,
+									studioId,
+									showStyleBaseId,
+									sourceLayerType: adLib.sourceLayerId
+										? sourceLayers[adLib.sourceLayerId]?.type
+										: undefined,
+									sourceLayerName: adLib.sourceLayerId
+										? {
+												name: sourceLayers[adLib.sourceLayerId]?.name,
+												abbreviation: sourceLayers[adLib.sourceLayerId]?.abbreviation,
+											}
+										: undefined,
+									styleClassNames: triggeredAction.styleClassNames,
+									isActive,
+									isNext,
+								})
+							)
+						})
+
+						await Promise.all(previewedAdlibsUpdatePromises)
+					}
+
+					await Promise.all(updateMountedActionsPromises)
+				}
+			)
+
+			await Promise.all(updateActionsPromises)
+
+			DeviceTriggerMountedActionAdlibsPreview.remove({
+				triggeredActionId: triggeredAction._id,
+				_id: {
+					$nin: addedPreviewIds,
+				},
+			})
+		}
+
+		DeviceTriggerMountedActions.remove({
+			studioId,
+			showStyleBaseId,
+			_id: {
+				$nin: upsertedDeviceTriggerMountedActionIds,
+			},
+		})
+
+		actionManager.deleteActionsOtherThan(touchedActionIds)
+	}
+
+	protected async updateTriggersFromLastCache(): Promise<void> {
+		if (!this.lastCache || !this.#lastShowStyleBaseId) return
+		return this.updateTriggers(this.lastCache, this.#lastShowStyleBaseId)
+	}
+
+	async updatePieceInstances(cache: PieceInstancesContentCache, showStyleBaseId: ShowStyleBaseId): Promise<void> {
+		const shouldUpdateTriggers = this.tagsService.updatePieceInstances(cache, showStyleBaseId)
+		if (shouldUpdateTriggers) {
+			await this.updateTriggersFromLastCache()
+		}
+	}
+
+	async clearTriggers(): Promise<void> {
+		const studioId = this.studioId
+		const showStyleBaseId = this.#lastShowStyleBaseId
+
+		if (!showStyleBaseId) {
+			return
+		}
+
+		const actionManager = StudioActionManagers.get(studioId)
+		if (!actionManager)
+			throw new SofieError(
+				500,
+				`No Studio Action Manager available to handle action context in Studio "${studioId}"`
+			)
+
+		const mountedActions = DeviceTriggerMountedActions.findFetch({
+			studioId,
+			showStyleBaseId,
+		})
+		for (const mountedAction of mountedActions) {
+			actionManager.deleteAction(mountedAction.actionId)
+		}
+
+		DeviceTriggerMountedActions.remove({
+			studioId,
+			showStyleBaseId,
+		})
+		DeviceTriggerMountedActionAdlibsPreview.remove({
+			studioId,
+			showStyleBaseId,
+		})
+
+		actionManager.deleteContext()
+
+		// Drop the cache too: it belongs to the observer that is being torn down, and `triggersContext` reads
+		// it to evaluate filter chains.
+		this.lastCache = undefined
+		this.#lastShowStyleBaseId = null
+		return
+	}
+
+	async stop(): Promise<void> {
+		StudioActionManagers.delete(this.studioId)
+		return await this.clearTriggers()
+	}
+}
+
+function convertDocument(doc: ReadonlyObjectDeep<DBTriggeredActions>): UITriggeredActionsObj {
+	return literal<Complete<UITriggeredActionsObj>>({
+		_id: doc._id,
+		_rank: doc._rank,
+
+		showStyleBaseId: doc.showStyleBaseId,
+		name: doc.name,
+
+		actions: applyAndValidateOverrides<Record<string, SomeAction>>(doc.actionsWithOverrides).obj,
+		triggers: applyAndValidateOverrides<Record<string, SomeBlueprintTrigger>>(doc.triggersWithOverrides).obj,
+
+		styleClassNames: doc.styleClassNames,
+	})
+}

@@ -1,6 +1,6 @@
 {
 	"name": "@sofie-automation/job-worker",
-	"version": "26.3.0-2",
+	"version": "26.9.3",
 	"description": "Worker for things",
 	"main": "dist/index.js",
 	"license": "MIT",
@@ -15,7 +15,7 @@
 	},
 	"homepage": "https://github.com/Sofie-Automation/sofie-core/blob/main/packages/job-worker#readme",
 	"scripts": {
-		"lint": "run -T lint job-worker",
+		"lint": "run -T lint packages/job-worker",
 		"unit": "run -T jest",
 		"test": "run lint && run unit",
 		"watch": "run -T jest --watch --coverage=false",
@@ -36,9 +36,9 @@
 	],
 	"dependencies": {
 		"@slack/webhook": "^7.2.0",
-		"@sofie-automation/blueprints-integration": "26.3.0-2",
-		"@sofie-automation/corelib": "26.3.0-2",
-		"@sofie-automation/shared-lib": "26.3.0-2",
+		"@sofie-automation/blueprints-integration": "26.9.3",
+		"@sofie-automation/corelib": "26.9.3",
+		"@sofie-automation/shared-lib": "26.9.3",
 		"amqplib": "0.10.5",
 		"chrono-node": "^2.9.1",
 		"deepmerge": "^4.3.1",

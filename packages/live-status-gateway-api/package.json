@@ -1,6 +1,6 @@
 {
 	"name": "@sofie-automation/live-status-gateway-api",
-	"version": "26.3.0-2",
+	"version": "26.9.3",
 	"description": "Library for types & values shared by core, workers and gateways",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
@@ -15,7 +15,7 @@
 	},
 	"homepage": "https://github.com/nrkno/sofie-core/blob/master/packages/live-status-gateway-api#readme",
 	"scripts": {
-		"lint": "run -T lint live-status-gateway-api",
+		"lint": "run -T lint packages/live-status-gateway-api",
 		"build:prepare": "run generate-schema-types",
 		"unit": "run -T jest",
 		"test": "run lint && run unit",

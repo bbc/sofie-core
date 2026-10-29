@@ -1,0 +1,1476 @@
+import { SofieError, UserError, UserErrorMessage } from '@sofie-automation/corelib/dist/error'
+import { z } from 'zod'
+import { logger } from '../../../logging'
+import { APIFactory, APIRegisterHook, ServerAPIContext } from './types'
+import { protectString, unprotectString } from '@sofie-automation/corelib/dist/protectedString'
+import {
+	AdLibActionId,
+	BucketAdLibId,
+	BucketId,
+	PartId,
+	PartInstanceId,
+	PieceId,
+	RundownBaselineAdLibActionId,
+	RundownId,
+	RundownPlaylistId,
+	SegmentId,
+} from '@sofie-automation/corelib/dist/dataModel/Ids'
+import { RundownTTimerIndex } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/TTimers'
+import { check } from '../../../lib/check'
+import { PlaylistsRestAPI } from '../../../lib/rest/v1'
+import { ClientAPI } from '@sofie-automation/meteor-lib/dist/api/client'
+import {
+	AdLibActions,
+	AdLibPieces,
+	BucketAdLibActions,
+	BucketAdLibs,
+	Buckets,
+	Parts,
+	RundownBaselineAdLibActions,
+	RundownBaselineAdLibPieces,
+	RundownPlaylists,
+	Segments,
+} from '../../../collections'
+import { DBRundownPlaylist } from '@sofie-automation/corelib/dist/dataModel/RundownPlaylist/RundownPlaylist'
+import { ServerClientAPI } from '../../client'
+import { QueueNextSegmentResult, StudioJobs, TakeNextPartResult } from '@sofie-automation/corelib/dist/worker/studio'
+import { getCurrentTime } from '../../../lib/lib'
+import { TriggerReloadDataResponse } from '@sofie-automation/meteor-lib/dist/api/userActions'
+import { ServerRundownAPI } from '../../rundown'
+import { triggerWriteAccess } from '../../../security/securityVerify'
+import type { DDPClientConnection } from '../../../ddp-server/types'
+import { RundownBaselineAdLibAction } from '@sofie-automation/corelib/dist/dataModel/RundownBaselineAdLibAction'
+import { AdLibPiece } from '@sofie-automation/corelib/dist/dataModel/AdLibPiece'
+import { AdLibAction } from '@sofie-automation/corelib/dist/dataModel/AdlibAction'
+import { BucketAdLib } from '@sofie-automation/corelib/dist/dataModel/BucketAdLibPiece'
+
+function parseTimerIndex(rawTimerIndex: string): RundownTTimerIndex {
+	const timerIndex = Number(rawTimerIndex)
+	if (!Number.isInteger(timerIndex) || timerIndex < 1 || timerIndex > 3) {
+		throw new SofieError(400, `Invalid timerIndex`)
+	}
+
+	return timerIndex as RundownTTimerIndex
+}
+
+class PlaylistsServerAPI implements PlaylistsRestAPI {
+	constructor(private context: ServerAPIContext) {}
+
+	private async findPlaylist(playlistId: RundownPlaylistId) {
+		const playlist = await RundownPlaylists.findOneAsync({
+			$or: [{ _id: playlistId }, { externalId: playlistId }],
+		})
+		if (!playlist) {
+			throw new SofieError(404, `Playlist ID '${playlistId}' was not found`)
+		}
+		return playlist
+	}
+
+	private async findSegment(segmentId: SegmentId) {
+		const segment = await Segments.findOneAsync({
+			$or: [
+				{
+					_id: segmentId,
+				},
+				{
+					externalId: segmentId,
+				},
+			],
+		})
+		if (!segment) {
+			throw new SofieError(404, `Segment ID '${segmentId}' was not found`)
+		}
+		return segment
+	}
+
+	private async findPart(partId: PartId) {
+		const part = await Parts.findOneAsync({
+			$or: [
+				{ _id: partId },
+				{
+					externalId: partId,
+				},
+			],
+		})
+		if (!part) {
+			throw new SofieError(404, `Part ID '${partId}' was not found`)
+		}
+		return part
+	}
+
+	async getAllRundownPlaylists(
+		_connection: DDPClientConnection,
+		_event: string
+	): Promise<ClientAPI.ClientResponse<Array<{ id: string; externalId: string }>>> {
+		const rundownPlaylists = (await RundownPlaylists.findFetchAsync(
+			{},
+			{ projection: { _id: 1, externalId: 1 } }
+		)) as Array<Pick<DBRundownPlaylist, '_id' | 'externalId'>>
+		return ClientAPI.responseSuccess(
+			rundownPlaylists.map((rundownPlaylist) => ({
+				id: unprotectString(rundownPlaylist._id),
+				externalId: rundownPlaylist.externalId,
+			}))
+		)
+	}
+
+	async activate(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		rehearsal: boolean
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(rehearsal, z.boolean())
+			},
+			StudioJobs.ActivateRundownPlaylist,
+			{
+				playlistId: playlist._id,
+				rehearsal,
+			}
+		)
+	}
+
+	async activateAdLibTesting(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		rundownId: RundownId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			rundownPlaylistId,
+			() => {
+				check(rundownPlaylistId, z.string())
+				check(rundownId, z.string())
+			},
+			StudioJobs.ActivateAdlibTesting,
+			{
+				playlistId: rundownPlaylistId,
+				rundownId: rundownId,
+			}
+		)
+	}
+
+	async deactivate(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+			},
+			StudioJobs.DeactivateRundownPlaylist,
+			{
+				playlistId: playlist._id,
+			}
+		)
+	}
+
+	async executeAdLib(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		adLibId: AdLibActionId | RundownBaselineAdLibActionId | PieceId | BucketAdLibId,
+		triggerMode?: string | null,
+		adLibOptions?: { [key: string]: any }
+	): Promise<ClientAPI.ClientResponse<object>> {
+		const [baselineAdLibDoc, segmentAdLibDoc, bucketAdLibDoc, adLibAction, baselineAdLibAction] = await Promise.all(
+			[
+				RundownBaselineAdLibPieces.findOneAsync(adLibId as PieceId, {
+					projection: { _id: 1 },
+				}) as Promise<Pick<AdLibPiece, '_id'> | undefined>,
+				AdLibPieces.findOneAsync(adLibId as PieceId, { projection: { _id: 1 } }) as Promise<
+					Pick<AdLibPiece, '_id'> | undefined
+				>,
+				BucketAdLibs.findOneAsync(adLibId as BucketAdLibId, { projection: { _id: 1 } }) as Promise<
+					Pick<BucketAdLib, '_id'> | undefined
+				>,
+				AdLibActions.findOneAsync(adLibId as AdLibActionId, {
+					projection: { _id: 1, actionId: 1, userData: 1 },
+				}) as Promise<Pick<AdLibAction, '_id' | 'actionId' | 'userData'> | undefined>,
+				RundownBaselineAdLibActions.findOneAsync(adLibId as RundownBaselineAdLibActionId, {
+					projection: { _id: 1, actionId: 1, userData: 1 },
+				}) as Promise<Pick<RundownBaselineAdLibAction, '_id' | 'actionId' | 'userData'> | undefined>,
+			]
+		)
+		const adLibActionDoc = adLibAction ?? baselineAdLibAction
+		const regularAdLibDoc = baselineAdLibDoc ?? segmentAdLibDoc ?? bucketAdLibDoc
+		if (regularAdLibDoc) {
+			// This is an AdLib Piece
+			const pieceType = baselineAdLibDoc ? 'baseline' : segmentAdLibDoc ? 'normal' : 'bucket'
+			const rundownPlaylist = await RundownPlaylists.findOneAsync(
+				{ $or: [{ _id: rundownPlaylistId }, { externalId: rundownPlaylistId }] },
+				{
+					projection: { currentPartInfo: 1 },
+				}
+			)
+			if (!rundownPlaylist)
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(`Rundown playlist does not exist`),
+						UserErrorMessage.RundownPlaylistNotFound,
+						undefined,
+						404
+					)
+				)
+			if (rundownPlaylist.currentPartInfo === null)
+				return ClientAPI.responseError(
+					UserError.from(
+						Error(`No active Part in ${rundownPlaylistId}`),
+						UserErrorMessage.PartNotFound,
+						undefined,
+						412
+					)
+				)
+
+			const result = await ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+				this.context.getMethodContext(connection),
+				event,
+				getCurrentTime(),
+				rundownPlaylist._id,
+				() => {
+					check(rundownPlaylist._id, z.string())
+					check(adLibId, z.string().nullable())
+				},
+				StudioJobs.AdlibPieceStart,
+				{
+					playlistId: rundownPlaylist._id,
+					adLibPieceId: regularAdLibDoc._id,
+					partInstanceId: rundownPlaylist.currentPartInfo.partInstanceId,
+					pieceType,
+				}
+			)
+			if (ClientAPI.isClientResponseError(result)) return result
+			return ClientAPI.responseSuccess({})
+		} else if (adLibActionDoc) {
+			// This is an AdLib Action
+			const rundownPlaylist = await RundownPlaylists.findOneAsync(
+				{ $or: [{ _id: rundownPlaylistId }, { externalId: rundownPlaylistId }] },
+				{
+					projection: { currentPartInfo: 1, activationId: 1 },
+				}
+			)
+
+			if (!rundownPlaylist)
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(`Rundown playlist does not exist`),
+						UserErrorMessage.RundownPlaylistNotFound,
+						undefined,
+						404
+					)
+				)
+			if (!rundownPlaylist.activationId)
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(`Rundown playlist ${rundownPlaylistId} is not currently active`),
+						UserErrorMessage.InactiveRundown,
+						undefined,
+						412
+					)
+				)
+			if (!rundownPlaylist.currentPartInfo)
+				return ClientAPI.responseError(
+					UserError.from(
+						new Error(`Rundown playlist ${rundownPlaylistId} must be playing`),
+						UserErrorMessage.NoCurrentPart,
+						undefined,
+						412
+					)
+				)
+
+			return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+				this.context.getMethodContext(connection),
+				event,
+				getCurrentTime(),
+				rundownPlaylist._id,
+				() => {
+					check(rundownPlaylist._id, z.string())
+					check(adLibId, z.string().nullable())
+				},
+				StudioJobs.ExecuteAction,
+				{
+					playlistId: rundownPlaylist._id,
+					actionDocId: adLibActionDoc._id,
+					actionId: adLibActionDoc.actionId,
+					userData: adLibActionDoc.userData,
+					triggerMode: triggerMode ?? undefined,
+					actionOptions: adLibOptions,
+				}
+			)
+		} else {
+			return ClientAPI.responseError(
+				UserError.from(new Error(`No adLib with Id ${adLibId}`), UserErrorMessage.AdlibNotFound, undefined, 412)
+			)
+		}
+	}
+
+	async executeBucketAdLib(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		bucketId: BucketId,
+		externalId: string,
+		triggerMode?: string | null
+	): Promise<ClientAPI.ClientResponse<object>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		const bucketPromise = Buckets.findOneAsync(bucketId, { projection: { _id: 1 } })
+		const bucketAdlibPromise = BucketAdLibs.findOneAsync({ bucketId, externalId }, { projection: { _id: 1 } })
+		const bucketAdlibActionPromise = BucketAdLibActions.findOneAsync(
+			{ bucketId, externalId },
+			{
+				projection: { _id: 1 },
+			}
+		)
+		const [bucket, bucketAdlib, bucketAdlibAction] = await Promise.all([
+			bucketPromise,
+			bucketAdlibPromise,
+			bucketAdlibActionPromise,
+		])
+		if (!bucket) {
+			return ClientAPI.responseError(
+				UserError.from(
+					new Error(`Bucket ${bucketId} not found`),
+					UserErrorMessage.BucketNotFound,
+					undefined,
+					412
+				)
+			)
+		}
+		if (!bucketAdlib && !bucketAdlibAction) {
+			return ClientAPI.responseError(
+				UserError.from(
+					new Error(`No adLib with Id ${externalId}, in bucket ${bucketId}`),
+					UserErrorMessage.AdlibNotFound,
+					undefined,
+					412
+				)
+			)
+		}
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(bucketId, z.string())
+				check(externalId, z.string())
+			},
+			StudioJobs.ExecuteBucketAdLibOrAction,
+			{
+				playlistId: playlist._id,
+				bucketId,
+				externalId,
+				triggerMode: triggerMode ?? undefined,
+			}
+		)
+	}
+
+	async moveNextPart(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		delta: number,
+		ignoreQuickLoop?: boolean
+	): Promise<ClientAPI.ClientResponse<PartId | null>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(delta, z.number())
+			},
+			StudioJobs.MoveNextPart,
+			{
+				playlistId: playlist._id,
+				partDelta: delta,
+				segmentDelta: 0,
+				ignoreQuickLoop,
+			}
+		)
+	}
+
+	async moveNextSegment(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		delta: number
+	): Promise<ClientAPI.ClientResponse<PartId | null>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(delta, z.number())
+			},
+			StudioJobs.MoveNextPart,
+			{
+				playlistId: playlist._id,
+				partDelta: 0,
+				segmentDelta: delta,
+			}
+		)
+	}
+
+	async reloadPlaylist(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylist<void>(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+			},
+			'reloadPlaylist',
+			{ rundownPlaylistId: playlist._id },
+			async (access) => {
+				const reloadResponse = await ServerRundownAPI.resyncRundownPlaylist(access)
+				const success = !reloadResponse.rundownsResponses.reduce((missing, rundownsResponse) => {
+					return missing || rundownsResponse.response === TriggerReloadDataResponse.MISSING
+				}, false)
+				if (!success)
+					throw UserError.from(
+						new Error(`Failed to reload playlist ${playlist._id}`),
+						UserErrorMessage.InternalError
+					)
+			}
+		)
+	}
+
+	async resetPlaylist(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+			},
+			StudioJobs.ResetRundownPlaylist,
+			{
+				playlistId: playlist._id,
+			}
+		)
+	}
+	async setNextSegment(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		segmentId: SegmentId
+	): Promise<ClientAPI.ClientResponse<PartId>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+		const segment = await this.findSegment(segmentId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(segment._id, z.string())
+			},
+			StudioJobs.SetNextSegment,
+			{
+				playlistId: playlist._id,
+				nextSegmentId: segment._id,
+			}
+		)
+	}
+	async setNextPart(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		partId: PartId
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+		const part = await this.findPart(partId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(part._id, z.string())
+			},
+			StudioJobs.SetNextPart,
+			{
+				playlistId: playlist._id,
+				nextPartId: part._id,
+			}
+		)
+	}
+
+	async queueNextSegment(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		segmentId: SegmentId
+	): Promise<ClientAPI.ClientResponse<QueueNextSegmentResult>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+		const segment = await this.findSegment(segmentId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(segment._id, z.string())
+			},
+			StudioJobs.QueueNextSegment,
+			{
+				playlistId: playlist._id,
+				queuedSegmentId: segment._id,
+			}
+		)
+	}
+
+	async take(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		fromPartInstanceId: PartInstanceId | undefined
+	): Promise<ClientAPI.ClientResponse<TakeNextPartResult>> {
+		triggerWriteAccess()
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+			},
+			StudioJobs.TakeNextPart,
+			{
+				playlistId: playlist._id,
+				fromPartInstanceId: fromPartInstanceId ?? playlist.currentPartInfo?.partInstanceId ?? null,
+			}
+		)
+	}
+
+	async clearSourceLayers(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		sourceLayerIds: string[]
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+		if (!playlist)
+			return ClientAPI.responseError(
+				UserError.from(
+					Error(`Rundown playlist ${rundownPlaylistId} does not exist`),
+					UserErrorMessage.RundownPlaylistNotFound,
+					undefined,
+					412
+				)
+			)
+		if (!playlist.currentPartInfo?.partInstanceId || !playlist.activationId)
+			return ClientAPI.responseError(
+				UserError.from(
+					new Error(`Rundown playlist ${rundownPlaylistId} is not currently active`),
+					UserErrorMessage.InactiveRundown,
+					undefined,
+					412
+				)
+			)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(sourceLayerIds, z.array(z.string()))
+			},
+			StudioJobs.StopPiecesOnSourceLayers,
+			{
+				playlistId: playlist._id,
+				partInstanceId: playlist.currentPartInfo.partInstanceId,
+				sourceLayerIds: sourceLayerIds,
+			}
+		)
+	}
+
+	async recallStickyPiece(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		sourceLayerId: string
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(sourceLayerId, z.string())
+			},
+			StudioJobs.StartStickyPieceOnSourceLayer,
+			{
+				playlistId: playlist._id,
+				sourceLayerId,
+			}
+		)
+	}
+
+	async tTimerStartCountdown(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		duration: number,
+		stopAtZero?: boolean,
+		startPaused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+				check(duration, z.number())
+				check(stopAtZero, z.boolean().optional())
+				check(startPaused, z.boolean().optional())
+			},
+			StudioJobs.TTimerStartCountdown,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+				duration,
+				stopAtZero: !!stopAtZero,
+				startPaused: !!startPaused,
+			}
+		)
+	}
+
+	async tTimerStartFreeRun(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		startPaused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+				check(startPaused, z.boolean().optional())
+			},
+			StudioJobs.TTimerStartFreeRun,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+				startPaused: !!startPaused,
+			}
+		)
+	}
+
+	async tTimerPause(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+			},
+			StudioJobs.TTimerPause,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+			}
+		)
+	}
+
+	async tTimerResume(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+			},
+			StudioJobs.TTimerResume,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+			}
+		)
+	}
+
+	async tTimerRestart(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+			},
+			StudioJobs.TTimerRestart,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+			}
+		)
+	}
+
+	async tTimerClearProjected(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+			},
+			StudioJobs.TTimerClearProjected,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+			}
+		)
+	}
+
+	async tTimerSetProjectedAnchorPart(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		partId?: PartId,
+		externalId?: string
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+				check(partId, z.string().optional())
+				check(externalId, z.string().optional())
+			},
+			StudioJobs.TTimerSetProjectedAnchorPart,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+				partId,
+				externalId,
+			}
+		)
+	}
+
+	async tTimerSetProjectedTime(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		time: number,
+		paused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+				check(time, z.number())
+				check(paused, z.boolean().optional())
+			},
+			StudioJobs.TTimerSetProjectedTime,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+				time,
+				paused: !!paused,
+			}
+		)
+	}
+
+	async tTimerSetProjectedDuration(
+		connection: DDPClientConnection,
+		event: string,
+		rundownPlaylistId: RundownPlaylistId,
+		timerIndex: RundownTTimerIndex,
+		duration: number,
+		paused?: boolean
+	): Promise<ClientAPI.ClientResponse<void>> {
+		const playlist = await this.findPlaylist(rundownPlaylistId)
+
+		return ServerClientAPI.runUserActionInLogForPlaylistOnWorker(
+			this.context.getMethodContext(connection),
+			event,
+			getCurrentTime(),
+			playlist._id,
+			() => {
+				check(playlist._id, z.string())
+				check(timerIndex, z.number())
+				check(duration, z.number())
+				check(paused, z.boolean().optional())
+			},
+			StudioJobs.TTimerSetProjectedDuration,
+			{
+				playlistId: playlist._id,
+				timerIndex,
+				duration,
+				paused: !!paused,
+			}
+		)
+	}
+}
+
+class PlaylistsAPIFactory implements APIFactory<PlaylistsRestAPI> {
+	createServerAPI(context: ServerAPIContext): PlaylistsRestAPI {
+		return new PlaylistsServerAPI(context)
+	}
+}
+
+export function registerRoutes(registerRoute: APIRegisterHook<PlaylistsRestAPI>): void {
+	const playlistsAPIFactory = new PlaylistsAPIFactory()
+
+	registerRoute<never, never, Array<{ id: string }>>(
+		'get',
+		'/playlists',
+		new Map(),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, _params, _body) => {
+			logger.info(`API GET: playlists`)
+			return await serverAPI.getAllRundownPlaylists(connection, event)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { rehearsal: boolean }, void>(
+		'put',
+		'/playlists/:playlistId/activate',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.RundownAlreadyActive]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const rehearsal = body.rehearsal
+			logger.info(`API PUT: activate ${rundownPlaylistId} - ${rehearsal ? 'rehearsal' : 'live'}`)
+
+			check(rundownPlaylistId, z.string())
+			return await serverAPI.activate(connection, event, rundownPlaylistId, rehearsal)
+		}
+	)
+
+	registerRoute<{ playlistId: string; rundownId: string }, { rehearsal: boolean }, void>(
+		'put',
+		'/playlists/:playlistId/rundowns/:rundownId/activate-adlib-testing',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.RundownAlreadyActive]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const rundownId = protectString<RundownId>(params.rundownId)
+			logger.info(`API PUT: activate AdLib testing mode, playlist ${rundownPlaylistId}, rundown ${rundownId}`)
+
+			check(rundownPlaylistId, z.string())
+			check(rundownId, z.string())
+			return await serverAPI.activateAdLibTesting(connection, event, rundownPlaylistId, rundownId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, never, void>(
+		'put',
+		'/playlists/:playlistId/deactivate',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			logger.info(`API PUT: deactivate ${rundownPlaylistId}`)
+
+			check(rundownPlaylistId, z.string())
+			return await serverAPI.deactivate(connection, event, rundownPlaylistId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { adLibId: string; actionType?: string; adLibOptions?: any }, object>(
+		'post',
+		'/playlists/:playlistId/execute-adlib',
+		new Map([
+			[400, []],
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[409, [UserErrorMessage.ValidationFailed]],
+			[412, [UserErrorMessage.InactiveRundown, UserErrorMessage.NoCurrentPart, UserErrorMessage.AdlibNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const adLibId = protectString<AdLibActionId | RundownBaselineAdLibActionId | PieceId | BucketAdLibId>(
+				body.adLibId
+			)
+			const actionTypeObj = body
+			const triggerMode = actionTypeObj ? (actionTypeObj as { actionType: string }).actionType : undefined
+			const adLibOptions = actionTypeObj ? actionTypeObj.adLibOptions : undefined
+			logger.info(
+				`API POST: execute-adlib ${rundownPlaylistId} ${adLibId} - actionType: ${triggerMode} - options: ${
+					adLibOptions ? JSON.stringify(adLibOptions) : 'undefined'
+				}`
+			)
+
+			check(adLibId, z.string())
+			check(rundownPlaylistId, z.string())
+
+			return await serverAPI.executeAdLib(
+				connection,
+				event,
+				rundownPlaylistId,
+				adLibId,
+				triggerMode,
+				adLibOptions
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { bucketId: string; externalId: string; actionType?: string }, object>(
+		'post',
+		'/playlists/:playlistId/execute-bucket-adlib',
+		new Map([
+			[400, []],
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[409, [UserErrorMessage.ValidationFailed]],
+			[
+				412,
+				[
+					UserErrorMessage.InactiveRundown,
+					UserErrorMessage.NoCurrentPart,
+					UserErrorMessage.AdlibNotFound,
+					UserErrorMessage.BucketNotFound,
+				],
+			],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const bucketId = protectString<BucketId>(body.bucketId)
+			const adLibExternalId = body.externalId
+			const actionTypeObj = body
+			const triggerMode = actionTypeObj ? (actionTypeObj as { actionType: string }).actionType : undefined
+			logger.info(
+				`API POST: execute-bucket-adlib ${rundownPlaylistId} ${bucketId} ${adLibExternalId} - triggerMode: ${triggerMode}`
+			)
+
+			check(rundownPlaylistId, z.string())
+			check(bucketId, z.string())
+			check(adLibExternalId, z.string())
+
+			return await serverAPI.executeBucketAdLib(
+				connection,
+				event,
+				rundownPlaylistId,
+				bucketId,
+				adLibExternalId,
+				triggerMode
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { delta: number }, PartId | null>(
+		'post',
+		'/playlists/:playlistId/move-next-part',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.PartNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const delta = body.delta
+			logger.info(`API POST: move-next-part ${rundownPlaylistId} ${delta}`)
+
+			check(rundownPlaylistId, z.string())
+			check(delta, z.number())
+			return await serverAPI.moveNextPart(connection, event, rundownPlaylistId, delta)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { delta: number }, PartId | null>(
+		'post',
+		'/playlists/:playlistId/move-next-segment',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.PartNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const delta = body.delta
+			logger.info(`API POST: move-next-segment ${rundownPlaylistId} ${delta}`)
+
+			check(rundownPlaylistId, z.string())
+			check(delta, z.number())
+			return await serverAPI.moveNextSegment(connection, event, rundownPlaylistId, delta)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, never, void>(
+		'put',
+		'/playlists/:playlistId/reload-playlist',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			logger.info(`API PUT: reload-playlist ${rundownPlaylistId}`)
+
+			check(rundownPlaylistId, z.string())
+			return await serverAPI.reloadPlaylist(connection, event, rundownPlaylistId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, never, void>(
+		'put',
+		'/playlists/:playlistId/reset-playlist',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.RundownResetWhileActive]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			logger.info(`API PUT: reset-playlist ${rundownPlaylistId}`)
+
+			check(rundownPlaylistId, z.string())
+			return await serverAPI.resetPlaylist(connection, event, rundownPlaylistId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { partId: string }, void>(
+		'put',
+		'/playlists/:playlistId/set-next-part',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.PartNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const partId = protectString<PartId>(body.partId)
+			logger.info(`API PUT: set-next-part ${rundownPlaylistId} ${partId}`)
+
+			check(rundownPlaylistId, z.string())
+			check(partId, z.string())
+			return await serverAPI.setNextPart(connection, event, rundownPlaylistId, partId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { segmentId: string }, PartId | null>(
+		'post',
+		'/playlists/:playlistId/set-next-segment',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.PartNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const segmentId = protectString<SegmentId>(body.segmentId)
+			logger.info(`API PUT: set-next-segment ${rundownPlaylistId} ${segmentId}`)
+
+			check(rundownPlaylistId, z.string())
+			check(segmentId, z.string())
+			return await serverAPI.setNextSegment(connection, event, rundownPlaylistId, segmentId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { segmentId: string }, QueueNextSegmentResult>(
+		'post',
+		'/playlists/:playlistId/queue-next-segment',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.PartNotFound]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const segmentId = protectString<SegmentId>(body.segmentId)
+			logger.info(`API POST: set-next-segment ${rundownPlaylistId} ${segmentId}`)
+
+			check(rundownPlaylistId, z.string())
+			check(segmentId, z.string())
+			return await serverAPI.queueNextSegment(connection, event, rundownPlaylistId, segmentId)
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { fromPartInstanceId?: string }, TakeNextPartResult>(
+		'post',
+		'/playlists/:playlistId/take',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.TakeNoNextPart]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const fromPartInstanceId = body.fromPartInstanceId
+			logger.info(`API POST: take ${rundownPlaylistId}`)
+
+			check(rundownPlaylistId, z.string())
+			check(fromPartInstanceId, z.string().optional())
+			return await serverAPI.take(connection, event, rundownPlaylistId, protectString(fromPartInstanceId))
+		}
+	)
+
+	registerRoute<{ playlistId: string }, { sourceLayerIds: string[] }, void>(
+		'put',
+		'/playlists/:playlistId/clear-sourcelayers',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.InactiveRundown]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const playlistId = protectString<RundownPlaylistId>(params.playlistId)
+			const sourceLayerIds = body?.sourceLayerIds
+			logger.info(`API POST: clear-sourcelayers ${playlistId} ${sourceLayerIds}`)
+
+			check(playlistId, z.string())
+			check(sourceLayerIds, z.array(z.string()))
+
+			return await serverAPI.clearSourceLayers(connection, event, playlistId, sourceLayerIds)
+		}
+	)
+
+	registerRoute<{ playlistId: string; sourceLayerId: string }, never, void>(
+		'delete',
+		'/playlists/:playlistId/sourceLayer/:sourceLayerId',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.InactiveRundown]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const playlistId = protectString<RundownPlaylistId>(params.playlistId)
+			const sourceLayerId = params.sourceLayerId
+			logger.info(`API DELETE: sourceLayer ${playlistId} ${sourceLayerId}`)
+
+			check(playlistId, z.string())
+			check(sourceLayerId, z.string())
+			return await serverAPI.clearSourceLayers(connection, event, playlistId, [sourceLayerId])
+		}
+	)
+
+	registerRoute<{ playlistId: string; sourceLayerId: string }, never, void>(
+		'post',
+		'/playlists/:playlistId/sourceLayer/:sourceLayerId/sticky',
+		new Map([
+			[404, [UserErrorMessage.RundownPlaylistNotFound]],
+			[412, [UserErrorMessage.InactiveRundown]],
+		]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const playlistId = protectString<RundownPlaylistId>(params.playlistId)
+			const sourceLayerId = params.sourceLayerId
+			logger.info(`API POST: sourceLayer recallSticky ${playlistId} ${sourceLayerId}`)
+
+			check(playlistId, z.string())
+			check(sourceLayerId, z.string())
+			return await serverAPI.recallStickyPiece(connection, event, playlistId, sourceLayerId)
+		}
+	)
+
+	registerRoute<
+		{ playlistId: string; timerIndex: string },
+		{ duration: number; stopAtZero?: boolean; startPaused?: boolean },
+		void
+	>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/countdown',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer countdown ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerStartCountdown(
+				connection,
+				event,
+				rundownPlaylistId,
+				timerIndex,
+				body.duration,
+				body.stopAtZero,
+				body.startPaused
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, { startPaused?: boolean }, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/free-run',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer free-run ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerStartFreeRun(
+				connection,
+				event,
+				rundownPlaylistId,
+				timerIndex,
+				body.startPaused
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, never, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/pause',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer pause ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerPause(connection, event, rundownPlaylistId, timerIndex)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, never, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/resume',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer resume ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerResume(connection, event, rundownPlaylistId, timerIndex)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, never, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/restart',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer restart ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerRestart(connection, event, rundownPlaylistId, timerIndex)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, never, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/projected/clear',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, _) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer projected clear ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			return await serverAPI.tTimerClearProjected(connection, event, rundownPlaylistId, timerIndex)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, { partId?: string; externalId?: string }, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/projected/anchor-part',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer projected anchor-part ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			check(body.partId, z.string().optional())
+			check(body.externalId, z.string().optional())
+
+			if (!body.partId && !body.externalId) {
+				throw new SofieError(400, `Must provide either 'partId' or 'externalId'`)
+			}
+
+			const partId = body.partId ? protectString<PartId>(body.partId) : undefined
+			const externalId = body.externalId
+
+			return await serverAPI.tTimerSetProjectedAnchorPart(
+				connection,
+				event,
+				rundownPlaylistId,
+				timerIndex,
+				partId,
+				externalId
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, { time: number; paused?: boolean }, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/projected/time',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer projected time ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			check(body.time, z.number())
+			check(body.paused, z.boolean().optional())
+
+			return await serverAPI.tTimerSetProjectedTime(
+				connection,
+				event,
+				rundownPlaylistId,
+				timerIndex,
+				body.time,
+				body.paused
+			)
+		}
+	)
+
+	registerRoute<{ playlistId: string; timerIndex: string }, { duration: number; paused?: boolean }, void>(
+		'post',
+		'/playlists/:playlistId/t-timers/:timerIndex/projected/duration',
+		new Map([[404, [UserErrorMessage.RundownPlaylistNotFound]]]),
+		playlistsAPIFactory,
+		async (serverAPI, connection, event, params, body) => {
+			const rundownPlaylistId = protectString<RundownPlaylistId>(params.playlistId)
+			const timerIndex = parseTimerIndex(params.timerIndex)
+			logger.info(`API POST: t-timer projected duration ${rundownPlaylistId} ${timerIndex}`)
+
+			check(rundownPlaylistId, z.string())
+			check(timerIndex, z.number())
+			check(body.duration, z.number())
+			check(body.paused, z.boolean().optional())
+
+			return await serverAPI.tTimerSetProjectedDuration(
+				connection,
+				event,
+				rundownPlaylistId,
+				timerIndex,
+				body.duration,
+				body.paused
+			)
+		}
+	)
+}

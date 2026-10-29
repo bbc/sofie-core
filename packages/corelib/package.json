@@ -1,6 +1,6 @@
 {
 	"name": "@sofie-automation/corelib",
-	"version": "26.3.0-2",
+	"version": "26.9.3",
 	"private": true,
 	"description": "Internal library for some types shared by core and workers",
 	"main": "dist/index.js",
@@ -16,7 +16,7 @@
 	},
 	"homepage": "https://github.com/Sofie-Automation/sofie-core/blob/main/packages/corelib#readme",
 	"scripts": {
-		"lint": "run -T lint corelib",
+		"lint": "run -T lint packages/corelib",
 		"unit": "run -T jest",
 		"test": "run lint && run unit",
 		"watch": "run -T jest --watch --coverage=false",
@@ -36,8 +36,8 @@
 		"/LICENSE"
 	],
 	"dependencies": {
-		"@sofie-automation/blueprints-integration": "26.3.0-2",
-		"@sofie-automation/shared-lib": "26.3.0-2",
+		"@sofie-automation/blueprints-integration": "26.9.3",
+		"@sofie-automation/shared-lib": "26.9.3",
 		"ejson": "^2.2.3",
 		"fast-clone": "^1.5.13",
 		"i18next": "^26.3.6",

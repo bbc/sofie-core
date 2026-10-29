@@ -1,4 +1,4 @@
-import type { ActionUserData, IBlueprintActionManifest } from '../action.js'
+import type { ActionUserData, IBlueprintActionManifest, IBlueprintBucketActionManifest } from '../action.js'
 import type {
 	IActionExecutionContext,
 	ISyncIngestUpdateToPartInstanceContext,
@@ -26,6 +26,7 @@ import type { IngestAdlib, ExtendedIngestRundown, IngestRundown } from '../inges
 import type { IBlueprintExternalMessageQueueObj } from '../message.js'
 import type {
 	IBlueprintAdLibPiece,
+	IBlueprintBucketAdLibPiece,
 	IBlueprintResolvedPieceInstance,
 	IBlueprintPartInstance,
 	PartEndState,
@@ -69,6 +70,9 @@ export interface ShowStyleBlueprintManifest<
 
 	/** A list of config items this blueprint expects to be available on the ShowStyle */
 	showStyleConfigSchema: JSONBlob<JSONSchema>
+
+	/** A list of config items this blueprint expects to be available on each Branding of the ShowStyle */
+	brandingConfigSchema?: JSONBlob<JSONSchema>
 
 	/** The config presets exposed by this blueprint */
 	configPresets: Record<string, IShowStyleConfigPreset<TRawConfig>>
@@ -165,9 +169,9 @@ export interface ShowStyleBlueprintManifest<
 		context: IShowStyleUserContext,
 		ingestItem: IngestAdlib
 	) =>
-		| Promise<IBlueprintAdLibPiece | IBlueprintActionManifest | null>
-		| IBlueprintAdLibPiece
-		| IBlueprintActionManifest
+		| Promise<IBlueprintBucketAdLibPiece | IBlueprintBucketActionManifest | null>
+		| IBlueprintBucketAdLibPiece
+		| IBlueprintBucketActionManifest
 		| null
 
 	/**
@@ -393,6 +397,8 @@ export interface BlueprintResultApplyShowStyleConfig {
 
 	triggeredActions: IBlueprintTriggeredActions[]
 
+	branding?: Record<string, IBlueprintBranding>
+
 	/** Configuration for displaying AB resolver channel assignments */
 	abChannelDisplay?: {
 		/** Source layer IDs that should show AB channel info */
@@ -405,6 +411,12 @@ export interface BlueprintResultApplyShowStyleConfig {
 		showOnDirectorScreen: boolean
 		// Future: showOnPresenterScreen, showOnCameraScreen when those views are implemented
 	}
+}
+
+export interface IBlueprintBranding {
+	name: string
+
+	config: IBlueprintConfig
 }
 
 export interface IShowStyleConfigPreset<TConfig = IBlueprintConfig> {
